@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /crm
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /manager
+
+Sitemap: https://www.aq8algerie-dz.com/sitemap.xml

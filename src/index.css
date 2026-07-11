@@ -1,0 +1,217 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+:root {
+  --brand-dark: #353535;
+  --brand-red: #ff5757;
+  --brand-red-hover: #ff4444;
+  --bg-light: #F8F9FA;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-light);
+  color: #333333;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* Sleek Interface theme classes */
+.bg-aq-dark {
+  background-color: #353535;
+}
+
+.text-aq-coral {
+  color: #ff5757;
+}
+
+.bg-aq-coral {
+  background-color: #ff5757;
+}
+
+.border-aq-coral {
+  border-color: #ff5757;
+}
+
+.shadow-premium {
+  box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+}
+
+.sidebar-item {
+  transition: all 0.2s ease;
+}
+
+.sidebar-item:hover {
+  background-color: rgba(255,255,255,0.05);
+  color: #ff5757;
+}
+
+.active-nav {
+  border-right: 4px solid #ff5757;
+  background-color: rgba(255,255,255,0.08);
+  color: #ff5757;
+}
+
+/* Custom Scrollbar for premium feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Micro interaction transitions */
+.transition-premium {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s infinite ease-in-out;
+}
+
+/* Premium Dark Mode styles for CRM */
+.dark {
+  --bg-light: #0B0B0F;
+  --bg-card: #15151B;
+  --text-primary: #F3F4F6;
+  --text-secondary: #9CA3AF;
+  --border-color: #22222B;
+  --bg-input: #1C1C24;
+}
+
+/* CRM area overrides when .dark is active */
+.dark.bg-\[\#f8f9fa\],
+.dark .bg-\[\#f8f9fa\],
+.dark .bg-slate-50,
+.dark .bg-slate-100 {
+  background-color: #0b0b0f !important;
+}
+
+.dark .bg-white,
+.dark .bg-slate-50\/50,
+.dark .bg-rose-50\/50,
+.dark .bg-blue-50\/50 {
+  background-color: #15151b !important;
+}
+
+.dark .text-slate-800,
+.dark .text-\[\#353535\],
+.dark .text-slate-700,
+.dark .text-slate-900,
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: #f3f4f6 !important;
+}
+
+.dark .text-slate-600,
+.dark .text-slate-500,
+.dark .text-slate-400 {
+  color: #9ca3af !important;
+}
+
+.dark .border-slate-50,
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-slate-200\/60,
+.dark .border-slate-200\/70,
+.dark .border-slate-100\/50,
+.dark .border-rose-100\/50,
+.dark .border-blue-100\/50,
+.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-y > * {
+  border-color: #22222b !important;
+}
+
+/* Modals & Inputs */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #1e1e26 !important;
+  color: #f3f4f6 !important;
+  border-color: #2e2e38 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #6b7280 !important;
+}
+
+/* Buttons and other details */
+.dark .bg-slate-50:hover,
+.dark .bg-slate-100:hover,
+.dark .hover\:bg-slate-50:hover {
+  background-color: #1e1e26 !important;
+}
+
+.dark .bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .text-slate-300 {
+  color: #d1d5db !important;
+}
+
+.dark select option {
+  background-color: #15151b !important;
+  color: #f3f4f6 !important;
+}
+
+/* Tooltip styles */
+.chart-tooltip {
+  background: rgba(15, 15, 20, 0.95) !important;
+  backdrop-filter: blur(4px);
+  border: 1px solid #2e2e38;
+}
+
+/* Print Media Styles for Invoices */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-receipt-card, #printable-receipt-card * {
+    visibility: visible;
+  }
+  #printable-receipt-card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none !important;
+    background: white !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .crm-no-print {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+}
