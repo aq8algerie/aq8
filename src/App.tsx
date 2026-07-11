@@ -78,6 +78,9 @@ import {
   dbSaveSettings,
   dbResetToDefaults
 } from './lib/db';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from './lib/firebase';
+import { CrmSession, getCrmAuthErrorMessage, resolveCrmSession } from './lib/crmAuth';
 
 // Import our modular subcomponents
 import {
@@ -118,7 +121,7 @@ export default function App() {
     });
   };
 
-  const allowDemoTools = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_TOOLS === 'true';
+  const allowDemoTools = import.meta.env.DEV && import.meta.env.VITE_ENABLE_DEMO_TOOLS === 'true';
 
   // Initialize public data on mount. CRM collections subscribe only after authentication.
   useEffect(() => {
@@ -223,13 +226,82 @@ export default function App() {
   const [crmSuperAdminTab, setCrmSuperAdminTab] = useState<'dashboard' | 'centers' | 'managers' | 'stats' | 'settings'>('dashboard');
   const [crmCenterManagerTab, setCrmCenterManagerTab] = useState<'dashboard' | 'schedule' | 'clients' | 'bookings' | 'payments' | 'services'>('dashboard');
   const [crmSidebarOpen, setCrmSidebarOpen] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
+
+  const clearCrmSession = () => {
+    setCrmRole(null);
+    setCrmCenterId(null);
+    setLoggedManagerName('');
+    setManagers([]);
+    setClients([]);
+    setAppointments([]);
+    setClientPackages([]);
+    setPayments([]);
+    setMeasurements([]);
+  };
+
+  const applyCrmSession = (session: CrmSession) => {
+    setCrmRole(session.role);
+    setCrmCenterId(session.centerId);
+    setLoggedManagerName(session.managerName);
+  };
+
+  useEffect(() => {
+    if (!auth) {
+      setAuthLoading(false);
+      return;
+    }
+
+    return onAuthStateChanged(auth, async (user) => {
+      setAuthLoading(true);
+
+      if (!user) {
+        clearCrmSession();
+        setAuthLoading(false);
+        if (window.location.pathname === '/crm') {
+          navigate('login');
+        }
+        return;
+      }
+
+      try {
+        setAuthErrorMessage(null);
+        const session = await resolveCrmSession(user);
+        applyCrmSession(session);
+        if (window.location.pathname === '/login') {
+          navigate('crm');
+        }
+      } catch (err) {
+        console.error(err);
+        setAuthErrorMessage(getCrmAuthErrorMessage(err));
+        clearCrmSession();
+        await signOut(auth).catch(() => {});
+        if (window.location.pathname === '/crm') {
+          navigate('login');
+        }
+      } finally {
+        setAuthLoading(false);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (currentRoute === 'crm' && !authLoading && !crmRole) {
+      navigate('login');
+    }
+  }, [currentRoute, authLoading, crmRole]);
 
   useEffect(() => {
     if (!crmRole) {
       return;
     }
 
-    const scopedCenterId = crmRole === 'center_manager' ? crmCenterId || undefined : undefined;
+    if (crmRole === 'center_manager' && !crmCenterId) {
+      return;
+    }
+
+    const scopedCenterId = crmRole === 'center_manager' ? crmCenterId : undefined;
     const unsubManagers = crmRole === 'super_admin' ? subscribeToManagers(setManagers) : () => {};
     const unsubClients = subscribeToClients(setClients, scopedCenterId);
     const unsubAppointments = subscribeToAppointments(setAppointments, scopedCenterId);
@@ -380,23 +452,18 @@ export default function App() {
   };
 
   // 5. AUTHENTICATION PORTAL ACTIONS
-  const handleLoginSuccess = (role: 'super_admin' | 'center_manager', centerId: string | null, managerName: string) => {
-    setCrmRole(role);
-    setCrmCenterId(centerId);
-    setLoggedManagerName(managerName);
+  const handleLoginSuccess = (session: CrmSession) => {
+    setAuthErrorMessage(null);
+    applyCrmSession(session);
     navigate('crm');
   };
 
-  const handleLogout = () => {
-    setCrmRole(null);
-    setCrmCenterId(null);
-    setLoggedManagerName('');
-    setManagers([]);
-    setClients([]);
-    setAppointments([]);
-    setClientPackages([]);
-    setPayments([]);
-    setMeasurements([]);
+  const handleLogout = async () => {
+    setAuthErrorMessage(null);
+    if (auth) {
+      await signOut(auth).catch((err) => console.error(err));
+    }
+    clearCrmSession();
     navigate('home');
   };
 
@@ -553,9 +620,34 @@ export default function App() {
                 centers={centers}
                 managers={managers}
                 onLoginSuccess={handleLoginSuccess}
+                authErrorMessage={authErrorMessage}
+                onAuthErrorClear={() => setAuthErrorMessage(null)}
               />
             )}
 
+          </div>
+        ) : authLoading ? (
+          <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa] text-slate-700 px-4">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-md text-center space-y-2 max-w-sm">
+              <ShieldCheck className="h-8 w-8 mx-auto text-[#ff5757]" />
+              <p className="text-sm font-bold text-[#353535]">Vérification de la session</p>
+              <p className="text-xs text-slate-500">Connexion au portail CRM AQ8 en cours...</p>
+            </div>
+          </div>
+        ) : !crmRole ? (
+          <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa] text-slate-700 px-4">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-md text-center space-y-3 max-w-sm">
+              <ShieldCheck className="h-8 w-8 mx-auto text-[#ff5757]" />
+              <p className="text-sm font-bold text-[#353535]">Session CRM requise</p>
+              <p className="text-xs text-slate-500">Veuillez vous connecter avec un compte autorisé.</p>
+              <button
+                type="button"
+                onClick={() => navigate('login')}
+                className="inline-flex items-center justify-center px-4 py-2 bg-[#353535] text-white rounded-xl text-xs font-bold hover:bg-slate-800"
+              >
+                Aller à la connexion
+              </button>
+            </div>
           </div>
         ) : (
           /* --- INTERNAL CRM AREA --- */
@@ -790,10 +882,10 @@ export default function App() {
                     Veuillez contacter le Super Administrateur <strong>Karim Benchikh</strong> au <strong>{settings?.contactPhone || '+213 (0) 23 48 50 60'}</strong> ou par e-mail à <strong>{settings?.contactEmail || 'contact@aq8algerie.com'}</strong> pour régulariser votre abonnement.
                   </p>
                 </div>
-              ) : (
+              ) : crmRole === 'center_manager' && crmCenterId ? (
                 /* RENDER CENTER MANAGER VIEW BLOCK (STRICT ISOLATION VIA CURRENT CENTERID) */
                 <CenterManagerViews
-                  centerId={crmCenterId || 'center-1'}
+                  centerId={crmCenterId}
                   centers={centers}
                   clients={clients}
                   appointments={appointments}
@@ -810,6 +902,21 @@ export default function App() {
                   activeTab={crmCenterManagerTab}
                   onTabChange={setCrmCenterManagerTab}
                 />
+              ) : (
+                <div className="max-w-xl mx-auto my-12 bg-white rounded-3xl p-8 border border-slate-200 shadow-xl text-center space-y-4">
+                  <ShieldCheck className="h-10 w-10 text-[#ff5757] mx-auto" />
+                  <h2 className="text-lg font-extrabold text-slate-800 font-display">Session CRM invalide</h2>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Votre profil ne contient pas de rôle ou de centre valide. Veuillez vous reconnecter ou contacter le super administrateur.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="inline-flex items-center justify-center px-4 py-2 bg-[#353535] text-white rounded-xl text-xs font-bold hover:bg-slate-800"
+                  >
+                    Se reconnecter
+                  </button>
+                </div>
               )}
             </section>
           </div>
