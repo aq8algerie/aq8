@@ -111,11 +111,11 @@ export function getCrmAuthErrorMessage(error: unknown) {
       return "Le compte Firebase n'a pas d'adresse e-mail associée.";
     default:
       if (error instanceof Error && error.message.includes('Firebase Auth is not configured')) {
-        return "Firebase Auth n'est pas configuré. Ajoutez les variables VITE_FIREBASE_* dans .env.local.";
+        return "Firebase Auth n'est pas configuré. Vérifiez la configuration AQ8 embarquée ou surchargez-la avec VITE_FIREBASE_* au build.";
       }
 
       if (error instanceof Error && error.message.includes('Firebase Firestore is not configured')) {
-        return "Firestore n'est pas configuré. Ajoutez les variables VITE_FIREBASE_* dans .env.local.";
+        return "Firestore n'est pas configuré. Vérifiez la configuration AQ8 embarquée ou surchargez-la avec VITE_FIREBASE_* au build.";
       }
 
       return 'Erreur lors de la connexion. Veuillez vérifier vos identifiants.';
