@@ -6,17 +6,58 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.email != null;
     }
 
+    function currentEmail() {
+      return request.auth.token.email;
+    }
+
     function isSuperAdmin() {
-      return signedIn() && request.auth.token.email == 'karim@aq8algerie.com';
+      return signedIn() && currentEmail() == 'karim@aq8algerie.com';
+    }
+
+    function managerDocPath(managerId) {
+      return /databases/$(database)/documents/managers/$(managerId);
     }
 
     function managerExists() {
-      return signedIn()
-        && exists(/databases/$(database)/documents/managers/$(request.auth.token.email));
+      return signedIn() && exists(managerDocPath(currentEmail()));
     }
 
     function managerData() {
-      return get(/databases/$(database)/documents/managers/$(request.auth.token.email)).data;
+      return get(managerDocPath(currentEmail())).data;
+    }
+
+    function isSelfManagerDoc(managerEmail) {
+      return signedIn() && managerEmail == currentEmail();
+    }
+
+    function isReadableLegacyManagerDoc() {
+      return signedIn()
+        && resource != null
+        && resource.data.email is string
+        && resource.data.email == currentEmail();
+    }
+
+    function legacySourceExists() {
+      return request.resource.data.legacySourceId is string
+        && exists(managerDocPath(request.resource.data.legacySourceId));
+    }
+
+    function legacySourceData() {
+      return get(managerDocPath(request.resource.data.legacySourceId)).data;
+    }
+
+    function canSelfHealManagerDoc(managerEmail) {
+      return isSelfManagerDoc(managerEmail)
+        && request.resource.data.email is string
+        && request.resource.data.email == currentEmail()
+        && request.resource.data.active is bool
+        && request.resource.data.centerId is string
+        && request.resource.data.name is string
+        && legacySourceExists()
+        && legacySourceData().email == currentEmail()
+        && legacySourceData().active == request.resource.data.active
+        && legacySourceData().centerId == request.resource.data.centerId
+        && legacySourceData().name == request.resource.data.name;
     }
 
     function isActiveManagerFor(centerId) {
@@ -58,8 +99,9 @@ service cloud.firestore {
     }
 
     match /managers/{managerEmail} {
-      allow read: if isSuperAdmin() || (signedIn() && request.auth.token.email == managerEmail);
-      allow create, update, delete: if isSuperAdmin();
+      allow read: if isSuperAdmin() || isSelfManagerDoc(managerEmail) || isReadableLegacyManagerDoc();
+      allow create, update: if isSuperAdmin() || canSelfHealManagerDoc(managerEmail);
+      allow delete: if isSuperAdmin();
     }
 
     match /clients/{clientId} {
