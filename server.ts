@@ -7,7 +7,7 @@ import { createServer as createViteServer } from 'vite';
 import { getSeoForPage, generateCenterSeo, PageSeo } from './lib/seo';
 import { AQ8Database } from './src/mockData';
 
-const PORT = 3000;
+const PORT = Number(process.env.PORT || 3000);
 
 function injectSeo(html: string, seo: PageSeo): string {
   let modifiedHtml = html;
