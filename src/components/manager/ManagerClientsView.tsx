@@ -24,8 +24,9 @@ export function ManagerClientsView({
 }: ManagerClientsViewProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [gridLimit, setGridLimit] = useState(3);
+  const [gridLimit, setGridLimit] = useState(12);
   const [listPage, setListPage] = useState(1);
+  const [listPageSize, setListPageSize] = useState<20 | 50 | 100 | 200>(20);
 
   // Filters state
   const [genderFilter, setGenderFilter] = useState<'all' | 'H' | 'F'>('all');
@@ -33,6 +34,7 @@ export function ManagerClientsView({
   const [periodFilter, setPeriodFilter] = useState<'all' | 'this_month' | 'this_year'>('all');
 
   const centerClients = clients.filter(c => c.centerId === centerId);
+  const clientPageSizes = [20, 50, 100, 200] as const;
 
   const safeText = (value: unknown) => String(value ?? '').trim();
   const getClientDisplayName = (client: Client) => {
@@ -81,6 +83,11 @@ export function ManagerClientsView({
 
     return true;
   });
+
+  React.useEffect(() => {
+    setListPage(1);
+    setGridLimit(12);
+  }, [searchQuery, genderFilter, subFilter, periodFilter, listPageSize]);
 
   return (
     <div id="manager-clients-view" className="space-y-4">
@@ -275,7 +282,7 @@ export function ManagerClientsView({
             <div className="flex justify-center pt-2">
               <button
                 type="button"
-                onClick={() => setGridLimit(gridLimit + 3)}
+                onClick={() => setGridLimit(gridLimit + 12)}
                 className="px-6 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-xs transition-premium cursor-pointer"
               >
                 Voir plus de clients ({filteredClients.length - gridLimit} restants)
@@ -304,9 +311,8 @@ export function ManagerClientsView({
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {(() => {
-                    const pageSize = 4;
-                    const startIndex = (listPage - 1) * pageSize;
-                    const pageData = filteredClients.slice(startIndex, startIndex + pageSize);
+                    const startIndex = (listPage - 1) * listPageSize;
+                    const pageData = filteredClients.slice(startIndex, startIndex + listPageSize);
 
                     return (
                       <>
@@ -366,13 +372,26 @@ export function ManagerClientsView({
 
           {/* List Pagination Controls */}
           {(() => {
-            const pageSize = 4;
-            const totalPages = Math.ceil(filteredClients.length / pageSize);
-            if (totalPages <= 1) return null;
+            const totalPages = Math.max(1, Math.ceil(filteredClients.length / listPageSize));
+            const startIndex = filteredClients.length === 0 ? 0 : (listPage - 1) * listPageSize + 1;
+            const endIndex = Math.min(listPage * listPageSize, filteredClients.length);
 
             return (
-              <div className="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-150 text-xs font-bold text-slate-600 animate-fade-in">
-                <button
+              <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center bg-slate-50 p-3 rounded-2xl border border-slate-150 text-xs font-bold text-slate-600 animate-fade-in">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-slate-500">{startIndex}-{endIndex} sur {filteredClients.length} clients</span>
+                  <select
+                    value={listPageSize}
+                    onChange={(e) => setListPageSize(Number(e.target.value) as 20 | 50 | 100 | 200)}
+                    className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold focus:outline-none"
+                  >
+                    {clientPageSizes.map(size => (
+                      <option key={size} value={size}>{size} par page</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center justify-end gap-2">
+                  <button
                   type="button"
                   disabled={listPage === 1}
                   onClick={() => setListPage(listPage - 1)}
@@ -389,6 +408,7 @@ export function ManagerClientsView({
                 >
                   Suivant
                 </button>
+                </div>
               </div>
             );
           })()}
