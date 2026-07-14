@@ -30,12 +30,14 @@ export const getFilteredScheduleAppointments = (
   return centerAppointments.filter(appointment => {
     const client = centerClients.find(candidate => candidate.id === appointment.clientId);
     const service = services.find(candidate => candidate.id === appointment.serviceId);
-    const fullName = client ? `${client.firstName} ${client.lastName}`.toLowerCase() : '';
+    const fullName = client ? `${client.firstName ?? ''} ${client.lastName ?? ''}`.toLowerCase() : '';
+    const phone = String(client?.phone ?? '').toLowerCase();
+    const serviceName = String(service?.name ?? '').toLowerCase();
 
     return (
       fullName.includes(normalizedSearch) ||
-      Boolean(client?.phone.includes(searchTerm)) ||
-      Boolean(service?.name.toLowerCase().includes(normalizedSearch))
+      phone.includes(normalizedSearch) ||
+      serviceName.includes(normalizedSearch)
     );
   });
 };

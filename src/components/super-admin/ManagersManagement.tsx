@@ -116,7 +116,7 @@ export function ManagersManagement({
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {uniqueMgrs.slice(0, managersGridLimit).map(mgr => {
-                        const initial = mgr.name.trim().charAt(0).toUpperCase() || 'M';
+                        const initial = (mgr.name || mgr.email || 'Manager').trim().charAt(0).toUpperCase() || 'M';
                         return (
                           <div key={mgr.email} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between space-y-4 group relative overflow-hidden">
                             {/* Accent line on hover */}

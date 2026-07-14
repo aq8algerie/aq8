@@ -34,12 +34,26 @@ export function ManagerClientsView({
 
   const centerClients = clients.filter(c => c.centerId === centerId);
 
+  const safeText = (value: unknown) => String(value ?? '').trim();
+  const getClientDisplayName = (client: Client) => {
+    const fullName = [safeText(client.firstName), safeText(client.lastName)].filter(Boolean).join(' ');
+    return fullName || safeText(client.phone) || safeText(client.email) || 'Client sans nom';
+  };
+  const getClientInitials = (client: Client) => {
+    const first = safeText(client.firstName).charAt(0);
+    const last = safeText(client.lastName).charAt(0);
+    const fallback = getClientDisplayName(client).charAt(0);
+    return `${first}${last || (!first ? fallback : '')}`.toUpperCase() || 'C';
+  };
+
   // Apply filters
   const filteredClients = centerClients.filter(c => {
     // 1. Search Query
-    const fullName = `${c.firstName} ${c.lastName}`.toLowerCase();
+    const fullName = getClientDisplayName(c).toLowerCase();
     const query = searchQuery.toLowerCase();
-    const matchesSearch = fullName.includes(query) || c.phone.includes(query) || (c.email && c.email.toLowerCase().includes(query));
+    const phone = safeText(c.phone).toLowerCase();
+    const email = safeText(c.email).toLowerCase();
+    const matchesSearch = fullName.includes(query) || phone.includes(query) || email.includes(query);
     if (!matchesSearch) return false;
 
     // 2. Gender Filter
@@ -194,7 +208,8 @@ export function ManagerClientsView({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredClients.slice(0, gridLimit).map(client => {
               const activePkg = clientPackages.find(cp => cp.clientId === client.id && cp.status === 'active' && cp.centerId === centerId);
-              const initials = `${client.firstName.charAt(0)}${client.lastName.charAt(0)}`.toUpperCase();
+              const initials = getClientInitials(client);
+              const displayName = getClientDisplayName(client);
               
               const isFemale = client.gender === 'F';
               const genderColor = isFemale 
@@ -217,8 +232,8 @@ export function ManagerClientsView({
                         </div>
                       </div>
                       <div className="min-w-0">
-                        <h4 className="font-bold text-sm text-[#353535] truncate">{client.firstName} {client.lastName}</h4>
-                        <span className="text-[10px] text-slate-400 font-mono block mt-0.5">{client.phone}</span>
+                        <h4 className="font-bold text-sm text-[#353535] truncate">{displayName}</h4>
+                        <span className="text-[10px] text-slate-400 font-mono block mt-0.5">{safeText(client.phone) || '-'}</span>
                       </div>
                     </div>
 
@@ -300,7 +315,7 @@ export function ManagerClientsView({
                             const activePkg = clientPackages.find(cp => cp.clientId === client.id && cp.status === 'active' && cp.centerId === centerId);
                             return (
                               <tr key={client.id} className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-4 font-bold text-[#353535]">{client.firstName} {client.lastName}</td>
+                                <td className="p-4 font-bold text-[#353535]">{getClientDisplayName(client)}</td>
                                 <td className="p-4">
                                   <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
                                     client.gender === 'F' ? 'bg-rose-50 text-rose-600' : 'bg-blue-50 text-blue-600'
@@ -308,9 +323,9 @@ export function ManagerClientsView({
                                     {client.gender === 'F' ? 'Femme' : 'Homme'}
                                   </span>
                                 </td>
-                                <td className="p-4 font-mono">{client.phone}</td>
-                                <td className="p-4 font-mono text-slate-500">{client.email || '-'}</td>
-                                <td className="p-4 text-slate-500">{client.createdAt}</td>
+                                <td className="p-4 font-mono">{safeText(client.phone) || '-'}</td>
+                                <td className="p-4 font-mono text-slate-500">{safeText(client.email) || '-'}</td>
+                                <td className="p-4 text-slate-500">{safeText(client.createdAt) || '-'}</td>
                                 <td className="p-4">
                                   {activePkg ? (
                                     <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded-full text-[9px] font-bold border border-green-100">
