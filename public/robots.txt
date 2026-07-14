@@ -1,6 +1,13 @@
 User-agent: *
 Allow: /
-Disallow: /login
+Allow: /#/aq8
+Allow: /#/wonder
+Allow: /#/centers
+Allow: /#/centres/*
+Allow: /#/faq
+Allow: /#/contact
+Disallow: /#/login
+Disallow: /#/crm
 Disallow: /crm
 Disallow: /dashboard
 Disallow: /admin

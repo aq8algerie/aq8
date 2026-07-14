@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { Suspense, useState, useEffect, useRef } from 'react';
 import {
   Activity,
   Calendar,
@@ -43,45 +43,36 @@ import {
   ClientPackage,
   Payment,
   Measurement,
-  GeneralSettings
+  GeneralSettings,
+  BookingRequest
 } from './types';
 
-import { AQ8Database } from './mockData';
 import {
-  seedDatabaseIfNeeded,
-  subscribeToCenters,
-  subscribeToManagers,
-  subscribeToServices,
-  subscribeToPackages,
-  subscribeToClients,
-  subscribeToAppointments,
-  subscribeToClientPackages,
-  subscribeToPayments,
-  subscribeToMeasurements,
-  subscribeToSettings,
-  dbSaveCenter,
-  dbDeleteCenter,
-  dbSaveManager,
-  dbDeleteManager,
-  dbSaveService,
-  dbDeleteService,
-  dbSavePackage,
-  dbDeletePackage,
-  dbSaveClient,
-  dbDeleteClient,
-  dbSaveAppointment,
-  dbDeleteAppointment,
-  dbSaveClientPackage,
-  dbSavePayment,
-  dbDeletePayment,
-  dbSaveMeasurement,
-  dbSaveSettings,
-  dbResetToDefaults,
-  ensureManagerDocForRules
-} from './lib/db';
+  AQ8Database,
+  INITIAL_CENTERS,
+  INITIAL_MANAGERS,
+  INITIAL_SERVICES,
+  INITIAL_PACKAGES,
+  INITIAL_CLIENTS,
+  INITIAL_CLIENT_PACKAGES,
+  INITIAL_PAYMENTS,
+  INITIAL_APPOINTMENTS,
+  INITIAL_MEASUREMENTS,
+  INITIAL_SETTINGS
+} from './mockData';
+import { auth, db } from './lib/firebase';
+import {
+  collection,
+  doc,
+  onSnapshot,
+  setDoc,
+  writeBatch,
+  getDocs,
+  getDoc,
+  query,
+  where
+} from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth } from './lib/firebase';
-import { CrmSession, getCrmAuthErrorMessage, resolveCrmSession, SUPER_ADMIN_NAME } from './lib/crmAuth';
 
 // Import our modular subcomponents
 import {
@@ -94,9 +85,37 @@ import {
   PublicContact
 } from './components/PublicViews';
 
-import { CrmPortal } from './components/CrmPortal';
-import { SuperAdminViews } from './components/SuperAdminViews';
-import { CenterManagerViews } from './components/CenterManagerViews';
+import { saveDocument, syncCollection as syncFirestoreCollection } from './lib/firestoreRepository';
+
+const CrmPortal = React.lazy(() =>
+  import('./components/CrmPortal').then(module => ({ default: module.CrmPortal }))
+);
+
+const SuperAdminViews = React.lazy(() =>
+  import('./components/SuperAdminViews').then(module => ({ default: module.SuperAdminViews }))
+);
+
+const CenterManagerViews = React.lazy(() =>
+  import('./components/CenterManagerViews').then(module => ({ default: module.CenterManagerViews }))
+);
+
+function CrmLoadingState() {
+  return (
+    <div className="py-16 text-center text-sm font-semibold text-slate-500">
+      Chargement de l’espace CRM...
+    </div>
+  );
+}
+
+type CrmRole = 'super_admin' | 'center_manager';
+
+type CrmProfile = {
+  role: CrmRole;
+  centerId?: string | null;
+  name?: string;
+  displayName?: string;
+  active?: boolean;
+};
 
 export default function App() {
   // 1. SYSTEM STATES (PERSISTED IN LOCALSTORAGE)
@@ -110,9 +129,19 @@ export default function App() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [settings, setSettings] = useState<GeneralSettings | null>(null);
+  const [bookingRequests, setBookingRequests] = useState<BookingRequest[]>([]);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('aq8_theme') === 'dark';
   });
+
+  const [authReady, setAuthReady] = useState(false);
+  const [crmRole, setCrmRole] = useState<CrmRole | null>(null);
+  const [crmCenterId, setCrmCenterId] = useState<string | null>(null);
+  const [loggedManagerName, setLoggedManagerName] = useState<string>('');
+  const [crmSuperAdminTab, setCrmSuperAdminTab] = useState<'dashboard' | 'centers' | 'managers' | 'stats' | 'settings'>('dashboard');
+  const [crmCenterManagerTab, setCrmCenterManagerTab] = useState<'dashboard' | 'schedule' | 'clients' | 'bookings' | 'payments' | 'services'>('dashboard');
+  const [crmSidebarOpen, setCrmSidebarOpen] = useState(false);
+  const isDevToolsEnabled = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true';
 
   const toggleDarkMode = () => {
     setIsDarkMode(prev => {
@@ -122,26 +151,223 @@ export default function App() {
     });
   };
 
-  const allowDemoTools = import.meta.env.DEV && import.meta.env.VITE_ENABLE_DEMO_TOOLS === 'true';
+  const isSeeding = useRef(false);
 
-  // Initialize public data on mount. CRM collections subscribe only after authentication.
-  useEffect(() => {
-    if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_FIREBASE_SEED === 'true') {
-      seedDatabaseIfNeeded();
+  const seedDatabase = async () => {
+    console.log("Seeding database to Firestore...");
+    try {
+      const batch = writeBatch(db);
+
+      INITIAL_CENTERS.forEach(c => batch.set(doc(db, 'centers', c.id), c));
+      INITIAL_MANAGERS.forEach(m => batch.set(doc(db, 'managers', m.id), m));
+      INITIAL_SERVICES.forEach(s => batch.set(doc(db, 'services', s.id), s));
+      INITIAL_PACKAGES.forEach(p => batch.set(doc(db, 'packages', p.id), p));
+      INITIAL_CLIENTS.forEach(c => batch.set(doc(db, 'clients', c.id), c));
+      INITIAL_CLIENT_PACKAGES.forEach(cp => batch.set(doc(db, 'client_packages', cp.id), cp));
+      INITIAL_PAYMENTS.forEach(p => batch.set(doc(db, 'payments', p.id), p));
+      INITIAL_APPOINTMENTS.forEach(a => batch.set(doc(db, 'appointments', a.id), a));
+      INITIAL_MEASUREMENTS.forEach(m => batch.set(doc(db, 'measurements', m.id), m));
+      batch.set(doc(db, 'settings', 'general'), INITIAL_SETTINGS);
+
+      await batch.commit();
+      console.log("Database seeded successfully!");
+    } catch (error) {
+      console.error("Failed to seed database:", error);
     }
+  };
 
-    const unsubCenters = subscribeToCenters(setCenters);
-    const unsubServices = subscribeToServices(setServices);
-    const unsubPackages = subscribeToPackages(setPackages);
-    const unsubSettings = subscribeToSettings(setSettings);
+  const syncCollection = async <T extends { id: string }>(
+    colName: string,
+    newList: T[],
+    oldList: T[]
+  ) => {
+    try {
+      await syncFirestoreCollection(db, colName, newList, oldList);
+    } catch (error) {
+      console.error(`Error syncing collection ${colName}:`, error);
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setCrmRole(null);
+        setCrmCenterId(null);
+        setLoggedManagerName('');
+        setAuthReady(true);
+        return;
+      }
+
+      try {
+        const profileSnapshot = await getDoc(doc(db, 'users', user.uid));
+        if (!profileSnapshot.exists()) {
+          await signOut(auth);
+          setAuthReady(true);
+          return;
+        }
+
+        const profile = profileSnapshot.data() as CrmProfile;
+        if (profile.active === false || (profile.role !== 'super_admin' && profile.role !== 'center_manager')) {
+          await signOut(auth);
+          setAuthReady(true);
+          return;
+        }
+
+        setCrmRole(profile.role);
+        setCrmCenterId(profile.role === 'center_manager' ? profile.centerId || null : null);
+        setLoggedManagerName(profile.displayName || profile.name || user.displayName || user.email || 'Utilisateur CRM');
+      } catch (error) {
+        console.error('Failed to restore CRM session:', error);
+        await signOut(auth).catch(() => undefined);
+        setCrmRole(null);
+        setCrmCenterId(null);
+        setLoggedManagerName('');
+      } finally {
+        setAuthReady(true);
+      }
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Public data is available to the website without opening CRM collections.
+  useEffect(() => {
+    const unsubscribeCenters = onSnapshot(collection(db, 'centers'), (snapshot) => {
+      const list: Center[] = [];
+      snapshot.forEach(doc => list.push(doc.data() as Center));
+      const resolvedCenters = list.length > 0 ? list : INITIAL_CENTERS;
+      setCenters(resolvedCenters);
+      AQ8Database.saveCenters(resolvedCenters);
+    }, (error) => {
+      console.error('Error listening to public centers:', error);
+      setCenters(INITIAL_CENTERS);
+    });
+
+    const unsubscribeServices = onSnapshot(collection(db, 'services'), (snapshot) => {
+      const list: Service[] = [];
+      snapshot.forEach(doc => list.push(doc.data() as Service));
+      const resolvedServices = list.length > 0 ? list : INITIAL_SERVICES;
+      setServices(resolvedServices);
+      AQ8Database.saveServices(resolvedServices);
+    }, (error) => {
+      console.error('Error listening to public services:', error);
+      setServices(INITIAL_SERVICES);
+    });
+
+    const unsubscribePackages = onSnapshot(collection(db, 'packages'), (snapshot) => {
+      const list: Package[] = [];
+      snapshot.forEach(doc => list.push(doc.data() as Package));
+      const resolvedPackages = list.length > 0 ? list : INITIAL_PACKAGES;
+      setPackages(resolvedPackages);
+      AQ8Database.savePackages(resolvedPackages);
+    }, (error) => {
+      console.error('Error listening to public packages:', error);
+      setPackages(INITIAL_PACKAGES);
+    });
+
+    const unsubscribeSettings = onSnapshot(collection(db, 'settings'), (snapshot) => {
+      let resolvedSettings: GeneralSettings | null = null;
+      snapshot.forEach(doc => {
+        if (doc.id === 'general') {
+          resolvedSettings = doc.data() as GeneralSettings;
+        }
+      });
+      const settingsToUse = resolvedSettings || INITIAL_SETTINGS;
+      setSettings(settingsToUse);
+      AQ8Database.saveSettings(settingsToUse);
+    }, (error) => {
+      console.error('Error listening to public settings:', error);
+      setSettings(INITIAL_SETTINGS);
+    });
 
     return () => {
-      unsubCenters();
-      unsubServices();
-      unsubPackages();
-      unsubSettings();
+      unsubscribeCenters();
+      unsubscribeServices();
+      unsubscribePackages();
+      unsubscribeSettings();
     };
   }, []);
+
+  // CRM data is loaded only after a CRM role has been established.
+  useEffect(() => {
+    if (!crmRole || (crmRole === 'center_manager' && !crmCenterId)) {
+      setManagers([]);
+      setClients([]);
+      setAppointments([]);
+      setClientPackages([]);
+      setPayments([]);
+      setMeasurements([]);
+      setBookingRequests([]);
+      return;
+    }
+
+    const managersRef = crmRole === 'super_admin' ? collection(db, 'managers') : query(collection(db, 'managers'), where('centerId', '==', crmCenterId));
+    const clientsRef = crmRole === 'super_admin' ? collection(db, 'clients') : query(collection(db, 'clients'), where('centerId', '==', crmCenterId));
+    const appointmentsRef = crmRole === 'super_admin' ? collection(db, 'appointments') : query(collection(db, 'appointments'), where('centerId', '==', crmCenterId));
+    const clientPackagesRef = crmRole === 'super_admin' ? collection(db, 'client_packages') : query(collection(db, 'client_packages'), where('centerId', '==', crmCenterId));
+    const paymentsRef = crmRole === 'super_admin' ? collection(db, 'payments') : query(collection(db, 'payments'), where('centerId', '==', crmCenterId));
+    const measurementsRef = crmRole === 'super_admin' ? collection(db, 'measurements') : query(collection(db, 'measurements'), where('centerId', '==', crmCenterId));
+    const bookingRequestsRef = crmRole === 'super_admin' ? collection(db, 'booking_requests') : query(collection(db, 'booking_requests'), where('centerId', '==', crmCenterId));
+
+    const unsubscribeManagers = onSnapshot(managersRef, (snapshot) => {
+      const list: CenterManager[] = [];
+      snapshot.forEach(doc => list.push(doc.data() as CenterManager));
+      setManagers(list);
+      AQ8Database.saveManagers(list);
+    });
+
+    const unsubscribeClients = onSnapshot(clientsRef, (snapshot) => {
+      const list: Client[] = [];
+      snapshot.forEach(doc => list.push(doc.data() as Client));
+      setClients(list);
+      AQ8Database.saveClients(list);
+    });
+
+    const unsubscribeAppointments = onSnapshot(appointmentsRef, (snapshot) => {
+      const list: Appointment[] = [];
+      snapshot.forEach(doc => list.push(doc.data() as Appointment));
+      setAppointments(list);
+      AQ8Database.saveAppointments(list);
+    });
+
+    const unsubscribeClientPackages = onSnapshot(clientPackagesRef, (snapshot) => {
+      const list: ClientPackage[] = [];
+      snapshot.forEach(doc => list.push(doc.data() as ClientPackage));
+      setClientPackages(list);
+      AQ8Database.saveClientPackages(list);
+    });
+
+    const unsubscribePayments = onSnapshot(paymentsRef, (snapshot) => {
+      const list: Payment[] = [];
+      snapshot.forEach(doc => list.push(doc.data() as Payment));
+      setPayments(list);
+      AQ8Database.savePayments(list);
+    });
+
+    const unsubscribeMeasurements = onSnapshot(measurementsRef, (snapshot) => {
+      const list: Measurement[] = [];
+      snapshot.forEach(doc => list.push(doc.data() as Measurement));
+      setMeasurements(list);
+      AQ8Database.saveMeasurements(list);
+    });
+
+    const unsubscribeBookingRequests = onSnapshot(bookingRequestsRef, (snapshot) => {
+      const list: BookingRequest[] = [];
+      snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as BookingRequest));
+      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setBookingRequests(list);
+    });
+
+    return () => {
+      unsubscribeManagers();
+      unsubscribeClients();
+      unsubscribeAppointments();
+      unsubscribeClientPackages();
+      unsubscribePayments();
+      unsubscribeMeasurements();
+      unsubscribeBookingRequests();
+    };
+  }, [crmRole, crmCenterId]);
 
   // 2. ROUTING & NAVIGATION STATE
   // 'home' | 'aq8' | 'wonder' | 'centers' | 'center-detail' | 'faq' | 'contact' | 'login' | 'crm'
@@ -153,7 +379,7 @@ export default function App() {
   useEffect(() => {
     const handleLocationChange = () => {
       const path = window.location.pathname;
-      
+
       const centerMatch = path.match(/^\/centres\/([a-zA-Z0-9_-]+)/);
       if (centerMatch) {
         const slug = centerMatch[1];
@@ -221,314 +447,128 @@ export default function App() {
   };
 
   // 3. INTERNAL CRM STATE
-  const [crmRole, setCrmRole] = useState<'super_admin' | 'center_manager' | null>(null);
-  const [crmCenterId, setCrmCenterId] = useState<string | null>(null); // Null if super admin, center ID if manager
-  const [loggedManagerName, setLoggedManagerName] = useState<string>('');
-  const [crmSuperAdminTab, setCrmSuperAdminTab] = useState<'dashboard' | 'centers' | 'managers' | 'stats' | 'settings'>('dashboard');
-  const [crmCenterManagerTab, setCrmCenterManagerTab] = useState<'dashboard' | 'schedule' | 'clients' | 'bookings' | 'payments' | 'services'>('dashboard');
-  const [crmSidebarOpen, setCrmSidebarOpen] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
-  const lastManagerRepairSignature = useRef<string>('');
 
-  const clearCrmSession = () => {
-    setCrmRole(null);
-    setCrmCenterId(null);
-    setLoggedManagerName('');
-    setManagers([]);
-    setClients([]);
-    setAppointments([]);
-    setClientPackages([]);
-    setPayments([]);
-    setMeasurements([]);
-    lastManagerRepairSignature.current = '';
-  };
-
-  const applyCrmSession = (session: CrmSession) => {
-    setCrmRole(session.role);
-    setCrmCenterId(session.centerId);
-    setLoggedManagerName(session.managerName);
-  };
-
-  useEffect(() => {
-    if (!auth) {
-      setAuthLoading(false);
-      return;
-    }
-
-    return onAuthStateChanged(auth, async (user) => {
-      setAuthLoading(true);
-
-      if (!user) {
-        clearCrmSession();
-        setAuthLoading(false);
-        if (window.location.pathname === '/crm') {
-          navigate('login');
-        }
-        return;
-      }
-
-      try {
-        setAuthErrorMessage(null);
-        const session = await resolveCrmSession(user);
-        applyCrmSession(session);
-        if (window.location.pathname === '/login') {
-          navigate('crm');
-        }
-      } catch (err) {
-        console.error(err);
-        setAuthErrorMessage(getCrmAuthErrorMessage(err));
-        clearCrmSession();
-        await signOut(auth).catch(() => {});
-        if (window.location.pathname === '/crm') {
-          navigate('login');
-        }
-      } finally {
-        setAuthLoading(false);
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    if (currentRoute === 'crm' && !authLoading && !crmRole) {
-      navigate('login');
-    }
-  }, [currentRoute, authLoading, crmRole]);
-
-  useEffect(() => {
-    if (crmRole !== 'super_admin' || managers.length === 0) {
-      return;
-    }
-
-    const uniqueManagersByEmail = new Map<string, CenterManager>();
-
-    managers.forEach((manager) => {
-      const emailKey = manager.email.toLowerCase().trim();
-      uniqueManagersByEmail.set(emailKey, { ...manager, email: emailKey });
-    });
-
-    const uniqueManagers = [...uniqueManagersByEmail.values()].sort((a, b) => a.email.localeCompare(b.email));
-
-    const signature = JSON.stringify(
-      uniqueManagers.map((manager) => ({
-        id: manager.id,
-        email: manager.email,
-        name: manager.name,
-        centerId: manager.centerId,
-        active: manager.active
-      }))
-    );
-
-    if (signature === lastManagerRepairSignature.current) {
-      return;
-    }
-
-    lastManagerRepairSignature.current = signature;
-    let cancelled = false;
-
-    (async () => {
-      let repaired = 0;
-
-      for (const manager of uniqueManagers) {
-        if (await ensureManagerDocForRules(manager)) {
-          repaired += 1;
-        }
-      }
-
-      if (!cancelled && repaired > 0) {
-        console.info(`[AQ8 auth] Repaired ${repaired} manager auth document(s).`);
-      }
-    })().catch((err) => {
-      console.error('[AQ8 auth] Failed to repair manager auth documents.', err);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [crmRole, managers]);
-
-  useEffect(() => {
-    if (!crmRole) {
-      return;
-    }
-
-    if (crmRole === 'center_manager' && !crmCenterId) {
-      return;
-    }
-
-    const scopedCenterId = crmRole === 'center_manager' ? crmCenterId : undefined;
-    const unsubManagers = crmRole === 'super_admin' ? subscribeToManagers(setManagers) : () => {};
-    const unsubClients = subscribeToClients(setClients, scopedCenterId);
-    const unsubAppointments = subscribeToAppointments(setAppointments, scopedCenterId);
-    const unsubClientPackages = subscribeToClientPackages(setClientPackages, scopedCenterId);
-    const unsubPayments = subscribeToPayments(setPayments, scopedCenterId);
-    const unsubMeasurements = subscribeToMeasurements(setMeasurements, scopedCenterId);
-
-    return () => {
-      unsubManagers();
-      unsubClients();
-      unsubAppointments();
-      unsubClientPackages();
-      unsubPayments();
-      unsubMeasurements();
-    };
-  }, [crmRole, crmCenterId]);
 
   // 4. DATABASE SYNC WRAPPERS
-  const updateCenters = async (newCenters: Center[]) => {
-    const deleted = centers.filter(c => !newCenters.some(nc => nc.id === c.id));
-    for (const d of deleted) {
-      await dbDeleteCenter(d.id);
-    }
-    const updatedOrAdded = newCenters.filter(nc => {
-      const old = centers.find(c => c.id === nc.id);
-      return !old || JSON.stringify(old) !== JSON.stringify(nc);
-    });
-    for (const u of updatedOrAdded) {
-      await dbSaveCenter(u);
-    }
+  const updateCenters = (newCenters: Center[]) => {
+    setCenters(newCenters);
+    AQ8Database.saveCenters(newCenters);
+    syncCollection('centers', newCenters, centers);
   };
 
-  const updateManagers = async (newManagers: CenterManager[]) => {
-    const deleted = managers.filter(m => !newManagers.some(nm => nm.email.toLowerCase().trim() === m.email.toLowerCase().trim()));
-    for (const d of deleted) {
-      await dbDeleteManager(d.email);
-    }
-    const updatedOrAdded = newManagers.filter(nm => {
-      const old = managers.find(m => m.email.toLowerCase().trim() === nm.email.toLowerCase().trim());
-      return !old || JSON.stringify(old) !== JSON.stringify(nm);
-    });
-    for (const u of updatedOrAdded) {
-      await dbSaveManager(u);
-    }
+  const updateManagers = (newManagers: CenterManager[]) => {
+    setManagers(newManagers);
+    AQ8Database.saveManagers(newManagers);
+    syncCollection('managers', newManagers, managers);
   };
 
-  const updateServices = async (newServices: Service[]) => {
-    const deleted = services.filter(s => !newServices.some(ns => ns.id === s.id));
-    for (const d of deleted) {
-      await dbDeleteService(d.id);
-    }
-    const updatedOrAdded = newServices.filter(ns => {
-      const old = services.find(s => s.id === ns.id);
-      return !old || JSON.stringify(old) !== JSON.stringify(ns);
-    });
-    for (const u of updatedOrAdded) {
-      await dbSaveService(u);
-    }
+  const updateServices = (newServices: Service[]) => {
+    setServices(newServices);
+    AQ8Database.saveServices(newServices);
+    syncCollection('services', newServices, services);
   };
 
-  const updatePackages = async (newPackages: Package[]) => {
-    const deleted = packages.filter(p => !newPackages.some(np => np.id === p.id));
-    for (const d of deleted) {
-      await dbDeletePackage(d.id);
-    }
-    const updatedOrAdded = newPackages.filter(np => {
-      const old = packages.find(p => p.id === np.id);
-      return !old || JSON.stringify(old) !== JSON.stringify(np);
-    });
-    for (const u of updatedOrAdded) {
-      await dbSavePackage(u);
-    }
+  const updatePackages = (newPackages: Package[]) => {
+    setPackages(newPackages);
+    AQ8Database.savePackages(newPackages);
+    syncCollection('packages', newPackages, packages);
   };
 
-  const updateClients = async (newClients: Client[]) => {
-    const deleted = clients.filter(c => !newClients.some(nc => nc.id === c.id));
-    for (const d of deleted) {
-      await dbDeleteClient(d.id);
-    }
-    const updatedOrAdded = newClients.filter(nc => {
-      const old = clients.find(c => c.id === nc.id);
-      return !old || JSON.stringify(old) !== JSON.stringify(nc);
-    });
-    for (const u of updatedOrAdded) {
-      await dbSaveClient(u);
-    }
+  const updateClients = (newClients: Client[]) => {
+    setClients(newClients);
+    AQ8Database.saveClients(newClients);
+    syncCollection('clients', newClients, clients);
   };
 
-  const updateAppointments = async (newApts: Appointment[]) => {
-    const deleted = appointments.filter(a => !newApts.some(na => na.id === a.id));
-    for (const d of deleted) {
-      await dbDeleteAppointment(d.id);
-    }
-    const updatedOrAdded = newApts.filter(na => {
-      const old = appointments.find(a => a.id === na.id);
-      return !old || JSON.stringify(old) !== JSON.stringify(na);
-    });
-    for (const u of updatedOrAdded) {
-      await dbSaveAppointment(u);
-    }
+  const updateAppointments = (newApts: Appointment[]) => {
+    setAppointments(newApts);
+    AQ8Database.saveAppointments(newApts);
+    syncCollection('appointments', newApts, appointments);
   };
 
-  const updateClientPackages = async (newClientPkgs: ClientPackage[]) => {
-    const updatedOrAdded = newClientPkgs.filter(ncp => {
-      const old = clientPackages.find(cp => cp.id === ncp.id);
-      return !old || JSON.stringify(old) !== JSON.stringify(ncp);
-    });
-    for (const u of updatedOrAdded) {
-      await dbSaveClientPackage(u);
-    }
+  const updateClientPackages = (newClientPkgs: ClientPackage[]) => {
+    setClientPackages(newClientPkgs);
+    AQ8Database.saveClientPackages(newClientPkgs);
+    syncCollection('client_packages', newClientPkgs, clientPackages);
   };
 
-  const updatePayments = async (newPayments: Payment[]) => {
-    const deleted = payments.filter(p => !newPayments.some(np => np.id === p.id));
-    for (const d of deleted) {
-      await dbDeletePayment(d.id);
-    }
-    const updatedOrAdded = newPayments.filter(np => {
-      const old = payments.find(p => p.id === np.id);
-      return !old || JSON.stringify(old) !== JSON.stringify(np);
-    });
-    for (const u of updatedOrAdded) {
-      await dbSavePayment(u);
-    }
+  const updatePayments = (newPayments: Payment[]) => {
+    setPayments(newPayments);
+    AQ8Database.savePayments(newPayments);
+    syncCollection('payments', newPayments, payments);
   };
 
-  const updateMeasurements = async (newMeas: Measurement[]) => {
-    const updatedOrAdded = newMeas.filter(nm => {
-      const old = measurements.find(m => m.id === nm.id);
-      return !old || JSON.stringify(old) !== JSON.stringify(nm);
-    });
-    for (const u of updatedOrAdded) {
-      await dbSaveMeasurement(u);
-    }
+  const updateMeasurements = (newMeas: Measurement[]) => {
+    setMeasurements(newMeas);
+    AQ8Database.saveMeasurements(newMeas);
+    syncCollection('measurements', newMeas, measurements);
   };
 
-  const updateSettings = async (newSettings: GeneralSettings) => {
-    await dbSaveSettings(newSettings);
+  const updateSettings = (newSettings: GeneralSettings) => {
+    setSettings(newSettings);
+    AQ8Database.saveSettings(newSettings);
+    saveDocument(db, 'settings', 'general', newSettings).catch(error => {
+      console.error("Failed to update settings in Firestore:", error);
+    });
   };
 
   const handleResetDatabase = async () => {
-    if (!allowDemoTools) return;
+    if (!isDevToolsEnabled) {
+      console.warn('Database reset is disabled outside development.');
+      return;
+    }
 
-    if (confirm('Voulez-vous rÃƒÂ©initialiser toutes les donnÃƒÂ©es aux valeurs d\'origine ? Vos modifications locales seront effacÃƒÂ©es.')) {
-      await dbResetToDefaults();
-      window.location.reload();
+    if (confirm('Voulez-vous réinitialiser toutes les données aux valeurs d\'origine ? Les données sur Firestore et vos modifications locales seront effacées.')) {
+      try {
+        AQ8Database.clearAndReset();
+
+        // Clear collections in Firestore
+        const collectionsToClear = [
+          'centers', 'managers', 'services', 'packages', 'clients',
+          'appointments', 'client_packages', 'payments', 'measurements'
+        ];
+
+        const batch = writeBatch(db);
+        for (const colName of collectionsToClear) {
+          const snapshot = await getDocs(collection(db, colName));
+          snapshot.forEach(document => {
+            batch.delete(doc(db, colName, document.id));
+          });
+        }
+        // Also delete settings
+        batch.delete(doc(db, 'settings', 'general'));
+
+        await batch.commit();
+        window.location.reload();
+      } catch (error) {
+        console.error("Failed to reset Firestore database:", error);
+        window.location.reload();
+      }
     }
   };
 
   // 5. AUTHENTICATION PORTAL ACTIONS
-  const handleLoginSuccess = (session: CrmSession) => {
-    setAuthErrorMessage(null);
-    applyCrmSession(session);
+  const handleLoginSuccess = (role: CrmRole, centerId: string | null, managerName: string) => {
+    setCrmRole(role);
+    setCrmCenterId(centerId);
+    setLoggedManagerName(managerName);
     navigate('crm');
   };
 
   const handleLogout = async () => {
-    setAuthErrorMessage(null);
-    if (auth) {
-      await signOut(auth).catch((err) => console.error(err));
-    }
-    clearCrmSession();
+    await signOut(auth).catch(() => undefined);
+    setCrmRole(null);
+    setCrmCenterId(null);
+    setLoggedManagerName('');
     navigate('home');
   };
 
   // Calculate high-level stats for Super Admin
   const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
-  const activeCenter = centers.find(c => c.id === crmCenterId);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa] selection:bg-[#ff5757]/30 selection:text-[#353535]">
-      
+
       {/* --- SITE PUBLIC HEADER / NAVIGATION BAR --- */}
       {currentRoute !== 'crm' && (
         <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-150 shadow-xs">
@@ -542,7 +582,7 @@ export default function App() {
                 <span className="text-[#ff5757] text-lg">8</span>
               </div>
               <div className="leading-none">
-                <span className="text-sm font-bold tracking-wider text-[#353535] uppercase font-display block">AQ8 AlgÃƒÂ©rie</span>
+                <span className="text-sm font-bold tracking-wider text-[#353535] uppercase font-display block">AQ8 Algérie</span>
                 <span className="text-[9px] font-semibold text-slate-400 tracking-widest uppercase block">Next-Gen Fitness</span>
               </div>
             </div>
@@ -573,8 +613,8 @@ export default function App() {
             <div className="hidden md:flex items-center gap-2">
               <button
                 onClick={() => handleResetDatabase()}
-                title="RÃƒÂ©initialiser la base de dÃƒÂ©monstration"
-                className={`${allowDemoTools ? '' : 'hidden'} p-2 text-slate-400 hover:text-[#ff5757] hover:bg-rose-50 rounded-xl transition-premium`}
+                title="Réinitialiser la base de démonstration"
+                className="p-2 text-slate-400 hover:text-[#ff5757] hover:bg-rose-50 rounded-xl transition-premium"
               >
                 <RefreshCw className="h-4 w-4" />
               </button>
@@ -582,7 +622,7 @@ export default function App() {
                 onClick={() => navigate('login')}
                 className="px-4 py-2 bg-[#353535] hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-premium shadow-xs flex items-center gap-1.5 cursor-pointer"
               >
-                <ShieldCheck className="h-4 w-4 text-[#ff5757]" /> AccÃƒÂ¨s CRM AQ8
+                <ShieldCheck className="h-4 w-4 text-[#ff5757]" /> Accès CRM AQ8
               </button>
             </div>
 
@@ -590,7 +630,7 @@ export default function App() {
             <div className="flex md:hidden items-center gap-2">
               <button
                 onClick={() => handleResetDatabase()}
-                className={`${allowDemoTools ? '' : 'hidden'} p-2 text-slate-400 hover:text-[#ff5757] rounded-xl`}
+                className="p-2 text-slate-400 hover:text-[#ff5757] rounded-xl"
               >
                 <RefreshCw className="h-4 w-4" />
               </button>
@@ -613,7 +653,7 @@ export default function App() {
                 { id: 'centers', label: 'Nos Centres' },
                 { id: 'faq', label: 'FAQ' },
                 { id: 'contact', label: 'Contact' },
-                { id: 'login', label: 'AccÃƒÂ©der au CRM AQ8' }
+                { id: 'login', label: 'Accéder au CRM AQ8' }
               ].map(link => (
                 <button
                   key={link.id}
@@ -634,10 +674,10 @@ export default function App() {
 
       {/* --- MAIN PAGE CONTENT --- */}
       <main className="flex-1">
-        {currentRoute !== 'crm' ? (
+        {(currentRoute !== 'crm' || !crmRole) ? (
           /* PUBLIC PAGES WRAPPER */
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            
+
             {currentRoute === 'home' && (
               <PublicHome
                 onNavigate={navigate}
@@ -671,38 +711,31 @@ export default function App() {
             {currentRoute === 'contact' && <PublicContact centers={centers} />}
 
             {currentRoute === 'login' && (
-              <CrmPortal
+              <Suspense fallback={<CrmLoadingState />}>
+                <CrmPortal
                 centers={centers}
                 managers={managers}
                 onLoginSuccess={handleLoginSuccess}
-                authErrorMessage={authErrorMessage}
-                onAuthErrorClear={() => setAuthErrorMessage(null)}
-              />
+                />
+              </Suspense>
             )}
 
-          </div>
-        ) : authLoading ? (
-          <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa] text-slate-700 px-4">
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-md text-center space-y-2 max-w-sm">
-              <ShieldCheck className="h-8 w-8 mx-auto text-[#ff5757]" />
-              <p className="text-sm font-bold text-[#353535]">VÃƒÂ©rification de la session</p>
-              <p className="text-xs text-slate-500">Connexion au portail CRM AQ8 en cours...</p>
-            </div>
-          </div>
-        ) : !crmRole ? (
-          <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa] text-slate-700 px-4">
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-md text-center space-y-3 max-w-sm">
-              <ShieldCheck className="h-8 w-8 mx-auto text-[#ff5757]" />
-              <p className="text-sm font-bold text-[#353535]">Session CRM requise</p>
-              <p className="text-xs text-slate-500">Veuillez vous connecter avec un compte autorisÃƒÂ©.</p>
-              <button
-                type="button"
-                onClick={() => navigate('login')}
-                className="inline-flex items-center justify-center px-4 py-2 bg-[#353535] text-white rounded-xl text-xs font-bold hover:bg-slate-800"
-              >
-                Aller ÃƒÂ  la connexion
-              </button>
-            </div>
+            {currentRoute === 'crm' && !crmRole && (
+              authReady ? (
+                <Suspense fallback={<CrmLoadingState />}>
+                  <CrmPortal
+                  centers={centers}
+                  managers={managers}
+                  onLoginSuccess={handleLoginSuccess}
+                  />
+                </Suspense>
+              ) : (
+                <div className="py-20 text-center text-sm font-semibold text-slate-500">
+                  Vérification de la session CRM...
+                </div>
+              )
+            )}
+
           </div>
         ) : (
           /* --- INTERNAL CRM AREA --- */
@@ -720,20 +753,20 @@ export default function App() {
                 <span className="inline-flex items-center gap-1 text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-sm text-[10px] uppercase tracking-wider animate-pulse-subtle">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Session Active
                 </span>
-                <span className="text-slate-300 hidden sm:inline">ConnectÃƒÂ© en tant que: <strong>{loggedManagerName}</strong></span>
+                <span className="text-slate-300 hidden sm:inline">Connecté en tant que: <strong>{loggedManagerName}</strong></span>
               </div>
 
               {/* Instant Switching Panel */}
               <div className="flex items-center gap-2 font-semibold">
-                {allowDemoTools && (<>
-                <span className="text-slate-400 text-[11px] hidden lg:inline">Simulateur de rÃƒÂ´le:</span>
-                
+                <span className="text-slate-400 text-[11px] hidden lg:inline">Simulateur de rôle:</span>
+
                 {/* Switch to Superadmin */}
                 <button
                   onClick={() => {
+                    if (!isDevToolsEnabled) return;
                     setCrmRole('super_admin');
                     setCrmCenterId(null);
-                    setLoggedManagerName(`${SUPER_ADMIN_NAME} (Super Admin)`);
+                    setLoggedManagerName('Karim Benchikh (Super Admin)');
                   }}
                   className={`px-2.5 py-1 rounded-md text-[10px] transition ${crmRole === 'super_admin' ? 'bg-[#ff5757] text-white font-bold shadow-sm' : 'bg-white/10 text-slate-300 hover:bg-white/15'}`}
                 >
@@ -744,9 +777,10 @@ export default function App() {
                 <select
                   value={crmCenterId || ''}
                   onChange={(e) => {
+                    if (!isDevToolsEnabled) return;
                     const centerId = e.target.value;
                     const c = centers.find(center => center.id === centerId);
-                    const matchedMgr = managers.find(m => m.centerId === centerId) || managers[0];
+                    const matchedMgr = managers.find(m => m.centerId === centerId);
                     setCrmRole('center_manager');
                     setCrmCenterId(centerId);
                     setLoggedManagerName(`${matchedMgr.name} (${c?.name || 'Manager'})`);
@@ -758,7 +792,6 @@ export default function App() {
                     <option key={c.id} value={c.id} className="text-slate-800">{c.name} ({c.city})</option>
                   ))}
                 </select>
-                </>)}
 
                 <button
                   onClick={toggleDarkMode}
@@ -805,15 +838,15 @@ export default function App() {
                 {/* Direct Navigation Controls */}
                 <div className="space-y-2">
                   <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-2 pb-1">Menu Principal</p>
-                  
+
                   {crmRole === 'super_admin' ? (
                     <nav className="space-y-1">
                       {[
                         { id: 'dashboard' as const, label: 'Tableau de bord', icon: Activity },
                         { id: 'centers' as const, label: 'Gestion Centres', icon: Building },
-                        { id: 'managers' as const, label: 'Managers & AccÃƒÂ¨s', icon: Users },
-                        { id: 'stats' as const, label: 'Analyses RÃƒÂ©seau', icon: BarChart3 },
-                        { id: 'settings' as const, label: 'ParamÃƒÂ¨tres GÃƒÂ©nÃƒÂ©raux', icon: Settings }
+                        { id: 'managers' as const, label: 'Managers & Accès', icon: Users },
+                        { id: 'stats' as const, label: 'Analyses Réseau', icon: BarChart3 },
+                        { id: 'settings' as const, label: 'Paramètres Généraux', icon: Settings }
                       ].map(tab => {
                         const Icon = tab.icon;
                         const isActive = crmSuperAdminTab === tab.id;
@@ -842,8 +875,8 @@ export default function App() {
                         { id: 'dashboard' as const, label: 'Tableau de bord', icon: Activity },
                         { id: 'schedule' as const, label: 'Planning du Jour', icon: Calendar },
                         { id: 'clients' as const, label: 'Gestion Clients', icon: Users },
-                        { id: 'bookings' as const, label: 'RÃƒÂ©servations', icon: Calendar },
-                        { id: 'payments' as const, label: 'Paiements EncaissÃƒÂ©s', icon: DollarSign },
+                        { id: 'bookings' as const, label: 'Réservations', icon: Calendar },
+                        { id: 'payments' as const, label: 'Paiements Encaissés', icon: DollarSign },
                         { id: 'services' as const, label: 'Prestations & Forfaits', icon: Layers }
                       ].map(tab => {
                         const Icon = tab.icon;
@@ -875,9 +908,9 @@ export default function App() {
               <div className="space-y-2 pt-6 border-t border-white/5 text-xs font-semibold">
                 <button
                   onClick={() => handleResetDatabase()}
-                  className={`${allowDemoTools ? 'flex' : 'hidden'} w-full py-2 px-3 border border-white/10 hover:bg-white/5 text-slate-300 rounded-xl transition items-center justify-center gap-1.5 cursor-pointer`}
+                  className="w-full py-2 px-3 border border-white/10 hover:bg-white/5 text-slate-300 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <RefreshCw className="h-3.5 w-3.5" /> RÃƒÂ©initialiser DÃƒÂ©mo
+                  <RefreshCw className="h-3.5 w-3.5" /> Réinitialiser Démo
                 </button>
                 <button
                   onClick={handleLogout}
@@ -892,12 +925,13 @@ export default function App() {
             <section className="flex-1 p-4 md:p-8 md:pl-72 pt-16 md:pt-20 min-h-screen">
               {crmRole === 'super_admin' ? (
                 /* RENDER SUPER ADMIN VIEW BLOCK */
+                <Suspense fallback={<CrmLoadingState />}>
                 <SuperAdminViews
                   centers={centers}
                   managers={managers}
                   services={services}
                   packages={packages}
-                  settings={settings || { appName: 'AQ8 AlgÃƒÂ©rie', contactEmail: 'contact@aq8algerie.com', contactPhone: '+213 (0) 23 48 50 60', addressAlgérie: 'Hydra, Alger', currency: 'DZD', enableVoucherPromo: true }}
+                  settings={settings || { appName: 'AQ8 Algérie', contactEmail: 'contact@aq8algerie.com', contactPhone: '+213 (0) 23 48 50 60', addressAlgérie: 'Hydra, Alger', currency: 'DZD', enableVoucherPromo: true }}
                   appointmentsCount={appointments.length}
                   paymentsCount={payments.length}
                   totalRevenue={totalRevenue}
@@ -913,34 +947,12 @@ export default function App() {
                   activeTab={crmSuperAdminTab}
                   onTabChange={setCrmSuperAdminTab}
                 />
-              ) : activeCenter && (activeCenter.subscriptionStatus === 'suspended' || (activeCenter.subscriptionExpiryDate && new Date(activeCenter.subscriptionExpiryDate) < new Date())) ? (
-                /* PREMIUM SaaS SUBSCRIPTION BLOCKING PAGE */
-                <div className="max-w-xl mx-auto my-12 bg-white rounded-3xl p-8 border border-slate-200 shadow-xl text-center space-y-6 animate-in fade-in zoom-in-95">
-                  <div className="mx-auto h-16 w-16 bg-rose-50 border border-rose-100 text-rose-500 rounded-2xl flex items-center justify-center">
-                    <ShieldCheck className="h-8 w-8 text-[#ff5757]" />
-                  </div>
-                  <div className="space-y-2">
-                    <span className="inline-block bg-[#ff5757]/10 text-[#ff5757] px-2.5 py-0.5 rounded-full font-bold uppercase text-[9px] tracking-wider">
-                      AccÃƒÂ¨s CRM Restreint
-                    </span>
-                    <h2 className="text-xl font-extrabold text-slate-800 font-display">Abonnement Club Suspendu</h2>
-                    <p className="text-xs text-slate-500 leading-relaxed">
-                      L'accÃƒÂ¨s au CRM pour l'ÃƒÂ©tablissement <strong>{activeCenter.name}</strong> a ÃƒÂ©tÃƒÂ© bloquÃƒÂ© par la direction. Cela se produit gÃƒÂ©nÃƒÂ©ralement suite ÃƒÂ  un dÃƒÂ©faut de paiement de l'abonnement du club ou ÃƒÂ  l'expiration de la pÃƒÂ©riode d'essai.
-                    </p>
-                  </div>
-                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/60 text-left text-xs text-slate-600 space-y-2">
-                    <p><strong>Club :</strong> {activeCenter.name} ({activeCenter.city})</p>
-                    <p><strong>Formule :</strong> {activeCenter.subscriptionPlan === 'premium' ? 'Formule Premium' : activeCenter.subscriptionPlan === 'basic' ? 'Formule Standard' : 'Essai Gratuit'}</p>
-                    <p><strong>Date d'expiration :</strong> {activeCenter.subscriptionExpiryDate || 'Non spÃƒÂ©cifiÃƒÂ©e'}</p>
-                  </div>
-                  <p className="text-[11px] text-slate-400">
-                    Veuillez contacter le Super Administrateur <strong>{SUPER_ADMIN_NAME}</strong> au <strong>{settings?.contactPhone || '+213 (0) 23 48 50 60'}</strong> ou par e-mail ÃƒÂ  <strong>{settings?.contactEmail || 'contact@aq8algerie.com'}</strong> pour rÃƒÂ©gulariser votre abonnement.
-                  </p>
-                </div>
-              ) : crmRole === 'center_manager' && crmCenterId ? (
+                </Suspense>
+              ) : (
                 /* RENDER CENTER MANAGER VIEW BLOCK (STRICT ISOLATION VIA CURRENT CENTERID) */
+                <Suspense fallback={<CrmLoadingState />}>
                 <CenterManagerViews
-                  centerId={crmCenterId}
+                  centerId={crmCenterId || 'center-1'}
                   centers={centers}
                   clients={clients}
                   appointments={appointments}
@@ -949,29 +961,22 @@ export default function App() {
                   payments={payments}
                   measurements={measurements}
                   services={services}
+                  bookingRequests={bookingRequests}
                   onUpdateClients={updateClients}
                   onUpdateAppointments={updateAppointments}
                   onUpdateClientPackages={updateClientPackages}
                   onUpdatePayments={updatePayments}
                   onUpdateMeasurements={updateMeasurements}
+                  onUpdateBookingRequests={async (updated: BookingRequest[]) => {
+                    // Update individual booking request docs
+                    for (const req of updated) {
+                      await setDoc(doc(db, 'booking_requests', req.id), req);
+                    }
+                  }}
                   activeTab={crmCenterManagerTab}
                   onTabChange={setCrmCenterManagerTab}
                 />
-              ) : (
-                <div className="max-w-xl mx-auto my-12 bg-white rounded-3xl p-8 border border-slate-200 shadow-xl text-center space-y-4">
-                  <ShieldCheck className="h-10 w-10 text-[#ff5757] mx-auto" />
-                  <h2 className="text-lg font-extrabold text-slate-800 font-display">Session CRM invalide</h2>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    Votre profil ne contient pas de rÃƒÂ´le ou de centre valide. Veuillez vous reconnecter ou contacter le super administrateur.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="inline-flex items-center justify-center px-4 py-2 bg-[#353535] text-white rounded-xl text-xs font-bold hover:bg-slate-800"
-                  >
-                    Se reconnecter
-                  </button>
-                </div>
+                </Suspense>
               )}
             </section>
           </div>
@@ -987,24 +992,24 @@ export default function App() {
                 <div className="h-8 w-8 bg-white/10 rounded-lg flex items-center justify-center border border-[#ff5757]/30">
                   <span className="text-[#ff5757] font-bold text-base">8</span>
                 </div>
-                <span className="font-bold text-lg font-display uppercase tracking-wider text-white">AQ8 AlgÃƒÂ©rie</span>
+                <span className="font-bold text-lg font-display uppercase tracking-wider text-white">AQ8 Algérie</span>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Leader de l'ÃƒÂ©lectrostimulation sans fil et de la remise en forme technologique en AlgÃƒÂ©rie. Prestations haut de gamme adaptÃƒÂ©es ÃƒÂ  tous les profils.
+                Leader de l'électrostimulation sans fil et de la remise en forme technologique en Algérie. Prestations haut de gamme adaptées à tous les profils.
               </p>
             </div>
 
             <div className="space-y-4 text-xs">
               <h4 className="font-bold uppercase tracking-wider text-[#ff5757] font-display">Nos Technologies</h4>
               <ul className="space-y-2 text-slate-400">
-                <li><button onClick={() => navigate('aq8')} className="hover:text-white transition">AQ8 Ãƒâ€°lectrostimulation (EMS)</button></li>
+                <li><button onClick={() => navigate('aq8')} className="hover:text-white transition">AQ8 Électrostimulation (EMS)</button></li>
                 <li><button onClick={() => navigate('wonder')} className="hover:text-white transition">Wonder Muscle Sculpting</button></li>
-                <li><button onClick={() => navigate('faq')} className="hover:text-white transition">Questions FrÃƒÂ©quentes</button></li>
+                <li><button onClick={() => navigate('faq')} className="hover:text-white transition">Questions Fréquentes</button></li>
               </ul>
             </div>
 
             <div className="space-y-4 text-xs">
-              <h4 className="font-bold uppercase tracking-wider text-white font-display">RÃƒÂ©seau d'Ãƒâ€°tablissements</h4>
+              <h4 className="font-bold uppercase tracking-wider text-white font-display">Réseau d'Établissements</h4>
               <ul className="space-y-2 text-slate-400">
                 {centers.map(c => (
                   <li key={c.id}>
@@ -1022,7 +1027,7 @@ export default function App() {
             </div>
 
             <div className="space-y-4 text-xs">
-              <h4 className="font-bold uppercase tracking-wider text-white font-display">Contact & SiÃƒÂ¨ge</h4>
+              <h4 className="font-bold uppercase tracking-wider text-white font-display">Contact & Siège</h4>
               <p className="text-slate-400 leading-relaxed flex items-start gap-1.5">
                 <MapPin className="h-4 w-4 text-[#ff5757] shrink-0 mt-0.5" />
                 {settings?.addressAlgérie || '12 Rue des Glycines, Hydra, Alger'}
@@ -1034,7 +1039,7 @@ export default function App() {
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-6 border-t border-white/5 text-center text-xs text-slate-500">
-            <p>Ã‚Â© 2026 AQ8 AlgÃƒÂ©rie. Tous droits rÃƒÂ©servÃƒÂ©s. Refonte modernisÃƒÂ©e et optimisÃƒÂ©e.</p>
+            <p>© 2026 AQ8 Algérie. Tous droits réservés. Refonte modernisée et optimisée.</p>
           </div>
         </footer>
       )}

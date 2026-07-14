@@ -1,14 +1,25 @@
 {
-  "name": "aq8-algerie",
+  "name": "react-example",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx server.ts --dev",
-    "build": "vite build && tsx scripts/generate-seo-pages.ts && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "dev": "tsx server.ts",
+    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
-    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
-    "lint": "tsc --noEmit"
+    "clean": "rm -rf dist",
+    "lint": "tsc --noEmit",
+    "test": "tsx src/lib/rules.test.ts",
+    "import:firestore": "node scripts/import-firestore.mjs",
+    "import:firestore:execute": "node scripts/import-firestore.mjs --execute",
+    "verify:firestore-import": "node scripts/verify-firestore-import.mjs",
+    "import:firestore:finance": "node scripts/import-firestore-finance.mjs",
+    "import:firestore:finance:execute": "node scripts/import-firestore-finance.mjs --execute",
+    "verify:firestore-finance-import": "node scripts/verify-firestore-finance-import.mjs",
+    "import:firestore:measurements": "node scripts/import-firestore-measurements.mjs",
+    "import:firestore:measurements:execute": "node scripts/import-firestore-measurements.mjs --execute",
+    "verify:firestore-measurements-import": "node scripts/verify-firestore-measurements-import.mjs",
+    "audit:firestore-migration": "node scripts/audit-firestore-migration.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -17,6 +28,7 @@
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "firebase": "^12.16.0",
+    "firebase-admin": "^13.10.0",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "react": "^19.0.1",

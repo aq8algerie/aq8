@@ -1,9 +1,9 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { Calendar, CheckCircle2 } from "lucide-react";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { requireFirestore } from "../../src/lib/firebase";
+import { Calendar, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "../../src/lib/firebase";
 
 type CenterBookingFormProps = {
   centerId: string;
@@ -20,8 +20,6 @@ function getServiceLabel(service: string) {
 
 function getTomorrowDate() {
   const date = new Date();
-  
-  // Cutoff rule: if current local time is past 21:30, the user can only book starting the day after tomorrow
   const currentHours = date.getHours();
   const currentMinutes = date.getMinutes();
   if (currentHours > 21 || (currentHours === 21 && currentMinutes >= 30)) {
@@ -29,7 +27,6 @@ function getTomorrowDate() {
   } else {
     date.setDate(date.getDate() + 1);
   }
-
   const yyyy = date.getFullYear();
   const mm = String(date.getMonth() + 1).padStart(2, '0');
   const dd = String(date.getDate()).padStart(2, '0');
@@ -53,20 +50,11 @@ export function CenterBookingForm({
   const [bookingTime, setBookingTime] = useState("10:00");
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const hours = [
-    "09:00",
-    "10:00",
-    "11:00",
-    "12:00",
-    "13:00",
-    "14:00",
-    "15:00",
-    "16:00",
-    "17:00",
-    "18:00",
-    "19:00",
-    "20:00",
+    "09:00", "10:00", "11:00", "12:00", "13:00",
+    "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00",
   ];
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -78,39 +66,40 @@ export function CenterBookingForm({
       return;
     }
 
-    const bookingRequest = {
-      centerId,
-      centerName,
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      phone: phone.trim(),
-      email: email.trim(),
-      service,
-      bookingDate,
-      bookingTime,
-      status: "pending",
-      createdAt: serverTimestamp(),
-    };
+    setIsLoading(true);
 
     try {
-      await addDoc(collection(requireFirestore(), 'booking_requests'), bookingRequest);
-    } catch (error) {
-      console.error(error);
-      setErrorMsg("Impossible d’envoyer la demande pour le moment. Veuillez réessayer ou contacter le centre directement.");
-      return;
+      await addDoc(collection(db, "booking_requests"), {
+        centerId,
+        centerName,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        service,
+        bookingDate,
+        bookingTime,
+        status: "pending",
+        createdAt: new Date().toISOString(),
+      });
+
+      setSuccessMsg(
+        `Votre demande de réservation a bien été enregistrée pour le centre ${centerName}. L'équipe du centre vous contactera pour confirmer le créneau.`
+      );
+
+      setFirstName("");
+      setLastName("");
+      setPhone("");
+      setEmail("");
+      setService(services[0] || "aq8");
+      setBookingDate(getTomorrowDate());
+      setBookingTime("10:00");
+    } catch (err) {
+      console.error("Booking submission error:", err);
+      setErrorMsg("Une erreur est survenue lors de l'envoi. Veuillez réessayer ou contacter directement le centre.");
+    } finally {
+      setIsLoading(false);
     }
-
-    setSuccessMsg(
-      `Votre demande de réservation a bien été enregistrée pour le centre ${centerName}. L’équipe du centre vous contactera pour confirmer le créneau.`
-    );
-
-    setFirstName("");
-    setLastName("");
-    setPhone("");
-    setEmail("");
-    setService(services[0] || "aq8");
-    setBookingDate(getTomorrowDate()); // Recalculate if time has changed
-    setBookingTime("10:00");
   };
 
   if (successMsg) {
@@ -120,16 +109,13 @@ export function CenterBookingForm({
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
             <CheckCircle2 className="h-6 w-6" />
           </div>
-
           <div className="space-y-2">
             <h2 className="font-display text-xl font-bold text-emerald-900">
-              Demande envoyée
+              Demande envoyée ✓
             </h2>
-
             <p className="text-sm font-medium leading-relaxed text-emerald-800">
               {successMsg}
             </p>
-
             <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs font-bold text-amber-800 space-y-1.5">
               <p className="flex items-center gap-1.5 text-amber-900">
                 <span>⚠️🚨</span> IMPORTANT :
@@ -139,7 +125,6 @@ export function CenterBookingForm({
               </p>
             </div>
           </div>
-
           <button
             type="button"
             onClick={() => setSuccessMsg("")}
@@ -158,11 +143,9 @@ export function CenterBookingForm({
         <span className="text-xs font-bold uppercase tracking-wider text-[#ff5757]">
           Demande de réservation
         </span>
-
         <h2 className="font-display text-xl font-bold text-[#353535]">
           Dans votre centre de {centerCity}
         </h2>
-
         <p className="text-sm font-medium leading-relaxed text-slate-500">
           Remplissez ce formulaire pour envoyer une demande. Le centre vous
           recontactera pour confirmer le créneau selon les disponibilités.
@@ -174,20 +157,19 @@ export function CenterBookingForm({
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#ff5757]" />
           <span>Demande à envoyer avant la séance souhaitée.</span>
         </li>
-
         <li className="flex items-start gap-2">
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#ff5757]" />
           <span>Créneaux proposés par heure complète.</span>
         </li>
-
         <li className="flex items-start gap-2">
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#ff5757]" />
-          <span>Confirmation finale par l’équipe du centre.</span>
+          <span>Confirmation finale par l'équipe du centre.</span>
         </li>
       </ul>
 
       {errorMsg && (
-        <div className="mb-4 rounded-2xl border border-rose-100 bg-rose-50 p-3 text-sm font-semibold text-rose-700">
+        <div className="mb-4 rounded-2xl border border-rose-100 bg-rose-50 p-3 text-sm font-semibold text-rose-700 flex items-start gap-2">
+          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
           {errorMsg}
         </div>
       )}
@@ -200,21 +182,22 @@ export function CenterBookingForm({
               type="text"
               required
               value={firstName}
-              onChange={(event) => setFirstName(event.target.value)}
+              onChange={(e) => setFirstName(e.target.value)}
               placeholder="Amira"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white"
+              disabled={isLoading}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
             />
           </div>
-
           <div className="space-y-1.5">
             <label className="text-slate-600">Nom *</label>
             <input
               type="text"
               required
               value={lastName}
-              onChange={(event) => setLastName(event.target.value)}
+              onChange={(e) => setLastName(e.target.value)}
               placeholder="Cherif"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white"
+              disabled={isLoading}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
             />
           </div>
         </div>
@@ -225,9 +208,10 @@ export function CenterBookingForm({
             type="tel"
             required
             value={phone}
-            onChange={(event) => setPhone(event.target.value)}
+            onChange={(e) => setPhone(e.target.value)}
             placeholder="0550 11 22 33"
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white"
+            disabled={isLoading}
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
           />
         </div>
 
@@ -236,9 +220,10 @@ export function CenterBookingForm({
           <input
             type="email"
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="amira@email.com"
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white"
+            disabled={isLoading}
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
           />
         </div>
 
@@ -246,8 +231,9 @@ export function CenterBookingForm({
           <label className="text-slate-600">Prestation souhaitée</label>
           <select
             value={service}
-            onChange={(event) => setService(event.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white"
+            onChange={(e) => setService(e.target.value)}
+            disabled={isLoading}
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
           >
             {services.map((item) => (
               <option key={item} value={item}>
@@ -264,22 +250,22 @@ export function CenterBookingForm({
               type="date"
               min={defaultDate}
               value={bookingDate}
-              onChange={(event) => setBookingDate(event.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white"
+              onChange={(e) => setBookingDate(e.target.value)}
+              disabled={isLoading}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
             />
           </div>
-
           <div className="space-y-1.5">
             <label className="text-slate-600">Heure souhaitée</label>
             <select
               value={bookingTime}
-              onChange={(event) => setBookingTime(event.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white"
+              onChange={(e) => setBookingTime(e.target.value)}
+              disabled={isLoading}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
             >
               {hours.map((hour) => (
                 <option key={hour} value={hour}>
-                  {hour} - {String(Number(hour.slice(0, 2)) + 1).padStart(2, "0")}
-                  :00
+                  {hour} — {String(Number(hour.slice(0, 2)) + 1).padStart(2, "0")}:00
                 </option>
               ))}
             </select>
@@ -288,24 +274,33 @@ export function CenterBookingForm({
 
         <div className="rounded-2xl border border-amber-100 bg-amber-50/50 p-3.5 space-y-1 text-xs">
           <p className="font-bold text-amber-800 flex items-center gap-1.5">
-            <span>ℹ️</span> Note sur l’heure de rendez-vous :
+            <span>ℹ️</span> Note sur l'heure de rendez-vous :
           </p>
           <p className="font-medium text-slate-600 leading-relaxed">
-            Il peut y avoir un décalage de votre rendez-vous dû au fuseau horaire, mais l’heure que vous avez sélectionnée est la bonne et reste confirmée.
+            Il peut y avoir un décalage dû au fuseau horaire, mais l'heure que vous avez sélectionnée est la bonne et reste confirmée.
           </p>
         </div>
 
         <button
           type="submit"
-          className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#ff5757] px-5 py-3 text-sm font-bold text-white shadow-md shadow-[#ff5757]/20 transition-all hover:bg-[#e94949] cursor-pointer"
+          disabled={isLoading}
+          className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#ff5757] px-5 py-3 text-sm font-bold text-white shadow-md shadow-[#ff5757]/20 transition-all hover:bg-[#e94949] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          <Calendar className="h-4 w-4" />
-          Envoyer ma demande
+          {isLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Envoi en cours…
+            </>
+          ) : (
+            <>
+              <Calendar className="h-4 w-4" />
+              Envoyer ma demande
+            </>
+          )}
         </button>
 
         <p className="text-xs font-medium leading-relaxed text-slate-500">
-          Cette demande ne confirme pas automatiquement le rendez-vous. Le centre
-          vous contactera pour confirmer le créneau.
+          Cette demande ne confirme pas automatiquement le rendez-vous. Le centre vous contactera pour confirmer le créneau.
         </p>
       </form>
     </div>

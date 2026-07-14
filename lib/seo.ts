@@ -9,7 +9,7 @@ export const siteConfig = {
   name: "AQ8 Algérie",
   url: "https://www.aq8algerie-dz.com",
   description: "AQ8 Algérie propose des séances d’électrostimulation, Wonder, remise en forme et accompagnement minceur dans ses centres.",
-  defaultImage: "/images/aq8algerie.webp"
+  defaultImage: "/images/aq8-og-image.webp"
 };
 
 export interface PageSeo {
@@ -54,19 +54,9 @@ export const staticPageSeo: Record<string, Omit<PageSeo, 'canonicalUrl'>> = {
 
 export function getSeoForPage(route: string): PageSeo {
   const staticSeo = staticPageSeo[route] || staticPageSeo.home;
-  const canonicalPaths: Record<string, string> = {
-    home: "/",
-    aq8: "/aq8",
-    wonder: "/wonder",
-    centers: "/centres",
-    faq: "/faq",
-    contact: "/contact"
-  };
-  const canonicalPath = canonicalPaths[route] || `/${route}`;
-
   return {
     ...staticSeo,
-    canonicalUrl: `${siteConfig.url}${canonicalPath}`
+    canonicalUrl: `${siteConfig.url}${route === 'home' ? '/' : `/${route}`}`
   };
 }
 

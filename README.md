@@ -1,32 +1,20 @@
-# AQ8 Algérie
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
+</div>
 
-Site public et CRM multi-centres pour AQ8 Algérie: centres, technologies AQ8 EMS et Wonder, demandes de réservation, contact, gestion clients, rendez-vous, forfaits, paiements et mensurations.
+# Run and deploy your AI Studio app
 
-## Prérequis
+This contains everything you need to run your app locally.
 
-- Node.js
-- Un projet Firebase avec Auth Email/Password et Firestore
-- Les variables `VITE_FIREBASE_*` renseignées dans `.env.local`
+View your app in AI Studio: https://ai.studio/apps/2daec5b5-53af-4458-b153-ec6408f97441
 
-## Développement
+## Run Locally
 
-```bash
-npm install
-npm run dev
-```
+**Prerequisites:**  Node.js
 
-## Build
 
-```bash
-npm run build
-```
-
-Le build Vite génère ensuite des pages HTML SEO par route publique dans `dist/` (`/aq8`, `/wonder`, `/centres`, `/centres/[slug]`, `/faq`, `/contact`) afin que Firebase Hosting serve des balises meta correctes avant le chargement React.
-
-## Déploiement Firebase Hosting
-
-```bash
-firebase deploy --only hosting
-```
-
-Avant production, gardez `VITE_ENABLE_DEMO_TOOLS=false` et `VITE_ENABLE_FIREBASE_SEED=false`.
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

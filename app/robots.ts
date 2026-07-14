@@ -11,16 +11,16 @@ export default function robots() {
         userAgent: '*',
         allow: [
           '/',
-          '/aq8',
-          '/wonder',
-          '/centres',
-          '/centres/*',
-          '/faq',
-          '/contact'
+          '/#/aq8',
+          '/#/wonder',
+          '/#/centers',
+          '/#/centres/*',
+          '/#/faq',
+          '/#/contact'
         ],
         disallow: [
-          '/login',
-          '/crm',
+          '/#/login',
+          '/#/crm',
           '/crm',
           '/dashboard',
           '/admin',

@@ -7,7 +7,7 @@ import { createServer as createViteServer } from 'vite';
 import { getSeoForPage, generateCenterSeo, PageSeo } from './lib/seo';
 import { AQ8Database } from './src/mockData';
 
-const PORT = Number(process.env.PORT || 3000);
+const PORT = 3000;
 
 function injectSeo(html: string, seo: PageSeo): string {
   let modifiedHtml = html;
@@ -80,9 +80,7 @@ async function startServer() {
   // Serve the public directory assets
   app.use('/public', express.static(path.join(process.cwd(), 'public')));
 
-  const isDevMode = process.argv.includes('--dev') || process.env.NODE_ENV === 'development';
-
-  if (isDevMode) {
+  if (process.env.NODE_ENV !== 'production') {
     // Development mode with Vite's Dev Middleware
     console.log('Starting server in DEVELOPMENT mode...');
     const vite = await createViteServer({
@@ -99,8 +97,7 @@ async function startServer() {
         template = await vite.transformIndexHtml(url, template);
         
         // Dynamic SEO injection
-        const pathname = new URL(req.baseUrl || req.originalUrl, 'http://localhost').pathname;
-        const seo = getSeoForUrl(pathname);
+        const seo = getSeoForUrl(req.path);
         const html = injectSeo(template, seo);
         
         res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
@@ -123,8 +120,7 @@ async function startServer() {
         const template = await fs.readFile(templatePath, 'utf-8');
         
         // Dynamic SEO injection
-        const pathname = new URL(req.baseUrl || req.originalUrl, 'http://localhost').pathname;
-        const seo = getSeoForUrl(pathname);
+        const seo = getSeoForUrl(req.path);
         const html = injectSeo(template, seo);
         
         res.status(200).set({ 'Content-Type': 'text/html' }).end(html);

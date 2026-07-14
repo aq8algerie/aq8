@@ -75,17 +75,17 @@ export function ManagerDashboard({
 
   // Filter based on selected gender
   const filteredClients = centerClients.filter(c => genderFilter === 'All' || c.gender === genderFilter);
-  
+
   const filteredAppointments = centerAppointments.filter(a => {
     const cl = centerClients.find(c => c.id === a.clientId);
     return genderFilter === 'All' || (cl && cl.gender === genderFilter);
   });
-  
+
   const filteredPayments = payments.filter(p => p.centerId === centerId).filter(p => {
     const cl = centerClients.find(c => c.id === p.clientId);
     return genderFilter === 'All' || (cl && cl.gender === genderFilter);
   });
-  
+
   const filteredMeasurements = measurements.filter(m => {
     const cl = centerClients.find(c => c.id === m.clientId);
     return cl && cl.centerId === centerId && (genderFilter === 'All' || cl.gender === genderFilter);
@@ -174,18 +174,27 @@ export function ManagerDashboard({
   const maxMonthlyVal = Math.max(...monthlyCounts, 1);
   // Local revenue trend for this center
   const getLocalRevenueTrendData = () => {
-    const months = ['Jan', 'F√©v', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Ao√ª', 'Sep', 'Oct', 'Nov', 'D√©c'];
-    const data = [];
-    for (let i = 2; i <= 6; i++) {
-      const mName = months[i];
-      const mPayments = payments.filter(p => {
-        const d = new Date(p.date);
-        return p.centerId === centerId && d.getFullYear() === 2026 && d.getMonth() === i;
+    const months = ['Jan', 'FÈv', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Ao˚', 'Sep', 'Oct', 'Nov', 'DÈc'];
+    const centerPayments = payments.filter(payment => payment.centerId === centerId);
+    const validDates = centerPayments
+      .map(payment => new Date(payment.date))
+      .filter(date => !Number.isNaN(date.getTime()))
+      .sort((a, b) => a.getTime() - b.getTime());
+    const latestDate = validDates.at(-1) || new Date();
+    const startMonth = new Date(latestDate.getFullYear(), latestDate.getMonth() - 5, 1);
+
+    return Array.from({ length: 6 }, (_, index) => {
+      const currentMonth = new Date(startMonth.getFullYear(), startMonth.getMonth() + index, 1);
+      const monthlyPayments = centerPayments.filter(payment => {
+        const paymentDate = new Date(payment.date);
+        return paymentDate.getFullYear() === currentMonth.getFullYear() && paymentDate.getMonth() === currentMonth.getMonth();
       });
-      const total = mPayments.reduce((sum, p) => sum + p.amount, 0);
-      data.push({ label: mName, value: total });
-    }
-    return data;
+      const total = monthlyPayments.reduce((sum, payment) => sum + payment.amount, 0);
+      return {
+        label: `${months[currentMonth.getMonth()]} ${String(currentMonth.getFullYear()).slice(-2)}`,
+        value: total
+      };
+    });
   };
 
   return (
@@ -699,7 +708,7 @@ export function ManagerDashboard({
                             transform: "translateX(-50%)"
                           }}
                         >
-                          <span className="text-[8px] text-slate-400 font-sans block uppercase font-bold">{trendData[hoveredManagerRevenuePoint].label} 2026</span>
+                          <span className="text-[8px] text-slate-400 font-sans block uppercase font-bold">{trendData[hoveredManagerRevenuePoint].label}</span>
                           <span className="text-xs font-bold text-[#ff5757]">{trendData[hoveredManagerRevenuePoint].value.toLocaleString()} DZD</span>
                         </div>
                       )}

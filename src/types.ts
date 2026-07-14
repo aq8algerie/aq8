@@ -25,9 +25,6 @@ export interface Center {
   customPackagePrices?: Record<string, number>;
   customActiveServices?: string[];
   customActivePackages?: string[];
-  subscriptionStatus?: 'active' | 'suspended' | 'trial';
-  subscriptionExpiryDate?: string; // YYYY-MM-DD
-  subscriptionPlan?: 'basic' | 'premium' | 'trial';
 }
 
 export interface CenterManager {
@@ -133,4 +130,21 @@ export interface GeneralSettings {
   addressAlgérie: string;
   currency: string;
   enableVoucherPromo: boolean;
+}
+
+export type BookingRequestStatus = 'pending' | 'accepted' | 'rejected';
+
+export interface BookingRequest {
+  id: string;
+  centerId: string;
+  centerName: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  service: string;
+  bookingDate: string;
+  bookingTime: string;
+  status: BookingRequestStatus;
+  createdAt: string;
 }

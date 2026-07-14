@@ -6,4 +6,5 @@ coverage/
 *.log
 .env*
 !.env.example
-.firebase/
+db-audit/out/
+scratch/

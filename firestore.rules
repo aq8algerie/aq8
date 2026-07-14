@@ -3,79 +3,49 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
-      return request.auth != null && request.auth.token.email != null;
+      return request.auth != null;
     }
 
-    function currentEmail() {
-      return request.auth.token.email;
+    function userProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isActiveCrmUser() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && userProfile().active == true;
     }
 
     function isSuperAdmin() {
-      return signedIn() && currentEmail() == 'aq8algerie@gmail.com';
+      return isActiveCrmUser() && userProfile().role == 'super_admin';
     }
 
-    function managerDocPath(managerId) {
-      return /databases/$(database)/documents/managers/$(managerId);
+    function isCenterManager(centerId) {
+      return isActiveCrmUser()
+        && userProfile().role == 'center_manager'
+        && userProfile().centerId == centerId;
     }
 
-    function managerExists() {
-      return signedIn() && exists(managerDocPath(currentEmail()));
+    function canAccessCenter(centerId) {
+      return isSuperAdmin() || isCenterManager(centerId);
     }
 
-    function managerData() {
-      return get(managerDocPath(currentEmail())).data;
-    }
-
-    function isSelfManagerDoc(managerEmail) {
-      return signedIn() && managerEmail == currentEmail();
-    }
-
-    function isReadableLegacyManagerDoc() {
-      return signedIn()
-        && resource != null
-        && resource.data.email is string
-        && resource.data.email == currentEmail();
-    }
-
-    function legacySourceExists() {
-      return request.resource.data.legacySourceId is string
-        && exists(managerDocPath(request.resource.data.legacySourceId));
-    }
-
-    function legacySourceData() {
-      return get(managerDocPath(request.resource.data.legacySourceId)).data;
-    }
-
-    function canSelfHealManagerDoc(managerEmail) {
-      return isSelfManagerDoc(managerEmail)
-        && request.resource.data.email is string
-        && request.resource.data.email == currentEmail()
-        && request.resource.data.active is bool
+    function isPublicBookingCreate() {
+      return request.resource.data.keys().hasOnly([
+          'centerId', 'centerName', 'firstName', 'lastName', 'phone', 'email',
+          'service', 'bookingDate', 'bookingTime', 'status', 'createdAt'
+        ])
         && request.resource.data.centerId is string
-        && request.resource.data.name is string
-        && legacySourceExists()
-        && legacySourceData().email == currentEmail()
-        && legacySourceData().active == request.resource.data.active
-        && legacySourceData().centerId == request.resource.data.centerId
-        && legacySourceData().name == request.resource.data.name;
+        && request.resource.data.centerName is string
+        && request.resource.data.firstName is string
+        && request.resource.data.lastName is string
+        && request.resource.data.phone is string
+        && request.resource.data.status == 'pending';
     }
 
-    function isActiveManagerFor(centerId) {
-      return managerExists()
-        && managerData().active == true
-        && managerData().centerId == centerId;
-    }
-
-    function clientExists(clientId) {
-      return exists(/databases/$(database)/documents/clients/$(clientId));
-    }
-
-    function clientData(clientId) {
-      return get(/databases/$(database)/documents/clients/$(clientId)).data;
-    }
-
-    function isActiveManagerForClient(clientId) {
-      return clientExists(clientId) && isActiveManagerFor(clientData(clientId).centerId);
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isSuperAdmin());
+      allow create, update, delete: if isSuperAdmin();
     }
 
     match /centers/{centerId} {
@@ -98,69 +68,51 @@ service cloud.firestore {
       allow create, update, delete: if isSuperAdmin();
     }
 
-    match /managers/{managerEmail} {
-      allow read: if isSuperAdmin() || isSelfManagerDoc(managerEmail) || isReadableLegacyManagerDoc();
-      allow create, update: if isSuperAdmin() || canSelfHealManagerDoc(managerEmail);
-      allow delete: if isSuperAdmin();
+    match /managers/{managerId} {
+      allow read: if isSuperAdmin() || isCenterManager(resource.data.centerId);
+      allow create, update, delete: if isSuperAdmin();
     }
 
     match /clients/{clientId} {
-      allow read: if isSuperAdmin() || isActiveManagerFor(resource.data.centerId);
-      allow create: if isSuperAdmin() || isActiveManagerFor(request.resource.data.centerId);
-      allow update: if isSuperAdmin()
-        || (isActiveManagerFor(resource.data.centerId)
-          && request.resource.data.centerId == resource.data.centerId);
-      allow delete: if isSuperAdmin() || isActiveManagerFor(resource.data.centerId);
+      allow read: if canAccessCenter(resource.data.centerId);
+      allow create: if canAccessCenter(request.resource.data.centerId);
+      allow update: if canAccessCenter(resource.data.centerId) && canAccessCenter(request.resource.data.centerId);
+      allow delete: if canAccessCenter(resource.data.centerId);
     }
 
     match /appointments/{appointmentId} {
-      allow read: if isSuperAdmin() || isActiveManagerFor(resource.data.centerId);
-      allow create: if isSuperAdmin() || isActiveManagerFor(request.resource.data.centerId);
-      allow update: if isSuperAdmin()
-        || (isActiveManagerFor(resource.data.centerId)
-          && request.resource.data.centerId == resource.data.centerId);
-      allow delete: if isSuperAdmin() || isActiveManagerFor(resource.data.centerId);
+      allow read: if canAccessCenter(resource.data.centerId);
+      allow create: if canAccessCenter(request.resource.data.centerId);
+      allow update: if canAccessCenter(resource.data.centerId) && canAccessCenter(request.resource.data.centerId);
+      allow delete: if canAccessCenter(resource.data.centerId);
     }
 
     match /client_packages/{clientPackageId} {
-      allow read: if isSuperAdmin() || isActiveManagerFor(resource.data.centerId);
-      allow create: if isSuperAdmin() || isActiveManagerFor(request.resource.data.centerId);
-      allow update: if isSuperAdmin()
-        || (isActiveManagerFor(resource.data.centerId)
-          && request.resource.data.centerId == resource.data.centerId);
-      allow delete: if isSuperAdmin() || isActiveManagerFor(resource.data.centerId);
+      allow read: if canAccessCenter(resource.data.centerId);
+      allow create: if canAccessCenter(request.resource.data.centerId);
+      allow update: if canAccessCenter(resource.data.centerId) && canAccessCenter(request.resource.data.centerId);
+      allow delete: if canAccessCenter(resource.data.centerId);
     }
 
     match /payments/{paymentId} {
-      allow read: if isSuperAdmin() || isActiveManagerFor(resource.data.centerId);
-      allow create: if isSuperAdmin() || isActiveManagerFor(request.resource.data.centerId);
-      allow update: if isSuperAdmin()
-        || (isActiveManagerFor(resource.data.centerId)
-          && request.resource.data.centerId == resource.data.centerId);
-      allow delete: if isSuperAdmin() || isActiveManagerFor(resource.data.centerId);
+      allow read: if canAccessCenter(resource.data.centerId);
+      allow create: if canAccessCenter(request.resource.data.centerId);
+      allow update: if canAccessCenter(resource.data.centerId) && canAccessCenter(request.resource.data.centerId);
+      allow delete: if canAccessCenter(resource.data.centerId);
     }
 
     match /measurements/{measurementId} {
-      allow read: if isSuperAdmin() || isActiveManagerFor(resource.data.centerId);
-      allow create: if isSuperAdmin()
-        || (isActiveManagerFor(request.resource.data.centerId)
-          && isActiveManagerForClient(request.resource.data.clientId));
-      allow update: if isSuperAdmin()
-        || (isActiveManagerFor(resource.data.centerId)
-          && request.resource.data.centerId == resource.data.centerId
-          && request.resource.data.clientId == resource.data.clientId);
-      allow delete: if isSuperAdmin() || isActiveManagerFor(resource.data.centerId);
+      allow read: if canAccessCenter(resource.data.centerId);
+      allow create: if canAccessCenter(request.resource.data.centerId);
+      allow update: if canAccessCenter(resource.data.centerId) && canAccessCenter(request.resource.data.centerId);
+      allow delete: if canAccessCenter(resource.data.centerId);
     }
 
     match /booking_requests/{requestId} {
-      allow create: if request.resource.data.centerId is string
-        && exists(/databases/$(database)/documents/centers/$(request.resource.data.centerId));
-      allow read, update, delete: if isSuperAdmin() || isActiveManagerFor(resource.data.centerId);
-    }
-
-    match /contact_requests/{requestId} {
-      allow create: if request.resource.data.status == 'new';
-      allow read, update, delete: if isSuperAdmin();
+      allow create: if isPublicBookingCreate();
+      allow read: if canAccessCenter(resource.data.centerId);
+      allow update: if canAccessCenter(resource.data.centerId) && canAccessCenter(request.resource.data.centerId);
+      allow delete: if isSuperAdmin();
     }
 
     match /{document=**} {

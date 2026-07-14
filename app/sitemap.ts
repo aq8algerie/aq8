@@ -12,17 +12,17 @@ export default async function sitemap() {
   // Static routes
   const staticRoutes = [
     { url: `${baseUrl}/`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 1.0 },
-    { url: `${baseUrl}/aq8`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.8 },
-    { url: `${baseUrl}/wonder`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.8 },
-    { url: `${baseUrl}/centres`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.9 },
-    { url: `${baseUrl}/faq`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.6 },
-    { url: `${baseUrl}/contact`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.7 },
+    { url: `${baseUrl}/#/aq8`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.8 },
+    { url: `${baseUrl}/#/wonder`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.8 },
+    { url: `${baseUrl}/#/centers`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.9 },
+    { url: `${baseUrl}/#/faq`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.6 },
+    { url: `${baseUrl}/#/contact`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.7 },
   ];
 
   // Dynamic Center routes based on our data
   const centers = AQ8Database.getCenters();
   const dynamicCenterRoutes = centers.map((center) => ({
-    url: `${baseUrl}/centres/${center.slug}`,
+    url: `${baseUrl}/#/centres/${center.slug}`,
     lastModified: new Date(),
     changeFrequency: 'weekly' as const,
     priority: 0.8,

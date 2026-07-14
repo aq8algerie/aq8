@@ -1,5 +1,6 @@
 {
   "name": "AQ8 Algérie",
-  "description": "Plateforme AQ8 Algérie pour site public, réservations, CRM multi-centres, électrostimulation, Wonder, paiements et suivi des mensurations.",
-  "requestFramePermissions": []
+  "description": "Refonte moderne et premium de la plateforme multi-centres AQ8 Algérie - Prestations fitness, électrostimulation, amincissement et suivi des mensurations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

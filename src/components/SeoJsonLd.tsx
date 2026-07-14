@@ -22,7 +22,7 @@ export function SeoJsonLd({ type, center }: SeoJsonLdProps) {
       "@id": `${siteConfig.url}/#organization`,
       "name": siteConfig.name,
       "url": siteConfig.url,
-      "logo": `${siteConfig.url}${siteConfig.defaultImage}`,
+      "logo": `${siteConfig.url}/images/aq8algerie-logo.webp`,
       "image": `${siteConfig.url}${siteConfig.defaultImage}`,
       "description": siteConfig.description,
       "contactPoint": {
@@ -77,10 +77,10 @@ export function SeoJsonLd({ type, center }: SeoJsonLdProps) {
     schemaData = {
       "@context": "https://schema.org",
       "@type": "SportsActivityLocation",
-      "@id": `${siteConfig.url}/centres/${center.slug}`,
+      "@id": `${siteConfig.url}/#/centres/${center.slug}`,
       "name": center.name,
       "description": center.description || `Centre AQ8 de remise en forme et d'électrostimulation à ${center.city}.`,
-      "url": `${siteConfig.url}/centres/${center.slug}`,
+      "url": `${siteConfig.url}/#/centres/${center.slug}`,
       "telephone": center.phone,
       "image": center.imageUrl,
       "priceRange": "$$",

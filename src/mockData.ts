@@ -608,9 +608,7 @@ export class AQ8Database {
       }
       return savedCenter;
     });
-    if (typeof localStorage !== 'undefined') {
-      this.save('centers', updated);
-    }
+    this.save('centers', updated);
     return updated;
   }
 

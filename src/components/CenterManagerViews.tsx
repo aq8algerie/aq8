@@ -12,7 +12,8 @@ import {
   Package,
   Payment,
   Measurement,
-  Service
+  Service,
+  BookingRequest
 } from '../types';
 
 // Manager subviews
@@ -52,11 +53,13 @@ export function CenterManagerViews({
   payments,
   measurements,
   services,
+  bookingRequests = [],
   onUpdateClients,
   onUpdateAppointments,
   onUpdateClientPackages,
   onUpdatePayments,
   onUpdateMeasurements,
+  onUpdateBookingRequests,
   activeTab,
   onTabChange
 }: {
@@ -69,11 +72,13 @@ export function CenterManagerViews({
   payments: Payment[];
   measurements: Measurement[];
   services: Service[];
+  bookingRequests?: BookingRequest[];
   onUpdateClients: (clients: Client[]) => void;
   onUpdateAppointments: (appointments: Appointment[]) => void;
   onUpdateClientPackages: (clientPackages: ClientPackage[]) => void;
   onUpdatePayments: (payments: Payment[]) => void;
   onUpdateMeasurements: (measurements: Measurement[]) => void;
+  onUpdateBookingRequests?: (requests: BookingRequest[]) => Promise<void>;
   activeTab?: SubTabId;
   onTabChange?: (tab: SubTabId) => void;
 }) {
@@ -483,6 +488,9 @@ export function CenterManagerViews({
                 packages={centerPackages}
                 onUpdateClientPackages={onUpdateClientPackages}
                 onBookAppointmentClick={() => setShowAptModal(true)}
+                bookingRequests={bookingRequests.filter(r => r.centerId === centerId)}
+                onUpdateBookingRequests={onUpdateBookingRequests}
+                onUpdateClients={onUpdateClients}
               />
             )}
 
