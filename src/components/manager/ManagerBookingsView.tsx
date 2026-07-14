@@ -66,6 +66,9 @@ export function ManagerBookingsView({
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | 'booked' | 'completed' | 'cancelled'>('All');
   const [serviceFilter, setServiceFilter] = useState<'All' | string>('All');
+  const [dateFilter, setDateFilter] = useState<'All' | 'today' | 'upcoming' | 'past' | 'thisWeek' | 'thisMonth'>('All');
+  const [genderFilter, setGenderFilter] = useState<'All' | 'H' | 'F' | 'unknown'>('All');
+  const [technologyFilter, setTechnologyFilter] = useState<'All' | 'aq8' | 'wonder' | 'mix' | 'none'>('All');
 
   // Selection state for Bulk Actions
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -76,7 +79,7 @@ export function ManagerBookingsView({
 
   // Pagination (List view)
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 8;
+  const [itemsPerPage, setItemsPerPage] = useState<20 | 50 | 100 | 200>(20);
 
   // Grid "Show More" limit
   const [gridLimit, setGridLimit] = useState(6);
@@ -86,6 +89,46 @@ export function ManagerBookingsView({
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
+  };
+
+  const safeText = (value: unknown) => String(value ?? '').trim();
+  const getClientDisplayName = (client?: Client) => {
+    if (!client) return 'Adhérent inconnu';
+    const fullName = [safeText(client.firstName), safeText(client.lastName)].filter(Boolean).join(' ');
+    return fullName || safeText(client.phone) || safeText(client.email) || 'Adhérent sans nom';
+  };
+  const getTechnologyForClient = (clientId: string) => {
+    const active = findActivePackageForClient(clientId, clientPackages);
+    if (!active) return null;
+    const pkg = packages.find(p => p.id === active.packageId);
+    return pkg ? pkg.type : null;
+  };
+
+  const getAppointmentDate = (appointment: Appointment) => {
+    const date = new Date(safeText(appointment.dateTime).replace(' ', 'T'));
+    return Number.isNaN(date.getTime()) ? null : date;
+  };
+  const matchesDateFilter = (appointment: Appointment) => {
+    if (dateFilter === 'All') return true;
+    const date = getAppointmentDate(appointment);
+    if (!date) return false;
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrowStart = new Date(todayStart);
+    tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+    const weekStart = new Date(todayStart);
+    weekStart.setDate(todayStart.getDate() - ((todayStart.getDay() + 6) % 7));
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    if (dateFilter === 'today') return date >= todayStart && date < tomorrowStart;
+    if (dateFilter === 'upcoming') return date >= todayStart;
+    if (dateFilter === 'past') return date < todayStart;
+    if (dateFilter === 'thisWeek') return date >= weekStart && date < weekEnd;
+    if (dateFilter === 'thisMonth') return date >= monthStart && date < nextMonthStart;
+    return true;
   };
 
   // 2. Data Filtering and Sorting
@@ -98,27 +141,47 @@ export function ManagerBookingsView({
 
   const filteredAppointments = sortedAppointments.filter(apt => {
     const cl = centerClients.find(c => c.id === apt.clientId);
-    const clientFullName = cl ? `${cl.firstName} ${cl.lastName}`.toLowerCase() : '';
-    const clientPhone = cl ? cl.phone : '';
+    const clientFullName = getClientDisplayName(cl).toLowerCase();
+    const clientPhone = safeText(cl?.phone).toLowerCase();
+    const clientEmail = safeText(cl?.email).toLowerCase();
     const srv = services.find(s => s.id === apt.serviceId);
-    const serviceName = srv ? srv.name.toLowerCase() : '';
+    const serviceName = safeText(srv?.name).toLowerCase();
+    const normalizedSearch = searchQuery.trim().toLowerCase();
+    const tech = cl ? getTechnologyForClient(cl.id) : null;
 
     const matchesSearch =
-      clientFullName.includes(searchQuery.toLowerCase()) ||
-      clientPhone.includes(searchQuery) ||
-      serviceName.includes(searchQuery.toLowerCase());
+      !normalizedSearch ||
+      clientFullName.includes(normalizedSearch) ||
+      clientPhone.includes(normalizedSearch) ||
+      clientEmail.includes(normalizedSearch) ||
+      serviceName.includes(normalizedSearch) ||
+      safeText(apt.id).toLowerCase().includes(normalizedSearch) ||
+      safeText(apt.notes).toLowerCase().includes(normalizedSearch);
 
     const matchesStatus = statusFilter === 'All' || apt.status === statusFilter;
     const matchesService = serviceFilter === 'All' || apt.serviceId === serviceFilter;
+    const matchesDate = matchesDateFilter(apt);
+    const matchesGender = genderFilter === 'All' || (genderFilter === 'unknown' ? !cl?.gender : cl?.gender === genderFilter);
+    const matchesTechnology = technologyFilter === 'All' || (technologyFilter === 'none' ? !tech : tech === technologyFilter);
 
-    return matchesSearch && matchesStatus && matchesService;
+    return matchesSearch && matchesStatus && matchesService && matchesDate && matchesGender && matchesTechnology;
   });
 
   // Pagination computation
   const totalItems = filteredAppointments.length;
-  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedAppointments = filteredAppointments.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const normalizedCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (normalizedCurrentPage - 1) * itemsPerPage;
+  const paginatedAppointments = filteredAppointments.slice(startIndex, startIndex + itemsPerPage);
+  const paginationPages = Array.from(new Set([
+    1,
+    totalPages,
+    normalizedCurrentPage - 2,
+    normalizedCurrentPage - 1,
+    normalizedCurrentPage,
+    normalizedCurrentPage + 1,
+    normalizedCurrentPage + 2,
+  ].filter(page => page >= 1 && page <= totalPages))).sort((a, b) => a - b);
 
   // Grid view items
   const gridAppointments = filteredAppointments.slice(0, gridLimit);
@@ -128,7 +191,7 @@ export function ManagerBookingsView({
   React.useEffect(() => {
     setCurrentPage(1);
     setGridLimit(6);
-  }, [searchQuery, statusFilter, serviceFilter]);
+  }, [searchQuery, statusFilter, serviceFilter, dateFilter, genderFilter, technologyFilter, itemsPerPage]);
 
   // 3. Selection Handlers
   const handleToggleSelectAll = () => {
@@ -272,14 +335,6 @@ export function ManagerBookingsView({
     }
   };
 
-  // Helper helper
-  const getTechnologyForClient = (clientId: string) => {
-    const active = findActivePackageForClient(clientId, clientPackages);
-    if (!active) return null;
-    const pkg = packages.find(p => p.id === active.packageId);
-    return pkg ? pkg.type : null;
-  };
-
   return (
     <div id="manager-bookings-container" className="space-y-6">
       {/* Toast Alert Feedback */}
@@ -340,13 +395,13 @@ export function ManagerBookingsView({
         </div>
 
         {/* Advanced Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
           {/* Search Bar */}
-          <div className="relative">
+          <div className="relative sm:col-span-2 xl:col-span-1">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Rechercher par membre ou soin..."
+              placeholder="Nom, téléphone, e-mail, soin, note ou ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-1 focus:ring-slate-400 text-xs text-slate-700"
@@ -361,10 +416,10 @@ export function ManagerBookingsView({
               onChange={(e) => setStatusFilter(e.target.value as any)}
               className="w-full py-2 bg-transparent focus:outline-none text-xs text-slate-700"
             >
-              <option value="All">Tous les Statuts</option>
-              <option value="booked">Séance Planifiée (En attente)</option>
-              <option value="completed">Séance Effectuée (Validée)</option>
-              <option value="cancelled">Séance Annulée</option>
+              <option value="All">Tous les statuts</option>
+              <option value="booked">Planifiées</option>
+              <option value="completed">Effectuées</option>
+              <option value="cancelled">Annulées</option>
             </select>
           </div>
 
@@ -376,12 +431,89 @@ export function ManagerBookingsView({
               onChange={(e) => setServiceFilter(e.target.value)}
               className="w-full py-2 bg-transparent focus:outline-none text-xs text-slate-700"
             >
-              <option value="All">Toutes les Prestations</option>
+              <option value="All">Toutes les prestations</option>
               {services.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
           </div>
+
+          {/* Date Filter */}
+          <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl px-2">
+            <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+            <select
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value as any)}
+              className="w-full py-2 bg-transparent focus:outline-none text-xs text-slate-700"
+            >
+              <option value="All">Toutes les dates</option>
+              <option value="today">Aujourd'hui</option>
+              <option value="upcoming">À venir</option>
+              <option value="past">Historique</option>
+              <option value="thisWeek">Cette semaine</option>
+              <option value="thisMonth">Ce mois-ci</option>
+            </select>
+          </div>
+
+          {/* Gender Filter */}
+          <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl px-2">
+            <User className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+            <select
+              value={genderFilter}
+              onChange={(e) => setGenderFilter(e.target.value as any)}
+              className="w-full py-2 bg-transparent focus:outline-none text-xs text-slate-700"
+            >
+              <option value="All">Tous les genres</option>
+              <option value="F">Femmes</option>
+              <option value="H">Hommes</option>
+              <option value="unknown">Non renseigné</option>
+            </select>
+          </div>
+
+          {/* Technology Filter */}
+          <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl px-2">
+            <Layers className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+            <select
+              value={technologyFilter}
+              onChange={(e) => setTechnologyFilter(e.target.value as any)}
+              className="w-full py-2 bg-transparent focus:outline-none text-xs text-slate-700"
+            >
+              <option value="All">Toutes les technologies</option>
+              <option value="aq8">AQ8 EMS</option>
+              <option value="wonder">Wonder</option>
+              <option value="mix">Mixte</option>
+              <option value="none">Sans forfait actif</option>
+            </select>
+          </div>
+
+          {/* Page Size */}
+          <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl px-2">
+            <List className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+            <select
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value) as 20 | 50 | 100 | 200)}
+              className="w-full py-2 bg-transparent focus:outline-none text-xs text-slate-700"
+            >
+              {[20, 50, 100, 200].map(size => (
+                <option key={size} value={size}>{size} par page</option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setSearchQuery('');
+              setStatusFilter('All');
+              setServiceFilter('All');
+              setDateFilter('All');
+              setGenderFilter('All');
+              setTechnologyFilter('All');
+            }}
+            className="px-3 py-2 border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-600 rounded-xl text-xs font-bold transition cursor-pointer"
+          >
+            Réinitialiser filtres
+          </button>
         </div>
       </div>
 
@@ -594,42 +726,65 @@ export function ManagerBookingsView({
           </div>
 
           {/* List View Pagination controls */}
-          {totalPages > 1 && (
-            <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-[11px] text-slate-500 font-semibold">
-                Affichage de {startIndex + 1} à {Math.min(startIndex + ITEMS_PER_PAGE, totalItems)} sur {totalItems} réservations
-              </span>
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                  className="p-1 rounded-md border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-50 transition cursor-pointer"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                  <button
-                    key={p}
-                    onClick={() => setCurrentPage(p)}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition ${
-                      currentPage === p 
-                        ? 'bg-[#353535] text-white' 
-                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                  className="p-1 rounded-md border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-50 transition cursor-pointer"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
+          <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <span className="text-[11px] text-slate-500 font-semibold">
+              {totalItems > 0
+                ? <>Affichage de {startIndex + 1} à {Math.min(startIndex + itemsPerPage, totalItems)} sur {totalItems} réservations</>
+                : <>Aucune réservation trouvée</>}
+            </span>
+
+            <div className="flex flex-wrap items-center gap-1.5 justify-end">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={normalizedCurrentPage === 1}
+                className="px-2 py-1 rounded-md border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-50 transition cursor-pointer text-[11px] font-bold"
+              >
+                Début
+              </button>
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={normalizedCurrentPage === 1}
+                className="p-1 rounded-md border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-50 transition cursor-pointer"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              {paginationPages.map((page, index) => {
+                const previous = paginationPages[index - 1];
+                const hasGap = previous !== undefined && page - previous > 1;
+                return (
+                  <React.Fragment key={page}>
+                    {hasGap && <span className="px-1 text-slate-400 text-[11px]">...</span>}
+                    <button
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition ${
+                        normalizedCurrentPage === page
+                          ? 'bg-[#353535] text-white'
+                          : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  </React.Fragment>
+                );
+              })}
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={normalizedCurrentPage === totalPages}
+                className="p-1 rounded-md border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-50 transition cursor-pointer"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={normalizedCurrentPage === totalPages}
+                className="px-2 py-1 rounded-md border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-50 transition cursor-pointer text-[11px] font-bold"
+              >
+                Fin
+              </button>
             </div>
-          )}
+          </div>
         </div>
       ) : (
         /* --- GRID VIEW WITH "AFFICHER PLUS" --- */
