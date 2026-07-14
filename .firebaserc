@@ -1,5 +1,7 @@
 {
-  "projects": {},
+  "projects": {
+    "default": "aq8algerie-4f675"
+  },
   "targets": {},
   "etags": {}
 }
