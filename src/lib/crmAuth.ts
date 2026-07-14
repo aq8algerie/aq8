@@ -1,4 +1,4 @@
-import { User } from 'firebase/auth';
+import { Auth, User, createUserWithEmailAndPassword } from 'firebase/auth';
 import { collection, doc, getDoc, getDocs, limit, query, setDoc, where } from 'firebase/firestore';
 import { Center, CenterManager } from '../types';
 import { requireFirestore } from './firebase';
@@ -29,8 +29,8 @@ interface ManagerLookupResult {
   isCanonical: boolean;
 }
 
-const SUPER_ADMIN_EMAIL = 'karim@aq8algerie.com';
-const SUPER_ADMIN_NAME = 'Karim Benchikh';
+export const SUPER_ADMIN_EMAIL = 'aq8algerie@gmail.com';
+export const SUPER_ADMIN_NAME = 'Hanane';
 
 export function normalizeEmail(email: string | null | undefined) {
   return (email || '').trim().toLowerCase();
@@ -98,23 +98,7 @@ async function repairCanonicalManagerDoc(email: string, lookup: ManagerLookupRes
   );
 }
 
-export async function resolveCrmSession(user: User): Promise<CrmSession> {
-  const email = normalizeEmail(user.email);
-
-  if (!email) {
-    throw new CrmAuthError('crm/email-required', "Le compte Firebase n'a pas d'adresse e-mail associee.");
-  }
-
-  if (email === SUPER_ADMIN_EMAIL) {
-    return {
-      uid: user.uid,
-      email,
-      role: 'super_admin',
-      centerId: null,
-      managerName: SUPER_ADMIN_NAME
-    };
-  }
-
+async function validateManagerLookup(email: string) {
   const lookup = await findManagerByEmail(email);
 
   if (!lookup) {
@@ -132,6 +116,28 @@ export async function resolveCrmSession(user: User): Promise<CrmSession> {
   }
 
   await assertCenterExists(manager.centerId);
+
+  return { lookup, manager };
+}
+
+export async function resolveCrmSession(user: User): Promise<CrmSession> {
+  const email = normalizeEmail(user.email);
+
+  if (!email) {
+    throw new CrmAuthError('crm/email-required', "Le compte Firebase n'a pas d'adresse e-mail associee.");
+  }
+
+  if (email === SUPER_ADMIN_EMAIL) {
+    return {
+      uid: user.uid,
+      email,
+      role: 'super_admin',
+      centerId: null,
+      managerName: SUPER_ADMIN_NAME
+    };
+  }
+
+  const { lookup, manager } = await validateManagerLookup(email);
   await repairCanonicalManagerDoc(email, lookup);
 
   return {
@@ -143,6 +149,31 @@ export async function resolveCrmSession(user: User): Promise<CrmSession> {
   };
 }
 
+export async function provisionCrmUserAccount(auth: Auth, email: string, password: string): Promise<CrmSession> {
+  const normalizedEmail = normalizeEmail(email);
+
+  if (!normalizedEmail) {
+    throw new CrmAuthError('crm/email-required', "Le compte Firebase n'a pas d'adresse e-mail associee.");
+  }
+
+  if (normalizedEmail !== SUPER_ADMIN_EMAIL) {
+    await validateManagerLookup(normalizedEmail);
+  }
+
+  try {
+    const credential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+    return resolveCrmSession(credential.user);
+  } catch (error) {
+    const code = typeof error === 'object' && error && 'code' in error ? String((error as { code?: string }).code) : '';
+
+    if (code === 'auth/email-already-in-use') {
+      throw new CrmAuthError('crm/account-exists', 'Adresse e-mail ou mot de passe incorrect.');
+    }
+
+    throw error;
+  }
+}
+
 export function getCrmAuthErrorMessage(error: unknown) {
   const code = typeof error === 'object' && error && 'code' in error
     ? String((error as { code?: string }).code)
@@ -152,6 +183,7 @@ export function getCrmAuthErrorMessage(error: unknown) {
     case 'auth/user-not-found':
     case 'auth/wrong-password':
     case 'auth/invalid-credential':
+    case 'crm/account-exists':
       return 'Adresse e-mail ou mot de passe incorrect.';
     case 'auth/invalid-email':
       return 'Adresse e-mail invalide.';

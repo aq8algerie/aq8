@@ -81,7 +81,7 @@ import {
 } from './lib/db';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from './lib/firebase';
-import { CrmSession, getCrmAuthErrorMessage, resolveCrmSession } from './lib/crmAuth';
+import { CrmSession, getCrmAuthErrorMessage, resolveCrmSession, SUPER_ADMIN_NAME } from './lib/crmAuth';
 
 // Import our modular subcomponents
 import {
@@ -500,7 +500,7 @@ export default function App() {
   const handleResetDatabase = async () => {
     if (!allowDemoTools) return;
 
-    if (confirm('Voulez-vous réinitialiser toutes les données aux valeurs d\'origine ? Vos modifications locales seront effacées.')) {
+    if (confirm('Voulez-vous rÃƒÂ©initialiser toutes les donnÃƒÂ©es aux valeurs d\'origine ? Vos modifications locales seront effacÃƒÂ©es.')) {
       await dbResetToDefaults();
       window.location.reload();
     }
@@ -542,7 +542,7 @@ export default function App() {
                 <span className="text-[#ff5757] text-lg">8</span>
               </div>
               <div className="leading-none">
-                <span className="text-sm font-bold tracking-wider text-[#353535] uppercase font-display block">AQ8 Algérie</span>
+                <span className="text-sm font-bold tracking-wider text-[#353535] uppercase font-display block">AQ8 AlgÃƒÂ©rie</span>
                 <span className="text-[9px] font-semibold text-slate-400 tracking-widest uppercase block">Next-Gen Fitness</span>
               </div>
             </div>
@@ -573,7 +573,7 @@ export default function App() {
             <div className="hidden md:flex items-center gap-2">
               <button
                 onClick={() => handleResetDatabase()}
-                title="Réinitialiser la base de démonstration"
+                title="RÃƒÂ©initialiser la base de dÃƒÂ©monstration"
                 className={`${allowDemoTools ? '' : 'hidden'} p-2 text-slate-400 hover:text-[#ff5757] hover:bg-rose-50 rounded-xl transition-premium`}
               >
                 <RefreshCw className="h-4 w-4" />
@@ -582,7 +582,7 @@ export default function App() {
                 onClick={() => navigate('login')}
                 className="px-4 py-2 bg-[#353535] hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-premium shadow-xs flex items-center gap-1.5 cursor-pointer"
               >
-                <ShieldCheck className="h-4 w-4 text-[#ff5757]" /> Accès CRM AQ8
+                <ShieldCheck className="h-4 w-4 text-[#ff5757]" /> AccÃƒÂ¨s CRM AQ8
               </button>
             </div>
 
@@ -613,7 +613,7 @@ export default function App() {
                 { id: 'centers', label: 'Nos Centres' },
                 { id: 'faq', label: 'FAQ' },
                 { id: 'contact', label: 'Contact' },
-                { id: 'login', label: 'Accéder au CRM AQ8' }
+                { id: 'login', label: 'AccÃƒÂ©der au CRM AQ8' }
               ].map(link => (
                 <button
                   key={link.id}
@@ -685,7 +685,7 @@ export default function App() {
           <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa] text-slate-700 px-4">
             <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-md text-center space-y-2 max-w-sm">
               <ShieldCheck className="h-8 w-8 mx-auto text-[#ff5757]" />
-              <p className="text-sm font-bold text-[#353535]">Vérification de la session</p>
+              <p className="text-sm font-bold text-[#353535]">VÃƒÂ©rification de la session</p>
               <p className="text-xs text-slate-500">Connexion au portail CRM AQ8 en cours...</p>
             </div>
           </div>
@@ -694,13 +694,13 @@ export default function App() {
             <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-md text-center space-y-3 max-w-sm">
               <ShieldCheck className="h-8 w-8 mx-auto text-[#ff5757]" />
               <p className="text-sm font-bold text-[#353535]">Session CRM requise</p>
-              <p className="text-xs text-slate-500">Veuillez vous connecter avec un compte autorisé.</p>
+              <p className="text-xs text-slate-500">Veuillez vous connecter avec un compte autorisÃƒÂ©.</p>
               <button
                 type="button"
                 onClick={() => navigate('login')}
                 className="inline-flex items-center justify-center px-4 py-2 bg-[#353535] text-white rounded-xl text-xs font-bold hover:bg-slate-800"
               >
-                Aller à la connexion
+                Aller ÃƒÂ  la connexion
               </button>
             </div>
           </div>
@@ -720,20 +720,20 @@ export default function App() {
                 <span className="inline-flex items-center gap-1 text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-sm text-[10px] uppercase tracking-wider animate-pulse-subtle">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Session Active
                 </span>
-                <span className="text-slate-300 hidden sm:inline">Connecté en tant que: <strong>{loggedManagerName}</strong></span>
+                <span className="text-slate-300 hidden sm:inline">ConnectÃƒÂ© en tant que: <strong>{loggedManagerName}</strong></span>
               </div>
 
               {/* Instant Switching Panel */}
               <div className="flex items-center gap-2 font-semibold">
                 {allowDemoTools && (<>
-                <span className="text-slate-400 text-[11px] hidden lg:inline">Simulateur de rôle:</span>
+                <span className="text-slate-400 text-[11px] hidden lg:inline">Simulateur de rÃƒÂ´le:</span>
                 
                 {/* Switch to Superadmin */}
                 <button
                   onClick={() => {
                     setCrmRole('super_admin');
                     setCrmCenterId(null);
-                    setLoggedManagerName('Karim Benchikh (Super Admin)');
+                    setLoggedManagerName(`${SUPER_ADMIN_NAME} (Super Admin)`);
                   }}
                   className={`px-2.5 py-1 rounded-md text-[10px] transition ${crmRole === 'super_admin' ? 'bg-[#ff5757] text-white font-bold shadow-sm' : 'bg-white/10 text-slate-300 hover:bg-white/15'}`}
                 >
@@ -811,9 +811,9 @@ export default function App() {
                       {[
                         { id: 'dashboard' as const, label: 'Tableau de bord', icon: Activity },
                         { id: 'centers' as const, label: 'Gestion Centres', icon: Building },
-                        { id: 'managers' as const, label: 'Managers & Accès', icon: Users },
-                        { id: 'stats' as const, label: 'Analyses Réseau', icon: BarChart3 },
-                        { id: 'settings' as const, label: 'Paramètres Généraux', icon: Settings }
+                        { id: 'managers' as const, label: 'Managers & AccÃƒÂ¨s', icon: Users },
+                        { id: 'stats' as const, label: 'Analyses RÃƒÂ©seau', icon: BarChart3 },
+                        { id: 'settings' as const, label: 'ParamÃƒÂ¨tres GÃƒÂ©nÃƒÂ©raux', icon: Settings }
                       ].map(tab => {
                         const Icon = tab.icon;
                         const isActive = crmSuperAdminTab === tab.id;
@@ -842,8 +842,8 @@ export default function App() {
                         { id: 'dashboard' as const, label: 'Tableau de bord', icon: Activity },
                         { id: 'schedule' as const, label: 'Planning du Jour', icon: Calendar },
                         { id: 'clients' as const, label: 'Gestion Clients', icon: Users },
-                        { id: 'bookings' as const, label: 'Réservations', icon: Calendar },
-                        { id: 'payments' as const, label: 'Paiements Encaissés', icon: DollarSign },
+                        { id: 'bookings' as const, label: 'RÃƒÂ©servations', icon: Calendar },
+                        { id: 'payments' as const, label: 'Paiements EncaissÃƒÂ©s', icon: DollarSign },
                         { id: 'services' as const, label: 'Prestations & Forfaits', icon: Layers }
                       ].map(tab => {
                         const Icon = tab.icon;
@@ -877,7 +877,7 @@ export default function App() {
                   onClick={() => handleResetDatabase()}
                   className={`${allowDemoTools ? 'flex' : 'hidden'} w-full py-2 px-3 border border-white/10 hover:bg-white/5 text-slate-300 rounded-xl transition items-center justify-center gap-1.5 cursor-pointer`}
                 >
-                  <RefreshCw className="h-3.5 w-3.5" /> Réinitialiser Démo
+                  <RefreshCw className="h-3.5 w-3.5" /> RÃƒÂ©initialiser DÃƒÂ©mo
                 </button>
                 <button
                   onClick={handleLogout}
@@ -897,7 +897,7 @@ export default function App() {
                   managers={managers}
                   services={services}
                   packages={packages}
-                  settings={settings || { appName: 'AQ8 Algérie', contactEmail: 'contact@aq8algerie.com', contactPhone: '+213 (0) 23 48 50 60', addressAlgérie: 'Hydra, Alger', currency: 'DZD', enableVoucherPromo: true }}
+                  settings={settings || { appName: 'AQ8 AlgÃƒÂ©rie', contactEmail: 'contact@aq8algerie.com', contactPhone: '+213 (0) 23 48 50 60', addressAlgérie: 'Hydra, Alger', currency: 'DZD', enableVoucherPromo: true }}
                   appointmentsCount={appointments.length}
                   paymentsCount={payments.length}
                   totalRevenue={totalRevenue}
@@ -921,20 +921,20 @@ export default function App() {
                   </div>
                   <div className="space-y-2">
                     <span className="inline-block bg-[#ff5757]/10 text-[#ff5757] px-2.5 py-0.5 rounded-full font-bold uppercase text-[9px] tracking-wider">
-                      Accès CRM Restreint
+                      AccÃƒÂ¨s CRM Restreint
                     </span>
                     <h2 className="text-xl font-extrabold text-slate-800 font-display">Abonnement Club Suspendu</h2>
                     <p className="text-xs text-slate-500 leading-relaxed">
-                      L'accès au CRM pour l'établissement <strong>{activeCenter.name}</strong> a été bloqué par la direction. Cela se produit généralement suite à un défaut de paiement de l'abonnement du club ou à l'expiration de la période d'essai.
+                      L'accÃƒÂ¨s au CRM pour l'ÃƒÂ©tablissement <strong>{activeCenter.name}</strong> a ÃƒÂ©tÃƒÂ© bloquÃƒÂ© par la direction. Cela se produit gÃƒÂ©nÃƒÂ©ralement suite ÃƒÂ  un dÃƒÂ©faut de paiement de l'abonnement du club ou ÃƒÂ  l'expiration de la pÃƒÂ©riode d'essai.
                     </p>
                   </div>
                   <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/60 text-left text-xs text-slate-600 space-y-2">
                     <p><strong>Club :</strong> {activeCenter.name} ({activeCenter.city})</p>
                     <p><strong>Formule :</strong> {activeCenter.subscriptionPlan === 'premium' ? 'Formule Premium' : activeCenter.subscriptionPlan === 'basic' ? 'Formule Standard' : 'Essai Gratuit'}</p>
-                    <p><strong>Date d'expiration :</strong> {activeCenter.subscriptionExpiryDate || 'Non spécifiée'}</p>
+                    <p><strong>Date d'expiration :</strong> {activeCenter.subscriptionExpiryDate || 'Non spÃƒÂ©cifiÃƒÂ©e'}</p>
                   </div>
                   <p className="text-[11px] text-slate-400">
-                    Veuillez contacter le Super Administrateur <strong>Karim Benchikh</strong> au <strong>{settings?.contactPhone || '+213 (0) 23 48 50 60'}</strong> ou par e-mail à <strong>{settings?.contactEmail || 'contact@aq8algerie.com'}</strong> pour régulariser votre abonnement.
+                    Veuillez contacter le Super Administrateur <strong>{SUPER_ADMIN_NAME}</strong> au <strong>{settings?.contactPhone || '+213 (0) 23 48 50 60'}</strong> ou par e-mail ÃƒÂ  <strong>{settings?.contactEmail || 'contact@aq8algerie.com'}</strong> pour rÃƒÂ©gulariser votre abonnement.
                   </p>
                 </div>
               ) : crmRole === 'center_manager' && crmCenterId ? (
@@ -962,7 +962,7 @@ export default function App() {
                   <ShieldCheck className="h-10 w-10 text-[#ff5757] mx-auto" />
                   <h2 className="text-lg font-extrabold text-slate-800 font-display">Session CRM invalide</h2>
                   <p className="text-xs text-slate-500 leading-relaxed">
-                    Votre profil ne contient pas de rôle ou de centre valide. Veuillez vous reconnecter ou contacter le super administrateur.
+                    Votre profil ne contient pas de rÃƒÂ´le ou de centre valide. Veuillez vous reconnecter ou contacter le super administrateur.
                   </p>
                   <button
                     type="button"
@@ -987,24 +987,24 @@ export default function App() {
                 <div className="h-8 w-8 bg-white/10 rounded-lg flex items-center justify-center border border-[#ff5757]/30">
                   <span className="text-[#ff5757] font-bold text-base">8</span>
                 </div>
-                <span className="font-bold text-lg font-display uppercase tracking-wider text-white">AQ8 Algérie</span>
+                <span className="font-bold text-lg font-display uppercase tracking-wider text-white">AQ8 AlgÃƒÂ©rie</span>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Leader de l'électrostimulation sans fil et de la remise en forme technologique en Algérie. Prestations haut de gamme adaptées à tous les profils.
+                Leader de l'ÃƒÂ©lectrostimulation sans fil et de la remise en forme technologique en AlgÃƒÂ©rie. Prestations haut de gamme adaptÃƒÂ©es ÃƒÂ  tous les profils.
               </p>
             </div>
 
             <div className="space-y-4 text-xs">
               <h4 className="font-bold uppercase tracking-wider text-[#ff5757] font-display">Nos Technologies</h4>
               <ul className="space-y-2 text-slate-400">
-                <li><button onClick={() => navigate('aq8')} className="hover:text-white transition">AQ8 Électrostimulation (EMS)</button></li>
+                <li><button onClick={() => navigate('aq8')} className="hover:text-white transition">AQ8 Ãƒâ€°lectrostimulation (EMS)</button></li>
                 <li><button onClick={() => navigate('wonder')} className="hover:text-white transition">Wonder Muscle Sculpting</button></li>
-                <li><button onClick={() => navigate('faq')} className="hover:text-white transition">Questions Fréquentes</button></li>
+                <li><button onClick={() => navigate('faq')} className="hover:text-white transition">Questions FrÃƒÂ©quentes</button></li>
               </ul>
             </div>
 
             <div className="space-y-4 text-xs">
-              <h4 className="font-bold uppercase tracking-wider text-white font-display">Réseau d'Établissements</h4>
+              <h4 className="font-bold uppercase tracking-wider text-white font-display">RÃƒÂ©seau d'Ãƒâ€°tablissements</h4>
               <ul className="space-y-2 text-slate-400">
                 {centers.map(c => (
                   <li key={c.id}>
@@ -1022,7 +1022,7 @@ export default function App() {
             </div>
 
             <div className="space-y-4 text-xs">
-              <h4 className="font-bold uppercase tracking-wider text-white font-display">Contact & Siège</h4>
+              <h4 className="font-bold uppercase tracking-wider text-white font-display">Contact & SiÃƒÂ¨ge</h4>
               <p className="text-slate-400 leading-relaxed flex items-start gap-1.5">
                 <MapPin className="h-4 w-4 text-[#ff5757] shrink-0 mt-0.5" />
                 {settings?.addressAlgérie || '12 Rue des Glycines, Hydra, Alger'}
@@ -1034,7 +1034,7 @@ export default function App() {
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-6 border-t border-white/5 text-center text-xs text-slate-500">
-            <p>© 2026 AQ8 Algérie. Tous droits réservés. Refonte modernisée et optimisée.</p>
+            <p>Ã‚Â© 2026 AQ8 AlgÃƒÂ©rie. Tous droits rÃƒÂ©servÃƒÂ©s. Refonte modernisÃƒÂ©e et optimisÃƒÂ©e.</p>
           </div>
         </footer>
       )}

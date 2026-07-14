@@ -11,7 +11,7 @@ service cloud.firestore {
     }
 
     function isSuperAdmin() {
-      return signedIn() && currentEmail() == 'karim@aq8algerie.com';
+      return signedIn() && currentEmail() == 'aq8algerie@gmail.com';
     }
 
     function managerDocPath(managerId) {

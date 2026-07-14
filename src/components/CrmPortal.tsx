@@ -8,7 +8,14 @@ import { ShieldCheck, Building, Lock, Mail, Activity } from 'lucide-react';
 import { Center, CenterManager } from '../types';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { requireAuth } from '../lib/firebase';
-import { CrmSession, getCrmAuthErrorMessage, resolveCrmSession } from '../lib/crmAuth';
+import {
+  CrmSession,
+  getCrmAuthErrorMessage,
+  provisionCrmUserAccount,
+  resolveCrmSession,
+  SUPER_ADMIN_EMAIL,
+  SUPER_ADMIN_NAME
+} from '../lib/crmAuth';
 
 export function CrmPortal({
   centers,
@@ -62,6 +69,29 @@ export function CrmPortal({
       onLoginSuccess(session);
     } catch (err) {
       console.error(err);
+      const code = typeof err === 'object' && err && 'code' in err ? String((err as { code?: string }).code) : '';
+      const canProvisionAccount = firebaseAuth && [
+        'auth/user-not-found',
+        'auth/wrong-password',
+        'auth/invalid-credential',
+        'auth/invalid-login-credentials'
+      ].includes(code);
+
+      if (firebaseAuth && canProvisionAccount) {
+        try {
+          const session = await provisionCrmUserAccount(firebaseAuth, trimmedEmail, trimmedPassword);
+          onLoginSuccess(session);
+          return;
+        } catch (provisionError) {
+          console.error(provisionError);
+          if (firebaseAuth.currentUser) {
+            await signOut(firebaseAuth).catch(() => {});
+          }
+          setErrorMessage(getCrmAuthErrorMessage(provisionError));
+          return;
+        }
+      }
+
       if (firebaseAuth?.currentUser) {
         await signOut(firebaseAuth).catch(() => {});
       }
@@ -76,11 +106,11 @@ export function CrmPortal({
 
     if (role === 'super_admin') {
       onLoginSuccess({
-        uid: 'démo-super-admin',
-        email: 'karim@aq8algerie.com',
+        uid: 'dÃ©mo-super-admin',
+        email: SUPER_ADMIN_EMAIL,
         role: 'super_admin',
         centerId: null,
-        managerName: 'Karim Benchikh'
+        managerName: SUPER_ADMIN_NAME
       });
       return;
     }
@@ -88,12 +118,12 @@ export function CrmPortal({
     if (!mgr) return;
 
     if (centers.length === 0) {
-      setErrorMessage('Aucun centre disponible. Connexion démo impossible.');
+      setErrorMessage('Aucun centre disponible. Connexion dÃ©mo impossible.');
       return;
     }
 
     onLoginSuccess({
-      uid: `démo-${mgr.email}`,
+      uid: `dÃ©mo-${mgr.email}`,
       email: mgr.email.toLowerCase().trim(),
       role: 'center_manager',
       centerId: mgr.centerId,
@@ -109,9 +139,9 @@ export function CrmPortal({
         <div className="mx-auto h-12 w-12 bg-[#353535] text-white rounded-full flex items-center justify-center shadow-md border border-[#ff5757]/30">
           <ShieldCheck className="h-6 w-6 text-[#ff5757]" />
         </div>
-        <h1 className="text-2xl font-bold text-[#353535] font-display">Portail CRM AQ8 Algérie</h1>
+        <h1 className="text-2xl font-bold text-[#353535] font-display">Portail CRM AQ8 AlgÃ©rie</h1>
         <p className="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">
-          Espace interne réservé à la direction AQ8 Algérie et aux managers de centres.
+          Espace interne rÃ©servÃ© Ã  la direction AQ8 AlgÃ©rie et aux managers de centres.
         </p>
       </div>
 
@@ -138,7 +168,7 @@ export function CrmPortal({
                   setEmail(e.target.value);
                   clearErrors();
                 }}
-                placeholder="karim@aq8algerie.com"
+                placeholder={SUPER_ADMIN_EMAIL}
                 className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:border-[#ff5757] text-xs"
               />
             </div>
@@ -147,7 +177,7 @@ export function CrmPortal({
           <div className="space-y-1">
             <div className="flex justify-between items-center">
               <label className="font-semibold text-slate-600">Mot de passe</label>
-              {allowDemoTools && (<span className="text-[10px] text-slate-400">Mode démo local</span>)}
+              {allowDemoTools && (<span className="text-[10px] text-slate-400">Mode dÃ©mo local</span>)}
             </div>
             <div className="relative">
               <Lock className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
@@ -179,10 +209,10 @@ export function CrmPortal({
       <div className={`${allowDemoTools ? 'block' : 'hidden'} bg-slate-50 rounded-3xl p-6 border border-slate-200 space-y-4`}>
         <div className="flex items-center gap-2">
           <Activity className="h-4 w-4 text-[#ff5757]" />
-          <h4 className="font-bold text-[#353535] text-xs font-display">Mode démonstration</h4>
+          <h4 className="font-bold text-[#353535] text-xs font-display">Mode dÃ©monstration</h4>
         </div>
         <p className="text-[11px] text-slate-500 leading-relaxed">
-          Accès local réservé àux essais hors production. Les accès réels passent par Firebase Auth.
+          AccÃ¨s local rÃ©servÃ© Ã ux essais hors production. Les accÃ¨s rÃ©els passent par Firebase Auth.
         </p>
 
         <div className="space-y-3 pt-1">
@@ -196,8 +226,8 @@ export function CrmPortal({
                 <ShieldCheck className="h-4 w-4" />
               </div>
               <div className="space-y-0.5">
-                <span className="font-bold text-slate-700 text-xs block group-hover:text-[#ff5757] transition-colors">Accès Super Admin</span>
-                <span className="text-[10px] text-slate-500 font-mono">karim@aq8algerie.com</span>
+                <span className="font-bold text-slate-700 text-xs block group-hover:text-[#ff5757] transition-colors">AccÃ¨s Super Admin</span>
+                <span className="text-[10px] text-slate-500 font-mono">{SUPER_ADMIN_EMAIL}</span>
               </div>
             </div>
             <span className="text-[10px] text-[#ff5757] font-semibold bg-[#ff5757]/10 py-1 px-2.5 rounded-md">
@@ -206,7 +236,7 @@ export function CrmPortal({
           </button>
 
           <div className="space-y-2 border-t border-slate-200/60 pt-3">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Accès gérant de centre</span>
+            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">AccÃ¨s gÃ©rant de centre</span>
 
             {isCentersEmpty ? (
               <div className="p-3 bg-amber-50 border border-amber-100 text-amber-700 text-xs rounded-xl font-medium">
@@ -214,7 +244,7 @@ export function CrmPortal({
               </div>
             ) : managers.length === 0 ? (
               <div className="p-3 bg-slate-100 border border-slate-200 text-slate-500 text-xs rounded-xl italic">
-                Aucun manager de centre configuré pour le moment.
+                Aucun manager de centre configurÃ© pour le moment.
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-2">
@@ -233,7 +263,7 @@ export function CrmPortal({
                         </div>
                         <div className="space-y-0.5">
                           <span className="font-bold text-slate-700 text-[11px] block group-hover:text-slate-900">{mgr.name}</span>
-                          <span className="text-[9px] text-[#ff5757] font-bold">{center?.name || 'Centre'} ({center?.city || 'Algérie'})</span>
+                          <span className="text-[9px] text-[#ff5757] font-bold">{center?.name || 'Centre'} ({center?.city || 'AlgÃ©rie'})</span>
                         </div>
                       </div>
                       <span className="text-[9px] text-slate-500 hover:text-slate-800">
