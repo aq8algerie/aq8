@@ -23,9 +23,9 @@ export function StatsPanel({
 
   return (        <div className="space-y-6">
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Donut Chart: Adhérents par technologie */}
+            {/* Donut Chart: AdhÃ©rents par technologie */}
             <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-xs space-y-4">
-              <h4 className="font-bold font-display text-slate-800 text-xs uppercase tracking-wider">Répartition des Adhérents par Technologie</h4>
+              <h4 className="font-bold font-display text-slate-800 text-xs uppercase tracking-wider">RÃ©partition des AdhÃ©rents par Technologie</h4>
 
               <div className="flex flex-col sm:flex-row items-center justify-around py-4 gap-4">
                 {(() => {
@@ -49,7 +49,7 @@ export function StatsPanel({
                         <div className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                           <div className="w-3 h-3 bg-[#ff5757] rounded-sm shrink-0"></div>
                           <div>
-                            <span className="text-slate-600 font-medium block">AQ8 Électrostimulation (EMS)</span>
+                            <span className="text-slate-600 font-medium block">AQ8 Ã‰lectrostimulation (EMS)</span>
                             <span className="font-bold font-mono text-slate-800 text-xs">{aq8ClientsCount} membres ({aq8Percent}%)</span>
                           </div>
                         </div>
@@ -67,10 +67,10 @@ export function StatsPanel({
               </div>
             </div>
 
-            {/* Radial Gauges: Taux de Remplissage des Créneaux Hommes vs Femmes */}
+            {/* Radial Gauges: Taux de Remplissage des CrÃ©neaux Hommes vs Femmes */}
             <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-xs space-y-4">
               <div className="flex justify-between items-center">
-                <h4 className="font-bold font-display text-slate-800 text-xs uppercase tracking-wider">Remplissage des Créneaux</h4>
+                <h4 className="font-bold font-display text-slate-800 text-xs uppercase tracking-wider">Remplissage des CrÃ©neaux</h4>
 
                 {/* Center Selector Dropdown */}
                 <select
@@ -121,7 +121,7 @@ export function StatsPanel({
                   <div className="grid grid-cols-2 gap-4 py-2">
                     {/* Women Gauge */}
                     <div className="flex flex-col items-center p-3 rounded-2xl bg-rose-50/20 border border-rose-100/30 text-center space-y-3">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Créneaux Femmes</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">CrÃ©neaux Femmes</span>
                       <div className="relative w-24 h-24">
                         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 50 50">
                           <circle cx="25" cy="25" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="3" />
@@ -149,7 +149,7 @@ export function StatsPanel({
 
                     {/* Men Gauge */}
                     <div className="flex flex-col items-center p-3 rounded-2xl bg-blue-50/20 border border-blue-100/30 text-center space-y-3">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Créneaux Hommes</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">CrÃ©neaux Hommes</span>
                       {occ.menCapacity > 0 ? (
                         <>
                           <div className="relative w-24 h-24">
@@ -179,7 +179,7 @@ export function StatsPanel({
                       ) : (
                         <div className="flex-1 flex flex-col items-center justify-center py-6 text-slate-400 text-[10px] italic">
                           <Venus className="h-8 w-8 text-rose-400 opacity-60 mb-2" />
-                          <span>Centre réservé aux femmes uniquement</span>
+                          <span>Centre rÃ©servÃ© aux femmes uniquement</span>
                         </div>
                       )}
                     </div>
@@ -191,7 +191,7 @@ export function StatsPanel({
 
           {/* Bar Chart: Chiffre d'Affaires par Centre */}
           <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-xs space-y-4">
-            <h4 className="font-bold font-display text-slate-800 text-xs uppercase tracking-wider">Chiffre d'Affaires Consolidé par Centre</h4>
+            <h4 className="font-bold font-display text-slate-800 text-xs uppercase tracking-wider">Chiffre d'Affaires ConsolidÃ© par Centre</h4>
 
             {(() => {
               const getCenterRevenues = () => {

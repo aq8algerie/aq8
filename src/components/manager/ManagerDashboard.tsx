@@ -174,7 +174,7 @@ export function ManagerDashboard({
   const maxMonthlyVal = Math.max(...monthlyCounts, 1);
   // Local revenue trend for this center
   const getLocalRevenueTrendData = () => {
-    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+    const months = ['Jan', 'FÃ©v', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'AoÃ»', 'Sep', 'Oct', 'Nov', 'DÃ©c'];
     const centerPayments = payments.filter(payment => payment.centerId === centerId);
     const validDates = centerPayments
       .map(payment => new Date(payment.date))

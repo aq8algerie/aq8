@@ -25,8 +25,8 @@ export function CentersManagement({
     <div className="space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
-              <h3 className="font-bold font-display text-slate-800 text-base">Réseau des Centres AQ8 ({centers.length})</h3>
-              <p className="text-[10px] text-slate-400">Gérez les implantations géographiques et le statut des établissements.</p>
+              <h3 className="font-bold font-display text-slate-800 text-base">RÃ©seau des Centres AQ8 ({centers.length})</h3>
+              <p className="text-[10px] text-slate-400">GÃ©rez les implantations gÃ©ographiques et le statut des Ã©tablissements.</p>
             </div>
 
             <div className="flex items-center gap-2 self-stretch sm:self-auto">
@@ -77,7 +77,7 @@ export function CentersManagement({
                     construction: 'bg-blue-50 text-blue-700 border-blue-100'
                   };
                   const statusLabel: Record<string, string> = {
-                    active: 'Opérationnel',
+                    active: 'OpÃ©rationnel',
                     maintenance: 'En Maintenance',
                     construction: 'En Construction'
                   };
@@ -130,7 +130,7 @@ export function CentersManagement({
                           {/* Member count */}
                           <div className="flex justify-between items-center text-[10px] font-bold">
                             <span className="text-slate-400 uppercase tracking-wider">Membres</span>
-                            <span className="font-mono text-slate-700">{clientCount} adhérents</span>
+                            <span className="font-mono text-slate-700">{clientCount} adhÃ©rents</span>
                           </div>
 
                           {/* Action Buttons */}
@@ -198,7 +198,7 @@ export function CentersManagement({
                           <>
                             {pageData.map(center => {
                               const statusLabel: Record<string, string> = {
-                                active: 'Opérationnel',
+                                active: 'OpÃ©rationnel',
                                 maintenance: 'Maintenance',
                                 construction: 'En Construction'
                               };
@@ -277,7 +277,7 @@ export function CentersManagement({
                       onClick={() => setListPage(listPage - 1)}
                       className="px-3 py-1 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white cursor-pointer"
                     >
-                      Précédent
+                      PrÃ©cÃ©dent
                     </button>
                     <span>Page {listPage} sur {totalPages}</span>
                     <button

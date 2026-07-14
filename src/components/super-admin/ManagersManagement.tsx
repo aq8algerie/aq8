@@ -26,14 +26,14 @@ export function ManagersManagement({
   return (        <div className="space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
-              <h3 className="font-bold font-display text-slate-800 text-base">Gérants de Centres & Accès CRM ({
+              <h3 className="font-bold font-display text-slate-800 text-base">GÃ©rants de Centres & AccÃ¨s CRM ({
                 (() => {
                   const map: Record<string, boolean> = {};
                   managers.forEach(m => { map[m.email.toLowerCase().trim()] = true; });
                   return Object.keys(map).length;
                 })()
               })</h3>
-              <p className="text-[10px] text-slate-400 font-medium">Visualisez et configurez les droits d'accès des gérants de vos centres.</p>
+              <p className="text-[10px] text-slate-400 font-medium">Visualisez et configurez les droits d'accÃ¨s des gÃ©rants de vos centres.</p>
             </div>
 
             <div className="flex items-center gap-2 self-stretch sm:self-auto">
@@ -136,7 +136,7 @@ export function ManagersManagement({
 
                               {/* Managed Centers List */}
                               <div className="space-y-1.5 pt-2 border-t border-slate-50">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Centres Gérés</span>
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Centres GÃ©rÃ©s</span>
                                 <div className="flex gap-1.5 flex-wrap">
                                   {mgr.centersList.map(c => (
                                     <span key={c.id} className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded-lg text-[10px] font-bold border border-slate-150">
@@ -145,7 +145,7 @@ export function ManagersManagement({
                                     </span>
                                   ))}
                                   {mgr.centersList.length === 0 && (
-                                    <span className="text-slate-400 text-[10px] italic">Aucun centre affecté</span>
+                                    <span className="text-slate-400 text-[10px] italic">Aucun centre affectÃ©</span>
                                   )}
                                 </div>
                               </div>
@@ -163,7 +163,7 @@ export function ManagersManagement({
                                 }`}
                               >
                                 <span className={`h-1.5 w-1.5 rounded-full ${mgr.active ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
-                                {mgr.active ? 'Accès Actif' : 'Bloqué'}
+                                {mgr.active ? 'AccÃ¨s Actif' : 'BloquÃ©'}
                               </button>
 
                               <div className="flex gap-1.5">
@@ -198,7 +198,7 @@ export function ManagersManagement({
                           onClick={() => setManagersGridLimit(managersGridLimit + 3)}
                           className="px-6 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-xs transition-premium cursor-pointer"
                         >
-                          Afficher plus de gérants ({uniqueMgrs.length - managersGridLimit} restants)
+                          Afficher plus de gÃ©rants ({uniqueMgrs.length - managersGridLimit} restants)
                         </button>
                       </div>
                     )}
@@ -215,8 +215,8 @@ export function ManagersManagement({
                             <tr>
                               <th className="p-4">Manager</th>
                               <th className="p-4">E-mail de Connexion</th>
-                              <th className="p-4">Centres Affectés</th>
-                              <th className="p-4">Statut d'Accès</th>
+                              <th className="p-4">Centres AffectÃ©s</th>
+                              <th className="p-4">Statut d'AccÃ¨s</th>
                               <th className="p-4 text-right">Actions</th>
                             </tr>
                           </thead>
@@ -240,7 +240,7 @@ export function ManagersManagement({
                                             </span>
                                           ))}
                                           {mgr.centersList.length === 0 && (
-                                            <span className="text-slate-400 text-[10px] italic">Non affecté</span>
+                                            <span className="text-slate-400 text-[10px] italic">Non affectÃ©</span>
                                           )}
                                         </div>
                                       </td>
@@ -252,7 +252,7 @@ export function ManagersManagement({
                                             mgr.active ? 'bg-green-50 text-green-600 border-green-150' : 'bg-slate-100 text-slate-400 border-slate-200'
                                           }`}
                                         >
-                                          {mgr.active ? 'Actif' : 'Désactivé'}
+                                          {mgr.active ? 'Actif' : 'DÃ©sactivÃ©'}
                                         </button>
                                       </td>
                                       <td className="p-4 text-right">
@@ -299,7 +299,7 @@ export function ManagersManagement({
                             onClick={() => setManagersListPage(managersListPage - 1)}
                             className="px-3 py-1 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white cursor-pointer"
                           >
-                            Précédent
+                            PrÃ©cÃ©dent
                           </button>
                           <span>Page {managersListPage} sur {totalPages}</span>
                           <button
