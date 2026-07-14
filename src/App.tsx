@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Activity,
   Calendar,
@@ -76,7 +76,8 @@ import {
   dbDeletePayment,
   dbSaveMeasurement,
   dbSaveSettings,
-  dbResetToDefaults
+  dbResetToDefaults,
+  ensureManagerDocForRules
 } from './lib/db';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from './lib/firebase';
@@ -228,6 +229,7 @@ export default function App() {
   const [crmSidebarOpen, setCrmSidebarOpen] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
+  const lastManagerRepairSignature = useRef<string>('');
 
   const clearCrmSession = () => {
     setCrmRole(null);
@@ -239,6 +241,7 @@ export default function App() {
     setClientPackages([]);
     setPayments([]);
     setMeasurements([]);
+    lastManagerRepairSignature.current = '';
   };
 
   const applyCrmSession = (session: CrmSession) => {
@@ -291,6 +294,58 @@ export default function App() {
       navigate('login');
     }
   }, [currentRoute, authLoading, crmRole]);
+
+  useEffect(() => {
+    if (crmRole !== 'super_admin' || managers.length === 0) {
+      return;
+    }
+
+    const uniqueManagersByEmail = new Map<string, CenterManager>();
+
+    managers.forEach((manager) => {
+      const emailKey = manager.email.toLowerCase().trim();
+      uniqueManagersByEmail.set(emailKey, { ...manager, email: emailKey });
+    });
+
+    const uniqueManagers = [...uniqueManagersByEmail.values()].sort((a, b) => a.email.localeCompare(b.email));
+
+    const signature = JSON.stringify(
+      uniqueManagers.map((manager) => ({
+        id: manager.id,
+        email: manager.email,
+        name: manager.name,
+        centerId: manager.centerId,
+        active: manager.active
+      }))
+    );
+
+    if (signature === lastManagerRepairSignature.current) {
+      return;
+    }
+
+    lastManagerRepairSignature.current = signature;
+    let cancelled = false;
+
+    (async () => {
+      let repaired = 0;
+
+      for (const manager of uniqueManagers) {
+        if (await ensureManagerDocForRules(manager)) {
+          repaired += 1;
+        }
+      }
+
+      if (!cancelled && repaired > 0) {
+        console.info(`[AQ8 auth] Repaired ${repaired} manager auth document(s).`);
+      }
+    })().catch((err) => {
+      console.error('[AQ8 auth] Failed to repair manager auth documents.', err);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [crmRole, managers]);
 
   useEffect(() => {
     if (!crmRole) {

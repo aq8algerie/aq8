@@ -6,6 +6,7 @@ import {
   deleteDoc,
   onSnapshot,
   getDocs,
+  getDoc,
   writeBatch,
   query,
   where
@@ -137,9 +138,21 @@ export function subscribeToManagers(callback: (managers: CenterManager[]) => voi
     return () => {};
   }
   return onSnapshot(collection(requireFirestore(), 'managers'), (snap) => {
-    const list: CenterManager[] = [];
-    snap.forEach((doc) => list.push(doc.data() as CenterManager));
-    callback(list);
+    const byEmail = new Map<string, { manager: CenterManager; score: number }>();
+
+    snap.forEach((docSnap) => {
+      const manager = docSnap.data() as CenterManager;
+      const emailKey = manager.email.toLowerCase().trim();
+      const normalized: CenterManager = { ...manager, email: emailKey };
+      const score = docSnap.id === emailKey ? 2 : 1;
+      const current = byEmail.get(emailKey);
+
+      if (!current || score >= current.score) {
+        byEmail.set(emailKey, { manager: normalized, score });
+      }
+    });
+
+    callback(Array.from(byEmail.values()).map((entry) => entry.manager));
   });
 }
 
@@ -253,7 +266,33 @@ export async function dbDeleteCenter(centerId: string) {
 export async function dbSaveManager(manager: CenterManager) {
   // Key managers by email in Firestore for easier rules querying
   const emailKey = manager.email.toLowerCase().trim();
-  await setDoc(doc(requireFirestore(), 'managers', emailKey), manager, { merge: true });
+  await setDoc(doc(requireFirestore(), 'managers', emailKey), { ...manager, email: emailKey }, { merge: true });
+}
+
+export async function ensureManagerDocForRules(manager: CenterManager) {
+  const emailKey = manager.email.toLowerCase().trim();
+  const normalized: CenterManager = { ...manager, email: emailKey };
+  const ref = doc(requireFirestore(), 'managers', emailKey);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    await setDoc(ref, normalized, { merge: true });
+    return true;
+  }
+
+  const current = snap.data() as CenterManager;
+  const isSame = current.id === normalized.id
+    && current.name === normalized.name
+    && current.email?.toLowerCase().trim() === emailKey
+    && current.centerId === normalized.centerId
+    && current.active === normalized.active;
+
+  if (isSame) {
+    return false;
+  }
+
+  await setDoc(ref, normalized, { merge: true });
+  return true;
 }
 
 export async function dbDeleteManager(managerEmail: string) {
