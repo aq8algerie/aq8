@@ -104,25 +104,26 @@ export function ManagerDashboard({
   const womenPercent = Math.round((womenCount / totalClients) * 100);
   const menPercent = Math.round((menCount / totalClients) * 100);
 
-  // Active package technology breakdown (AQ8 vs Wonder vs Mix)
+  // Active package session breakdown (AQ8 vs Wonder vs Mix)
   const centerClientPackages = clientPackages.filter(cp => cp.centerId === centerId && cp.status === 'active');
-  let aq8SubscribersCount = 0;
-  let wonderSubscribersCount = 0;
-  let mixSubscribersCount = 0;
+  let aq8SessionsCount = 0;
+  let wonderSessionsCount = 0;
+  let mixSessionsCount = 0;
 
   centerClientPackages.forEach(cp => {
     const pkg = packages.find(p => p.id === cp.packageId);
+    const sessionCount = Number(cp.totalSessions || pkg?.sessionsCount || 0);
     if (pkg) {
-      if (pkg.type === 'aq8') aq8SubscribersCount++;
-      else if (pkg.type === 'wonder') wonderSubscribersCount++;
-      else if (pkg.type === 'mix') mixSubscribersCount++;
+      if (pkg.type === 'aq8') aq8SessionsCount += sessionCount;
+      else if (pkg.type === 'wonder') wonderSessionsCount += sessionCount;
+      else if (pkg.type === 'mix') mixSessionsCount += sessionCount;
     }
   });
 
-  const totalActiveSubscriptions = aq8SubscribersCount + wonderSubscribersCount + mixSubscribersCount || 1;
-  const aq8SubPercent = Math.round((aq8SubscribersCount / totalActiveSubscriptions) * 100);
-  const wonderSubPercent = Math.round((wonderSubscribersCount / totalActiveSubscriptions) * 100);
-  const mixSubPercent = Math.round((mixSubscribersCount / totalActiveSubscriptions) * 100);
+  const totalActiveSessions = aq8SessionsCount + wonderSessionsCount + mixSessionsCount || 1;
+  const aq8SubPercent = Math.round((aq8SessionsCount / totalActiveSessions) * 100);
+  const wonderSubPercent = Math.round((wonderSessionsCount / totalActiveSessions) * 100);
+  const mixSubPercent = Math.round((mixSessionsCount / totalActiveSessions) * 100);
 
   // Weekday distribution (Sun=0, Mon=1, etc.)
   const weekDaysFr = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
@@ -331,7 +332,7 @@ export function ManagerDashboard({
         <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-xs space-y-4">
           <div className="flex items-center gap-2">
             <Layers className="h-4 w-4 text-[#ff5757]" />
-            <h4 className="font-bold font-display text-slate-800 text-xs uppercase tracking-wider">Forfaits par Technologie</h4>
+            <h4 className="font-bold font-display text-slate-800 text-xs uppercase tracking-wider">Séances par Technologie</h4>
           </div>
 
           <div className="space-y-3 pt-1 text-xs">
@@ -340,7 +341,7 @@ export function ManagerDashboard({
               <div className="space-y-1">
                 <div className="flex justify-between font-semibold">
                   <span className="text-slate-600">AQ8 Électrostimulation</span>
-                  <span className="font-mono text-slate-800">{aq8SubscribersCount} ({aq8SubPercent}%)</span>
+                  <span className="font-mono text-slate-800">{aq8SessionsCount} séances ({aq8SubPercent}%)</span>
                 </div>
                 <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                   <div style={{ width: `${aq8SubPercent}%` }} className="h-full bg-[#ff5757] rounded-full transition-all duration-500"></div>
@@ -351,7 +352,7 @@ export function ManagerDashboard({
               <div className="space-y-1">
                 <div className="flex justify-between font-semibold">
                   <span className="text-slate-600">Wonder Muscle Sculpt</span>
-                  <span className="font-mono text-slate-800">{wonderSubscribersCount} ({wonderSubPercent}%)</span>
+                  <span className="font-mono text-slate-800">{wonderSessionsCount} séances ({wonderSubPercent}%)</span>
                 </div>
                 <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                   <div style={{ width: `${wonderSubPercent}%` }} className="h-full bg-[#353535] rounded-full transition-all duration-500"></div>
@@ -362,7 +363,7 @@ export function ManagerDashboard({
               <div className="space-y-1">
                 <div className="flex justify-between font-semibold">
                   <span className="text-slate-600">Cures Mixtes</span>
-                  <span className="font-mono text-slate-800">{mixSubscribersCount} ({mixSubPercent}%)</span>
+                  <span className="font-mono text-slate-800">{mixSessionsCount} séances ({mixSubPercent}%)</span>
                 </div>
                 <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                   <div style={{ width: `${mixSubPercent}%` }} className="h-full bg-slate-400 rounded-full transition-all duration-500"></div>
