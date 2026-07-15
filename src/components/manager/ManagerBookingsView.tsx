@@ -32,7 +32,8 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { Client, Appointment, Service, ClientPackage, Package } from '../../types';
 import { formatDateTime, getTodayDateString } from '../../lib/centerManagerUtils';
-import { findActivePackageForClient, validateDeduction, deductSessionFromPackage } from '../../lib/packageRules';
+import { findActivePackageForClient } from '../../lib/packageRules';
+import { AppointmentMutationOptions, CrmActionResult } from '../../lib/crmTransactions';
 
 interface ManagerBookingsViewProps {
   centerId: string;
@@ -41,10 +42,10 @@ interface ManagerBookingsViewProps {
   services: Service[];
   clientPackages: ClientPackage[];
   packages: Package[];
-  onCompleteAppointment: (id: string) => void;
-  onCancelAppointment: (id: string) => void;
-  onUpdateAppointments: (appointments: Appointment[]) => void;
-  onUpdateClientPackages: (clientPackages: ClientPackage[]) => void;
+  onCompleteAppointment: (id: string, options?: AppointmentMutationOptions) => Promise<CrmActionResult>;
+  onCancelAppointment: (id: string, options?: AppointmentMutationOptions) => Promise<CrmActionResult>;
+  onUpdateAppointment: (appointment: Appointment) => Promise<CrmActionResult>;
+  onDeleteAppointment: (id: string) => Promise<CrmActionResult>;
   onBookAppointmentClick: () => void;
 }
 
@@ -57,8 +58,8 @@ export function ManagerBookingsView({
   packages,
   onCompleteAppointment,
   onCancelAppointment,
-  onUpdateAppointments,
-  onUpdateClientPackages,
+  onUpdateAppointment,
+  onDeleteAppointment,
   onBookAppointmentClick
 }: ManagerBookingsViewProps) {
   // 1. Core State
@@ -220,118 +221,123 @@ export function ManagerBookingsView({
   };
 
   // 4. Individual Actions
-  const handleSingleComplete = (id: string) => {
-    onCompleteAppointment(id);
-    showToast('Séance validée avec succès !');
-  };
-
-  const handleSingleCancel = (id: string) => {
-    onCancelAppointment(id);
-    showToast('Séance annulée avec succès.');
-  };
-
-  const handleSingleDelete = (id: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer définitivement cette réservation ?')) {
-      const updated = appointments.filter(a => a.id !== id);
-      onUpdateAppointments(updated);
-      setSelectedIds(prev => prev.filter(x => x !== id));
-      showToast('Réservation supprimée définitivement.');
+  const handleSingleComplete = async (id: string) => {
+    const result = await onCompleteAppointment(id, { silent: true });
+    if (result.ok) {
+      showToast('Seance validee avec succes !');
+    } else {
+      showToast(result.error || 'Validation impossible.', 'error');
     }
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleSingleCancel = async (id: string) => {
+    const result = await onCancelAppointment(id, { silent: true });
+    if (result.ok) {
+      showToast('Seance annulee avec succes.');
+    } else {
+      showToast(result.error || 'Annulation impossible.', 'error');
+    }
+  };
+
+  const handleSingleDelete = async (id: string) => {
+    if (window.confirm('Voulez-vous supprimer definitivement cette reservation ?')) {
+      const result = await onDeleteAppointment(id);
+      if (result.ok) {
+        setSelectedIds(prev => prev.filter(x => x !== id));
+        showToast('Reservation supprimee definitivement.');
+      } else {
+        showToast(result.error || 'Suppression impossible.', 'error');
+      }
+    }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingApt) return;
 
-    // Check if appointment is valid
     const selectedService = services.find(s => s.id === editingApt.serviceId);
-    const updated = appointments.map(a => {
-      if (a.id === editingApt.id) {
-        return {
-          ...editingApt,
-          duration: selectedService ? selectedService.duration : 20
-        };
-      }
-      return a;
+    const result = await onUpdateAppointment({
+      ...editingApt,
+      duration: selectedService ? selectedService.duration : 20
     });
 
-    onUpdateAppointments(updated);
-    setEditingApt(null);
-    showToast('Réservation mise à jour avec succès.');
+    if (result.ok) {
+      setEditingApt(null);
+      showToast('Reservation mise a jour avec succes.');
+    } else {
+      showToast(result.error || 'Mise a jour impossible.', 'error');
+    }
   };
 
   // 5. Bulk Operations
-  const handleBulkComplete = () => {
+  const handleBulkComplete = async () => {
     const bookingsToComplete = appointments.filter(a => selectedIds.includes(a.id) && a.status === 'booked');
-    
+
     if (bookingsToComplete.length === 0) {
-      showToast('Aucun rendez-vous planifié éligible parmi les sélections.', 'error');
+      showToast('Aucun rendez-vous planifie eligible parmi les selections.', 'error');
       return;
     }
 
-    let tempClientPackages = [...clientPackages];
     let succeededCount = 0;
     let failedCount = 0;
 
-    const updatedApts = appointments.map(apt => {
-      if (selectedIds.includes(apt.id)) {
-        if (apt.status !== 'booked') return apt;
+    for (const appointment of bookingsToComplete) {
+      const result = await onCompleteAppointment(appointment.id, { silent: true });
+      if (result.ok) succeededCount++;
+      else failedCount++;
+    }
 
-        const cl = clients.find(c => c.id === apt.clientId);
-        const activePkg = findActivePackageForClient(apt.clientId, tempClientPackages);
-        
-        const validation = validateDeduction(apt, cl, activePkg, centerId);
-
-        if (validation.valid && activePkg) {
-          const updatedPkg = deductSessionFromPackage(activePkg);
-          tempClientPackages = tempClientPackages.map(cp => cp.id === activePkg.id ? updatedPkg : cp);
-          succeededCount++;
-          return { ...apt, status: 'completed' as const };
-        } else {
-          failedCount++;
-          return apt; // leaves booked if invalid/no credits
-        }
-      }
-      return apt;
-    });
-
-    onUpdateAppointments(updatedApts);
-    onUpdateClientPackages(tempClientPackages);
     setSelectedIds([]);
-    
+
     if (failedCount > 0) {
-      showToast(`${succeededCount} validé(s), ${failedCount} échoué(s) (absence de forfait/crédits).`, 'error');
+      showToast(`${succeededCount} valide(s), ${failedCount} echoue(s) (absence de forfait/credits).`, 'error');
     } else {
-      showToast(`${succeededCount} réservations validées et créditées en masse !`);
+      showToast(`${succeededCount} reservations validees et creditees en masse !`);
     }
   };
 
-  const handleBulkCancel = () => {
+  const handleBulkCancel = async () => {
     const bookingsToCancel = appointments.filter(a => selectedIds.includes(a.id) && a.status === 'booked');
 
     if (bookingsToCancel.length === 0) {
-      showToast('Aucun rendez-vous planifié éligible à l’annulation.', 'error');
+      showToast("Aucun rendez-vous planifie eligible a l'annulation.", 'error');
       return;
     }
 
-    const updatedApts = appointments.map(apt => {
-      if (selectedIds.includes(apt.id) && apt.status === 'booked') {
-        return { ...apt, status: 'cancelled' as const };
-      }
-      return apt;
-    });
+    let succeededCount = 0;
+    let failedCount = 0;
 
-    onUpdateAppointments(updatedApts);
+    for (const appointment of bookingsToCancel) {
+      const result = await onCancelAppointment(appointment.id, { silent: true });
+      if (result.ok) succeededCount++;
+      else failedCount++;
+    }
+
     setSelectedIds([]);
-    showToast(`${bookingsToCancel.length} séances annulées en masse.`);
+    if (failedCount > 0) {
+      showToast(`${succeededCount} annulee(s), ${failedCount} echouee(s).`, 'error');
+    } else {
+      showToast(`${succeededCount} seances annulees en masse.`);
+    }
   };
 
-  const handleBulkDelete = () => {
-    if (window.confirm(`Voulez-vous supprimer définitivement ces ${selectedIds.length} réservations ?`)) {
-      const updated = appointments.filter(apt => !selectedIds.includes(apt.id));
-      onUpdateAppointments(updated);
+  const handleBulkDelete = async () => {
+    if (window.confirm(`Voulez-vous supprimer definitivement ces ${selectedIds.length} reservations ?`)) {
+      let countSuccess = 0;
+      let countFail = 0;
+
+      for (const appointmentId of selectedIds) {
+        const result = await onDeleteAppointment(appointmentId);
+        if (result.ok) countSuccess++;
+        else countFail++;
+      }
+
       setSelectedIds([]);
-      showToast('Sélections supprimées définitivement.');
+      if (countFail > 0) {
+        showToast(`${countSuccess} supprimee(s), ${countFail} echouee(s).`, 'error');
+      } else {
+        showToast(`${countSuccess} reservations supprimees en masse.`);
+      }
     }
   };
 

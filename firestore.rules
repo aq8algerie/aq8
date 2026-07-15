@@ -36,11 +36,34 @@ service cloud.firestore {
           'service', 'bookingDate', 'bookingTime', 'status', 'createdAt'
         ])
         && request.resource.data.centerId is string
+        && request.resource.data.centerId.size() > 0
+        && request.resource.data.centerId.size() <= 80
         && request.resource.data.centerName is string
+        && request.resource.data.centerName.size() > 0
+        && request.resource.data.centerName.size() <= 160
         && request.resource.data.firstName is string
+        && request.resource.data.firstName.size() > 0
+        && request.resource.data.firstName.size() <= 80
         && request.resource.data.lastName is string
+        && request.resource.data.lastName.size() > 0
+        && request.resource.data.lastName.size() <= 80
         && request.resource.data.phone is string
-        && request.resource.data.status == 'pending';
+        && request.resource.data.phone.size() > 0
+        && request.resource.data.phone.size() <= 40
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 160
+        && request.resource.data.service is string
+        && request.resource.data.service.size() > 0
+        && request.resource.data.service.size() <= 80
+        && request.resource.data.bookingDate is string
+        && request.resource.data.bookingDate.size() == 10
+        && request.resource.data.bookingTime in [
+          '09:00', '10:00', '11:00', '12:00', '13:00', '14:00',
+          '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
+        ]
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt is string
+        && request.resource.data.createdAt.size() <= 40;
     }
 
     function isPublicContactMessageCreate() {
@@ -57,11 +80,13 @@ service cloud.firestore {
         && request.resource.data.email.size() <= 160
         && request.resource.data.requestType in ['general', 'reservation', 'partnership', 'recruitment']
         && request.resource.data.centerId is string
+        && request.resource.data.centerId.size() > 0
         && request.resource.data.centerId.size() <= 80
         && request.resource.data.message is string
         && request.resource.data.message.size() <= 2000
         && request.resource.data.status == 'new'
-        && request.resource.data.createdAt is string;
+        && request.resource.data.createdAt is string
+        && request.resource.data.createdAt.size() <= 40;
     }
 
     match /users/{userId} {
@@ -127,6 +152,15 @@ service cloud.firestore {
       allow create: if canAccessCenter(request.resource.data.centerId);
       allow update: if canAccessCenter(resource.data.centerId) && canAccessCenter(request.resource.data.centerId);
       allow delete: if canAccessCenter(resource.data.centerId);
+    }
+
+    match /appointment_slots/{centerId}/slots/{slotId} {
+      allow read: if canAccessCenter(centerId);
+      allow create: if canAccessCenter(centerId) && request.resource.data.centerId == centerId;
+      allow update: if canAccessCenter(centerId)
+        && resource.data.centerId == centerId
+        && request.resource.data.centerId == centerId;
+      allow delete: if canAccessCenter(centerId) && resource.data.centerId == centerId;
     }
 
     match /booking_requests/{requestId} {

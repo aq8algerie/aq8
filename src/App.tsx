@@ -65,7 +65,6 @@ import {
   collection,
   doc,
   onSnapshot,
-  setDoc,
   writeBatch,
   getDocs,
   getDoc,
@@ -963,16 +962,8 @@ export default function App() {
                   services={services}
                   bookingRequests={bookingRequests}
                   onUpdateClients={updateClients}
-                  onUpdateAppointments={updateAppointments}
-                  onUpdateClientPackages={updateClientPackages}
                   onUpdatePayments={updatePayments}
                   onUpdateMeasurements={updateMeasurements}
-                  onUpdateBookingRequests={async (updated: BookingRequest[]) => {
-                    // Update individual booking request docs
-                    for (const req of updated) {
-                      await setDoc(doc(db, 'booking_requests', req.id), req);
-                    }
-                  }}
                   activeTab={crmCenterManagerTab}
                   onTabChange={setCrmCenterManagerTab}
                 />

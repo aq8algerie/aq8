@@ -20,7 +20,10 @@
     "import:firestore:measurements:execute": "node scripts/import-firestore-measurements.mjs --execute",
     "verify:firestore-measurements-import": "node scripts/verify-firestore-measurements-import.mjs",
     "audit:firestore-migration": "node scripts/audit-firestore-migration.mjs",
-    "provision:crm-user": "node scripts/provision-crm-user.mjs"
+    "provision:crm-user": "node scripts/provision-crm-user.mjs",
+    "backfill:appointment-slots": "node scripts/backfill-appointment-slots.mjs",
+    "backfill:appointment-slots:execute": "node scripts/backfill-appointment-slots.mjs --execute",
+    "analyze:appointment-slot-conflicts": "node scripts/analyze-appointment-slot-conflicts.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

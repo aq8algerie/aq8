@@ -18,3 +18,7 @@ View your app in AI Studio: https://ai.studio/apps/2daec5b5-53af-4458-b153-ec640
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+## Operations CRM
+
+- Backfill des verrous de creneaux Firestore : voir [docs/backfill-appointment-slots.md](docs/backfill-appointment-slots.md).

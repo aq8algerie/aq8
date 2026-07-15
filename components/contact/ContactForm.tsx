@@ -5,19 +5,29 @@ import { CheckCircle2, Send, Loader2, AlertCircle } from "lucide-react";
 import type { Center } from "../../src/types";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../src/lib/firebase";
+import {
+  CONTACT_REQUEST_TYPES,
+  PublicContactRequestType,
+  validatePublicContactMessage
+} from "../../src/lib/publicFormValidation";
 
 type ContactFormProps = {
   centers: Center[];
 };
 
-type RequestType = "general" | "reservation" | "partnership" | "recruitment";
+type RequestType = PublicContactRequestType;
 
-const requestTypes: { value: RequestType; label: string }[] = [
-  { value: "general", label: "Question générale" },
-  { value: "reservation", label: "Demande liée à une réservation" },
-  { value: "partnership", label: "Partenariat / franchise" },
-  { value: "recruitment", label: "Recrutement" },
-];
+const requestTypeLabels: Record<RequestType, string> = {
+  general: "Question g?n?rale",
+  reservation: "Demande li?e ? une r?servation",
+  partnership: "Partenariat / franchise",
+  recruitment: "Recrutement",
+};
+
+const requestTypes = CONTACT_REQUEST_TYPES.map((value) => ({
+  value,
+  label: requestTypeLabels[value],
+}));
 
 export function ContactForm({ centers }: ContactFormProps) {
   const defaultCenterId = useMemo(() => centers[0]?.id || "general", [centers]);
@@ -46,8 +56,20 @@ export function ContactForm({ centers }: ContactFormProps) {
     event.preventDefault();
     setErrorMsg("");
 
-    if (!name.trim() || !phone.trim()) {
-      setErrorMsg("Veuillez renseigner au minimum votre nom et votre téléphone.");
+    const validation = validatePublicContactMessage(
+      {
+        name,
+        phone,
+        email,
+        requestType,
+        centerId: selectedCenter,
+        message,
+      },
+      centers.map((center) => center.id)
+    );
+
+    if (validation.valid === false) {
+      setErrorMsg(validation.error);
       return;
     }
 
@@ -55,12 +77,7 @@ export function ContactForm({ centers }: ContactFormProps) {
 
     try {
       await addDoc(collection(db, "contact_messages"), {
-        name: name.trim(),
-        phone: phone.trim(),
-        email: email.trim(),
-        requestType,
-        centerId: selectedCenter,
-        message: message.trim(),
+        ...validation.data,
         status: "new",
         createdAt: new Date().toISOString(),
       });

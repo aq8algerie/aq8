@@ -37,11 +37,20 @@ import { MeasurementModal } from './manager/modals/MeasurementModal';
 // Utilities & Business rules
 import { getTodayDateString } from '../lib/centerManagerUtils';
 import { validateAppointment } from '../lib/appointmentRules';
+import { findActivePackageForClient, validateDeduction } from '../lib/packageRules';
+import { db } from '../lib/firebase';
 import {
-  findActivePackageForClient,
-  validateDeduction,
-  deductSessionFromPackage
-} from '../lib/packageRules';
+  AppointmentMutationOptions,
+  assignPackageToClient,
+  cancelAppointmentInTransaction,
+  completeAppointmentWithSessionDeduction,
+  createAppointmentInTransaction,
+  CrmActionResult,
+  deleteAppointmentInTransaction,
+  getErrorMessage,
+  recordPaymentWithOptionalPackage,
+  updateAppointmentInTransaction
+} from '../lib/crmTransactions';
 
 export function CenterManagerViews({
   centerId,
@@ -55,11 +64,8 @@ export function CenterManagerViews({
   services,
   bookingRequests = [],
   onUpdateClients,
-  onUpdateAppointments,
-  onUpdateClientPackages,
   onUpdatePayments,
   onUpdateMeasurements,
-  onUpdateBookingRequests,
   activeTab,
   onTabChange
 }: {
@@ -74,11 +80,8 @@ export function CenterManagerViews({
   services: Service[];
   bookingRequests?: BookingRequest[];
   onUpdateClients: (clients: Client[]) => void;
-  onUpdateAppointments: (appointments: Appointment[]) => void;
-  onUpdateClientPackages: (clientPackages: ClientPackage[]) => void;
   onUpdatePayments: (payments: Payment[]) => void;
   onUpdateMeasurements: (measurements: Measurement[]) => void;
-  onUpdateBookingRequests?: (requests: BookingRequest[]) => Promise<void>;
   activeTab?: SubTabId;
   onTabChange?: (tab: SubTabId) => void;
 }) {
@@ -206,7 +209,7 @@ export function CenterManagerViews({
   };
 
   // 2. Appointment booking actions
-  const handleAptSubmit = (aptData: {
+  const handleAptSubmit = async (aptData: {
     clientId: string;
     serviceId: string;
     date: string;
@@ -217,12 +220,11 @@ export function CenterManagerViews({
     const selectedService = services.find(s => s.id === aptData.serviceId);
     const dateTimeStr = `${aptData.date}T${aptData.time}`;
 
-    // Perform strict validation rules
     const validation = validateAppointment(
       {
         clientId: aptData.clientId,
         serviceId: aptData.serviceId,
-        centerId: centerId,
+        centerId,
         dateTime: dateTimeStr,
         duration: selectedService ? selectedService.duration : 20
       },
@@ -231,99 +233,185 @@ export function CenterManagerViews({
     );
 
     if (!validation.valid) {
-      triggerToast(validation.error || "Erreur lors de la planification du RDV.", 'error');
+      triggerToast(validation.error || 'Erreur lors de la planification du RDV.', 'error');
       return;
     }
 
-    const newApt: Appointment = {
-      id: `apt-${Date.now()}`,
-      clientId: aptData.clientId,
-      serviceId: aptData.serviceId,
-      centerId: centerId,
-      dateTime: dateTimeStr,
-      duration: selectedService ? selectedService.duration : 20,
-      status: 'booked',
-      notes: aptData.notes || undefined
-    };
+    try {
+      await createAppointmentInTransaction(db, {
+        appointmentId: `apt-${Date.now()}`,
+        clientId: aptData.clientId,
+        serviceId: aptData.serviceId,
+        centerId,
+        dateTime: dateTimeStr,
+        duration: selectedService ? selectedService.duration : 20,
+        notes: aptData.notes,
+        createdAt: new Date().toISOString()
+      });
 
-    onUpdateAppointments([...appointments, newApt]);
-    setShowAptModal(false);
-    triggerToast('Rendez-vous planifié avec succès !');
+      setShowAptModal(false);
+      triggerToast('Rendez-vous planifie avec succes !');
+    } catch (error) {
+      triggerToast(getErrorMessage(error, 'Erreur lors de la planification du RDV.'), 'error');
+    }
   };
 
   // 3. Complete and deduct session credit safely
-  const handleCompleteAppointment = (aptId: string) => {
+  const handleCompleteAppointment = async (
+    aptId: string,
+    options: AppointmentMutationOptions = {}
+  ): Promise<CrmActionResult> => {
+    const fail = (message: string): CrmActionResult => {
+      if (!options.silent) triggerToast(message, 'error');
+      return { ok: false, error: message };
+    };
+
     const apt = appointments.find(a => a.id === aptId);
-    if (!apt) return;
+    if (!apt) return fail('Reservation introuvable.');
 
     if (apt.status !== 'booked') {
-      triggerToast("La réservation n'est pas dans l'état planifiée.", 'error');
-      return;
+      return fail("La reservation n'est pas dans l'etat planifiee.");
     }
 
     const cl = clients.find(c => c.id === apt.clientId);
     const activePkg = findActivePackageForClient(apt.clientId, clientPackages);
-
-    // Validate rules
     const validation = validateDeduction(apt, cl, activePkg, centerId);
-    if (!validation.valid) {
-      triggerToast(validation.error || 'Erreur lors du traitement du forfait.', 'error');
-      return;
+
+    if (validation.valid === false || !activePkg) {
+      return fail(validation.error || 'Erreur lors du traitement du forfait.');
     }
 
-    // Safely deduct session credit
-    if (activePkg) {
-      const updatedPkg = deductSessionFromPackage(activePkg);
-      const updatedPkgs = clientPackages.map(cp => cp.id === activePkg.id ? updatedPkg : cp);
-      onUpdateClientPackages(updatedPkgs);
+    try {
+      await completeAppointmentWithSessionDeduction(db, {
+        appointmentId: apt.id,
+        centerId,
+        clientPackageId: activePkg.id
+      });
+
+      if (!options.silent) {
+        triggerToast('Seance validee et 1 credit deduit avec succes !');
+      }
+      return { ok: true };
+    } catch (error) {
+      return fail(getErrorMessage(error, 'Erreur lors de la validation de la seance.'));
     }
-
-    // Update appointment status to completed
-    const updatedApts = appointments.map(a => a.id === aptId ? { ...a, status: 'completed' as const } : a);
-    onUpdateAppointments(updatedApts);
-
-    triggerToast('Séance validée et 1 crédit déduit avec succès !');
   };
 
   // 4. Cancel appointment safely
-  const handleCancelAppointment = (aptId: string) => {
+  const handleCancelAppointment = async (
+    aptId: string,
+    options: AppointmentMutationOptions = {}
+  ): Promise<CrmActionResult> => {
+    const fail = (message: string): CrmActionResult => {
+      if (!options.silent) triggerToast(message, 'error');
+      return { ok: false, error: message };
+    };
+
     const apt = appointments.find(a => a.id === aptId);
-    if (!apt) return;
+    if (!apt) return fail('Reservation introuvable.');
 
     if (apt.centerId !== centerId) {
-      triggerToast("Cette réservation n'appartient pas à votre centre.", 'error');
-      return;
+      return fail("Cette reservation n'appartient pas a votre centre.");
     }
 
-    const updatedApts = appointments.map(a => a.id === aptId ? { ...a, status: 'cancelled' as const } : a);
-    onUpdateAppointments(updatedApts);
+    try {
+      await cancelAppointmentInTransaction(db, {
+        appointmentId: apt.id,
+        centerId
+      });
 
-    triggerToast('Séance annulée avec succès.');
+      if (!options.silent) {
+        triggerToast('Seance annulee avec succes.');
+      }
+      return { ok: true };
+    } catch (error) {
+      return fail(getErrorMessage(error, "Erreur lors de l'annulation de la seance."));
+    }
+  };
+
+  const handleUpdateAppointment = async (appointment: Appointment): Promise<CrmActionResult> => {
+    const fail = (message: string): CrmActionResult => ({ ok: false, error: message });
+
+    const selectedService = services.find(s => s.id === appointment.serviceId);
+    const clientObj = clients.find(c => c.id === appointment.clientId);
+    const appointmentToSave: Appointment = {
+      ...appointment,
+      duration: selectedService ? selectedService.duration : appointment.duration || 20
+    };
+
+    if (appointmentToSave.centerId !== centerId) {
+      return fail("Cette reservation n'appartient pas a votre centre.");
+    }
+
+    if (appointmentToSave.status !== 'cancelled') {
+      const validation = validateAppointment(
+        {
+          clientId: appointmentToSave.clientId,
+          serviceId: appointmentToSave.serviceId,
+          centerId,
+          dateTime: appointmentToSave.dateTime,
+          duration: appointmentToSave.duration
+        },
+        appointments.filter(a => a.id !== appointmentToSave.id),
+        clientObj?.centerId || ''
+      );
+
+      if (!validation.valid) {
+        return fail(validation.error || 'Reservation invalide.');
+      }
+    }
+
+    try {
+      await updateAppointmentInTransaction(db, {
+        ...appointmentToSave,
+        updatedAt: new Date().toISOString()
+      });
+      return { ok: true };
+    } catch (error) {
+      return fail(getErrorMessage(error, 'Erreur lors de la mise a jour de la reservation.'));
+    }
+  };
+
+  const handleDeleteAppointment = async (appointmentId: string): Promise<CrmActionResult> => {
+    const fail = (message: string): CrmActionResult => ({ ok: false, error: message });
+
+    try {
+      await deleteAppointmentInTransaction(db, {
+        appointmentId,
+        centerId
+      });
+      return { ok: true };
+    } catch (error) {
+      return fail(getErrorMessage(error, 'Erreur lors de la suppression de la reservation.'));
+    }
   };
 
   // 5. Package assignments
-  const handlePackageAssignSubmit = (clientId: string, packageId: string) => {
-    const matchedPkg = packages.find(p => p.id === packageId);
-    if (!matchedPkg) return;
+  const handlePackageAssignSubmit = async (clientId: string, packageId: string) => {
+    const client = centerClients.find(c => c.id === clientId);
+    if (!client) {
+      triggerToast('Client introuvable dans ce centre.', 'error');
+      return;
+    }
 
-    const newClientPkg: ClientPackage = {
-      id: `clipkg-${Date.now()}`,
-      clientId: clientId,
-      packageId: packageId,
-      centerId: centerId,
-      sessionsRemaining: matchedPkg.sessionsCount,
-      totalSessions: matchedPkg.sessionsCount,
-      purchaseDate: getTodayDateString(),
-      status: 'active'
-    };
+    try {
+      await assignPackageToClient(db, {
+        clientPackageId: `clipkg-${Date.now()}`,
+        centerId,
+        clientId,
+        packageId,
+        purchaseDate: getTodayDateString()
+      });
 
-    onUpdateClientPackages([...clientPackages, newClientPkg]);
-    setShowPackageAssignModal(false);
-    triggerToast('Forfait affecté avec succès au client !');
+      setShowPackageAssignModal(false);
+      triggerToast('Forfait affecte avec succes au client !');
+    } catch (error) {
+      triggerToast(getErrorMessage(error, "Erreur lors de l'affectation du forfait."), 'error');
+    }
   };
 
   // 6. Payment logging
-  const handlePaymentSubmit = (payData: {
+  const handlePaymentSubmit = async (payData: {
     clientId: string;
     packageId: string;
     amount: number;
@@ -331,40 +419,28 @@ export function CenterManagerViews({
     receiptNumber: string;
     autoActivatePackage: boolean;
   }) => {
-    const generatedReceipt = payData.receiptNumber || `REC-${Date.now().toString().slice(-6)}`;
+    const now = Date.now();
+    const generatedReceipt = payData.receiptNumber || `REC-${now.toString().slice(-6)}`;
 
-    const newPay: Payment = {
-      id: `pay-${Date.now()}`,
-      clientId: payData.clientId,
-      packageId: payData.packageId,
-      centerId: centerId,
-      amount: payData.amount,
-      date: getTodayDateString(),
-      method: payData.method,
-      receiptNumber: generatedReceipt
-    };
+    try {
+      await recordPaymentWithOptionalPackage(db, {
+        paymentId: `pay-${now}`,
+        clientPackageId: payData.autoActivatePackage ? `clipkg-${now}` : undefined,
+        centerId,
+        clientId: payData.clientId,
+        packageId: payData.packageId,
+        amount: payData.amount,
+        method: payData.method,
+        receiptNumber: generatedReceipt,
+        date: getTodayDateString(),
+        autoActivatePackage: payData.autoActivatePackage
+      });
 
-    // Auto-create/activate package subscription for the client if requested
-    if (payData.autoActivatePackage) {
-      const matchedPkg = packages.find(p => p.id === payData.packageId);
-      if (matchedPkg) {
-        const newClientPkg: ClientPackage = {
-          id: `clipkg-${Date.now()}`,
-          clientId: payData.clientId,
-          packageId: payData.packageId,
-          centerId: centerId,
-          sessionsRemaining: matchedPkg.sessionsCount,
-          totalSessions: matchedPkg.sessionsCount,
-          purchaseDate: getTodayDateString(),
-          status: 'active'
-    };
-        onUpdateClientPackages([...clientPackages, newClientPkg]);
-      }
+      setShowPaymentModal(false);
+      triggerToast(`Paiement de ${payData.amount.toLocaleString()} DZD enregistre avec succes !`);
+    } catch (error) {
+      triggerToast(getErrorMessage(error, "Erreur lors de l'enregistrement du paiement."), 'error');
     }
-
-    onUpdatePayments([...payments, newPay]);
-    setShowPaymentModal(false);
-    triggerToast(`Paiement de ${payData.amount.toLocaleString()} DZD enregistré avec succès !`);
   };
 
   // 7. Measurement logging
@@ -483,14 +559,12 @@ export function CenterManagerViews({
                 onBookingDateFilterChange={setBookingDateFilter}
                 onCompleteAppointment={handleCompleteAppointment}
                 onCancelAppointment={handleCancelAppointment}
-                onUpdateAppointments={onUpdateAppointments}
+                onUpdateAppointment={handleUpdateAppointment}
+                onDeleteAppointment={handleDeleteAppointment}
                 clientPackages={clientPackages}
                 packages={centerPackages}
-                onUpdateClientPackages={onUpdateClientPackages}
                 onBookAppointmentClick={() => setShowAptModal(true)}
                 bookingRequests={bookingRequests.filter(r => r.centerId === centerId)}
-                onUpdateBookingRequests={onUpdateBookingRequests}
-                onUpdateClients={onUpdateClients}
               />
             )}
 
@@ -514,8 +588,8 @@ export function CenterManagerViews({
                 packages={centerPackages}
                 onCompleteAppointment={handleCompleteAppointment}
                 onCancelAppointment={handleCancelAppointment}
-                onUpdateAppointments={onUpdateAppointments}
-                onUpdateClientPackages={onUpdateClientPackages}
+                onUpdateAppointment={handleUpdateAppointment}
+                onDeleteAppointment={handleDeleteAppointment}
                 onBookAppointmentClick={() => setShowAptModal(true)}
               />
             )}

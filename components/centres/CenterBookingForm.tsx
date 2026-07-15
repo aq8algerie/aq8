@@ -4,6 +4,11 @@ import { FormEvent, useMemo, useState } from "react";
 import { Calendar, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../src/lib/firebase";
+import {
+  BOOKING_HOURS,
+  getBookingMinimumDate,
+  validatePublicBookingRequest
+} from "../../src/lib/publicFormValidation";
 
 type CenterBookingFormProps = {
   centerId: string;
@@ -18,28 +23,13 @@ function getServiceLabel(service: string) {
   return service;
 }
 
-function getTomorrowDate() {
-  const date = new Date();
-  const currentHours = date.getHours();
-  const currentMinutes = date.getMinutes();
-  if (currentHours > 21 || (currentHours === 21 && currentMinutes >= 30)) {
-    date.setDate(date.getDate() + 2);
-  } else {
-    date.setDate(date.getDate() + 1);
-  }
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
-
 export function CenterBookingForm({
   centerId,
   centerName,
   centerCity,
   services,
 }: CenterBookingFormProps) {
-  const defaultDate = useMemo(() => getTomorrowDate(), []);
+  const defaultDate = useMemo(() => getBookingMinimumDate(), []);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -52,17 +42,29 @@ export function CenterBookingForm({
   const [successMsg, setSuccessMsg] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const hours = [
-    "09:00", "10:00", "11:00", "12:00", "13:00",
-    "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00",
-  ];
+  const hours = BOOKING_HOURS;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrorMsg("");
 
-    if (!firstName.trim() || !lastName.trim() || !phone.trim()) {
-      setErrorMsg("Veuillez renseigner votre prénom, votre nom et votre téléphone.");
+    const validation = validatePublicBookingRequest(
+      {
+        centerId,
+        centerName,
+        firstName,
+        lastName,
+        phone,
+        email,
+        service,
+        bookingDate,
+        bookingTime,
+      },
+      services
+    );
+
+    if (validation.valid === false) {
+      setErrorMsg(validation.error);
       return;
     }
 
@@ -70,15 +72,7 @@ export function CenterBookingForm({
 
     try {
       await addDoc(collection(db, "booking_requests"), {
-        centerId,
-        centerName,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        phone: phone.trim(),
-        email: email.trim(),
-        service,
-        bookingDate,
-        bookingTime,
+        ...validation.data,
         status: "pending",
         createdAt: new Date().toISOString(),
       });
@@ -92,7 +86,7 @@ export function CenterBookingForm({
       setPhone("");
       setEmail("");
       setService(services[0] || "aq8");
-      setBookingDate(getTomorrowDate());
+      setBookingDate(getBookingMinimumDate());
       setBookingTime("10:00");
     } catch (err) {
       console.error("Booking submission error:", err);

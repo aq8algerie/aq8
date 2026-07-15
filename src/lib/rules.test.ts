@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { Appointment, Client, ClientPackage } from '../types';
 import { isBeforePreviousDayCutoff, isFullHour, validateAppointment } from './appointmentRules';
 import { deductSessionFromPackage, findActivePackageForClient, validateDeduction } from './packageRules';
+import { getBookingMinimumDate, validatePublicBookingRequest, validatePublicContactMessage } from './publicFormValidation';
 
 function test(name: string, run: () => void) {
   run();
@@ -126,6 +127,102 @@ test('package deduction decrements sessions and completes at zero', () => {
     status: 'active'
   });
   assert.equal(deductSessionFromPackage({ ...activePackage, sessionsRemaining: 1 }).status, 'completed');
+});
+
+
+test('public booking validation normalizes and accepts valid requests', () => {
+  const result = validatePublicBookingRequest(
+    {
+      centerId: 'center-1',
+      centerName: 'AQ8 Alger',
+      firstName: '  Amira  ',
+      lastName: 'Cherif',
+      phone: '0550112233',
+      email: 'AMIRA@EXAMPLE.COM',
+      service: 'aq8',
+      bookingDate: '2026-07-12',
+      bookingTime: '10:00'
+    },
+    ['aq8'],
+    new Date('2026-07-11T12:00:00')
+  );
+
+  assert.equal(result.valid, true);
+  if (result.valid) {
+    assert.equal(result.data.firstName, 'Amira');
+    assert.equal(result.data.email, 'amira@example.com');
+  }
+});
+
+test('public booking validation rejects unsupported slots and stale dates', () => {
+  const stale = validatePublicBookingRequest(
+    {
+      centerId: 'center-1',
+      centerName: 'AQ8 Alger',
+      firstName: 'Amira',
+      lastName: 'Cherif',
+      phone: '0550112233',
+      email: '',
+      service: 'aq8',
+      bookingDate: '2026-07-11',
+      bookingTime: '10:00'
+    },
+    ['aq8'],
+    new Date('2026-07-11T12:00:00')
+  );
+
+  const unsupportedSlot = validatePublicBookingRequest(
+    {
+      centerId: 'center-1',
+      centerName: 'AQ8 Alger',
+      firstName: 'Amira',
+      lastName: 'Cherif',
+      phone: '0550112233',
+      email: '',
+      service: 'aq8',
+      bookingDate: '2026-07-12',
+      bookingTime: '10:30'
+    },
+    ['aq8'],
+    new Date('2026-07-11T12:00:00')
+  );
+
+  assert.equal(stale.valid, false);
+  assert.equal(unsupportedSlot.valid, false);
+});
+
+test('booking minimum date moves after the 21:30 cutoff', () => {
+  assert.equal(getBookingMinimumDate(new Date('2026-07-11T21:29:00')), '2026-07-12');
+  assert.equal(getBookingMinimumDate(new Date('2026-07-11T21:30:00')), '2026-07-13');
+});
+
+test('public contact validation rejects invalid center and long messages', () => {
+  const invalidCenter = validatePublicContactMessage(
+    {
+      name: 'Yacine',
+      phone: '0660112233',
+      email: '',
+      requestType: 'general',
+      centerId: 'unknown-center',
+      message: 'Bonjour'
+    },
+    ['center-1']
+  );
+
+  const longMessage = validatePublicContactMessage(
+    {
+      name: 'Yacine',
+      phone: '0660112233',
+      email: '',
+      requestType: 'general',
+      centerId: 'center-1',
+      message: 'x'.repeat(2001)
+    },
+    ['center-1']
+  );
+
+  assert.equal(invalidCenter.valid, false);
+  assert.equal(longMessage.valid, false);
 });
 
 console.log('All business-rule tests passed.');

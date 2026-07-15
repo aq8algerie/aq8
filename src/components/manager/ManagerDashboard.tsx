@@ -25,6 +25,7 @@ import { StatCard } from './cards/StatCard';
 import { QuickActionsCard } from './cards/QuickActionsCard';
 import { formatDZD } from '../../lib/centerManagerUtils';
 import { SubTabId } from './ManagerTabs';
+import { AppointmentMutationOptions, CrmActionResult } from '../../lib/crmTransactions';
 
 interface ManagerDashboardProps {
   centerId: string;
@@ -36,8 +37,8 @@ interface ManagerDashboardProps {
   packages: Package[];
   clientPackages: ClientPackage[];
   bookingDateFilter: string;
-  onCompleteAppointment: (id: string) => void;
-  onCancelAppointment: (id: string) => void;
+  onCompleteAppointment: (id: string, options?: AppointmentMutationOptions) => Promise<CrmActionResult>;
+  onCancelAppointment: (id: string, options?: AppointmentMutationOptions) => Promise<CrmActionResult>;
   onOpenTab: (tab: SubTabId) => void;
   onRegisterClientClick: () => void;
   onBookAppointmentClick: () => void;

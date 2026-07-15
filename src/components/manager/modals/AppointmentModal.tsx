@@ -11,7 +11,7 @@ interface AppointmentModalProps {
   clients: Client[];
   services: Service[];
   onClose: () => void;
-  onSubmit: (data: { clientId: string; serviceId: string; date: string; time: string; notes: string }) => void;
+  onSubmit: (data: { clientId: string; serviceId: string; date: string; time: string; notes: string }) => void | Promise<void>;
   initialDate?: string;
 }
 

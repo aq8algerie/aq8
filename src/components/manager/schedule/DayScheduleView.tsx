@@ -21,8 +21,8 @@ interface DayScheduleViewProps {
   onToggleSelectOne: (id: string) => void;
   onViewAppointment: (appointment: Appointment) => void;
   onEditAppointment: (appointment: Appointment) => void;
-  onCompleteAppointment: (id: string) => void;
-  onCancelAppointment: (id: string) => void;
+  onCompleteAppointment: (id: string) => void | Promise<void>;
+  onCancelAppointment: (id: string) => void | Promise<void>;
   onDeleteAppointment: (id: string) => void;
 }
 

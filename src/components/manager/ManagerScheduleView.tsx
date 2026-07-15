@@ -10,8 +10,16 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Client, Appointment, Service, ClientPackage, Package, BookingRequest } from '../../types';
+import {
+  acceptBookingRequestInTransaction,
+  AppointmentMutationOptions,
+  CrmActionResult,
+  getErrorMessage,
+  rejectBookingRequestInTransaction
+} from '../../lib/crmTransactions';
 import { getTodayDateString } from '../../lib/centerManagerUtils';
-import { findActivePackageForClient, validateDeduction, deductSessionFromPackage } from '../../lib/packageRules';
+import { validateAppointment } from '../../lib/appointmentRules';
+import { db } from '../../lib/firebase';
 import { PendingBookingRequestsPanel } from './schedule/PendingBookingRequestsPanel';
 import { ScheduleToolbar, ScheduleViewType } from './schedule/ScheduleToolbar';
 import { ScheduleBulkActionsBar } from './schedule/ScheduleBulkActionsBar';
@@ -46,16 +54,14 @@ interface ManagerScheduleViewProps {
   services: Service[];
   bookingDateFilter: string;
   onBookingDateFilterChange: (val: string) => void;
-  onCompleteAppointment: (id: string) => void;
-  onCancelAppointment: (id: string) => void;
-  onUpdateAppointments: (appointments: Appointment[]) => void;
+  onCompleteAppointment: (id: string, options?: AppointmentMutationOptions) => Promise<CrmActionResult>;
+  onCancelAppointment: (id: string, options?: AppointmentMutationOptions) => Promise<CrmActionResult>;
+  onUpdateAppointment: (appointment: Appointment) => Promise<CrmActionResult>;
+  onDeleteAppointment: (id: string) => Promise<CrmActionResult>;
   clientPackages: ClientPackage[];
   packages: Package[];
-  onUpdateClientPackages: (clientPackages: ClientPackage[]) => void;
   onBookAppointmentClick: () => void;
   bookingRequests?: BookingRequest[];
-  onUpdateBookingRequests?: (requests: BookingRequest[]) => Promise<void>;
-  onUpdateClients?: (clients: Client[]) => void;
 }
 
 
@@ -68,14 +74,12 @@ export function ManagerScheduleView({
   onBookingDateFilterChange,
   onCompleteAppointment,
   onCancelAppointment,
-  onUpdateAppointments,
+  onUpdateAppointment,
+  onDeleteAppointment,
   clientPackages,
   packages,
-  onUpdateClientPackages,
   onBookAppointmentClick,
   bookingRequests = [],
-  onUpdateBookingRequests,
-  onUpdateClients,
 }: ManagerScheduleViewProps) {
   // 1. Navigation and View Mode States
   const [viewType, setViewType] = useState<ScheduleViewType>('day');
@@ -140,43 +144,52 @@ export function ManagerScheduleView({
     getAppointmentsForDayAndHourFromData(appointmentsToRender, dateStr, hourStr)
   );
   // 4. Individual Actions
-  const handleSingleComplete = (id: string) => {
-    onCompleteAppointment(id);
-    showToast('Séance effectuée et créditée avec succès !');
-  };
-
-  const handleSingleCancel = (id: string) => {
-    onCancelAppointment(id);
-    showToast('Séance marquée comme annulée.');
-  };
-
-  const handleSingleDelete = (id: string) => {
-    if (window.confirm('Voulez-vous supprimer définitivement cette réservation ?')) {
-      const updated = appointments.filter(a => a.id !== id);
-      onUpdateAppointments(updated);
-      setSelectedIds(prev => prev.filter(x => x !== id));
-      showToast('Réservation supprimée définitivement.');
+  const handleSingleComplete = async (id: string) => {
+    const result = await onCompleteAppointment(id, { silent: true });
+    if (result.ok) {
+      showToast('Seance effectuee et creditee avec succes !');
+    } else {
+      showToast(result.error || 'Validation impossible.', 'error');
     }
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleSingleCancel = async (id: string) => {
+    const result = await onCancelAppointment(id, { silent: true });
+    if (result.ok) {
+      showToast('Seance marquee comme annulee.');
+    } else {
+      showToast(result.error || 'Annulation impossible.', 'error');
+    }
+  };
+
+  const handleSingleDelete = async (id: string) => {
+    if (window.confirm('Voulez-vous supprimer definitivement cette reservation ?')) {
+      const result = await onDeleteAppointment(id);
+      if (result.ok) {
+        setSelectedIds(prev => prev.filter(x => x !== id));
+        showToast('Reservation supprimee definitivement.');
+      } else {
+        showToast(result.error || 'Suppression impossible.', 'error');
+      }
+    }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingApt) return;
 
     const selectedService = services.find(s => s.id === editingApt.serviceId);
-    const updated = appointments.map(a => {
-      if (a.id === editingApt.id) {
-        return {
-          ...editingApt,
-          duration: selectedService ? selectedService.duration : 20
-        };
-      }
-      return a;
+    const result = await onUpdateAppointment({
+      ...editingApt,
+      duration: selectedService ? selectedService.duration : 20
     });
 
-    onUpdateAppointments(updated);
-    setEditingApt(null);
-    showToast('Réservation mise à jour avec succès.');
+    if (result.ok) {
+      setEditingApt(null);
+      showToast('Reservation mise a jour avec succes.');
+    } else {
+      showToast(result.error || 'Mise a jour impossible.', 'error');
+    }
   };
 
   // 5. Bulk Actions Logic
@@ -186,148 +199,152 @@ export function ManagerScheduleView({
     );
   };
 
-  const handleBulkComplete = () => {
+  const handleBulkComplete = async () => {
     const eligibleBookings = appointments.filter(a => selectedIds.includes(a.id) && a.status === 'booked');
-    
+
     if (eligibleBookings.length === 0) {
-      showToast('Aucun rendez-vous éligible (planifié) sélectionné.', 'error');
+      showToast('Aucun rendez-vous eligible (planifie) selectionne.', 'error');
       return;
     }
 
-    let tempClientPackages = [...clientPackages];
     let countSuccess = 0;
     let countFail = 0;
 
-    const updatedApts = appointments.map(apt => {
-      if (selectedIds.includes(apt.id)) {
-        if (apt.status !== 'booked') return apt;
+    for (const appointment of eligibleBookings) {
+      const result = await onCompleteAppointment(appointment.id, { silent: true });
+      if (result.ok) countSuccess++;
+      else countFail++;
+    }
 
-        const cl = clients.find(c => c.id === apt.clientId);
-        const activePkg = findActivePackageForClient(apt.clientId, tempClientPackages);
-        const validation = validateDeduction(apt, cl, activePkg, centerId);
-
-        if (validation.valid && activePkg) {
-          const updatedPkg = deductSessionFromPackage(activePkg);
-          tempClientPackages = tempClientPackages.map(cp => cp.id === activePkg.id ? updatedPkg : cp);
-          countSuccess++;
-          return { ...apt, status: 'completed' as const };
-        } else {
-          countFail++;
-          return apt;
-        }
-      }
-      return apt;
-    });
-
-    onUpdateAppointments(updatedApts);
-    onUpdateClientPackages(tempClientPackages);
     setSelectedIds([]);
 
     if (countFail > 0) {
-      showToast(`${countSuccess} validé(s), ${countFail} échoué(s) (absence de forfait/crédits).`, 'error');
+      showToast(`${countSuccess} valide(s), ${countFail} echoue(s) (absence de forfait/credits).`, 'error');
     } else {
-      showToast(`${countSuccess} séances validées en masse avec déduction des forfaits !`);
+      showToast(`${countSuccess} seances validees en masse avec deduction des forfaits !`);
     }
   };
 
-  const handleBulkCancel = () => {
+  const handleBulkCancel = async () => {
     const eligibleBookings = appointments.filter(a => selectedIds.includes(a.id) && a.status === 'booked');
     if (eligibleBookings.length === 0) {
-      showToast('Aucune séance planifiée éligible pour annulation.', 'error');
+      showToast('Aucune seance planifiee eligible pour annulation.', 'error');
       return;
     }
 
-    const updatedApts = appointments.map(apt => {
-      if (selectedIds.includes(apt.id) && apt.status === 'booked') {
-        return { ...apt, status: 'cancelled' as const };
-      }
-      return apt;
-    });
+    let countSuccess = 0;
+    let countFail = 0;
 
-    onUpdateAppointments(updatedApts);
+    for (const appointment of eligibleBookings) {
+      const result = await onCancelAppointment(appointment.id, { silent: true });
+      if (result.ok) countSuccess++;
+      else countFail++;
+    }
+
     setSelectedIds([]);
-    showToast(`${eligibleBookings.length} séances annulées en masse.`);
+    if (countFail > 0) {
+      showToast(`${countSuccess} annulee(s), ${countFail} echouee(s).`, 'error');
+    } else {
+      showToast(`${countSuccess} seances annulees en masse.`);
+    }
   };
 
-  const handleBulkDelete = () => {
-    if (window.confirm(`Êtes-vous sûr de vouloir supprimer définitivement ces ${selectedIds.length} réservations ?`)) {
-      const updated = appointments.filter(apt => !selectedIds.includes(apt.id));
-      onUpdateAppointments(updated);
+  const handleBulkDelete = async () => {
+    if (window.confirm(`Voulez-vous supprimer definitivement ces ${selectedIds.length} reservations ?`)) {
+      let countSuccess = 0;
+      let countFail = 0;
+
+      for (const appointmentId of selectedIds) {
+        const result = await onDeleteAppointment(appointmentId);
+        if (result.ok) countSuccess++;
+        else countFail++;
+      }
+
       setSelectedIds([]);
-      showToast('Réservations supprimées en masse.');
+      if (countFail > 0) {
+        showToast(`${countSuccess} supprimee(s), ${countFail} echouee(s).`, 'error');
+      } else {
+        showToast(`${countSuccess} reservations supprimees en masse.`);
+      }
     }
   };
 
   // Booking Requests handlers
   const [processingId, setProcessingId] = useState<string | null>(null);
 
+  const getServiceForBookingRequest = (req: BookingRequest) => {
+    const requestedService = req.service.toLowerCase();
+    return services.find(
+      s => s.type === req.service || s.name.toLowerCase().includes(requestedService)
+    );
+  };
+
   const handleAcceptBookingRequest = async (req: BookingRequest) => {
-    if (!onUpdateBookingRequests) return;
     setProcessingId(req.id);
     try {
-      // 1. Find or create client by phone
-      let existingClient = clients.find(
-        c => c.phone === req.phone && c.centerId === centerId
-      );
-      if (!existingClient && onUpdateClients) {
-        const newClient: Client = {
-          id: `cli-${Date.now()}`,
-          firstName: req.firstName,
-          lastName: req.lastName,
-          phone: req.phone,
-          email: req.email || '',
-          centerId: centerId,
-          createdAt: getTodayDateString(),
-          gender: 'H' as const,
-          sportGoals: [],
-        };
-        onUpdateClients([...clients, newClient]);
-        existingClient = newClient;
+      if (req.centerId !== centerId) {
+        throw new Error("Cette demande n'appartient pas a votre centre.");
+      }
+      if (req.status !== 'pending') {
+        throw new Error("Cette demande a deja ete traitee.");
       }
 
-      // 2. Find service matching the booking request service key
-      const matchedService = services.find(
-        s => s.type === req.service || s.name.toLowerCase().includes(req.service.toLowerCase())
-      ) || services[0];
+      const matchedService = getServiceForBookingRequest(req);
+      if (!matchedService) {
+        throw new Error('Aucune prestation CRM ne correspond a cette demande.');
+      }
 
-      // 3. Create the appointment
-      const newApt: Appointment = {
-        id: `apt-${Date.now()}`,
-        clientId: existingClient?.id || `cli-${Date.now()}`,
-        serviceId: matchedService?.id || '',
-        centerId: centerId,
-        dateTime: `${req.bookingDate}T${req.bookingTime}`,
-        duration: matchedService?.duration || 20,
-        status: 'booked',
-        notes: `Demande publique — ${req.service}`,
-      };
-      onUpdateAppointments([...appointments, newApt]);
-
-      // 4. Update booking request status to accepted
-      const updatedAll: BookingRequest[] = bookingRequests.map(r =>
-        r.id === req.id ? { ...r, status: 'accepted' as const } : r
+      const existingClient = clients.find(
+        c => c.phone === req.phone && c.centerId === centerId
       );
-      await onUpdateBookingRequests(updatedAll);
-      showToast(`Demande de ${req.firstName} ${req.lastName} acceptée — RDV créé !`);
-    } catch (e) {
-      console.error(e);
-      showToast('Erreur lors du traitement.', 'error');
+      const clientId = existingClient?.id || `cli-${req.id}`;
+      const dateTime = `${req.bookingDate}T${req.bookingTime}`;
+      const validation = validateAppointment(
+        {
+          clientId,
+          serviceId: matchedService.id,
+          centerId,
+          dateTime,
+          duration: matchedService.duration || 20
+        },
+        appointments,
+        existingClient?.centerId || centerId
+      );
+
+      if (!validation.valid) {
+        throw new Error(validation.error || 'Reservation invalide.');
+      }
+
+      await acceptBookingRequestInTransaction(db, {
+        requestId: req.id,
+        centerId,
+        existingClientId: existingClient?.id,
+        newClientId: `cli-${req.id}`,
+        appointmentId: `apt-${req.id}`,
+        serviceId: matchedService.id,
+        duration: matchedService.duration || 20,
+        createdAt: getTodayDateString()
+      });
+
+      showToast(`Demande de ${req.firstName} ${req.lastName} acceptee - RDV cree !`);
+    } catch (error) {
+      console.error(error);
+      showToast(getErrorMessage(error, 'Erreur lors du traitement.'), 'error');
     } finally {
       setProcessingId(null);
     }
   };
 
   const handleRejectBookingRequest = async (req: BookingRequest) => {
-    if (!onUpdateBookingRequests) return;
     setProcessingId(req.id);
     try {
-      const updatedAll: BookingRequest[] = bookingRequests.map(r =>
-        r.id === req.id ? { ...r, status: 'rejected' as const } : r
-      );
-      await onUpdateBookingRequests(updatedAll);
-      showToast(`Demande de ${req.firstName} ${req.lastName} refusée.`);
-    } catch (e) {
-      showToast('Erreur lors du traitement.', 'error');
+      await rejectBookingRequestInTransaction(db, {
+        requestId: req.id,
+        centerId
+      });
+      showToast(`Demande de ${req.firstName} ${req.lastName} refusee.`);
+    } catch (error) {
+      showToast(getErrorMessage(error, 'Erreur lors du traitement.'), 'error');
     } finally {
       setProcessingId(null);
     }
