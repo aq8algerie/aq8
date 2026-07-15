@@ -104,20 +104,18 @@ export function ManagerDashboard({
   const womenPercent = Math.round((womenCount / totalClients) * 100);
   const menPercent = Math.round((menCount / totalClients) * 100);
 
-  // Active package session breakdown (AQ8 vs Wonder vs Mix)
-  const centerClientPackages = clientPackages.filter(cp => cp.centerId === centerId && cp.status === 'active');
+  // Scheduled session technology breakdown (AQ8 vs Wonder)
   let aq8SessionsCount = 0;
   let wonderSessionsCount = 0;
   let mixSessionsCount = 0;
 
-  centerClientPackages.forEach(cp => {
-    const pkg = packages.find(p => p.id === cp.packageId);
-    const sessionCount = Number(cp.totalSessions || pkg?.sessionsCount || 0);
-    if (pkg) {
-      if (pkg.type === 'aq8') aq8SessionsCount += sessionCount;
-      else if (pkg.type === 'wonder') wonderSessionsCount += sessionCount;
-      else if (pkg.type === 'mix') mixSessionsCount += sessionCount;
-    }
+  filteredAppointments.forEach(apt => {
+    if (apt.status === 'cancelled') return;
+
+    const service = services.find(s => s.id === apt.serviceId);
+    if (service?.type === 'aq8') aq8SessionsCount++;
+    else if (service?.type === 'wonder') wonderSessionsCount++;
+    else mixSessionsCount++;
   });
 
   const totalActiveSessions = aq8SessionsCount + wonderSessionsCount + mixSessionsCount || 1;
@@ -362,7 +360,7 @@ export function ManagerDashboard({
               {/* Mixed Cure Progress */}
               <div className="space-y-1">
                 <div className="flex justify-between font-semibold">
-                  <span className="text-slate-600">Cures Mixtes</span>
+                  <span className="text-slate-600">Autres / non classées</span>
                   <span className="font-mono text-slate-800">{mixSessionsCount} séances ({mixSubPercent}%)</span>
                 </div>
                 <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
