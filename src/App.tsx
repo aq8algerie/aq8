@@ -562,6 +562,20 @@ export default function App() {
     navigate('home');
   };
 
+  const handlePublicReservationClick = () => {
+    setMobileMenuOpen(false);
+
+    if (currentRoute === 'center-detail') {
+      document.getElementById('booking-form-section')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+      return;
+    }
+
+    navigate('centers');
+  };
+
   // Calculate high-level stats for Super Admin
   const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
 
@@ -608,8 +622,15 @@ export default function App() {
               ))}
             </nav>
 
-            {/* CRM Portal Entry trigger */}
+            {/* Primary actions */}
             <div className="hidden md:flex items-center gap-2">
+              <button
+                onClick={handlePublicReservationClick}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#ff5757] px-4 py-2 text-xs font-extrabold text-white shadow-md shadow-[#ff5757]/20 transition-premium hover:bg-[#e94949] cursor-pointer"
+              >
+                <Calendar className="h-4 w-4" />
+                R&eacute;server
+              </button>
               <button
                 onClick={() => handleResetDatabase()}
                 title="Réinitialiser la base de démonstration"
@@ -645,6 +666,13 @@ export default function App() {
           {/* Mobile responsive drawer */}
           {mobileMenuOpen && (
             <div className="md:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-4 space-y-2 text-xs font-bold">
+              <button
+                onClick={handlePublicReservationClick}
+                className="mb-1 flex w-full items-center justify-center gap-2 rounded-xl bg-[#ff5757] px-4 py-3 text-sm font-extrabold text-white shadow-md shadow-[#ff5757]/20 transition-premium hover:bg-[#e94949]"
+              >
+                <Calendar className="h-4 w-4" />
+                R&eacute;server une s&eacute;ance
+              </button>
               {[
                 { id: 'home', label: 'Accueil' },
                 { id: 'aq8', label: 'Technologie AQ8' },
