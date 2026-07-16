@@ -223,7 +223,12 @@ function findReservableService(center: Center, services: Service[], serviceType:
 
 async function createPublicReservation(input: PublicBookingRequestInput) {
   const db = getAdminDb();
-  const centerSnapshot = await db.collection('centers').doc(String(input.centerId || '').trim()).get();
+  const requestedCenterId = String(input.centerId || '').trim();
+  if (!requestedCenterId) {
+    throw new Error('Centre invalide. Veuillez choisir un centre disponible.');
+  }
+
+  const centerSnapshot = await db.collection('centers').doc(requestedCenterId).get();
   if (!centerSnapshot.exists) {
     throw new Error('Centre introuvable.');
   }
