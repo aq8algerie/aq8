@@ -84,14 +84,18 @@ service cloud.firestore {
     }
 
     match /clients/{clientId} {
-      allow read: if canAccessCenter(resource.data.centerId);
+      allow get: if (isActiveCrmUser() && !exists(/databases/$(database)/documents/clients/$(clientId)))
+        || canAccessCenter(resource.data.centerId);
+      allow list: if canAccessCenter(resource.data.centerId);
       allow create: if canAccessCenter(request.resource.data.centerId);
       allow update: if canAccessCenter(resource.data.centerId) && canAccessCenter(request.resource.data.centerId);
       allow delete: if canAccessCenter(resource.data.centerId);
     }
 
     match /appointments/{appointmentId} {
-      allow read: if canAccessCenter(resource.data.centerId);
+      allow get: if (isActiveCrmUser() && !exists(/databases/$(database)/documents/appointments/$(appointmentId)))
+        || canAccessCenter(resource.data.centerId);
+      allow list: if canAccessCenter(resource.data.centerId);
       allow create: if canAccessCenter(request.resource.data.centerId);
       allow update: if canAccessCenter(resource.data.centerId) && canAccessCenter(request.resource.data.centerId);
       allow delete: if canAccessCenter(resource.data.centerId);
