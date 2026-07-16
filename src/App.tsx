@@ -587,18 +587,18 @@ export default function App() {
         <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-150 shadow-xs">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             {/* Logo */}
-            <div
+            <button
+              type="button"
               onClick={() => navigate('home')}
-              className="flex items-center gap-2 cursor-pointer group"
+              className="flex items-center cursor-pointer group"
+              aria-label="Retour a l'accueil AQ8 Algerie"
             >
-              <div className="h-9 w-9 bg-[#353535] rounded-xl flex items-center justify-center text-white font-bold transition-premium group-hover:scale-105 border border-[#ff5757]/30">
-                <span className="text-[#ff5757] text-lg">8</span>
-              </div>
-              <div className="leading-none">
-                <span className="text-sm font-bold tracking-wider text-[#353535] uppercase font-display block">AQ8 Algérie</span>
-                <span className="text-[9px] font-semibold text-slate-400 tracking-widest uppercase block">Next-Gen Fitness</span>
-              </div>
-            </div>
+              <img
+                src="/images/logo.png"
+                alt="AQ8 Algerie"
+                className="h-10 w-auto max-w-[145px] object-contain transition-premium group-hover:scale-[1.02] lg:h-11 lg:max-w-[170px]"
+              />
+            </button>
 
             {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center gap-1 text-xs font-bold text-slate-600">
@@ -1007,12 +1007,18 @@ export default function App() {
         <footer className="bg-[#353535] text-white border-t border-slate-800 pt-16 pb-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-4 gap-8">
             <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 bg-white/10 rounded-lg flex items-center justify-center border border-[#ff5757]/30">
-                  <span className="text-[#ff5757] font-bold text-base">8</span>
-                </div>
-                <span className="font-bold text-lg font-display uppercase tracking-wider text-white">AQ8 Algérie</span>
-              </div>
+              <button
+                type="button"
+                onClick={() => navigate('home')}
+                className="inline-flex rounded-xl bg-white px-3 py-2 shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                aria-label="Retour a l'accueil AQ8 Algerie"
+              >
+                <img
+                  src="/images/logo.png"
+                  alt="AQ8 Algerie"
+                  className="h-10 w-auto max-w-[165px] object-contain"
+                />
+              </button>
               <p className="text-xs text-slate-400 leading-relaxed">
                 Leader de l'électrostimulation sans fil et de la remise en forme technologique en Algérie. Prestations haut de gamme adaptées à tous les profils.
               </p>

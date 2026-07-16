@@ -22,7 +22,7 @@ export function SeoJsonLd({ type, center }: SeoJsonLdProps) {
       "@id": `${siteConfig.url}/#organization`,
       "name": siteConfig.name,
       "url": siteConfig.url,
-      "logo": `${siteConfig.url}/images/aq8algerie-logo.webp`,
+      "logo": `${siteConfig.url}${siteConfig.logoImage}`,
       "image": `${siteConfig.url}${siteConfig.defaultImage}`,
       "description": siteConfig.description,
       "contactPoint": {

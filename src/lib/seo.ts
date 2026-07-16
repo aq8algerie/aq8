@@ -5,7 +5,8 @@ export const siteConfig = {
   name: "AQ8 Algérie",
   url: "https://www.aq8algerie-dz.com",
   description: "AQ8 Algérie propose des séances d’électrostimulation, Wonder, remise en forme et accompagnement minceur dans ses centres.",
-  defaultImage: "/images/aq8-og-image.webp"
+  defaultImage: "/images/aq8-og-image.webp",
+  logoImage: "/images/logo.png"
 };
 
 export interface PageSeo {
