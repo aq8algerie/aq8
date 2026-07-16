@@ -38,7 +38,7 @@ export function HomeTechnologies() {
         <article className="group relative overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg">
           <div className="relative h-64 overflow-hidden">
             <img
-              src="/images/aq8algerie.webp"
+              src="/images/prestations/aq8.webp"
               alt="Séance AQ8 EMS électrostimulation en Algérie"
               className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
               referrerPolicy="no-referrer"
@@ -114,7 +114,7 @@ export function HomeTechnologies() {
         <article className="group relative overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg">
           <div className="relative h-64 overflow-hidden">
             <img
-              src="/images/wonder-sculpt.webp"
+              src="/images/prestations/wonder-ems.webp"
               alt="Séance Wonder Sculpt AQ8 Algérie"
               className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
               referrerPolicy="no-referrer"
