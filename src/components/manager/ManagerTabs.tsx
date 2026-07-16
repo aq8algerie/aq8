@@ -4,9 +4,9 @@
  */
 
 import React from 'react';
-import { Activity, Calendar, Users, DollarSign, Layers } from 'lucide-react';
+import { Activity, Calendar, Users, DollarSign, Layers, Settings } from 'lucide-react';
 
-export type SubTabId = 'dashboard' | 'schedule' | 'clients' | 'bookings' | 'payments' | 'services';
+export type SubTabId = 'dashboard' | 'schedule' | 'clients' | 'bookings' | 'payments' | 'services' | 'settings';
 
 interface TabItem {
   id: SubTabId;
@@ -31,7 +31,8 @@ export function ManagerTabs({
     { id: 'clients', label: 'Gestion Clients', icon: Users },
     { id: 'bookings', label: 'Réservations', icon: Calendar },
     { id: 'payments', label: 'Paiements Encaissés', icon: DollarSign },
-    { id: 'services', label: 'Prestations & Forfaits', icon: Layers }
+    { id: 'services', label: 'Prestations & Forfaits', icon: Layers },
+    { id: 'settings', label: 'Parametres', icon: Settings }
   ];
 
   return (

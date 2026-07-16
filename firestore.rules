@@ -67,12 +67,32 @@ service cloud.firestore {
         && (!('6' in value) || isBookingDayRanges(value['6']));
     }
 
-    function isCenterBookingSettingsUpdate(centerId) {
+    function isPublicTextList(value, maxItems) {
+      return value is list && value.size() <= maxItems;
+    }
+
+    function isCenterManagerSettingsUpdate(centerId) {
       return isCenterManager(centerId)
         && request.resource.data.id == resource.data.id
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['bookingCapacity', 'bookingHours', 'updatedAt'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'bookingCapacity', 'bookingHours', 'phone', 'email', 'address', 'imageUrl', 'schedule',
+          'description', 'status', 'importantNotes', 'menHours', 'womenHours', 'equipment',
+          'cancellationRule', 'updatedAt'
+        ])
         && (!('bookingCapacity' in request.resource.data) || isBookingCapacityMap(request.resource.data.bookingCapacity))
         && (!('bookingHours' in request.resource.data) || isBookingHoursMap(request.resource.data.bookingHours))
+        && (!('phone' in request.resource.data) || (request.resource.data.phone is string && request.resource.data.phone.size() <= 60))
+        && (!('email' in request.resource.data) || (request.resource.data.email is string && request.resource.data.email.size() <= 160))
+        && (!('address' in request.resource.data) || (request.resource.data.address is string && request.resource.data.address.size() <= 240))
+        && (!('imageUrl' in request.resource.data) || (request.resource.data.imageUrl is string && request.resource.data.imageUrl.size() <= 500))
+        && (!('schedule' in request.resource.data) || (request.resource.data.schedule is string && request.resource.data.schedule.size() <= 300))
+        && (!('description' in request.resource.data) || (request.resource.data.description is string && request.resource.data.description.size() <= 2000))
+        && (!('status' in request.resource.data) || (request.resource.data.status is string && request.resource.data.status.size() <= 80))
+        && (!('importantNotes' in request.resource.data) || isPublicTextList(request.resource.data.importantNotes, 20))
+        && (!('menHours' in request.resource.data) || isPublicTextList(request.resource.data.menHours, 20))
+        && (!('womenHours' in request.resource.data) || isPublicTextList(request.resource.data.womenHours, 20))
+        && (!('equipment' in request.resource.data) || isPublicTextList(request.resource.data.equipment, 20))
+        && (!('cancellationRule' in request.resource.data) || (request.resource.data.cancellationRule is string && request.resource.data.cancellationRule.size() <= 1200))
         && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is string);
     }
 
@@ -107,7 +127,7 @@ service cloud.firestore {
     match /centers/{centerId} {
       allow read: if true;
       allow create, delete: if isSuperAdmin();
-      allow update: if isSuperAdmin() || isCenterBookingSettingsUpdate(centerId);
+      allow update: if isSuperAdmin() || isCenterManagerSettingsUpdate(centerId);
     }
 
     match /services/{serviceId} {

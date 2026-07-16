@@ -14,21 +14,16 @@ import {
   Package2,
   CheckCircle2
 } from 'lucide-react';
-import { Center, Service, Package } from '../../types';
-import { ManagerBookingSettingsPanel } from './ManagerBookingSettingsPanel';
+import { Service, Package } from '../../types';
 
 interface ManagerServicesViewProps {
   centerServices: Service[];
   centerPackages: Package[];
-  currentCenter: Center;
-  onSaveBookingSettings: (settings: { bookingCapacity: Center['bookingCapacity']; bookingHours: Center['bookingHours'] }) => Promise<{ ok: boolean; error?: string }>;
 }
 
 export function ManagerServicesView({
   centerServices,
-  centerPackages,
-  currentCenter,
-  onSaveBookingSettings
+  centerPackages
 }: ManagerServicesViewProps) {
   const [activeSection, setActiveSection] = useState<'services' | 'packages'>('services');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -94,11 +89,6 @@ export function ManagerServicesView({
           </div>
         </div>
       </div>
-
-      <ManagerBookingSettingsPanel
-        currentCenter={currentCenter}
-        onSave={onSaveBookingSettings}
-      />
 
       {/* Section Toggle: Prestations / Forfaits */}
       <div className="flex gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200/40 w-full sm:w-fit">

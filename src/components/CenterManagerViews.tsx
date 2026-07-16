@@ -25,6 +25,7 @@ import { ManagerClientsView } from './manager/ManagerClientsView';
 import { ManagerBookingsView } from './manager/ManagerBookingsView';
 import { ManagerPaymentsView } from './manager/ManagerPaymentsView';
 import { ManagerServicesView } from './manager/ManagerServicesView';
+import { ManagerSettingsView } from './manager/ManagerSettingsView';
 import { ClientProfileView } from './manager/ClientProfileView';
 import { ProfessionalConfirmDialog } from './manager/ProfessionalConfirmDialog';
 import { ProfessionalToast, ProfessionalToastState, ToastAction, ToastType } from './manager/ProfessionalToast';
@@ -135,10 +136,7 @@ export function CenterManagerViews({
   // Find center metadata
   const currentCenter = centers.find(c => c.id === centerId) || centers[0];
 
-  const handleSaveBookingSettings = async (settings: {
-    bookingCapacity: Center['bookingCapacity'];
-    bookingHours: Center['bookingHours'];
-  }): Promise<CrmActionResult> => {
+  const handleSaveCenterUpdate = async (payload: Partial<Center>, successMessage: string, successTitle: string): Promise<CrmActionResult> => {
     if (!currentCenter) {
       const message = 'Centre introuvable.';
       triggerToast(message, 'error');
@@ -147,18 +145,39 @@ export function CenterManagerViews({
 
     try {
       await updateDoc(doc(db, 'centers', centerId), {
-        bookingCapacity: settings.bookingCapacity,
-        bookingHours: settings.bookingHours,
+        ...payload,
         updatedAt: new Date().toISOString(),
       });
-      triggerToast('Parametres de reservation mis a jour.', 'success', 'updated', 'Parametres enregistres');
+      triggerToast(successMessage, 'success', 'updated', successTitle);
       return { ok: true };
     } catch (error) {
-      const message = getErrorMessage(error, 'Erreur lors de la mise a jour des parametres.');
+      const message = getErrorMessage(error, 'Erreur lors de la mise a jour du centre.');
       triggerToast(message, 'error');
       return { ok: false, error: message };
     }
   };
+
+  const handleSaveBookingSettings = async (settings: {
+    bookingCapacity: Center['bookingCapacity'];
+    bookingHours: Center['bookingHours'];
+  }): Promise<CrmActionResult> => {
+    return handleSaveCenterUpdate(
+      {
+        bookingCapacity: settings.bookingCapacity,
+        bookingHours: settings.bookingHours,
+      },
+      'Parametres de reservation mis a jour.',
+      'Parametres enregistres'
+    );
+  };
+
+  const handleSaveCenterProfile = async (settings: Partial<Center>): Promise<CrmActionResult> => (
+    handleSaveCenterUpdate(
+      settings,
+      'Informations du centre mises a jour.',
+      'Centre mis a jour'
+    )
+  );
 
   // Custom center services filtering & pricing
   const centerServices = services
@@ -683,8 +702,14 @@ export function CenterManagerViews({
               <ManagerServicesView
                 centerServices={centerServices}
                 centerPackages={centerPackages}
+              />
+            )}
+
+            {activeSubTab === 'settings' && (
+              <ManagerSettingsView
                 currentCenter={currentCenter}
                 onSaveBookingSettings={handleSaveBookingSettings}
+                onSaveCenterProfile={handleSaveCenterProfile}
               />
             )}
           </>

@@ -138,7 +138,7 @@ export default function App() {
   const [crmCenterId, setCrmCenterId] = useState<string | null>(null);
   const [loggedManagerName, setLoggedManagerName] = useState<string>('');
   const [crmSuperAdminTab, setCrmSuperAdminTab] = useState<'dashboard' | 'centers' | 'managers' | 'stats' | 'settings'>('dashboard');
-  const [crmCenterManagerTab, setCrmCenterManagerTab] = useState<'dashboard' | 'schedule' | 'clients' | 'bookings' | 'payments' | 'services'>('dashboard');
+  const [crmCenterManagerTab, setCrmCenterManagerTab] = useState<'dashboard' | 'schedule' | 'clients' | 'bookings' | 'payments' | 'services' | 'settings'>('dashboard');
   const [crmSidebarOpen, setCrmSidebarOpen] = useState(false);
   const isDevToolsEnabled = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true';
 
@@ -873,7 +873,7 @@ export default function App() {
                         { id: 'centers' as const, label: 'Gestion Centres', icon: Building },
                         { id: 'managers' as const, label: 'Managers & Accès', icon: Users },
                         { id: 'stats' as const, label: 'Analyses Réseau', icon: BarChart3 },
-                        { id: 'settings' as const, label: 'Paramètres Généraux', icon: Settings }
+                        { id: 'settings' as const, label: 'Parametres Généraux', icon: Settings }
                       ].map(tab => {
                         const Icon = tab.icon;
                         const isActive = crmSuperAdminTab === tab.id;
@@ -904,7 +904,8 @@ export default function App() {
                         { id: 'clients' as const, label: 'Gestion Clients', icon: Users },
                         { id: 'bookings' as const, label: 'Réservations', icon: Calendar },
                         { id: 'payments' as const, label: 'Paiements Encaissés', icon: DollarSign },
-                        { id: 'services' as const, label: 'Prestations & Forfaits', icon: Layers }
+                        { id: 'services' as const, label: 'Prestations & Forfaits', icon: Layers },
+                        { id: 'settings' as const, label: 'Parametres', icon: Settings }
                       ].map(tab => {
                         const Icon = tab.icon;
                         const isActive = crmCenterManagerTab === tab.id;
