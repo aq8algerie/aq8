@@ -164,8 +164,17 @@ service cloud.firestore {
       allow delete: if canAccessCenter(centerId) && resource.data.centerId == centerId;
     }
 
+    match /public_booking_slots/{centerId}/slots/{slotId} {
+      allow read: if true;
+      allow create: if canAccessCenter(centerId) && request.resource.data.centerId == centerId;
+      allow update: if canAccessCenter(centerId)
+        && resource.data.centerId == centerId
+        && request.resource.data.centerId == centerId;
+      allow delete: if canAccessCenter(centerId) && resource.data.centerId == centerId;
+    }
+
     match /booking_requests/{requestId} {
-      allow create: if isPublicBookingCreate();
+      allow create: if false;
       allow read: if canAccessCenter(resource.data.centerId);
       allow update: if canAccessCenter(resource.data.centerId) && canAccessCenter(request.resource.data.centerId);
       allow delete: if isSuperAdmin();

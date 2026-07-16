@@ -9,6 +9,7 @@ import { Appointment, BookingRequest, Client, ClientPackage, Package, Payment, S
 import {
   BookingServiceType,
   CenterCapacity,
+  getBookingSlotId,
   getCenterBookingCapacity,
   getServiceTypeLabel,
   getSlotCapacity,
@@ -66,11 +67,15 @@ function shouldHoldAppointmentSlot(status: Appointment['status']): boolean {
 }
 
 export function getAppointmentSlotId(dateTime: string): string {
-  return encodeURIComponent(dateTime.trim());
+  return getBookingSlotId(dateTime);
 }
 
 function getAppointmentSlotRef(db: Firestore, centerId: string, dateTime: string): DocumentReference {
   return doc(db, 'appointment_slots', centerId, 'slots', getAppointmentSlotId(dateTime));
+}
+
+function getPublicBookingSlotRef(db: Firestore, centerId: string, dateTime: string): DocumentReference {
+  return doc(db, 'public_booking_slots', centerId, 'slots', getAppointmentSlotId(dateTime));
 }
 
 function emptyCounts(): CenterCapacity {
@@ -110,6 +115,36 @@ function recomputeSlot(slot: AppointmentSlot): AppointmentSlot {
 
 function totalSlotAppointments(slot: AppointmentSlot): number {
   return slot.counts.aq8 + slot.counts.wonder;
+}
+
+function buildPublicBookingSlot(slot: AppointmentSlot) {
+  const remaining = {
+    aq8: Math.max(slot.capacities.aq8 - slot.counts.aq8, 0),
+    wonder: Math.max(slot.capacities.wonder - slot.counts.wonder, 0),
+  };
+  const [date, time] = slot.dateTime.split('T');
+
+  return {
+    id: slot.id,
+    centerId: slot.centerId,
+    dateTime: slot.dateTime,
+    date: date || '',
+    time: time || '',
+    capacities: slot.capacities,
+    counts: slot.counts,
+    remaining,
+    updatedAt: slot.updatedAt,
+  };
+}
+
+function removeBookingRequestHold(slot: AppointmentSlot, requestId: string): AppointmentSlot {
+  const nextAppointments = { ...slot.appointments };
+  for (const [entryId, entry] of Object.entries(nextAppointments)) {
+    if (entry.requestId === requestId && entry.source === 'booking_request') {
+      delete nextAppointments[entryId];
+    }
+  }
+  return recomputeSlot({ ...slot, appointments: nextAppointments });
 }
 
 async function readServiceType(transaction: Transaction, db: Firestore, serviceId: string): Promise<BookingServiceType> {
@@ -254,13 +289,18 @@ function removeAppointmentFromSlot(slot: AppointmentSlot, appointmentId: string)
   return recomputeSlot({ ...slot, appointments: nextAppointments });
 }
 
-function writeSlotOrDelete(transaction: Transaction, slotRef: DocumentReference, slot: AppointmentSlot): void {
+function writeSlotOrDelete(transaction: Transaction, db: Firestore, slotRef: DocumentReference, slot: AppointmentSlot): void {
+  const publicSlotRef = getPublicBookingSlotRef(db, slot.centerId, slot.dateTime);
+
   if (totalSlotAppointments(slot) === 0) {
     transaction.delete(slotRef);
+    transaction.delete(publicSlotRef);
     return;
   }
 
-  transaction.set(slotRef, slot);
+  const nextSlot = { ...slot, updatedAt: slot.updatedAt || new Date().toISOString() };
+  transaction.set(slotRef, nextSlot);
+  transaction.set(publicSlotRef, buildPublicBookingSlot(nextSlot));
 }
 
 function buildAppointmentSlotEntry(params: {
@@ -350,7 +390,7 @@ export async function createAppointmentInTransaction(
     }));
 
     transaction.set(appointmentRef, appointment);
-    writeSlotOrDelete(transaction, slotRef, nextSlot);
+    writeSlotOrDelete(transaction, db, slotRef, nextSlot);
   });
 }
 
@@ -431,11 +471,11 @@ export async function updateAppointmentInTransaction(
     };
 
     if (sameSlot) {
-      writeSlotOrDelete(transaction, oldSlotRef, nextNewSlot);
+      writeSlotOrDelete(transaction, db, oldSlotRef, nextNewSlot);
     } else {
-      writeSlotOrDelete(transaction, oldSlotRef, nextOldSlot);
+      writeSlotOrDelete(transaction, db, oldSlotRef, nextOldSlot);
       if (shouldHoldNewSlot) {
-        writeSlotOrDelete(transaction, newSlotRef, nextNewSlot);
+        writeSlotOrDelete(transaction, db, newSlotRef, nextNewSlot);
       }
     }
 
@@ -470,7 +510,7 @@ export async function deleteAppointmentInTransaction(
     const slot = await normalizeSlotFromSnapshot(transaction, db, slotSnapshot, params.centerId, appointment.dateTime, new Date().toISOString());
     const nextSlot = removeAppointmentFromSlot(slot, params.appointmentId);
 
-    writeSlotOrDelete(transaction, slotRef, nextSlot);
+    writeSlotOrDelete(transaction, db, slotRef, nextSlot);
     transaction.delete(appointmentRef);
   });
 }
@@ -564,7 +604,7 @@ export async function cancelAppointmentInTransaction(
     const slot = await normalizeSlotFromSnapshot(transaction, db, slotSnapshot, params.centerId, appointment.dateTime, new Date().toISOString());
     const nextSlot = removeAppointmentFromSlot(slot, params.appointmentId);
 
-    writeSlotOrDelete(transaction, slotRef, nextSlot);
+    writeSlotOrDelete(transaction, db, slotRef, nextSlot);
     transaction.update(appointmentRef, {
       status: 'cancelled'
     });
@@ -670,7 +710,8 @@ export async function acceptBookingRequestInTransaction(
       notes: `Demande publique - ${bookingRequest.service}`
     };
 
-    const nextSlot = addAppointmentToSlot(slot, buildAppointmentSlotEntry({
+    const slotWithoutRequestHold = removeBookingRequestHold(slot, params.requestId);
+    const nextSlot = addAppointmentToSlot(slotWithoutRequestHold, buildAppointmentSlotEntry({
       appointmentId: params.appointmentId,
       serviceId: params.serviceId,
       serviceType,
@@ -683,7 +724,7 @@ export async function acceptBookingRequestInTransaction(
       transaction.set(newClientRef, newClient);
     }
     transaction.set(appointmentRef, appointment);
-    writeSlotOrDelete(transaction, slotRef, nextSlot);
+    writeSlotOrDelete(transaction, db, slotRef, nextSlot);
     transaction.update(requestRef, {
       status: 'accepted'
     });
@@ -720,6 +761,13 @@ export async function rejectBookingRequestInTransaction(
       throw new Error('Cette demande a deja ete traitee.');
     }
 
+    const dateTime = `${bookingRequest.bookingDate}T${bookingRequest.bookingTime}`;
+    const slotRef = getAppointmentSlotRef(db, params.centerId, dateTime);
+    const slotSnapshot = await transaction.get(slotRef);
+    const slot = await normalizeSlotFromSnapshot(transaction, db, slotSnapshot, params.centerId, dateTime, new Date().toISOString());
+    const nextSlot = removeBookingRequestHold(slot, params.requestId);
+
+    writeSlotOrDelete(transaction, db, slotRef, nextSlot);
     transaction.update(requestRef, {
       status: 'rejected'
     });

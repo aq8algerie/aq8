@@ -23,7 +23,9 @@
     "provision:crm-user": "node scripts/provision-crm-user.mjs",
     "backfill:appointment-slots": "node scripts/backfill-appointment-slots.mjs",
     "backfill:appointment-slots:execute": "node scripts/backfill-appointment-slots.mjs --execute",
-    "analyze:appointment-slot-conflicts": "node scripts/analyze-appointment-slot-conflicts.mjs"
+    "analyze:appointment-slot-conflicts": "node scripts/analyze-appointment-slot-conflicts.mjs",
+    "sync:public-booking-slots": "node scripts/sync-public-booking-slots.mjs",
+    "sync:public-booking-slots:execute": "node scripts/sync-public-booking-slots.mjs --execute"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

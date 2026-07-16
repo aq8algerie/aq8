@@ -1,14 +1,21 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Calendar, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
-import { collection, addDoc } from "firebase/firestore";
+import { AlertCircle, Calendar, CheckCircle2, Loader2 } from "lucide-react";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "../../src/lib/firebase";
 import {
   getBookingMinimumDate,
-  validatePublicBookingRequest
+  validatePublicBookingRequest,
 } from "../../src/lib/publicFormValidation";
-import { getBookingHoursForDate, getCapacitySummary, getNextOpenBookingDate } from "../../src/lib/bookingCapacityRules";
+import {
+  BookingServiceType,
+  getBookingHoursForDate,
+  getCapacitySummary,
+  getNextOpenBookingDate,
+  getSlotCapacity,
+  isBookingServiceType,
+} from "../../src/lib/bookingCapacityRules";
 
 type CenterBookingFormProps = {
   centerId: string;
@@ -17,10 +24,68 @@ type CenterBookingFormProps = {
   services: string[];
 };
 
+type PublicBookingSlot = {
+  id?: string;
+  centerId?: string;
+  dateTime?: string;
+  date?: string;
+  time?: string;
+  capacities?: Partial<Record<BookingServiceType, number>>;
+  counts?: Partial<Record<BookingServiceType, number>>;
+  remaining?: Partial<Record<BookingServiceType, number>>;
+};
+
+type SlotAvailability = {
+  capacity: number;
+  booked: number;
+  remaining: number;
+  isFull: boolean;
+};
+
+type ReservationResponse = {
+  ok?: boolean;
+  error?: string;
+  reservation?: {
+    reservationId: string;
+    centerName: string;
+    service: string;
+    bookingDate: string;
+    bookingTime: string;
+  };
+};
+
 function getServiceLabel(service: string) {
   if (service.toLowerCase() === "aq8") return "AQ8 EMS";
   if (service.toLowerCase() === "wonder") return "Wonder Sculpt";
   return service;
+}
+
+function getEndHourLabel(hour: string) {
+  const startHour = Number(hour.slice(0, 2));
+  if (!Number.isFinite(startHour)) return "";
+  return `${String(startHour + 1).padStart(2, "0")}:00`;
+}
+
+function getServiceType(value: string): BookingServiceType {
+  return isBookingServiceType(value) ? value : "aq8";
+}
+
+function resolveSlotAvailability(
+  centerId: string,
+  serviceType: BookingServiceType,
+  slot?: PublicBookingSlot,
+): SlotAvailability {
+  const capacity = slot?.capacities?.[serviceType] ?? getSlotCapacity(centerId, serviceType);
+  const booked = slot?.counts?.[serviceType] ?? 0;
+  const remaining = slot?.remaining?.[serviceType] ?? Math.max(capacity - booked, 0);
+  const safeRemaining = Math.max(remaining, 0);
+
+  return {
+    capacity,
+    booked,
+    remaining: safeRemaining,
+    isFull: capacity <= 0 || safeRemaining <= 0,
+  };
 }
 
 export function CenterBookingForm({
@@ -38,25 +103,92 @@ export function CenterBookingForm({
   const [email, setEmail] = useState("");
   const [service, setService] = useState(services[0] || "aq8");
   const [bookingDate, setBookingDate] = useState(defaultDate);
-  const [bookingTime, setBookingTime] = useState("10:00");
+  const [bookingTime, setBookingTime] = useState("");
+  const [slotByTime, setSlotByTime] = useState<Record<string, PublicBookingSlot>>({});
+  const [availabilityLoading, setAvailabilityLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const selectedServiceType = useMemo(() => getServiceType(service), [service]);
   const hours = useMemo(() => getBookingHoursForDate(centerId, bookingDate), [centerId, bookingDate]);
   const capacitySummary = useMemo(() => getCapacitySummary(centerId), [centerId]);
 
-  useEffect(() => {
-    if (hours.length > 0 && !hours.includes(bookingTime)) {
-      setBookingTime(hours[0]);
-    } else if (hours.length === 0 && bookingTime !== '') {
-      setBookingTime('');
+  const hourAvailability = useMemo(() => {
+    const next: Record<string, SlotAvailability> = {};
+    for (const hour of hours) {
+      next[hour] = resolveSlotAvailability(centerId, selectedServiceType, slotByTime[hour]);
     }
-  }, [bookingTime, hours]);
+    return next;
+  }, [centerId, hours, selectedServiceType, slotByTime]);
+
+  const availableHours = useMemo(
+    () => hours.filter((hour) => !hourAvailability[hour]?.isFull),
+    [hourAvailability, hours],
+  );
+
+  const selectedAvailability = bookingTime ? hourAvailability[bookingTime] : undefined;
+  const selectedSlotIsFull = Boolean(selectedAvailability?.isFull);
+  const canSubmit = !isLoading && !availabilityLoading && Boolean(bookingTime) && hours.length > 0 && !selectedSlotIsFull;
+
+  useEffect(() => {
+    if (!services.includes(service)) {
+      setService(services[0] || "aq8");
+    }
+  }, [service, services]);
+
+  useEffect(() => {
+    setSlotByTime({});
+    if (!bookingDate) {
+      setAvailabilityLoading(false);
+      return;
+    }
+
+    setAvailabilityLoading(true);
+    const slotsRef = collection(db, "public_booking_slots", centerId, "slots");
+    const slotsQuery = query(slotsRef, where("date", "==", bookingDate));
+
+    return onSnapshot(
+      slotsQuery,
+      (snapshot) => {
+        const next: Record<string, PublicBookingSlot> = {};
+        snapshot.forEach((document) => {
+          const data = document.data() as PublicBookingSlot;
+          if (data.time) {
+            next[data.time] = { id: document.id, ...data };
+          }
+        });
+        setSlotByTime(next);
+        setAvailabilityLoading(false);
+      },
+      (error) => {
+        console.error("Public slot availability error:", error);
+        setSlotByTime({});
+        setAvailabilityLoading(false);
+      },
+    );
+  }, [bookingDate, centerId]);
+
+  useEffect(() => {
+    if (hours.length === 0) {
+      if (bookingTime !== "") setBookingTime("");
+      return;
+    }
+
+    if (!hours.includes(bookingTime)) {
+      setBookingTime(availableHours[0] || hours[0]);
+      return;
+    }
+
+    if (!availabilityLoading && selectedAvailability?.isFull && availableHours.length > 0) {
+      setBookingTime(availableHours[0]);
+    }
+  }, [availabilityLoading, availableHours, bookingTime, hours, selectedAvailability]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrorMsg("");
+    setSuccessMsg("");
 
     const validation = validatePublicBookingRequest(
       {
@@ -70,7 +202,7 @@ export function CenterBookingForm({
         bookingDate,
         bookingTime,
       },
-      services
+      services,
     );
 
     if (validation.valid === false) {
@@ -78,17 +210,27 @@ export function CenterBookingForm({
       return;
     }
 
+    if (selectedAvailability?.isFull) {
+      setErrorMsg("Ce creneau vient d'etre complet. Veuillez choisir une autre heure.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      await addDoc(collection(db, "booking_requests"), {
-        ...validation.data,
-        status: "pending",
-        createdAt: new Date().toISOString(),
+      const response = await fetch("/api/public-reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(validation.data),
       });
+      const payload = (await response.json().catch(() => null)) as ReservationResponse | null;
+
+      if (!response.ok || payload?.ok !== true) {
+        throw new Error(payload?.error || "Reservation impossible pour ce creneau.");
+      }
 
       setSuccessMsg(
-        `Votre demande de réservation a bien été enregistrée pour le centre ${centerName}. L'équipe du centre vous contactera pour confirmer le créneau.`
+        `Votre creneau est pre-reserve pour le centre ${centerName}. L'equipe du centre vous contactera pour confirmer definitivement le rendez-vous.`,
       );
 
       setFirstName("");
@@ -96,11 +238,12 @@ export function CenterBookingForm({
       setPhone("");
       setEmail("");
       setService(services[0] || "aq8");
-      setBookingDate(getNextOpenBookingDate(centerId, getBookingMinimumDate()));
-      setBookingTime("10:00");
+      const nextDate = getNextOpenBookingDate(centerId, getBookingMinimumDate());
+      setBookingDate(nextDate);
+      setBookingTime(getBookingHoursForDate(centerId, nextDate)[0] || "");
     } catch (err) {
       console.error("Booking submission error:", err);
-      setErrorMsg("Une erreur est survenue lors de l'envoi. Veuillez réessayer ou contacter directement le centre.");
+      setErrorMsg(err instanceof Error ? err.message : "Une erreur est survenue. Veuillez reessayer ou contacter directement le centre.");
     } finally {
       setIsLoading(false);
     }
@@ -115,17 +258,14 @@ export function CenterBookingForm({
           </div>
           <div className="space-y-2">
             <h2 className="font-display text-xl font-bold text-emerald-900">
-              Demande envoyée ✓
+              Creneau pre-reserve
             </h2>
             <p className="text-sm font-medium leading-relaxed text-emerald-800">
               {successMsg}
             </p>
             <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs font-bold text-amber-800 space-y-1.5">
-              <p className="flex items-center gap-1.5 text-amber-900">
-                <span>⚠️🚨</span> IMPORTANT :
-              </p>
-              <p className="font-medium text-amber-800 leading-relaxed">
-                Vous devez absolument recevoir votre reçu de paiement pour valider votre paiement directement à notre centre.
+              <p className="font-medium leading-relaxed text-amber-800">
+                La confirmation finale reste faite par l'equipe du centre apres verification du planning et du paiement.
               </p>
             </div>
           </div>
@@ -134,7 +274,7 @@ export function CenterBookingForm({
             onClick={() => setSuccessMsg("")}
             className="w-full rounded-xl bg-[#353535] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#ff5757] cursor-pointer"
           >
-            Faire une autre demande
+            Faire une autre reservation
           </button>
         </div>
       </div>
@@ -145,31 +285,27 @@ export function CenterBookingForm({
     <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
       <div className="mb-5 space-y-2">
         <span className="text-xs font-bold uppercase tracking-wider text-[#ff5757]">
-          Demande de réservation
+          Reservation en ligne
         </span>
         <h2 className="font-display text-xl font-bold text-[#353535]">
           Dans votre centre de {centerCity}
         </h2>
         <p className="text-sm font-medium leading-relaxed text-slate-500">
-          Remplissez ce formulaire pour envoyer une demande. Le centre vous
-          recontactera pour confirmer le créneau selon les disponibilités.
+          Choisissez une prestation, une date et une heure disponible. Le creneau est bloque en attente de confirmation par le centre.
         </p>
       </div>
 
-      <ul className="mb-5 space-y-2 border-b border-slate-100 pb-5 text-sm font-medium text-slate-600">
-        <li className="flex items-start gap-2">
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#ff5757]" />
-          <span>Demande à envoyer avant la séance souhaitée.</span>
-        </li>
-        <li className="flex items-start gap-2">
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#ff5757]" />
-          <span>Créneaux proposés par heure complète.</span>
-        </li>
-        <li className="flex items-start gap-2">
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#ff5757]" />
-          <span>Confirmation finale par l'équipe du centre.</span>
-        </li>
-      </ul>
+      <div className="mb-5 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm">
+        <div className="flex items-center justify-between gap-3">
+          <span className="font-bold text-slate-700">Capacite par heure</span>
+          <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#ff5757] shadow-sm">
+            {capacitySummary}
+          </span>
+        </div>
+        <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500">
+          Les disponibilites se mettent a jour automatiquement selon les reservations deja prises et les demandes en attente.
+        </p>
+      </div>
 
       {errorMsg && (
         <div className="mb-4 rounded-2xl border border-rose-100 bg-rose-50 p-3 text-sm font-semibold text-rose-700 flex items-start gap-2">
@@ -181,7 +317,7 @@ export function CenterBookingForm({
       <form onSubmit={handleSubmit} className="space-y-4 text-sm font-semibold text-slate-700">
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-slate-600">Prénom *</label>
+            <label className="text-slate-600">Prenom *</label>
             <input
               type="text"
               required
@@ -207,7 +343,7 @@ export function CenterBookingForm({
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-slate-600">Téléphone *</label>
+          <label className="text-slate-600">Telephone *</label>
           <input
             type="tel"
             required
@@ -220,7 +356,7 @@ export function CenterBookingForm({
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-slate-600">E-mail (facultatif)</label>
+          <label className="text-slate-600">E-mail facultatif</label>
           <input
             type="email"
             value={email}
@@ -232,7 +368,7 @@ export function CenterBookingForm({
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-slate-600">Prestation souhaitée</label>
+          <label className="text-slate-600">Prestation souhaitee</label>
           <select
             value={service}
             onChange={(e) => setService(e.target.value)}
@@ -249,7 +385,7 @@ export function CenterBookingForm({
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-slate-600">Date souhaitée</label>
+            <label className="text-slate-600">Date souhaitee</label>
             <input
               type="date"
               min={bookingMinimumDate}
@@ -260,54 +396,66 @@ export function CenterBookingForm({
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-slate-600">Heure souhaitée</label>
+            <label className="text-slate-600">Heure disponible</label>
             <select
               value={bookingTime}
               onChange={(e) => setBookingTime(e.target.value)}
-              disabled={isLoading || hours.length === 0}
+              disabled={isLoading || availabilityLoading || hours.length === 0}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
             >
               {hours.length === 0 && (
                 <option value="">Centre ferme ce jour</option>
               )}
-              {hours.map((hour) => (
-                <option key={hour} value={hour}>
-                  {hour} — {String(Number(hour.slice(0, 2)) + 1).padStart(2, "0")}:00
-                </option>
-              ))}
+              {hours.map((hour) => {
+                const availability = hourAvailability[hour];
+                const isFull = availability?.isFull ?? false;
+                return (
+                  <option key={hour} value={hour} disabled={isFull}>
+                    {hour} - {getEndHourLabel(hour)} | {isFull ? "complet" : `${availability.remaining}/${availability.capacity} places`}
+                  </option>
+                );
+              })}
             </select>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-amber-100 bg-amber-50/50 p-3.5 space-y-1 text-xs">
-          <p className="font-bold text-amber-800 flex items-center gap-1.5">
-            <span>ℹ️</span> Note sur l'heure de rendez-vous :
-          </p>
-          <p className="font-medium text-slate-600 leading-relaxed">
-            Il peut y avoir un décalage dû au fuseau horaire, mais l'heure que vous avez sélectionnée est la bonne et reste confirmée.
-          </p>
-        </div>
+        {hours.length > 0 && (
+          <div className="rounded-2xl border border-slate-100 bg-white p-3 text-xs font-semibold text-slate-600 shadow-sm">
+            {availabilityLoading ? (
+              <span className="inline-flex items-center gap-2 text-slate-500">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Verification des disponibilites...
+              </span>
+            ) : selectedAvailability?.isFull ? (
+              <span className="text-rose-700">Ce creneau est complet pour {getServiceLabel(service)}.</span>
+            ) : selectedAvailability ? (
+              <span className="text-emerald-700">
+                {selectedAvailability.remaining} place{selectedAvailability.remaining > 1 ? "s" : ""} disponible{selectedAvailability.remaining > 1 ? "s" : ""} pour {getServiceLabel(service)} a {bookingTime}.
+              </span>
+            ) : null}
+          </div>
+        )}
 
         <button
           type="submit"
-          disabled={isLoading || hours.length === 0}
+          disabled={!canSubmit}
           className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#ff5757] px-5 py-3 text-sm font-bold text-white shadow-md shadow-[#ff5757]/20 transition-all hover:bg-[#e94949] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Envoi en cours…
+              Reservation en cours...
             </>
           ) : (
             <>
               <Calendar className="h-4 w-4" />
-              Envoyer ma demande
+              Pre-reserver mon creneau
             </>
           )}
         </button>
 
         <p className="text-xs font-medium leading-relaxed text-slate-500">
-          Cette demande ne confirme pas automatiquement le rendez-vous. Le centre vous contactera pour confirmer le créneau.
+          La reservation bloque une place disponible, puis l'equipe du centre confirme definitivement le rendez-vous.
         </p>
       </form>
     </div>

@@ -84,6 +84,10 @@ export const ALL_BOOKING_HOURS = [
   '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00',
 ] as const;
 
+export function getBookingSlotId(dateTime: string): string {
+  return encodeURIComponent(dateTime.trim());
+}
+
 function parseHourToMinutes(value: string): number | null {
   const match = /^(\d{2}):(\d{2})$/.exec(value);
   if (!match) return null;
