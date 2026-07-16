@@ -52,9 +52,9 @@ service cloud.firestore {
         && request.resource.data.phone.size() <= 40
         && request.resource.data.email is string
         && request.resource.data.email.size() <= 160
-        && request.resource.data.service is string
-        && request.resource.data.service in ['aq8', 'wonder']
-        && request.resource.data.service.size() <= 80
+        && request.resource.data['service'] is string
+        && request.resource.data['service'] in ['aq8', 'wonder']
+        && request.resource.data['service'].size() <= 80
         && request.resource.data.bookingDate is string
         && request.resource.data.bookingDate.size() == 10
         && request.resource.data.bookingTime in [
