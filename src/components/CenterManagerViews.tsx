@@ -26,6 +26,7 @@ import { ManagerBookingsView } from './manager/ManagerBookingsView';
 import { ManagerPaymentsView } from './manager/ManagerPaymentsView';
 import { ManagerServicesView } from './manager/ManagerServicesView';
 import { ClientProfileView } from './manager/ClientProfileView';
+import { ProfessionalToast, ProfessionalToastState, ToastAction, ToastType } from './manager/ProfessionalToast';
 
 // Manager modals
 import { ClientModal } from './manager/modals/ClientModal';
@@ -117,14 +118,14 @@ export function CenterManagerViews({
   const [payClientId, setPayClientId] = useState<string>('');
   const [measClientId, setMeasClientId] = useState<string>('');
 
-  // Temporary Elegant Toast Status Feedback
-  const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  // Professional toast feedback
+  const [feedback, setFeedback] = useState<ProfessionalToastState | null>(null);
 
-  const triggerToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setFeedback({ message, type });
+  const triggerToast = (message: string, type: ToastType = 'success', action?: ToastAction, title?: string) => {
+    setFeedback({ message, type, action, title });
     setTimeout(() => {
       setFeedback(null);
-    }, 4000);
+    }, 4200);
   };
 
   // Find center metadata
@@ -481,19 +482,11 @@ export function CenterManagerViews({
 
   return (
     <div id="center-manager-views-container" className="space-y-6">
-      {/* Toast Feedback Message Banner */}
-      {feedback && (
-        <div
-          id="toast-feedback-banner"
-          className={`fixed top-4 right-4 z-[100] px-4 py-3 rounded-xl shadow-lg border text-xs font-bold transition-all duration-300 animate-in fade-in slide-in-from-top-4 ${
-            feedback.type === 'success'
-              ? 'bg-green-50 border-green-200 text-green-700'
-              : 'bg-red-50 border-red-200 text-red-700'
-          }`}
-        >
-          {feedback.message}
-        </div>
-      )}
+      <ProfessionalToast
+        toast={feedback}
+        onDismiss={() => setFeedback(null)}
+        id="center-manager-toast"
+      />
 
       {/* Top Header Location Banner */}
       <ManagerTopBanner currentCenter={currentCenter} />

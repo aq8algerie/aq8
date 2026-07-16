@@ -29,11 +29,12 @@ import {
   Mail,
   FileText
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { Client, Appointment, Service, ClientPackage, Package } from '../../types';
 import { formatDateTime, getTodayDateString } from '../../lib/centerManagerUtils';
 import { findActivePackageForClient } from '../../lib/packageRules';
 import { AppointmentMutationOptions, CrmActionResult } from '../../lib/crmTransactions';
+import { ProfessionalToast, ProfessionalToastState, ToastAction, ToastType } from './ProfessionalToast';
 
 interface ManagerBookingsViewProps {
   centerId: string;
@@ -86,10 +87,10 @@ export function ManagerBookingsView({
   const [gridLimit, setGridLimit] = useState(6);
 
   // Toast / internal action feedback
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
+  const [toast, setToast] = useState<ProfessionalToastState | null>(null);
+  const showToast = (message: string, type: ToastType = 'success', action?: ToastAction, title?: string) => {
+    setToast({ message, type, action, title });
+    setTimeout(() => setToast(null), 4200);
   };
 
   const safeText = (value: unknown) => String(value ?? '').trim();
@@ -224,7 +225,7 @@ export function ManagerBookingsView({
   const handleSingleComplete = async (id: string) => {
     const result = await onCompleteAppointment(id, { silent: true });
     if (result.ok) {
-      showToast('Seance validee avec succes !');
+      showToast('Credit deduit et statut de la seance mis a jour.', 'success', 'completed');
     } else {
       showToast(result.error || 'Validation impossible.', 'error');
     }
@@ -233,7 +234,7 @@ export function ManagerBookingsView({
   const handleSingleCancel = async (id: string) => {
     const result = await onCancelAppointment(id, { silent: true });
     if (result.ok) {
-      showToast('Seance annulee avec succes.');
+      showToast('La place est liberee et le planning est mis a jour.', 'success', 'cancelled');
     } else {
       showToast(result.error || 'Annulation impossible.', 'error');
     }
@@ -244,7 +245,7 @@ export function ManagerBookingsView({
       const result = await onDeleteAppointment(id);
       if (result.ok) {
         setSelectedIds(prev => prev.filter(x => x !== id));
-        showToast('Reservation supprimee definitivement.');
+        showToast('Le rendez-vous a ete retire du planning et la capacite est liberee.', 'success', 'deleted');
       } else {
         showToast(result.error || 'Suppression impossible.', 'error');
       }
@@ -263,7 +264,7 @@ export function ManagerBookingsView({
 
     if (result.ok) {
       setEditingApt(null);
-      showToast('Reservation mise a jour avec succes.');
+      showToast('Les changements ont ete enregistres dans le planning.', 'success', 'updated');
     } else {
       showToast(result.error || 'Mise a jour impossible.', 'error');
     }
@@ -292,7 +293,7 @@ export function ManagerBookingsView({
     if (failedCount > 0) {
       showToast(`${succeededCount} valide(s), ${failedCount} echoue(s) (absence de forfait/credits).`, 'error');
     } else {
-      showToast(`${succeededCount} reservations validees et creditees en masse !`);
+      showToast(`${succeededCount} reservations validees avec deduction des credits.`, 'success', 'bulk');
     }
   };
 
@@ -317,7 +318,7 @@ export function ManagerBookingsView({
     if (failedCount > 0) {
       showToast(`${succeededCount} annulee(s), ${failedCount} echouee(s).`, 'error');
     } else {
-      showToast(`${succeededCount} seances annulees en masse.`);
+      showToast(`${succeededCount} seances annulees et places liberees.`, 'success', 'bulk');
     }
   };
 
@@ -336,29 +337,18 @@ export function ManagerBookingsView({
       if (countFail > 0) {
         showToast(`${countSuccess} supprimee(s), ${countFail} echouee(s).`, 'error');
       } else {
-        showToast(`${countSuccess} reservations supprimees en masse.`);
+        showToast(`${countSuccess} reservations supprimees du planning.`, 'success', 'deleted');
       }
     }
   };
 
   return (
     <div id="manager-bookings-container" className="space-y-6">
-      {/* Toast Alert Feedback */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-2xl shadow-xl text-xs font-semibold text-white flex items-center gap-2 ${
-              toast.type === 'error' ? 'bg-rose-500' : 'bg-slate-800'
-            }`}
-          >
-            {toast.type === 'error' ? <XCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-            {toast.message}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ProfessionalToast
+        toast={toast}
+        onDismiss={() => setToast(null)}
+        id="manager-bookings-toast"
+      />
 
       {/* View Header with Filters and Layout Switching */}
       <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-xs space-y-4">

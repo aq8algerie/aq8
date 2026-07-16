@@ -4,11 +4,6 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  CheckCircle2,
-  AlertCircle
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 import { Client, Appointment, Service, ClientPackage, Package, BookingRequest } from '../../types';
 import {
   acceptBookingRequestInTransaction,
@@ -21,6 +16,7 @@ import { getTodayDateString } from '../../lib/centerManagerUtils';
 import { validateAppointment } from '../../lib/appointmentRules';
 import { getBookingHoursForDate } from '../../lib/bookingCapacityRules';
 import { db } from '../../lib/firebase';
+import { ProfessionalToast, ProfessionalToastState, ToastAction, ToastType } from './ProfessionalToast';
 import { PendingBookingRequestsPanel } from './schedule/PendingBookingRequestsPanel';
 import { ScheduleToolbar, ScheduleViewType } from './schedule/ScheduleToolbar';
 import { ScheduleBulkActionsBar } from './schedule/ScheduleBulkActionsBar';
@@ -119,10 +115,10 @@ export function ManagerScheduleView({
   const [searchTerm, setSearchTerm] = useState('');
 
   // Toast message
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
+  const [toast, setToast] = useState<ProfessionalToastState | null>(null);
+  const showToast = (message: string, type: ToastType = 'success', action?: ToastAction, title?: string) => {
+    setToast({ message, type, action, title });
+    setTimeout(() => setToast(null), 4200);
   };
 
   // 2. Navigation Actions
@@ -150,7 +146,7 @@ export function ManagerScheduleView({
   const handleSingleComplete = async (id: string) => {
     const result = await onCompleteAppointment(id, { silent: true });
     if (result.ok) {
-      showToast('Seance effectuee et creditee avec succes !');
+      showToast('Credit deduit et statut de la seance mis a jour.', 'success', 'completed');
     } else {
       showToast(result.error || 'Validation impossible.', 'error');
     }
@@ -159,7 +155,7 @@ export function ManagerScheduleView({
   const handleSingleCancel = async (id: string) => {
     const result = await onCancelAppointment(id, { silent: true });
     if (result.ok) {
-      showToast('Seance marquee comme annulee.');
+      showToast('La place est liberee et le planning est mis a jour.', 'success', 'cancelled');
     } else {
       showToast(result.error || 'Annulation impossible.', 'error');
     }
@@ -170,7 +166,7 @@ export function ManagerScheduleView({
       const result = await onDeleteAppointment(id);
       if (result.ok) {
         setSelectedIds(prev => prev.filter(x => x !== id));
-        showToast('Reservation supprimee definitivement.');
+        showToast('Le rendez-vous a ete retire du planning et la capacite est liberee.', 'success', 'deleted');
       } else {
         showToast(result.error || 'Suppression impossible.', 'error');
       }
@@ -189,7 +185,7 @@ export function ManagerScheduleView({
 
     if (result.ok) {
       setEditingApt(null);
-      showToast('Reservation mise a jour avec succes.');
+      showToast('Les changements ont ete enregistres dans le planning.', 'success', 'updated');
     } else {
       showToast(result.error || 'Mise a jour impossible.', 'error');
     }
@@ -224,7 +220,7 @@ export function ManagerScheduleView({
     if (countFail > 0) {
       showToast(`${countSuccess} valide(s), ${countFail} echoue(s) (absence de forfait/credits).`, 'error');
     } else {
-      showToast(`${countSuccess} seances validees en masse avec deduction des forfaits !`);
+      showToast(`${countSuccess} seances validees avec deduction des credits.`, 'success', 'bulk');
     }
   };
 
@@ -248,7 +244,7 @@ export function ManagerScheduleView({
     if (countFail > 0) {
       showToast(`${countSuccess} annulee(s), ${countFail} echouee(s).`, 'error');
     } else {
-      showToast(`${countSuccess} seances annulees en masse.`);
+      showToast(`${countSuccess} seances annulees et places liberees.`, 'success', 'bulk');
     }
   };
 
@@ -267,7 +263,7 @@ export function ManagerScheduleView({
       if (countFail > 0) {
         showToast(`${countSuccess} supprimee(s), ${countFail} echouee(s).`, 'error');
       } else {
-        showToast(`${countSuccess} reservations supprimees en masse.`);
+        showToast(`${countSuccess} reservations supprimees du planning.`, 'success', 'deleted');
       }
     }
   };
@@ -330,7 +326,7 @@ export function ManagerScheduleView({
         createdAt: getTodayDateString()
       });
 
-      showToast(`Demande de ${req.firstName} ${req.lastName} acceptee - RDV cree !`);
+      showToast(`${req.firstName} ${req.lastName} est ajoute au planning.`, 'success', 'booking-request', 'Pre-reservation acceptee');
     } catch (error) {
       console.error(error);
       showToast(getErrorMessage(error, 'Erreur lors du traitement.'), 'error');
@@ -346,7 +342,7 @@ export function ManagerScheduleView({
         requestId: req.id,
         centerId
       });
-      showToast(`Demande de ${req.firstName} ${req.lastName} refusee.`);
+      showToast(`La demande de ${req.firstName} ${req.lastName} est refusee et la place est liberee.`, 'success', 'cancelled', 'Pre-reservation refusee');
     } catch (error) {
       showToast(getErrorMessage(error, 'Erreur lors du traitement.'), 'error');
     } finally {
@@ -359,22 +355,11 @@ export function ManagerScheduleView({
   return (
     <div id="manager-schedule-view-container" className="space-y-6">
       
-      {/* Toast Feedbacks */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-2xl shadow-xl text-xs font-semibold text-white flex items-center gap-2 ${
-              toast.type === 'error' ? 'bg-rose-500' : 'bg-slate-800'
-            }`}
-          >
-            {toast.type === 'error' ? <AlertCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-            {toast.message}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ProfessionalToast
+        toast={toast}
+        onDismiss={() => setToast(null)}
+        id="manager-schedule-toast"
+      />
       {/* ===================================================== */}
       <PendingBookingRequestsPanel
         requests={pendingRequests}
