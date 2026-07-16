@@ -16,6 +16,7 @@ import { getTodayDateString } from '../../lib/centerManagerUtils';
 import { validateAppointment } from '../../lib/appointmentRules';
 import { getBookingHoursForDate } from '../../lib/bookingCapacityRules';
 import { db } from '../../lib/firebase';
+import { ProfessionalConfirmDialog } from './ProfessionalConfirmDialog';
 import { ProfessionalToast, ProfessionalToastState, ToastAction, ToastType } from './ProfessionalToast';
 import { PendingBookingRequestsPanel } from './schedule/PendingBookingRequestsPanel';
 import { ScheduleToolbar, ScheduleViewType } from './schedule/ScheduleToolbar';
@@ -61,6 +62,10 @@ interface ManagerScheduleViewProps {
   bookingRequests?: BookingRequest[];
 }
 
+
+type ScheduleConfirmation =
+  | { kind: 'delete-single'; appointmentId: string }
+  | { kind: 'delete-bulk'; appointmentIds: string[] };
 
 export function ManagerScheduleView({
   centerId,
@@ -116,6 +121,8 @@ export function ManagerScheduleView({
 
   // Toast message
   const [toast, setToast] = useState<ProfessionalToastState | null>(null);
+  const [pendingConfirmation, setPendingConfirmation] = useState<ScheduleConfirmation | null>(null);
+  const [confirmingAction, setConfirmingAction] = useState(false);
   const showToast = (message: string, type: ToastType = 'success', action?: ToastAction, title?: string) => {
     setToast({ message, type, action, title });
     setTimeout(() => setToast(null), 4200);
@@ -142,6 +149,69 @@ export function ManagerScheduleView({
   );
   const focusedDateStr = formatDateToYYYYMMDD(focusedDate);
   const focusedDateTimelineHours = getBookingHoursForDate(centerId, focusedDateStr);
+
+  const getAppointmentClientLabel = (appointmentId: string) => {
+    const appointment = centerAppointments.find(candidate => candidate.id === appointmentId);
+    const client = appointment ? centerClients.find(candidate => candidate.id === appointment.clientId) : null;
+    if (!client) return 'cette reservation';
+    return `${client.firstName} ${client.lastName}`.trim() || 'cette reservation';
+  };
+
+  const confirmationCopy = pendingConfirmation
+    ? pendingConfirmation.kind === 'delete-single'
+      ? {
+          title: 'Supprimer cette reservation ?',
+          description: `${getAppointmentClientLabel(pendingConfirmation.appointmentId)} sera retire du planning. La capacite du creneau sera liberee immediatement.`,
+          confirmLabel: 'Supprimer',
+        }
+      : {
+          title: `Supprimer ${pendingConfirmation.appointmentIds.length} reservations ?`,
+          description: 'Les reservations selectionnees seront retirees du planning. Les places correspondantes seront liberees.',
+          confirmLabel: `Supprimer ${pendingConfirmation.appointmentIds.length}`,
+        }
+    : null;
+
+  const executePendingConfirmation = async () => {
+    if (!pendingConfirmation || confirmingAction) return;
+    setConfirmingAction(true);
+
+    try {
+      if (pendingConfirmation.kind === 'delete-single') {
+        const result = await onDeleteAppointment(pendingConfirmation.appointmentId);
+        if (result.ok) {
+          setSelectedIds(prev => prev.filter(x => x !== pendingConfirmation.appointmentId));
+          showToast('Le rendez-vous a ete retire du planning et la capacite est liberee.', 'success', 'deleted');
+        } else {
+          showToast(result.error || 'Suppression impossible.', 'error');
+        }
+        return;
+      }
+
+      let countSuccess = 0;
+      let countFail = 0;
+      const deletedIds: string[] = [];
+
+      for (const appointmentId of pendingConfirmation.appointmentIds) {
+        const result = await onDeleteAppointment(appointmentId);
+        if (result.ok) {
+          countSuccess++;
+          deletedIds.push(appointmentId);
+        } else {
+          countFail++;
+        }
+      }
+
+      setSelectedIds(prev => prev.filter(id => !deletedIds.includes(id)));
+      if (countFail > 0) {
+        showToast(`${countSuccess} supprimee(s), ${countFail} echouee(s).`, 'error');
+      } else {
+        showToast(`${countSuccess} reservations supprimees du planning.`, 'success', 'deleted');
+      }
+    } finally {
+      setConfirmingAction(false);
+      setPendingConfirmation(null);
+    }
+  };
   // 4. Individual Actions
   const handleSingleComplete = async (id: string) => {
     const result = await onCompleteAppointment(id, { silent: true });
@@ -161,16 +231,8 @@ export function ManagerScheduleView({
     }
   };
 
-  const handleSingleDelete = async (id: string) => {
-    if (window.confirm('Voulez-vous supprimer definitivement cette reservation ?')) {
-      const result = await onDeleteAppointment(id);
-      if (result.ok) {
-        setSelectedIds(prev => prev.filter(x => x !== id));
-        showToast('Le rendez-vous a ete retire du planning et la capacite est liberee.', 'success', 'deleted');
-      } else {
-        showToast(result.error || 'Suppression impossible.', 'error');
-      }
-    }
+  const handleSingleDelete = (id: string) => {
+    setPendingConfirmation({ kind: 'delete-single', appointmentId: id });
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -248,24 +310,12 @@ export function ManagerScheduleView({
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (window.confirm(`Voulez-vous supprimer definitivement ces ${selectedIds.length} reservations ?`)) {
-      let countSuccess = 0;
-      let countFail = 0;
-
-      for (const appointmentId of selectedIds) {
-        const result = await onDeleteAppointment(appointmentId);
-        if (result.ok) countSuccess++;
-        else countFail++;
-      }
-
-      setSelectedIds([]);
-      if (countFail > 0) {
-        showToast(`${countSuccess} supprimee(s), ${countFail} echouee(s).`, 'error');
-      } else {
-        showToast(`${countSuccess} reservations supprimees du planning.`, 'success', 'deleted');
-      }
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) {
+      showToast('Aucune reservation selectionnee.', 'error');
+      return;
     }
+    setPendingConfirmation({ kind: 'delete-bulk', appointmentIds: [...selectedIds] });
   };
 
   // Booking Requests handlers
@@ -360,6 +410,24 @@ export function ManagerScheduleView({
         onDismiss={() => setToast(null)}
         id="manager-schedule-toast"
       />
+      {confirmationCopy && (
+        <ProfessionalConfirmDialog
+          open={Boolean(pendingConfirmation)}
+          title={confirmationCopy.title}
+          description={confirmationCopy.description}
+          confirmLabel={confirmationCopy.confirmLabel}
+          cancelLabel="Garder"
+          tone="danger"
+          loading={confirmingAction}
+          id="manager-schedule-confirm-dialog"
+          onCancel={() => {
+            if (!confirmingAction) {
+              setPendingConfirmation(null);
+            }
+          }}
+          onConfirm={executePendingConfirmation}
+        />
+      )}
       {/* ===================================================== */}
       <PendingBookingRequestsPanel
         requests={pendingRequests}

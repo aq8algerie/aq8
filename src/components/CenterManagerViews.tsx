@@ -26,6 +26,7 @@ import { ManagerBookingsView } from './manager/ManagerBookingsView';
 import { ManagerPaymentsView } from './manager/ManagerPaymentsView';
 import { ManagerServicesView } from './manager/ManagerServicesView';
 import { ClientProfileView } from './manager/ClientProfileView';
+import { ProfessionalConfirmDialog } from './manager/ProfessionalConfirmDialog';
 import { ProfessionalToast, ProfessionalToastState, ToastAction, ToastType } from './manager/ProfessionalToast';
 
 // Manager modals
@@ -120,6 +121,8 @@ export function CenterManagerViews({
 
   // Professional toast feedback
   const [feedback, setFeedback] = useState<ProfessionalToastState | null>(null);
+  const [pendingPaymentDeleteId, setPendingPaymentDeleteId] = useState<string | null>(null);
+  const [confirmingPaymentDelete, setConfirmingPaymentDelete] = useState(false);
 
   const triggerToast = (message: string, type: ToastType = 'success', action?: ToastAction, title?: string) => {
     setFeedback({ message, type, action, title });
@@ -167,6 +170,29 @@ export function CenterManagerViews({
     });
 
   const centerClients = clients.filter(c => c.centerId === centerId);
+  const pendingPaymentDelete = pendingPaymentDeleteId
+    ? payments.find(payment => payment.id === pendingPaymentDeleteId)
+    : null;
+  const pendingPaymentClient = pendingPaymentDelete
+    ? centerClients.find(client => client.id === pendingPaymentDelete.clientId)
+    : null;
+  const pendingPaymentDeleteDescription = pendingPaymentDelete
+    ? `Paiement de ${pendingPaymentDelete.amount.toLocaleString()} DZD${pendingPaymentClient ? ` pour ${pendingPaymentClient.firstName} ${pendingPaymentClient.lastName}` : ``}. Il sera retire du registre des encaissements.`
+    : 'Cet encaissement sera retire du registre des encaissements.';
+
+  const confirmPaymentDelete = () => {
+    if (!pendingPaymentDeleteId || confirmingPaymentDelete) return;
+    setConfirmingPaymentDelete(true);
+
+    try {
+      const updated = payments.filter(payment => payment.id !== pendingPaymentDeleteId);
+      onUpdatePayments(updated);
+      triggerToast('Encaissement supprime avec succes.', 'success', 'payment', 'Encaissement supprime');
+    } finally {
+      setConfirmingPaymentDelete(false);
+      setPendingPaymentDeleteId(null);
+    }
+  };
 
   const handleClientSubmit = (clientData: {
     firstName: string;
@@ -487,6 +513,22 @@ export function CenterManagerViews({
         onDismiss={() => setFeedback(null)}
         id="center-manager-toast"
       />
+      <ProfessionalConfirmDialog
+        open={Boolean(pendingPaymentDeleteId)}
+        title="Supprimer cet encaissement ?"
+        description={pendingPaymentDeleteDescription}
+        confirmLabel="Supprimer"
+        cancelLabel="Garder"
+        tone="danger"
+        loading={confirmingPaymentDelete}
+        id="center-manager-payment-confirm-dialog"
+        onCancel={() => {
+          if (!confirmingPaymentDelete) {
+            setPendingPaymentDeleteId(null);
+          }
+        }}
+        onConfirm={confirmPaymentDelete}
+      />
 
       {/* Top Header Location Banner */}
       <ManagerTopBanner currentCenter={currentCenter} />
@@ -600,11 +642,7 @@ export function CenterManagerViews({
                   setShowPaymentModal(true);
                 }}
                 onDeletePayment={(payId) => {
-                  if (confirm("Voulez-vous vraiment supprimer cet encaissement ?")) {
-                    const updated = payments.filter(p => p.id !== payId);
-                    onUpdatePayments(updated);
-                    triggerToast("Encaissement supprimé avec succès !");
-                  }
+                  setPendingPaymentDeleteId(payId);
                 }}
                 currentCenter={currentCenter}
               />
