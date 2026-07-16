@@ -4,8 +4,9 @@
  */
 
 import React, { useState } from 'react';
-import { ShieldCheck, Building, Lock, Mail, Activity, Loader2, KeyRound, ArrowLeft, CheckCircle2 } from 'lucide-react';
-import { signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
+import { ShieldCheck, Building, Lock, Mail, Activity, Loader2, KeyRound, ArrowLeft, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut, sendPasswordResetEmail } from 'firebase/auth';
+import type { User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { Center, CenterManager } from '../types';
 import { auth, db } from '../lib/firebase';
@@ -31,8 +32,10 @@ export function CrmPortal({
 }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
 
   // Forgot password state
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -42,6 +45,7 @@ export function CrmPortal({
   const [isResetting, setIsResetting] = useState(false);
 
   const isDemoLoginEnabled = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true';
+  const isAuthBusy = isSubmitting || isGoogleSubmitting;
 
   const loadUserProfile = async (uid: string): Promise<UserProfile> => {
     const snapshot = await getDoc(doc(db, 'users', uid));
@@ -63,6 +67,41 @@ export function CrmPortal({
     return profile;
   };
 
+  const completeAuthenticatedLogin = async (user: User) => {
+    const profile = await loadUserProfile(user.uid);
+    const centerId = profile.role === 'center_manager' ? profile.centerId || null : null;
+
+    if (profile.role === 'center_manager') {
+      const centerExists = centers.some(c => c.id === centerId);
+      if (!centerExists) {
+        throw new Error('Votre centre de rattachement est inexistant ou desactive.');
+      }
+    }
+
+    onLoginSuccess(
+      profile.role,
+      centerId,
+      profile.displayName || profile.name || user.displayName || user.email || 'Utilisateur CRM'
+    );
+  };
+
+  const getFriendlyAuthError = (error: unknown, fallback: string) => {
+    const code = typeof error === 'object' && error && 'code' in error
+      ? String((error as { code?: unknown }).code)
+      : '';
+    const message = error instanceof Error ? error.message : fallback;
+
+    if (code.includes('popup-closed-by-user')) return 'Connexion Google annulee.';
+    if (code.includes('popup-blocked')) return 'La fenetre Google a ete bloquee par le navigateur. Autorisez les popups pour ce site.';
+    if (code.includes('operation-not-allowed')) return "La connexion Google n'est pas encore activee dans Firebase Authentication.";
+    if (code.includes('unauthorized-domain')) return "Ce domaine n'est pas autorise dans Firebase Authentication.";
+    if (code.includes('account-exists-with-different-credential')) {
+      return 'Un compte CRM existe deja avec cet e-mail. Connectez-vous avec le mot de passe, puis liez le compte Google cote Firebase.';
+    }
+
+    return message;
+  };
+
   const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -80,27 +119,29 @@ export function CrmPortal({
     setIsSubmitting(true);
     try {
       const credential = await signInWithEmailAndPassword(auth, trimmedEmail, password);
-      const profile = await loadUserProfile(credential.user.uid);
-      const centerId = profile.role === 'center_manager' ? profile.centerId || null : null;
-
-      if (profile.role === 'center_manager') {
-        const centerExists = centers.some(c => c.id === centerId);
-        if (!centerExists) {
-          throw new Error('Votre centre de rattachement est inexistant ou désactivé.');
-        }
-      }
-
-      onLoginSuccess(
-        profile.role,
-        centerId,
-        profile.displayName || profile.name || credential.user.displayName || credential.user.email || 'Utilisateur CRM'
-      );
+      await completeAuthenticatedLogin(credential.user);
     } catch (error) {
       await signOut(auth).catch(() => undefined);
-      const message = error instanceof Error ? error.message : 'Connexion impossible. Vérifiez vos identifiants.';
-      setErrorMessage(message);
+      setErrorMessage(getFriendlyAuthError(error, 'Connexion impossible. Verifiez vos identifiants.'));
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setErrorMessage(null);
+    setIsGoogleSubmitting(true);
+
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      const credential = await signInWithPopup(auth, provider);
+      await completeAuthenticatedLogin(credential.user);
+    } catch (error) {
+      await signOut(auth).catch(() => undefined);
+      setErrorMessage(getFriendlyAuthError(error, 'Connexion Google impossible.'));
+    } finally {
+      setIsGoogleSubmitting(false);
     }
   };
 
@@ -271,34 +312,63 @@ export function CrmPortal({
                   onClick={() => { setShowForgotPassword(true); setErrorMessage(null); }}
                   className="text-[10px] font-bold text-[#ff5757] hover:text-[#e04646] transition-colors cursor-pointer"
                 >
-                  Mot de passe oublié ?
+                  Mot de passe oublie ?
                 </button>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
                     setErrorMessage(null);
                   }}
-                  placeholder="••••••••••••"
-                  className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:border-[#ff5757] text-xs"
+                  placeholder="************"
+                  className="w-full pl-9 pr-10 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:border-[#ff5757] text-xs"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(prev => !prev)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 transition hover:bg-white hover:text-slate-700 cursor-pointer"
+                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isAuthBusy}
               className="w-full py-3 bg-[#353535] hover:bg-slate-800 font-semibold text-white rounded-xl shadow-md transition-premium text-center flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
               Se connecter au CRM
             </button>
           </form>
+
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-slate-100" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">ou</span>
+            <div className="h-px flex-1 bg-slate-100" />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={isAuthBusy}
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-extrabold text-slate-700 shadow-xs transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2"
+          >
+            {isGoogleSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin text-[#ff5757]" />
+            ) : (
+              <span className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-black text-[#4285f4]">G</span>
+            )}
+            Continuer avec Google
+          </button>
         </div>
       )}
 
