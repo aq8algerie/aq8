@@ -594,7 +594,7 @@ export default function App() {
               aria-label="Retour a l'accueil AQ8 Algerie"
             >
               <img
-                src="/images/logo-symbol.png"
+                src="/images/logo.png"
                 alt="AQ8 Algerie"
                 className="h-10 w-auto max-w-[145px] object-contain transition-premium group-hover:scale-[1.02] lg:h-11 lg:max-w-[170px]"
               />
@@ -1015,7 +1015,7 @@ export default function App() {
                 aria-label="Retour a l'accueil AQ8 Algerie"
               >
                 <img
-                  src="/images/logo-symbol.png"
+                  src="/images/logo.png"
                   alt="AQ8 Algerie"
                   className="h-10 w-auto max-w-[165px] object-contain"
                 />

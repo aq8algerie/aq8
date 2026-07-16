@@ -321,6 +321,8 @@ function injectSeo(html: string, seo: PageSeo): string {
   modifiedHtml = modifiedHtml.replace(/<meta\s+name="description"\s+content=".*?"\s*\/?>/gi, '');
   modifiedHtml = modifiedHtml.replace(/<meta\s+name="keywords"\s+content=".*?"\s*\/?>/gi, '');
   modifiedHtml = modifiedHtml.replace(/<link\s+rel="canonical"\s+href=".*?"\s*\/?>/gi, '');
+  modifiedHtml = modifiedHtml.replace(/<link\s+rel="(?:icon|shortcut icon)"[^>]*>/gi, '');
+  modifiedHtml = modifiedHtml.replace(/<link\s+rel="apple-touch-icon"[^>]*>/gi, '');
 
   // Generate complete set of optimized SEO tags
   const metaTags = `
@@ -328,6 +330,8 @@ function injectSeo(html: string, seo: PageSeo): string {
     <meta name="description" content="${seo.description}" />
     <meta name="keywords" content="${seo.keywords.join(', ')}" />
     <link rel="canonical" href="${seo.canonicalUrl}" />
+    <link rel="icon" type="image/png" href="/images/favicon.png" />
+    <link rel="apple-touch-icon" href="/images/favicon.png" />
     <meta property="og:title" content="${seo.title}" />
     <meta property="og:description" content="${seo.description}" />
     <meta property="og:type" content="website" />
