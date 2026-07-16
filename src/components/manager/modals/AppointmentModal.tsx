@@ -3,13 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { Client, Service } from '../../../types';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Appointment, Client, Service } from '../../../types';
 import { getTodayDateString } from '../../../lib/centerManagerUtils';
+import { getBookingHoursForDate, getServiceTypeById, getSlotAvailability } from '../../../lib/bookingCapacityRules';
 
 interface AppointmentModalProps {
   clients: Client[];
   services: Service[];
+  appointments: Appointment[];
+  centerId: string;
   onClose: () => void;
   onSubmit: (data: { clientId: string; serviceId: string; date: string; time: string; notes: string }) => void | Promise<void>;
   initialDate?: string;
@@ -18,6 +21,8 @@ interface AppointmentModalProps {
 export function AppointmentModal({
   clients,
   services,
+  appointments,
+  centerId,
   onClose,
   onSubmit,
   initialDate
@@ -27,6 +32,17 @@ export function AppointmentModal({
   const [date, setDate] = useState(initialDate || getTodayDateString());
   const [time, setTime] = useState('10:00');
   const [notes, setNotes] = useState('');
+
+  const allowedHours = useMemo(() => getBookingHoursForDate(centerId, date), [centerId, date]);
+  const selectedServiceType = useMemo(() => getServiceTypeById(services, serviceId), [services, serviceId]);
+
+  useEffect(() => {
+    if (allowedHours.length > 0 && !allowedHours.includes(time)) {
+      setTime(allowedHours[0]);
+    } else if (allowedHours.length === 0 && time !== '') {
+      setTime('');
+    }
+  }, [allowedHours, time]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,8 +57,6 @@ export function AppointmentModal({
       notes: notes.trim()
     });
   };
-
-  const allowedHours = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'];
 
   return (
     <div id="modal-appointment" className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -103,10 +117,20 @@ export function AppointmentModal({
                 onChange={(e) => setTime(e.target.value)}
                 className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none"
                 required
+                disabled={allowedHours.length === 0}
               >
-                {allowedHours.map(h => (
-                  <option key={h} value={h}>{h}</option>
-                ))}
+                {allowedHours.length === 0 && (
+                  <option value="">Centre ferme ce jour</option>
+                )}
+                {allowedHours.map(h => {
+                  const availability = selectedServiceType
+                    ? getSlotAvailability(appointments, services, centerId, `${date}T${h}`, selectedServiceType)
+                    : null;
+                  const label = availability
+                    ? `${h} - ${availability.remaining}/${availability.capacity} place(s)`
+                    : h;
+                  return <option key={h} value={h}>{label}</option>;
+                })}
               </select>
             </div>
           </div>
@@ -132,7 +156,8 @@ export function AppointmentModal({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl cursor-pointer"
+              disabled={allowedHours.length === 0}
+              className="px-4 py-2 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Planifier
             </button>

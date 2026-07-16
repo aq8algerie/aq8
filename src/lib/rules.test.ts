@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { Appointment, Client, ClientPackage } from '../types';
+import { Appointment, Client, ClientPackage, Service } from '../types';
 import { isBeforePreviousDayCutoff, isFullHour, validateAppointment } from './appointmentRules';
 import { deductSessionFromPackage, findActivePackageForClient, validateDeduction } from './packageRules';
 import { getBookingMinimumDate, validatePublicBookingRequest, validatePublicContactMessage } from './publicFormValidation';
@@ -8,6 +8,25 @@ function test(name: string, run: () => void) {
   run();
   console.log(`ok - ${name}`);
 }
+
+const services: Service[] = [
+  {
+    id: 'service-1',
+    name: 'AQ8 EMS',
+    type: 'aq8',
+    duration: 20,
+    price: 3500,
+    description: 'EMS'
+  },
+  {
+    id: 'service-2',
+    name: 'Wonder',
+    type: 'wonder',
+    duration: 25,
+    price: 4500,
+    description: 'Wonder'
+  }
+];
 
 const existingAppointments: Appointment[] = [
   {
@@ -73,12 +92,13 @@ test('appointment validation rejects clients from another center', () => {
       duration: 20
     },
     existingAppointments,
-    'center-2'
+    'center-2',
+    services
   );
   assert.equal(result.valid, false);
 });
 
-test('appointment validation rejects duplicate active slots', () => {
+test('appointment validation accepts shared AQ8 slots under center capacity', () => {
   const result = validateAppointment(
     {
       clientId: 'client-1',
@@ -88,12 +108,35 @@ test('appointment validation rejects duplicate active slots', () => {
       duration: 20
     },
     existingAppointments,
-    'center-1'
+    'center-1',
+    services
+  );
+  assert.equal(result.valid, true);
+});
+
+test('appointment validation rejects slots once AQ8 capacity is reached', () => {
+  const fullSlot = [
+    ...existingAppointments,
+    { ...existingAppointments[0], id: 'apt-existing-2' },
+    { ...existingAppointments[0], id: 'apt-existing-3' }
+  ];
+
+  const result = validateAppointment(
+    {
+      clientId: 'client-1',
+      serviceId: 'service-1',
+      centerId: 'center-1',
+      dateTime: '2026-07-12T10:00',
+      duration: 20
+    },
+    fullSlot,
+    'center-1',
+    services
   );
   assert.equal(result.valid, false);
 });
 
-test('appointment validation accepts valid full-hour slots', () => {
+test('appointment validation accepts valid full-hour open slots', () => {
   const result = validateAppointment(
     {
       clientId: 'client-1',
@@ -103,7 +146,8 @@ test('appointment validation accepts valid full-hour slots', () => {
       duration: 20
     },
     existingAppointments,
-    'center-1'
+    'center-1',
+    services
   );
   assert.equal(result.valid, true);
 });
@@ -154,7 +198,7 @@ test('public booking validation normalizes and accepts valid requests', () => {
   }
 });
 
-test('public booking validation rejects unsupported slots and stale dates', () => {
+test('public booking validation rejects unsupported, stale and closed slots', () => {
   const stale = validatePublicBookingRequest(
     {
       centerId: 'center-1',
@@ -187,8 +231,25 @@ test('public booking validation rejects unsupported slots and stale dates', () =
     new Date('2026-07-11T12:00:00')
   );
 
+  const closedSlot = validatePublicBookingRequest(
+    {
+      centerId: 'center-1',
+      centerName: 'AQ8 Alger',
+      firstName: 'Amira',
+      lastName: 'Cherif',
+      phone: '0550112233',
+      email: '',
+      service: 'aq8',
+      bookingDate: '2026-07-13',
+      bookingTime: '10:00'
+    },
+    ['aq8'],
+    new Date('2026-07-11T12:00:00')
+  );
+
   assert.equal(stale.valid, false);
   assert.equal(unsupportedSlot.valid, false);
+  assert.equal(closedSlot.valid, false);
 });
 
 test('booking minimum date moves after the 21:30 cutoff', () => {

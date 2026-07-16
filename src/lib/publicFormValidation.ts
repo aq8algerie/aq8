@@ -1,17 +1,6 @@
-export const BOOKING_HOURS = [
-  '09:00',
-  '10:00',
-  '11:00',
-  '12:00',
-  '13:00',
-  '14:00',
-  '15:00',
-  '16:00',
-  '17:00',
-  '18:00',
-  '19:00',
-  '20:00'
-] as const;
+import { ALL_BOOKING_HOURS, getBookingHoursForDate, isBookingServiceType } from './bookingCapacityRules';
+
+export const BOOKING_HOURS = ALL_BOOKING_HOURS;
 
 export const CONTACT_REQUEST_TYPES = [
   'general',
@@ -114,7 +103,7 @@ export function validatePublicBookingRequest(
     return { valid: false, error: 'Veuillez renseigner une adresse e-mail valide.' };
   }
 
-  if (!isValidLength(data.service, 80) || (availableServices.length > 0 && !availableServices.includes(data.service))) {
+  if (!isValidLength(data.service, 80) || !isBookingServiceType(data.service) || (availableServices.length > 0 && !availableServices.includes(data.service))) {
     return { valid: false, error: 'Veuillez choisir une prestation disponible dans ce centre.' };
   }
 
@@ -124,6 +113,10 @@ export function validatePublicBookingRequest(
 
   if (!BOOKING_HOURS.includes(data.bookingTime as typeof BOOKING_HOURS[number])) {
     return { valid: false, error: 'Veuillez choisir un creneau horaire propose.' };
+  }
+
+  if (!getBookingHoursForDate(data.centerId, data.bookingDate).includes(data.bookingTime)) {
+    return { valid: false, error: "Ce creneau est en dehors des horaires d'ouverture du centre." };
   }
 
   return { valid: true, data };

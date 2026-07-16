@@ -1,14 +1,14 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Calendar, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../src/lib/firebase";
 import {
-  BOOKING_HOURS,
   getBookingMinimumDate,
   validatePublicBookingRequest
 } from "../../src/lib/publicFormValidation";
+import { getBookingHoursForDate, getCapacitySummary, getNextOpenBookingDate } from "../../src/lib/bookingCapacityRules";
 
 type CenterBookingFormProps = {
   centerId: string;
@@ -29,7 +29,8 @@ export function CenterBookingForm({
   centerCity,
   services,
 }: CenterBookingFormProps) {
-  const defaultDate = useMemo(() => getBookingMinimumDate(), []);
+  const bookingMinimumDate = useMemo(() => getBookingMinimumDate(), []);
+  const defaultDate = useMemo(() => getNextOpenBookingDate(centerId, bookingMinimumDate), [centerId, bookingMinimumDate]);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -42,7 +43,16 @@ export function CenterBookingForm({
   const [successMsg, setSuccessMsg] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const hours = BOOKING_HOURS;
+  const hours = useMemo(() => getBookingHoursForDate(centerId, bookingDate), [centerId, bookingDate]);
+  const capacitySummary = useMemo(() => getCapacitySummary(centerId), [centerId]);
+
+  useEffect(() => {
+    if (hours.length > 0 && !hours.includes(bookingTime)) {
+      setBookingTime(hours[0]);
+    } else if (hours.length === 0 && bookingTime !== '') {
+      setBookingTime('');
+    }
+  }, [bookingTime, hours]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -86,7 +96,7 @@ export function CenterBookingForm({
       setPhone("");
       setEmail("");
       setService(services[0] || "aq8");
-      setBookingDate(getBookingMinimumDate());
+      setBookingDate(getNextOpenBookingDate(centerId, getBookingMinimumDate()));
       setBookingTime("10:00");
     } catch (err) {
       console.error("Booking submission error:", err);
@@ -242,7 +252,7 @@ export function CenterBookingForm({
             <label className="text-slate-600">Date souhaitée</label>
             <input
               type="date"
-              min={defaultDate}
+              min={bookingMinimumDate}
               value={bookingDate}
               onChange={(e) => setBookingDate(e.target.value)}
               disabled={isLoading}
@@ -254,9 +264,12 @@ export function CenterBookingForm({
             <select
               value={bookingTime}
               onChange={(e) => setBookingTime(e.target.value)}
-              disabled={isLoading}
+              disabled={isLoading || hours.length === 0}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
             >
+              {hours.length === 0 && (
+                <option value="">Centre ferme ce jour</option>
+              )}
               {hours.map((hour) => (
                 <option key={hour} value={hour}>
                   {hour} — {String(Number(hour.slice(0, 2)) + 1).padStart(2, "0")}:00
@@ -277,7 +290,7 @@ export function CenterBookingForm({
 
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || hours.length === 0}
           className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#ff5757] px-5 py-3 text-sm font-bold text-white shadow-md shadow-[#ff5757]/20 transition-all hover:bg-[#e94949] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {isLoading ? (

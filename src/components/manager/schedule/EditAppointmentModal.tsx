@@ -8,11 +8,13 @@ import { Edit2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Appointment, AppointmentStatus, Client, Service } from '../../../types';
 import { getTodayDateString } from '../../../lib/centerManagerUtils';
+import { getBookingHoursForDate, getServiceTypeById, getSlotAvailability } from '../../../lib/bookingCapacityRules';
 
 interface EditAppointmentModalProps {
   appointment: Appointment | null;
   centerClients: Client[];
   services: Service[];
+  appointments: Appointment[];
   onAppointmentChange: (appointment: Appointment) => void;
   onSubmit: (event: React.FormEvent) => void;
   onClose: () => void;
@@ -22,6 +24,7 @@ export function EditAppointmentModal({
   appointment,
   centerClients,
   services,
+  appointments,
   onAppointmentChange,
   onSubmit,
   onClose,
@@ -29,6 +32,12 @@ export function EditAppointmentModal({
   if (!appointment) {
     return null;
   }
+
+  const datePart = appointment.dateTime.split('T')[0] || getTodayDateString();
+  const timePart = appointment.dateTime.split('T')[1] || '10:00';
+  const selectedServiceType = getServiceTypeById(services, appointment.serviceId);
+  const baseHours = getBookingHoursForDate(appointment.centerId, datePart);
+  const allowedHours = Array.from(new Set([...baseHours, timePart].filter(Boolean))).sort();
 
   return (
     <div id="modal-edit-appointment" className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -85,9 +94,8 @@ export function EditAppointmentModal({
               <label className="font-semibold text-slate-600 block">Date *</label>
               <input
                 type="date"
-                value={appointment.dateTime.split('T')[0] || getTodayDateString()}
+                value={datePart}
                 onChange={(event) => {
-                  const timePart = appointment.dateTime.split('T')[1] || '10:00';
                   onAppointmentChange({ ...appointment, dateTime: `${event.target.value}T${timePart}` });
                 }}
                 className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none font-mono"
@@ -96,16 +104,24 @@ export function EditAppointmentModal({
             </div>
             <div className="space-y-1">
               <label className="font-semibold text-slate-600 block">Heure *</label>
-              <input
-                type="time"
-                value={appointment.dateTime.split('T')[1] || '10:00'}
+              <select
+                value={timePart}
                 onChange={(event) => {
-                  const datePart = appointment.dateTime.split('T')[0] || getTodayDateString();
                   onAppointmentChange({ ...appointment, dateTime: `${datePart}T${event.target.value}` });
                 }}
                 className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none font-mono"
                 required
-              />
+              >
+                {allowedHours.map(hour => {
+                  const availability = selectedServiceType
+                    ? getSlotAvailability(appointments, services, appointment.centerId, `${datePart}T${hour}`, selectedServiceType, appointment.id)
+                    : null;
+                  const label = availability
+                    ? `${hour} - ${availability.remaining}/${availability.capacity} place(s)`
+                    : hour;
+                  return <option key={hour} value={hour}>{label}</option>;
+                })}
+              </select>
             </div>
           </div>
 

@@ -4,14 +4,17 @@
  */
 
 import React from 'react';
-import { CheckCircle2, CheckSquare, Clock, Edit2, Eye, Square, Trash2, XCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle2, CheckSquare, Clock, Edit2, Eye, Square, Trash2, XCircle } from 'lucide-react';
 import { Appointment, Client, Package, Service } from '../../../types';
+import { getSlotAvailability } from '../../../lib/bookingCapacityRules';
 
 type PackageType = Package['type'];
 
 interface DayScheduleViewProps {
   timelineHours: string[];
   focusedDate: Date;
+  centerId: string;
+  centerAppointments: Appointment[];
   centerClients: Client[];
   services: Service[];
   selectedIds: string[];
@@ -29,6 +32,8 @@ interface DayScheduleViewProps {
 export function DayScheduleView({
   timelineHours,
   focusedDate,
+  centerId,
+  centerAppointments,
   centerClients,
   services,
   selectedIds,
@@ -44,16 +49,35 @@ export function DayScheduleView({
 }: DayScheduleViewProps) {
   const dateStr = formatDateToYYYYMMDD(focusedDate);
 
+  if (timelineHours.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs">
+        <div className="flex items-center gap-3 rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+          <AlertCircle className="h-5 w-5 shrink-0" />
+          <span>Centre ferme ce jour selon les horaires configures.</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs space-y-4">
       {timelineHours.map((hour) => {
         const hourApts = getAppointmentsForDayAndHour(dateStr, hour);
+        const aq8Availability = getSlotAvailability(centerAppointments, services, centerId, `${dateStr}T${hour}`, 'aq8');
+        const wonderAvailability = getSlotAvailability(centerAppointments, services, centerId, `${dateStr}T${hour}`, 'wonder');
 
         return (
           <div key={hour} className="flex gap-4 items-start border-b border-slate-100 pb-3 last:border-0 last:pb-0 text-xs">
-            <div className="font-mono font-bold text-slate-500 shrink-0 w-12 pt-1 flex items-center gap-1">
-              <Clock className="h-3.5 w-3.5 text-slate-300" />
-              <span>{hour}</span>
+            <div className="shrink-0 w-28 pt-1 space-y-1">
+              <div className="font-mono font-bold text-slate-500 flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5 text-slate-300" />
+                <span>{hour}</span>
+              </div>
+              <div className="flex flex-col gap-1 text-[9px] font-bold">
+                <span className="rounded-md bg-rose-50 px-1.5 py-0.5 text-rose-600">AQ8 {aq8Availability.remaining}/{aq8Availability.capacity}</span>
+                <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-slate-700">Wonder {wonderAvailability.remaining}/{wonderAvailability.capacity}</span>
+              </div>
             </div>
             <div className="flex-1 space-y-2.5">
               {hourApts.length > 0 ? (

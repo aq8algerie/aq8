@@ -229,7 +229,8 @@ export function CenterManagerViews({
         duration: selectedService ? selectedService.duration : 20
       },
       appointments,
-      clientObj?.centerId || ''
+      clientObj?.centerId || '',
+      services
     );
 
     if (!validation.valid) {
@@ -353,7 +354,8 @@ export function CenterManagerViews({
           duration: appointmentToSave.duration
         },
         appointments.filter(a => a.id !== appointmentToSave.id),
-        clientObj?.centerId || ''
+        clientObj?.centerId || '',
+        services
       );
 
       if (!validation.valid) {
@@ -638,6 +640,8 @@ export function CenterManagerViews({
         <AppointmentModal
           clients={centerClients}
           services={centerServices}
+          appointments={appointments.filter(appointment => appointment.centerId === centerId)}
+          centerId={centerId}
           onClose={() => setShowAptModal(false)}
           onSubmit={handleAptSubmit}
           initialDate={bookingDateFilter}

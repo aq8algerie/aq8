@@ -1,7 +1,12 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { Appointment } from '../types';
+import { Appointment, Service } from '../types';
 import { isBeforePreviousDayCutoff, isFullHour, validateAppointment } from './appointmentRules';
+
+const services: Service[] = [
+  { id: 'service-1', name: 'AQ8 EMS', type: 'aq8', duration: 20, price: 3500, description: 'EMS' },
+  { id: 'service-2', name: 'Wonder', type: 'wonder', duration: 25, price: 4500, description: 'Wonder' },
+];
 
 const existingAppointments: Appointment[] = [
   {
@@ -43,13 +48,14 @@ describe('appointmentRules', () => {
         duration: 20
       },
       existingAppointments,
-      'center-2'
+      'center-2',
+      services
     );
 
     assert.equal(result.valid, false);
   });
 
-  it('rejects duplicate active slots in the same center', () => {
+  it('accepts shared active AQ8 slots under center capacity', () => {
     const result = validateAppointment(
       {
         clientId: 'client-1',
@@ -59,7 +65,31 @@ describe('appointmentRules', () => {
         duration: 20
       },
       existingAppointments,
-      'center-1'
+      'center-1',
+      services
+    );
+
+    assert.equal(result.valid, true);
+  });
+
+  it('rejects active AQ8 slots once center capacity is reached', () => {
+    const fullSlot = [
+      ...existingAppointments,
+      { ...existingAppointments[0], id: 'apt-existing-2' },
+      { ...existingAppointments[0], id: 'apt-existing-3' },
+    ];
+
+    const result = validateAppointment(
+      {
+        clientId: 'client-1',
+        serviceId: 'service-1',
+        centerId: 'center-1',
+        dateTime: '2026-07-12T10:00',
+        duration: 20
+      },
+      fullSlot,
+      'center-1',
+      services
     );
 
     assert.equal(result.valid, false);
@@ -75,7 +105,8 @@ describe('appointmentRules', () => {
         duration: 20
       },
       existingAppointments,
-      'center-1'
+      'center-1',
+      services
     );
 
     assert.equal(result.valid, true);

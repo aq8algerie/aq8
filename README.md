@@ -21,4 +21,5 @@ View your app in AI Studio: https://ai.studio/apps/2daec5b5-53af-4458-b153-ec640
 
 ## Operations CRM
 
+- Systeme de capacite de reservation : voir [docs/reservation-capacity-system.md](docs/reservation-capacity-system.md).
 - Backfill des verrous de creneaux Firestore : voir [docs/backfill-appointment-slots.md](docs/backfill-appointment-slots.md).

@@ -1,8 +1,8 @@
 # Backfill des verrous de creneaux Firestore
 
-Ce projet utilise la collection `appointment_slots/{centerId}/slots/{slotId}` pour empecher deux reservations non annulees de prendre le meme creneau dans un centre.
+Ce projet utilise la collection `appointment_slots/{centerId}/slots/{slotId}` pour appliquer les capacites de reservation par centre, heure et type de prestation.
 
-Les nouveaux flux CRM creent, deplacent ou liberent ces verrous automatiquement. Les rendez-vous deja presents avant cette securisation doivent etre audites puis backfilles.
+Les nouveaux flux CRM creent, deplacent ou liberent ces documents de capacite automatiquement. Les rendez-vous deja presents avant cette securisation doivent etre audites puis backfilles. Voir aussi [reservation-capacity-system.md](reservation-capacity-system.md).
 
 ## Pre-requis
 
@@ -45,7 +45,7 @@ db-audit/out/firestore-import/appointment-slots-conflicts.csv
 Verifier notamment :
 
 - `invalidCandidates` : rendez-vous non annules incomplets ;
-- `duplicateSlotConflicts` : plusieurs rendez-vous pour le meme `centerId + dateTime` ;
+- `duplicateSlotConflicts` : anciens conflits mono-creneau detectes par `centerId + dateTime` ;
 - `existingSlotConflicts` : verrou existant pointe vers un autre rendez-vous ;
 - `slotsToCreate` : verrous qui seront crees en execution.
 

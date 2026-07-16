@@ -19,6 +19,7 @@ import {
 } from '../../lib/crmTransactions';
 import { getTodayDateString } from '../../lib/centerManagerUtils';
 import { validateAppointment } from '../../lib/appointmentRules';
+import { getBookingHoursForDate } from '../../lib/bookingCapacityRules';
 import { db } from '../../lib/firebase';
 import { PendingBookingRequestsPanel } from './schedule/PendingBookingRequestsPanel';
 import { ScheduleToolbar, ScheduleViewType } from './schedule/ScheduleToolbar';
@@ -143,6 +144,8 @@ export function ManagerScheduleView({
   const getAppointmentsForDayAndHour = (dateStr: string, hourStr: string) => (
     getAppointmentsForDayAndHourFromData(appointmentsToRender, dateStr, hourStr)
   );
+  const focusedDateStr = formatDateToYYYYMMDD(focusedDate);
+  const focusedDateTimelineHours = getBookingHoursForDate(centerId, focusedDateStr);
   // 4. Individual Actions
   const handleSingleComplete = async (id: string) => {
     const result = await onCompleteAppointment(id, { silent: true });
@@ -308,7 +311,8 @@ export function ManagerScheduleView({
           duration: matchedService.duration || 20
         },
         appointments,
-        existingClient?.centerId || centerId
+        existingClient?.centerId || centerId,
+        services
       );
 
       if (!validation.valid) {
@@ -405,8 +409,10 @@ export function ManagerScheduleView({
       {/* 1. DAY VIEW */}
       {viewType === 'day' && (
         <DayScheduleView
-          timelineHours={TIMELINE_HOURS}
+          timelineHours={focusedDateTimelineHours}
           focusedDate={focusedDate}
+          centerId={centerId}
+          centerAppointments={centerAppointments}
           centerClients={centerClients}
           services={services}
           selectedIds={selectedIds}
@@ -486,6 +492,7 @@ export function ManagerScheduleView({
         appointment={editingApt}
         centerClients={centerClients}
         services={services}
+        appointments={centerAppointments}
         onAppointmentChange={setEditingApt}
         onSubmit={handleEditSubmit}
         onClose={() => setEditingApt(null)}
