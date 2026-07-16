@@ -41,6 +41,7 @@ import { getTodayDateString } from '../lib/centerManagerUtils';
 import { validateAppointment } from '../lib/appointmentRules';
 import { findActivePackageForClient, validateDeduction } from '../lib/packageRules';
 import { db } from '../lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 import {
   AppointmentMutationOptions,
   assignPackageToClient,
@@ -133,6 +134,31 @@ export function CenterManagerViews({
 
   // Find center metadata
   const currentCenter = centers.find(c => c.id === centerId) || centers[0];
+
+  const handleSaveBookingSettings = async (settings: {
+    bookingCapacity: Center['bookingCapacity'];
+    bookingHours: Center['bookingHours'];
+  }): Promise<CrmActionResult> => {
+    if (!currentCenter) {
+      const message = 'Centre introuvable.';
+      triggerToast(message, 'error');
+      return { ok: false, error: message };
+    }
+
+    try {
+      await updateDoc(doc(db, 'centers', centerId), {
+        bookingCapacity: settings.bookingCapacity,
+        bookingHours: settings.bookingHours,
+        updatedAt: new Date().toISOString(),
+      });
+      triggerToast('Parametres de reservation mis a jour.', 'success', 'updated', 'Parametres enregistres');
+      return { ok: true };
+    } catch (error) {
+      const message = getErrorMessage(error, 'Erreur lors de la mise a jour des parametres.');
+      triggerToast(message, 'error');
+      return { ok: false, error: message };
+    }
+  };
 
   // Custom center services filtering & pricing
   const centerServices = services
@@ -257,7 +283,9 @@ export function CenterManagerViews({
       },
       appointments,
       clientObj?.centerId || '',
-      services
+      services,
+      undefined,
+      currentCenter
     );
 
     if (!validation.valid) {
@@ -382,7 +410,9 @@ export function CenterManagerViews({
         },
         appointments.filter(a => a.id !== appointmentToSave.id),
         clientObj?.centerId || '',
-        services
+        services,
+        undefined,
+        currentCenter
       );
 
       if (!validation.valid) {
@@ -602,6 +632,7 @@ export function CenterManagerViews({
                 packages={centerPackages}
                 onBookAppointmentClick={() => setShowAptModal(true)}
                 bookingRequests={bookingRequests.filter(r => r.centerId === centerId)}
+                currentCenter={currentCenter}
               />
             )}
 
@@ -652,6 +683,8 @@ export function CenterManagerViews({
               <ManagerServicesView
                 centerServices={centerServices}
                 centerPackages={centerPackages}
+                currentCenter={currentCenter}
+                onSaveBookingSettings={handleSaveBookingSettings}
               />
             )}
           </>
@@ -676,6 +709,7 @@ export function CenterManagerViews({
           onClose={() => setShowAptModal(false)}
           onSubmit={handleAptSubmit}
           initialDate={bookingDateFilter}
+          center={currentCenter}
         />
       )}
 

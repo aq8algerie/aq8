@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Appointment, Client, Service } from '../../../types';
+import { Appointment, Center, Client, Service } from '../../../types';
 import { getTodayDateString } from '../../../lib/centerManagerUtils';
 import { getBookingHoursForDate, getServiceTypeById, getSlotAvailability } from '../../../lib/bookingCapacityRules';
 
@@ -16,6 +16,7 @@ interface AppointmentModalProps {
   onClose: () => void;
   onSubmit: (data: { clientId: string; serviceId: string; date: string; time: string; notes: string }) => void | Promise<void>;
   initialDate?: string;
+  center: Center;
 }
 
 export function AppointmentModal({
@@ -25,7 +26,8 @@ export function AppointmentModal({
   centerId,
   onClose,
   onSubmit,
-  initialDate
+  initialDate,
+  center
 }: AppointmentModalProps) {
   const [clientId, setClientId] = useState('');
   const [serviceId, setServiceId] = useState(services[0]?.id || '');
@@ -33,7 +35,7 @@ export function AppointmentModal({
   const [time, setTime] = useState('10:00');
   const [notes, setNotes] = useState('');
 
-  const allowedHours = useMemo(() => getBookingHoursForDate(centerId, date), [centerId, date]);
+  const allowedHours = useMemo(() => getBookingHoursForDate(centerId, date, center), [centerId, date, center]);
   const selectedServiceType = useMemo(() => getServiceTypeById(services, serviceId), [services, serviceId]);
 
   useEffect(() => {
@@ -124,7 +126,7 @@ export function AppointmentModal({
                 )}
                 {allowedHours.map(h => {
                   const availability = selectedServiceType
-                    ? getSlotAvailability(appointments, services, centerId, `${date}T${h}`, selectedServiceType)
+                    ? getSlotAvailability(appointments, services, centerId, `${date}T${h}`, selectedServiceType, undefined, center)
                     : null;
                   const label = availability
                     ? `${h} - ${availability.remaining}/${availability.capacity} place(s)`

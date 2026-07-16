@@ -30,6 +30,52 @@ service cloud.firestore {
       return isSuperAdmin() || isCenterManager(centerId);
     }
 
+    function isBookingCapacityMap(value) {
+      return value is map
+        && value.keys().hasOnly(['aq8', 'wonder'])
+        && (!('aq8' in value) || (value.aq8 is number && value.aq8 >= 0 && value.aq8 <= 20))
+        && (!('wonder' in value) || (value.wonder is number && value.wonder >= 0 && value.wonder <= 20));
+    }
+
+    function isTimeRange(value) {
+      return value is map
+        && value.keys().hasOnly(['start', 'end'])
+        && value.start is string
+        && value.end is string
+        && value.start.matches('^([01][0-9]|2[0-3]):00$')
+        && value.end.matches('^([01][0-9]|2[0-4]):00$');
+    }
+
+    function isBookingDayRanges(value) {
+      return value is list
+        && value.size() <= 4
+        && (value.size() == 0 || isTimeRange(value[0]))
+        && (value.size() <= 1 || isTimeRange(value[1]))
+        && (value.size() <= 2 || isTimeRange(value[2]))
+        && (value.size() <= 3 || isTimeRange(value[3]));
+    }
+
+    function isBookingHoursMap(value) {
+      return value is map
+        && value.keys().hasOnly(['0', '1', '2', '3', '4', '5', '6'])
+        && (!('0' in value) || isBookingDayRanges(value['0']))
+        && (!('1' in value) || isBookingDayRanges(value['1']))
+        && (!('2' in value) || isBookingDayRanges(value['2']))
+        && (!('3' in value) || isBookingDayRanges(value['3']))
+        && (!('4' in value) || isBookingDayRanges(value['4']))
+        && (!('5' in value) || isBookingDayRanges(value['5']))
+        && (!('6' in value) || isBookingDayRanges(value['6']));
+    }
+
+    function isCenterBookingSettingsUpdate(centerId) {
+      return isCenterManager(centerId)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['bookingCapacity', 'bookingHours', 'updatedAt'])
+        && (!('bookingCapacity' in request.resource.data) || isBookingCapacityMap(request.resource.data.bookingCapacity))
+        && (!('bookingHours' in request.resource.data) || isBookingHoursMap(request.resource.data.bookingHours))
+        && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is string);
+    }
+
     function isPublicContactMessageCreate() {
       return request.resource.data.keys().hasOnly([
           'name', 'phone', 'email', 'requestType', 'centerId', 'message', 'status', 'createdAt'
@@ -60,7 +106,8 @@ service cloud.firestore {
 
     match /centers/{centerId} {
       allow read: if true;
-      allow create, update, delete: if isSuperAdmin();
+      allow create, delete: if isSuperAdmin();
+      allow update: if isSuperAdmin() || isCenterBookingSettingsUpdate(centerId);
     }
 
     match /services/{serviceId} {

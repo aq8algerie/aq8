@@ -451,6 +451,7 @@ export default function CenterDetailPage({ params }: PageProps) {
                 centerName={center.name}
                 centerCity={center.city}
                 services={center.services}
+                center={center}
               />
             </div>
           </aside>

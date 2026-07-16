@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Appointment, Service } from '../types';
+import { Appointment, Center, Service } from '../types';
 import {
   getServiceTypeById,
   getServiceTypeLabel,
@@ -57,6 +57,7 @@ export function validateAppointment(
   clientCenterId: string,
   services: Service[],
   excludeAppointmentId?: string,
+  center?: Pick<Center, 'bookingCapacity' | 'bookingHours'>,
 ): { valid: boolean; error?: string } {
   const { centerId, dateTime, serviceId } = params;
 
@@ -77,7 +78,7 @@ export function validateAppointment(
     return { valid: false, error: 'Les reservations doivent se faire uniquement par heure complete (ex: 10:00).' };
   }
 
-  if (!isCenterOpenForDateTime(centerId, dateTime)) {
+  if (!isCenterOpenForDateTime(centerId, dateTime, center)) {
     return { valid: false, error: "Ce creneau est en dehors des horaires d'ouverture du centre." };
   }
 
@@ -93,6 +94,7 @@ export function validateAppointment(
     dateTime,
     serviceType,
     excludeAppointmentId,
+    center,
   );
 
   if (!availability.isAvailable) {

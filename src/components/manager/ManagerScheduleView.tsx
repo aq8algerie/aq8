@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Client, Appointment, Service, ClientPackage, Package, BookingRequest } from '../../types';
+import { Center, Client, Appointment, Service, ClientPackage, Package, BookingRequest } from '../../types';
 import {
   acceptBookingRequestInTransaction,
   AppointmentMutationOptions,
@@ -60,6 +60,7 @@ interface ManagerScheduleViewProps {
   packages: Package[];
   onBookAppointmentClick: () => void;
   bookingRequests?: BookingRequest[];
+  currentCenter: Center;
 }
 
 
@@ -82,6 +83,7 @@ export function ManagerScheduleView({
   packages,
   onBookAppointmentClick,
   bookingRequests = [],
+  currentCenter,
 }: ManagerScheduleViewProps) {
   // 1. Navigation and View Mode States
   const [viewType, setViewType] = useState<ScheduleViewType>('day');
@@ -148,7 +150,7 @@ export function ManagerScheduleView({
     getAppointmentsForDayAndHourFromData(appointmentsToRender, dateStr, hourStr)
   );
   const focusedDateStr = formatDateToYYYYMMDD(focusedDate);
-  const focusedDateTimelineHours = getBookingHoursForDate(centerId, focusedDateStr);
+  const focusedDateTimelineHours = getBookingHoursForDate(centerId, focusedDateStr, currentCenter);
 
   const getAppointmentClientLabel = (appointmentId: string) => {
     const appointment = centerAppointments.find(candidate => candidate.id === appointmentId);
@@ -358,7 +360,9 @@ export function ManagerScheduleView({
         },
         appointments,
         existingClient?.centerId || centerId,
-        services
+        services,
+        undefined,
+        currentCenter
       );
 
       if (!validation.valid) {
@@ -478,6 +482,7 @@ export function ManagerScheduleView({
           onCompleteAppointment={handleSingleComplete}
           onCancelAppointment={handleSingleCancel}
           onDeleteAppointment={handleSingleDelete}
+          currentCenter={currentCenter}
         />
       )}
       {/* 2. WEEKLY VIEW (7 Columns Side by Side) */}
@@ -549,6 +554,7 @@ export function ManagerScheduleView({
         onAppointmentChange={setEditingApt}
         onSubmit={handleEditSubmit}
         onClose={() => setEditingApt(null)}
+        currentCenter={currentCenter}
       />
     </div>
   );

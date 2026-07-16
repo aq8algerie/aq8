@@ -2,8 +2,9 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AlertCircle, Calendar, CheckCircle2, Loader2 } from "lucide-react";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { collection, doc, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "../../src/lib/firebase";
+import { Center } from "../../src/types";
 import {
   getBookingMinimumDate,
   validatePublicBookingRequest,
@@ -22,6 +23,7 @@ type CenterBookingFormProps = {
   centerName: string;
   centerCity: string;
   services: string[];
+  center?: Pick<Center, "id" | "bookingCapacity" | "bookingHours">;
 };
 
 type PublicBookingSlot = {
@@ -73,12 +75,12 @@ function getServiceType(value: string): BookingServiceType {
 function resolveSlotAvailability(
   centerId: string,
   serviceType: BookingServiceType,
+  center: Pick<Center, "bookingCapacity" | "bookingHours"> | undefined,
   slot?: PublicBookingSlot,
 ): SlotAvailability {
-  const capacity = slot?.capacities?.[serviceType] ?? getSlotCapacity(centerId, serviceType);
+  const capacity = getSlotCapacity(centerId, serviceType, center);
   const booked = slot?.counts?.[serviceType] ?? 0;
-  const remaining = slot?.remaining?.[serviceType] ?? Math.max(capacity - booked, 0);
-  const safeRemaining = Math.max(remaining, 0);
+  const safeRemaining = Math.max(capacity - booked, 0);
 
   return {
     capacity,
@@ -93,9 +95,12 @@ export function CenterBookingForm({
   centerName,
   centerCity,
   services,
+  center,
 }: CenterBookingFormProps) {
+  const [liveCenter, setLiveCenter] = useState<Pick<Center, "id" | "bookingCapacity" | "bookingHours"> | undefined>(center);
+  const bookingCenter = liveCenter ?? center;
   const bookingMinimumDate = useMemo(() => getBookingMinimumDate(), []);
-  const defaultDate = useMemo(() => getNextOpenBookingDate(centerId, bookingMinimumDate), [centerId, bookingMinimumDate]);
+  const defaultDate = useMemo(() => getNextOpenBookingDate(centerId, bookingMinimumDate, 45, bookingCenter), [centerId, bookingMinimumDate, bookingCenter]);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -111,16 +116,16 @@ export function CenterBookingForm({
   const [isLoading, setIsLoading] = useState(false);
 
   const selectedServiceType = useMemo(() => getServiceType(service), [service]);
-  const hours = useMemo(() => getBookingHoursForDate(centerId, bookingDate), [centerId, bookingDate]);
-  const capacitySummary = useMemo(() => getCapacitySummary(centerId), [centerId]);
+  const hours = useMemo(() => getBookingHoursForDate(centerId, bookingDate, bookingCenter), [centerId, bookingDate, bookingCenter]);
+  const capacitySummary = useMemo(() => getCapacitySummary(centerId, bookingCenter), [centerId, bookingCenter]);
 
   const hourAvailability = useMemo(() => {
     const next: Record<string, SlotAvailability> = {};
     for (const hour of hours) {
-      next[hour] = resolveSlotAvailability(centerId, selectedServiceType, slotByTime[hour]);
+      next[hour] = resolveSlotAvailability(centerId, selectedServiceType, bookingCenter, slotByTime[hour]);
     }
     return next;
-  }, [centerId, hours, selectedServiceType, slotByTime]);
+  }, [bookingCenter, centerId, hours, selectedServiceType, slotByTime]);
 
   const availableHours = useMemo(
     () => hours.filter((hour) => !hourAvailability[hour]?.isFull),
@@ -136,6 +141,31 @@ export function CenterBookingForm({
       setService(services[0] || "aq8");
     }
   }, [service, services]);
+
+  useEffect(() => {
+    setLiveCenter(center);
+  }, [center]);
+
+  useEffect(() => {
+    const centerRef = doc(db, "centers", centerId);
+    return onSnapshot(
+      centerRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          setLiveCenter({ id: snapshot.id, ...(snapshot.data() as Omit<Center, "id">) });
+        }
+      },
+      (error) => {
+        console.error("Public center booking settings error:", error);
+      },
+    );
+  }, [centerId]);
+
+  useEffect(() => {
+    if (!bookingDate || getBookingHoursForDate(centerId, bookingDate, bookingCenter).length === 0) {
+      setBookingDate(defaultDate);
+    }
+  }, [bookingCenter, bookingDate, centerId, defaultDate]);
 
   useEffect(() => {
     setSlotByTime({});
@@ -203,6 +233,8 @@ export function CenterBookingForm({
         bookingTime,
       },
       services,
+      new Date(),
+      bookingCenter,
     );
 
     if (validation.valid === false) {
@@ -238,9 +270,9 @@ export function CenterBookingForm({
       setPhone("");
       setEmail("");
       setService(services[0] || "aq8");
-      const nextDate = getNextOpenBookingDate(centerId, getBookingMinimumDate());
+      const nextDate = getNextOpenBookingDate(centerId, getBookingMinimumDate(), 45, bookingCenter);
       setBookingDate(nextDate);
-      setBookingTime(getBookingHoursForDate(centerId, nextDate)[0] || "");
+      setBookingTime(getBookingHoursForDate(centerId, nextDate, bookingCenter)[0] || "");
     } catch (err) {
       console.error("Booking submission error:", err);
       setErrorMsg(err instanceof Error ? err.message : "Une erreur est survenue. Veuillez reessayer ou contacter directement le centre.");

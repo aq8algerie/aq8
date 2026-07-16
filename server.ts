@@ -12,6 +12,7 @@ import { Appointment, Center, Service } from './src/types';
 import { PublicBookingRequestInput, validatePublicBookingRequest } from './src/lib/publicFormValidation';
 import {
   BookingServiceType,
+  CenterBookingConfig,
   CenterCapacity,
   getBookingSlotId,
   getCenterBookingCapacity,
@@ -61,21 +62,21 @@ function emptyCounts(): CenterCapacity {
   return { aq8: 0, wonder: 0 };
 }
 
-function recomputeSlot(slot: AppointmentSlot): AppointmentSlot {
+function recomputeSlot(slot: AppointmentSlot, center?: CenterBookingConfig): AppointmentSlot {
   const counts = emptyCounts();
   for (const entry of Object.values(slot.appointments)) {
     counts[entry.serviceType] += 1;
   }
-  return { ...slot, capacities: getCenterBookingCapacity(slot.centerId), counts };
+  return { ...slot, capacities: getCenterBookingCapacity(slot.centerId, center), counts };
 }
 
-function buildEmptyAppointmentSlot(centerId: string, dateTime: string, timestamp: string): AppointmentSlot {
+function buildEmptyAppointmentSlot(centerId: string, dateTime: string, timestamp: string, center?: CenterBookingConfig): AppointmentSlot {
   return {
     id: getBookingSlotId(dateTime),
     centerId,
     dateTime,
     status: 'held',
-    capacities: getCenterBookingCapacity(centerId),
+    capacities: getCenterBookingCapacity(centerId, center),
     counts: emptyCounts(),
     appointments: {},
     createdAt: timestamp,
@@ -121,8 +122,9 @@ async function normalizeAdminSlot(
   centerId: string,
   dateTime: string,
   timestamp: string,
+  center?: CenterBookingConfig,
 ): Promise<AppointmentSlot> {
-  const emptySlot = buildEmptyAppointmentSlot(centerId, dateTime, timestamp);
+  const emptySlot = buildEmptyAppointmentSlot(centerId, dateTime, timestamp, center);
   if (!snapshot.exists) return emptySlot;
 
   const rawSlot = snapshot.data() as Record<string, unknown>;
@@ -175,18 +177,18 @@ async function normalizeAdminSlot(
     updatedAt: timestamp,
     appointments,
     migratedFromLegacy: Boolean(rawSlot.appointmentId && Object.keys(appointments).length > 0),
-  });
+  }, center);
 }
 
-function addBookingHoldToSlot(slot: AppointmentSlot, entry: AppointmentSlotEntry): AppointmentSlot {
-  if (!isCenterOpenForDateTime(slot.centerId, slot.dateTime)) {
+function addBookingHoldToSlot(slot: AppointmentSlot, entry: AppointmentSlotEntry, center?: CenterBookingConfig): AppointmentSlot {
+  if (!isCenterOpenForDateTime(slot.centerId, slot.dateTime, center)) {
     throw new Error("Ce creneau est en dehors des horaires d'ouverture du centre.");
   }
 
   const booked = Object.values(slot.appointments).filter(candidate => (
     candidate.serviceType === entry.serviceType && candidate.appointmentId !== entry.appointmentId
   )).length;
-  const capacity = getSlotCapacity(slot.centerId, entry.serviceType);
+  const capacity = getSlotCapacity(slot.centerId, entry.serviceType, center);
 
   if (booked >= capacity) {
     throw new Error(`Capacite ${getServiceTypeLabel(entry.serviceType)} atteinte sur ce creneau (${booked}/${capacity}).`);
@@ -198,7 +200,7 @@ function addBookingHoldToSlot(slot: AppointmentSlot, entry: AppointmentSlotEntry
       ...slot.appointments,
       [entry.appointmentId]: entry,
     },
-  });
+  }, center);
 }
 
 function getAvailablePublicServiceTypes(center: Center, services: Service[]): BookingServiceType[] {
@@ -233,7 +235,7 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
     throw new Error('Centre introuvable.');
   }
 
-  const center = centerSnapshot.data() as Center;
+  const center = { id: centerSnapshot.id, ...(centerSnapshot.data() as Omit<Center, 'id'>) } as Center;
   const servicesSnapshot = await db.collection('services').get();
   const services = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Service));
   const availableServiceTypes = getAvailablePublicServiceTypes(center, services);
@@ -241,6 +243,8 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
   const validation = validatePublicBookingRequest(
     { ...input, centerName: center.name },
     availableServiceTypes,
+    new Date(),
+    center,
   );
   if (validation.valid === false) {
     throw new Error(validation.error);
@@ -257,12 +261,21 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
   const dateTime = `${data.bookingDate}T${data.bookingTime}`;
   const slotId = getBookingSlotId(dateTime);
   const requestRef = db.collection('booking_requests').doc();
+  const centerRef = db.collection('centers').doc(data.centerId);
   const slotRef = db.collection('appointment_slots').doc(data.centerId).collection('slots').doc(slotId);
   const publicSlotRef = db.collection('public_booking_slots').doc(data.centerId).collection('slots').doc(slotId);
+  let reservedCenterName = center.name;
 
   await db.runTransaction(async transaction => {
+    const transactionCenterSnapshot = await transaction.get(centerRef);
+    if (!transactionCenterSnapshot.exists) {
+      throw new Error('Centre introuvable.');
+    }
+    const transactionCenter = { id: transactionCenterSnapshot.id, ...(transactionCenterSnapshot.data() as Omit<Center, 'id'>) } as Center;
+    reservedCenterName = transactionCenter.name;
+
     const slotSnapshot = await transaction.get(slotRef);
-    const slot = await normalizeAdminSlot(transaction, db, slotSnapshot, data.centerId, dateTime, createdAt);
+    const slot = await normalizeAdminSlot(transaction, db, slotSnapshot, data.centerId, dateTime, createdAt, transactionCenter);
     const entryId = `request-${requestRef.id}`;
     const nextSlot = addBookingHoldToSlot(slot, {
       appointmentId: entryId,
@@ -271,11 +284,11 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
       source: 'booking_request',
       createdAt,
       requestId: requestRef.id,
-    });
+    }, transactionCenter);
 
     transaction.set(requestRef, {
       centerId: data.centerId,
-      centerName: center.name,
+      centerName: transactionCenter.name,
       firstName: data.firstName,
       lastName: data.lastName,
       phone: data.phone,
@@ -293,7 +306,7 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
 
   return {
     reservationId: requestRef.id,
-    centerName: center.name,
+    centerName: reservedCenterName,
     service: data.service,
     bookingDate: data.bookingDate,
     bookingTime: data.bookingTime,

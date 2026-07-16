@@ -6,7 +6,7 @@
 import React from 'react';
 import { Edit2 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Appointment, AppointmentStatus, Client, Service } from '../../../types';
+import { Appointment, AppointmentStatus, Center, Client, Service } from '../../../types';
 import { getTodayDateString } from '../../../lib/centerManagerUtils';
 import { getBookingHoursForDate, getServiceTypeById, getSlotAvailability } from '../../../lib/bookingCapacityRules';
 
@@ -18,6 +18,7 @@ interface EditAppointmentModalProps {
   onAppointmentChange: (appointment: Appointment) => void;
   onSubmit: (event: React.FormEvent) => void;
   onClose: () => void;
+  currentCenter: Center;
 }
 
 export function EditAppointmentModal({
@@ -28,6 +29,7 @@ export function EditAppointmentModal({
   onAppointmentChange,
   onSubmit,
   onClose,
+  currentCenter,
 }: EditAppointmentModalProps) {
   if (!appointment) {
     return null;
@@ -36,7 +38,7 @@ export function EditAppointmentModal({
   const datePart = appointment.dateTime.split('T')[0] || getTodayDateString();
   const timePart = appointment.dateTime.split('T')[1] || '10:00';
   const selectedServiceType = getServiceTypeById(services, appointment.serviceId);
-  const baseHours = getBookingHoursForDate(appointment.centerId, datePart);
+  const baseHours = getBookingHoursForDate(appointment.centerId, datePart, currentCenter);
   const allowedHours = Array.from(new Set([...baseHours, timePart].filter(Boolean))).sort();
 
   return (
@@ -114,7 +116,7 @@ export function EditAppointmentModal({
               >
                 {allowedHours.map(hour => {
                   const availability = selectedServiceType
-                    ? getSlotAvailability(appointments, services, appointment.centerId, `${datePart}T${hour}`, selectedServiceType, appointment.id)
+                    ? getSlotAvailability(appointments, services, appointment.centerId, `${datePart}T${hour}`, selectedServiceType, appointment.id, currentCenter)
                     : null;
                   const label = availability
                     ? `${hour} - ${availability.remaining}/${availability.capacity} place(s)`

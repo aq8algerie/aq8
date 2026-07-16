@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { AlertCircle, CheckCircle2, CheckSquare, Clock, Edit2, Eye, Square, Trash2, XCircle } from 'lucide-react';
-import { Appointment, Client, Package, Service } from '../../../types';
+import { Appointment, Center, Client, Package, Service } from '../../../types';
 import { getSlotAvailability } from '../../../lib/bookingCapacityRules';
 
 type PackageType = Package['type'];
@@ -27,6 +27,7 @@ interface DayScheduleViewProps {
   onCompleteAppointment: (id: string) => void | Promise<void>;
   onCancelAppointment: (id: string) => void | Promise<void>;
   onDeleteAppointment: (id: string) => void;
+  currentCenter: Center;
 }
 
 export function DayScheduleView({
@@ -46,6 +47,7 @@ export function DayScheduleView({
   onCompleteAppointment,
   onCancelAppointment,
   onDeleteAppointment,
+  currentCenter,
 }: DayScheduleViewProps) {
   const dateStr = formatDateToYYYYMMDD(focusedDate);
 
@@ -64,8 +66,8 @@ export function DayScheduleView({
     <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs space-y-4">
       {timelineHours.map((hour) => {
         const hourApts = getAppointmentsForDayAndHour(dateStr, hour);
-        const aq8Availability = getSlotAvailability(centerAppointments, services, centerId, `${dateStr}T${hour}`, 'aq8');
-        const wonderAvailability = getSlotAvailability(centerAppointments, services, centerId, `${dateStr}T${hour}`, 'wonder');
+        const aq8Availability = getSlotAvailability(centerAppointments, services, centerId, `${dateStr}T${hour}`, 'aq8', undefined, currentCenter);
+        const wonderAvailability = getSlotAvailability(centerAppointments, services, centerId, `${dateStr}T${hour}`, 'wonder', undefined, currentCenter);
 
         return (
           <div key={hour} className="flex gap-4 items-start border-b border-slate-100 pb-3 last:border-0 last:pb-0 text-xs">
