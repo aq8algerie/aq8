@@ -81,7 +81,6 @@ import {
   PublicWonder,
   PublicCenters,
   PublicCenterDetail,
-  PublicFAQ,
   PublicContact,
   PublicAbout
 } from './components/PublicViews';
@@ -371,7 +370,7 @@ export default function App() {
   }, [crmRole, crmCenterId]);
 
   // 2. ROUTING & NAVIGATION STATE
-  // 'home' | 'about' | 'aq8' | 'wonder' | 'centers' | 'center-detail' | 'faq' | 'contact' | 'login' | 'crm'
+  // 'home' | 'about' | 'aq8' | 'wonder' | 'centers' | 'center-detail' | 'contact' | 'login' | 'crm'
   const [currentRoute, setCurrentRoute] = useState<string>('home');
   const [selectedCenterId, setSelectedCenterId] = useState<string>('center-1');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -380,6 +379,12 @@ export default function App() {
   useEffect(() => {
     const handleLocationChange = () => {
       const path = window.location.pathname;
+
+      if (path === '/faq') {
+        window.history.replaceState({}, '', '/a-propos');
+        setCurrentRoute('about');
+        return;
+      }
 
       const centerMatch = path.match(/^\/centres\/([a-zA-Z0-9_-]+)/);
       if (centerMatch) {
@@ -403,7 +408,6 @@ export default function App() {
           'wonder': 'wonder',
           'centres': 'centers',
           'centers': 'centers',
-          'faq': 'faq',
           'contact': 'contact',
           'login': 'login',
           'crm': 'crm'
@@ -433,8 +437,6 @@ export default function App() {
       targetPath = '/aq8';
     } else if (route === 'wonder') {
       targetPath = '/wonder';
-    } else if (route === 'faq') {
-      targetPath = '/faq';
     } else if (route === 'contact') {
       targetPath = '/contact';
     } else if (route === 'login') {
@@ -649,7 +651,6 @@ export default function App() {
               {[
                 { id: 'about', label: '\u00c0 propos' },
                 { id: 'centers', label: 'Nos Centres' },
-                { id: 'faq', label: 'FAQ' },
                 { id: 'contact', label: 'Contact' }
               ].map(link => (
                 <button
@@ -704,7 +705,6 @@ export default function App() {
                 { id: 'home', label: 'Accueil' },
                 { id: 'about', label: '\u00c0 propos' },
                 { id: 'centers', label: 'Nos Centres' },
-                { id: 'faq', label: 'FAQ' },
                 { id: 'contact', label: 'Contact' },
                 { id: 'login', label: 'Acc\u00e9der au CRM AQ8' }
               ].map(link => (
@@ -780,7 +780,6 @@ export default function App() {
               />
             )}
 
-            {currentRoute === 'faq' && <PublicFAQ />}
 
             {currentRoute === 'contact' && <PublicContact centers={centers} />}
 
@@ -1084,7 +1083,6 @@ export default function App() {
               <ul className="space-y-2 text-slate-400">
                 <li><button onClick={() => navigate('aq8')} className="hover:text-white transition">AQ8 Électrostimulation (EMS)</button></li>
                 <li><button onClick={() => navigate('wonder')} className="hover:text-white transition">Wonder Muscle Sculpting</button></li>
-                <li><button onClick={() => navigate('faq')} className="hover:text-white transition">Questions Fréquentes</button></li>
               </ul>
             </div>
 

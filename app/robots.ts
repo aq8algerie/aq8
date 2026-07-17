@@ -16,7 +16,6 @@ export default function robots() {
           '/#/wonder',
           '/#/centers',
           '/#/centres/*',
-          '/#/faq',
           '/#/contact'
         ],
         disallow: [

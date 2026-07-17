@@ -73,11 +73,11 @@ export function HomeShortFAQ() {
       {/* CTA */}
       <div className="text-center">
         <Link
-          href="/faq"
-          aria-label="Consulter toute la foire aux questions AQ8 Algérie"
+          href="/a-propos"
+          aria-label="Voir les questions frequentes AQ8 Algérie"
           className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#ff5757]/15 bg-[#ff5757]/5 px-5 py-3 text-sm font-bold text-[#ff5757] transition-all hover:border-[#ff5757]/30 hover:bg-[#ff5757]/10"
         >
-          Consulter toute la foire aux questions
+          Voir les questions frequentes
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>

@@ -24,8 +24,8 @@ export const staticPageSeo: Record<string, Omit<PageSeo, 'canonicalUrl'>> = {
   },
   about: {
     title: "A propos - AQ8 Algerie",
-    description: "Decouvrez AQ8 Algerie, son approche premium de la remise en forme technologique, ses centres, ses seances AQ8 EMS et Wonder.",
-    keywords: ["a propos AQ8 Algerie", "AQ8 Algerie", "centres AQ8", "EMS Algerie", "Wonder Algerie"]
+    description: "Decouvrez AQ8 Algerie, son approche premium, ses centres, ses seances AQ8 EMS et Wonder, ainsi que les questions frequentes avant reservation.",
+    keywords: ["a propos AQ8 Algerie", "questions frequentes AQ8", "AQ8 Algerie", "centres AQ8", "EMS Algerie", "Wonder Algerie"]
   },
   aq8: {
     title: "AQ8 EMS - Électrostimulation sans fil en Algérie",
@@ -41,11 +41,6 @@ export const staticPageSeo: Record<string, Omit<PageSeo, 'canonicalUrl'>> = {
     title: "Centres AQ8 en Algérie - Trouver votre centre AQ8 ou Wonder",
     description: "Consultez la liste des centres AQ8 Algérie, leurs horaires, prestations, coordonnées et règles de réservation.",
     keywords: ["centres AQ8", "salles de sport AQ8", "Bir Khadem gym", "AQ8 Ouled Fayet", "AQ8 Blida", "AQ8 Tlemcen", "AQ8 Sidi Yahia"]
-  },
-  faq: {
-    title: "FAQ - Questions Fréquentes AQ8 Algérie",
-    description: "Tout savoir sur l'électrostimulation, les contre-indications, le déroulement des séances d'EMS et de Wonder chez AQ8 Algérie.",
-    keywords: ["FAQ AQ8", "questions électrostimulation", "danger EMS", "wonder contre indications"]
   },
   contact: {
     title: "Contactez AQ8 Algérie - Réservations et Informations",
