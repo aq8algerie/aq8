@@ -578,6 +578,8 @@ export default function App() {
 
   // Calculate high-level stats for Super Admin
   const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
+  const currentCrmCenter = crmCenterId ? centers.find(center => center.id === crmCenterId) : null;
+  const canUseCrmRoleSwitcher = isDevToolsEnabled && crmRole === 'super_admin';
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa] selection:bg-[#ff5757]/30 selection:text-[#353535]">
@@ -783,42 +785,49 @@ export default function App() {
                 <span className="text-slate-300 hidden sm:inline">Connecté en tant que: <strong>{loggedManagerName}</strong></span>
               </div>
 
-              {/* Instant Switching Panel */}
+              {/* CRM controls */}
               <div className="flex items-center gap-2 font-semibold">
-                <span className="text-slate-400 text-[11px] hidden lg:inline">Simulateur de rôle:</span>
+                {canUseCrmRoleSwitcher && (
+                  <>
+                    <span className="text-slate-400 text-[11px] hidden lg:inline">Simulateur de role:</span>
 
-                {/* Switch to Superadmin */}
-                <button
-                  onClick={() => {
-                    if (!isDevToolsEnabled) return;
-                    setCrmRole('super_admin');
-                    setCrmCenterId(null);
-                    setLoggedManagerName('Karim Benchikh (Super Admin)');
-                  }}
-                  className={`px-2.5 py-1 rounded-md text-[10px] transition ${crmRole === 'super_admin' ? 'bg-[#ff5757] text-white font-bold shadow-sm' : 'bg-white/10 text-slate-300 hover:bg-white/15'}`}
-                >
-                  Super Admin
-                </button>
+                    <button
+                      onClick={() => {
+                        setCrmRole('super_admin');
+                        setCrmCenterId(null);
+                        setLoggedManagerName('Karim Benchikh (Super Admin)');
+                      }}
+                      className={`px-2.5 py-1 rounded-md text-[10px] transition ${crmRole === 'super_admin' ? 'bg-[#ff5757] text-white font-bold shadow-sm' : 'bg-white/10 text-slate-300 hover:bg-white/15'}`}
+                    >
+                      Super Admin
+                    </button>
 
-                {/* Switch to Center Manager selector */}
-                <select
-                  value={crmCenterId || ''}
-                  onChange={(e) => {
-                    if (!isDevToolsEnabled) return;
-                    const centerId = e.target.value;
-                    const c = centers.find(center => center.id === centerId);
-                    const matchedMgr = managers.find(m => m.centerId === centerId);
-                    setCrmRole('center_manager');
-                    setCrmCenterId(centerId);
-                    setLoggedManagerName(`${matchedMgr.name} (${c?.name || 'Manager'})`);
-                  }}
-                  className="bg-white/10 text-white rounded-md text-[10px] px-2 py-1 focus:outline-none border border-white/10"
-                >
-                  <option value="" disabled className="text-slate-800">-- Choisir un centre --</option>
-                  {centers.map(c => (
-                    <option key={c.id} value={c.id} className="text-slate-800">{c.name} ({c.city})</option>
-                  ))}
-                </select>
+                    <select
+                      value={crmCenterId || ''}
+                      onChange={(e) => {
+                        const centerId = e.target.value;
+                        const c = centers.find(center => center.id === centerId);
+                        const matchedMgr = managers.find(m => m.centerId === centerId);
+                        setCrmRole('center_manager');
+                        setCrmCenterId(centerId);
+                        setLoggedManagerName(`${matchedMgr?.name || 'Manager'} (${c?.name || 'Centre'})`);
+                      }}
+                      className="bg-white/10 text-white rounded-md text-[10px] px-2 py-1 focus:outline-none border border-white/10"
+                    >
+                      <option value="" disabled className="text-slate-800">-- Choisir un centre --</option>
+                      {centers.map(c => (
+                        <option key={c.id} value={c.id} className="text-slate-800">{c.name} ({c.city})</option>
+                      ))}
+                    </select>
+                  </>
+                )}
+
+                {crmRole === 'center_manager' && (
+                  <span className="hidden sm:inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-200">
+                    <Building className="h-3.5 w-3.5 text-[#ff5757]" />
+                    {currentCrmCenter?.name || 'Centre assigne'}
+                  </span>
+                )}
 
                 <button
                   onClick={toggleDarkMode}
