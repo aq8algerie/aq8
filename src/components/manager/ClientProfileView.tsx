@@ -48,6 +48,7 @@ export function ClientProfileView({
   };
 
   const age = calculateAge(client.dob);
+  const isSuspended = client.status === 'suspended';
 
   return (
     <div id="client-profile-view" className="space-y-6">
@@ -73,6 +74,11 @@ export function ClientProfileView({
                   client.gender === 'F' ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-blue-50 text-blue-600 border border-blue-100'
                 }`}>
                   {client.gender === 'F' ? 'Femme' : 'Homme'}
+                </span>
+              )}
+              {isSuspended && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-100">
+                  Suspendu
                 </span>
               )}
             </h3>

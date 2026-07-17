@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import {
   Center,
   Client,
+  ClientStatus,
   Appointment,
   ClientPackage,
   Package,
@@ -56,6 +57,10 @@ import {
   updateAppointmentInTransaction
 } from '../lib/crmTransactions';
 
+type PendingClientAction =
+  | { kind: 'delete'; clientIds: string[] }
+  | { kind: 'status'; clientIds: string[]; status: ClientStatus };
+
 export function CenterManagerViews({
   centerId,
   centers,
@@ -100,6 +105,9 @@ export function CenterManagerViews({
   };
 
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [pendingClientAction, setPendingClientAction] = useState<PendingClientAction | null>(null);
+  const [confirmingClientAction, setConfirmingClientAction] = useState(false);
 
   // Clear selected client when tab changes
   React.useEffect(() => {
@@ -215,6 +223,7 @@ export function CenterManagerViews({
     });
 
   const centerClients = clients.filter(c => c.centerId === centerId);
+  const centerActiveClients = centerClients.filter(client => client.status !== 'suspended');
   const pendingPaymentDelete = pendingPaymentDeleteId
     ? payments.find(payment => payment.id === pendingPaymentDeleteId)
     : null;
@@ -224,6 +233,28 @@ export function CenterManagerViews({
   const pendingPaymentDeleteDescription = pendingPaymentDelete
     ? `Paiement de ${pendingPaymentDelete.amount.toLocaleString()} DZD${pendingPaymentClient ? ` pour ${pendingPaymentClient.firstName} ${pendingPaymentClient.lastName}` : ``}. Il sera retire du registre des encaissements.`
     : 'Cet encaissement sera retire du registre des encaissements.';
+
+  const pendingClientActionClients = pendingClientAction
+    ? pendingClientAction.clientIds
+        .map(clientId => centerClients.find(client => client.id === clientId))
+        .filter((client): client is Client => Boolean(client))
+    : [];
+  const pendingClientCount = pendingClientActionClients.length;
+  const pendingClientNames = pendingClientActionClients
+    .slice(0, 3)
+    .map(client => [client.firstName, client.lastName].filter(Boolean).join(' ').trim() || client.phone || client.email || 'Client sans nom')
+    .join(', ');
+  const pendingClientSuffix = pendingClientCount > 3 ? ' et ' + (pendingClientCount - 3) + ' autre(s)' : '';
+  const pendingClientActionTitle = pendingClientAction?.kind === 'delete'
+    ? 'Supprimer ' + (pendingClientCount > 1 ? 'ces clients' : 'ce client') + ' ?'
+    : pendingClientAction?.status === 'suspended'
+      ? 'Suspendre ' + (pendingClientCount > 1 ? 'ces clients' : 'ce client') + ' ?'
+      : 'Reactiver ' + (pendingClientCount > 1 ? 'ces clients' : 'ce client') + ' ?';
+  const pendingClientActionDescription = pendingClientAction?.kind === 'delete'
+    ? pendingClientNames + pendingClientSuffix + ' sera retire du fichier clients du centre. Les historiques deja enregistres peuvent rester visibles dans les autres modules.'
+    : pendingClientAction?.status === 'suspended'
+      ? pendingClientNames + pendingClientSuffix + ' ne pourra plus etre utilise pour de nouvelles actions operationnelles tant qu il reste suspendu.'
+      : pendingClientNames + pendingClientSuffix + ' sera reactif dans le fichier clients.';
 
   const confirmPaymentDelete = () => {
     if (!pendingPaymentDeleteId || confirmingPaymentDelete) return;
@@ -236,6 +267,89 @@ export function CenterManagerViews({
     } finally {
       setConfirmingPaymentDelete(false);
       setPendingPaymentDeleteId(null);
+    }
+  };
+
+  const closeClientModal = () => {
+    setShowClientModal(false);
+    setEditingClient(null);
+  };
+
+  const openCreateClientModal = () => {
+    setEditingClient(null);
+    setShowClientModal(true);
+  };
+
+  const openEditClientModal = (clientId: string) => {
+    const client = centerClients.find(candidate => candidate.id === clientId);
+    if (!client) {
+      triggerToast('Client introuvable dans ce centre.', 'error');
+      return;
+    }
+    setEditingClient(client);
+    setShowClientModal(true);
+  };
+
+  const requestClientStatusChange = (clientIds: string[], status: ClientStatus) => {
+    const scopedIds = clientIds.filter(clientId => centerClients.some(client => client.id === clientId));
+    if (scopedIds.length === 0) {
+      triggerToast('Aucun client valide selectionne.', 'error');
+      return;
+    }
+    setPendingClientAction({ kind: 'status', clientIds: Array.from(new Set(scopedIds)), status });
+  };
+
+  const requestClientDelete = (clientIds: string[]) => {
+    const scopedIds = clientIds.filter(clientId => centerClients.some(client => client.id === clientId));
+    if (scopedIds.length === 0) {
+      triggerToast('Aucun client valide selectionne.', 'error');
+      return;
+    }
+    setPendingClientAction({ kind: 'delete', clientIds: Array.from(new Set(scopedIds)) });
+  };
+
+  const confirmClientAction = () => {
+    if (!pendingClientAction || confirmingClientAction) return;
+    setConfirmingClientAction(true);
+
+    try {
+      const actionIds = new Set(pendingClientAction.clientIds);
+      const timestamp = new Date().toISOString();
+
+      if (pendingClientAction.kind === 'delete') {
+        onUpdateClients(clients.filter(client => !(actionIds.has(client.id) && client.centerId === centerId)));
+        if (selectedClientId && actionIds.has(selectedClientId)) {
+          setSelectedClientId(null);
+        }
+        triggerToast(
+          actionIds.size + ' client' + (actionIds.size > 1 ? 's' : '') + ' supprime' + (actionIds.size > 1 ? 's' : '') + '.',
+          'success',
+          'deleted',
+          'Client supprime'
+        );
+      } else {
+        onUpdateClients(clients.map(client => {
+          if (!actionIds.has(client.id) || client.centerId !== centerId) return client;
+          const nextClient: Client = {
+            ...client,
+            status: pendingClientAction.status,
+            updatedAt: timestamp,
+          };
+          if (pendingClientAction.status === 'suspended') {
+            nextClient.suspendedAt = timestamp;
+          }
+          return nextClient;
+        }));
+        triggerToast(
+          pendingClientAction.status === 'suspended' ? 'Client suspendu avec succes.' : 'Client reactive avec succes.',
+          'success',
+          'updated',
+          pendingClientAction.status === 'suspended' ? 'Client suspendu' : 'Client reactive'
+        );
+      }
+    } finally {
+      setConfirmingClientAction(false);
+      setPendingClientAction(null);
     }
   };
 
@@ -255,14 +369,11 @@ export function CenterManagerViews({
     sportGoals?: string[];
     avatarUrl?: string;
   }) => {
-    const newClient: Client = {
-      id: `cli-${Date.now()}`,
+    const baseFields = {
       firstName: clientData.firstName,
       lastName: clientData.lastName,
       email: clientData.email,
       phone: clientData.phone,
-      centerId: centerId,
-      createdAt: getTodayDateString(),
       notes: clientData.notes || undefined,
       gender: clientData.gender,
       dob: clientData.dob || undefined,
@@ -272,14 +383,40 @@ export function CenterManagerViews({
       emergencyContactPhone: clientData.emergencyContactPhone || undefined,
       medicalConditions: clientData.medicalConditions || undefined,
       sportGoals: clientData.sportGoals || [],
-      avatarUrl: clientData.avatarUrl || undefined
+      avatarUrl: clientData.avatarUrl || undefined,
+      updatedAt: new Date().toISOString()
+    };
+
+    if (editingClient) {
+      if (editingClient.centerId !== centerId) {
+        triggerToast('Ce client ne peut pas etre modifie depuis ce centre.', 'error');
+        return;
+      }
+
+      const updatedClient: Client = {
+        ...editingClient,
+        ...baseFields,
+        status: editingClient.status || 'active'
+      };
+
+      onUpdateClients(clients.map(client => client.id === editingClient.id ? updatedClient : client));
+      closeClientModal();
+      triggerToast('Fiche de ' + updatedClient.firstName + ' ' + updatedClient.lastName + ' mise a jour.', 'success', 'updated', 'Client modifie');
+      return;
+    }
+
+    const newClient: Client = {
+      id: 'cli-' + Date.now(),
+      ...baseFields,
+      centerId,
+      createdAt: getTodayDateString(),
+      status: 'active'
     };
 
     onUpdateClients([...clients, newClient]);
-    setShowClientModal(false);
-    triggerToast(`Adhérent ${newClient.firstName} ${newClient.lastName} enregistré avec succès !`);
+    closeClientModal();
+    triggerToast('Adherent ' + newClient.firstName + ' ' + newClient.lastName + ' enregistre avec succes !');
   };
-
   // 2. Appointment booking actions
   const handleAptSubmit = async (aptData: {
     clientId: string;
@@ -578,6 +715,22 @@ export function CenterManagerViews({
         }}
         onConfirm={confirmPaymentDelete}
       />
+      <ProfessionalConfirmDialog
+        open={Boolean(pendingClientAction)}
+        title={pendingClientActionTitle}
+        description={pendingClientActionDescription}
+        confirmLabel={pendingClientAction?.kind === 'delete' ? 'Supprimer' : pendingClientAction?.status === 'suspended' ? 'Suspendre' : 'Reactiver'}
+        cancelLabel="Annuler"
+        tone={pendingClientAction?.kind === 'delete' ? 'danger' : 'warning'}
+        loading={confirmingClientAction}
+        id="center-manager-client-confirm-dialog"
+        onCancel={() => {
+          if (!confirmingClientAction) {
+            setPendingClientAction(null);
+          }
+        }}
+        onConfirm={confirmClientAction}
+      />
 
       {/* Top Header Location Banner */}
       <ManagerTopBanner currentCenter={currentCenter} />
@@ -628,7 +781,7 @@ export function CenterManagerViews({
                 onCompleteAppointment={handleCompleteAppointment}
                 onCancelAppointment={handleCancelAppointment}
                 onOpenTab={setActiveSubTab}
-                onRegisterClientClick={() => setShowClientModal(true)}
+                onRegisterClientClick={openCreateClientModal}
                 onBookAppointmentClick={() => setShowAptModal(true)}
                 onLogPaymentClick={() => setShowPaymentModal(true)}
                 onLogMeasurementsClick={() => setShowMeasurementModal(true)}
@@ -661,7 +814,10 @@ export function CenterManagerViews({
                 clients={clients}
                 clientPackages={clientPackages}
                 onSelectClient={setSelectedClientId}
-                onRegisterClientClick={() => setShowClientModal(true)}
+                onEditClient={openEditClientModal}
+                onUpdateClientStatus={requestClientStatusChange}
+                onDeleteClients={requestClientDelete}
+                onRegisterClientClick={openCreateClientModal}
               />
             )}
 
@@ -720,14 +876,16 @@ export function CenterManagerViews({
 
       {showClientModal && (
         <ClientModal
-          onClose={() => setShowClientModal(false)}
+          onClose={closeClientModal}
           onSubmit={handleClientSubmit}
+          initialClient={editingClient || undefined}
+          mode={editingClient ? 'edit' : 'create'}
         />
       )}
 
       {showAptModal && (
         <AppointmentModal
-          clients={centerClients}
+          clients={centerActiveClients}
           services={centerServices}
           appointments={appointments.filter(appointment => appointment.centerId === centerId)}
           centerId={centerId}

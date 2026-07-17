@@ -5,9 +5,12 @@
 
 import React, { useState } from 'react';
 import { User, Activity, ShieldAlert, Sparkles, Heart, AlertTriangle } from 'lucide-react';
+import { Client } from '../../../types';
 
 interface ClientModalProps {
   onClose: () => void;
+  initialClient?: Client;
+  mode?: 'create' | 'edit';
   onSubmit: (clientData: {
     firstName: string;
     lastName: string;
@@ -28,29 +31,29 @@ interface ClientModalProps {
 
 type TabId = 'general' | 'profile' | 'health';
 
-export function ClientModal({ onClose, onSubmit }: ClientModalProps) {
+export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' }: ClientModalProps) {
   const [activeTab, setActiveTab] = useState<TabId>('general');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' } | null>(null);
 
   // Tab 1: General States
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [gender, setGender] = useState<'H' | 'F'>('F');
-  const [dob, setDob] = useState('');
-  const [profession, setProfession] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
+  const [firstName, setFirstName] = useState(initialClient?.firstName || '');
+  const [lastName, setLastName] = useState(initialClient?.lastName || '');
+  const [phone, setPhone] = useState(initialClient?.phone || '');
+  const [email, setEmail] = useState(initialClient?.email || '');
+  const [gender, setGender] = useState<'H' | 'F'>(initialClient?.gender || 'F');
+  const [dob, setDob] = useState(initialClient?.dob || '');
+  const [profession, setProfession] = useState(initialClient?.profession || '');
+  const [avatarUrl, setAvatarUrl] = useState(initialClient?.avatarUrl || '');
 
   // Tab 2: Profile & Goals States
-  const [bloodType, setBloodType] = useState('O+');
-  const [notes, setNotes] = useState('');
-  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+  const [bloodType, setBloodType] = useState(initialClient?.bloodType || 'O+');
+  const [notes, setNotes] = useState(initialClient?.notes || '');
+  const [selectedGoals, setSelectedGoals] = useState<string[]>(initialClient?.sportGoals || []);
 
   // Tab 3: Health & Emergency States
-  const [medicalConditions, setMedicalConditions] = useState('');
-  const [emergencyContactName, setEmergencyContactName] = useState('');
-  const [emergencyContactPhone, setEmergencyContactPhone] = useState('');
+  const [medicalConditions, setMedicalConditions] = useState(initialClient?.medicalConditions || '');
+  const [emergencyContactName, setEmergencyContactName] = useState(initialClient?.emergencyContactName || '');
+  const [emergencyContactPhone, setEmergencyContactPhone] = useState(initialClient?.emergencyContactPhone || '');
 
   const goalOptions = [
     'Perte de poids',
@@ -135,9 +138,9 @@ export function ClientModal({ onClose, onSubmit }: ClientModalProps) {
         <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
           <div>
             <h4 className="font-bold text-slate-800 text-sm font-display flex items-center gap-1.5">
-              <Sparkles className="h-4 w-4 text-[#ff5757]" /> Fiche Nouvel Adhérent
+              <Sparkles className="h-4 w-4 text-[#ff5757]" /> {mode === 'edit' ? 'Modifier la fiche adherent' : 'Fiche nouvel adherent'}
             </h4>
-            <p className="text-[10px] text-slate-400 font-medium">Configurez le profil complet du membre.</p>
+            <p className="text-[10px] text-slate-400 font-medium">{mode === 'edit' ? 'Mettez a jour les informations du membre.' : 'Configurez le profil complet du membre.'}</p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer transition-colors">✕</button>
         </div>
@@ -445,7 +448,7 @@ export function ClientModal({ onClose, onSubmit }: ClientModalProps) {
                 onClick={handleSubmit}
                 className="px-6 py-2 bg-[#ff5757] hover:bg-[#e04646] text-white font-bold rounded-xl cursor-pointer transition-premium shadow-md shadow-red-100"
               >
-                Enregistrer l'Adhérent
+                {mode === 'edit' ? 'Enregistrer les modifications' : "Enregistrer l'Adherent"}
               </button>
             )}
           </div>

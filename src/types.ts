@@ -46,6 +46,8 @@ export interface Service {
   description: string;
 }
 
+export type ClientStatus = 'active' | 'suspended';
+
 export interface Client {
   id: string;
   firstName: string;
@@ -54,6 +56,9 @@ export interface Client {
   phone: string;
   centerId: string;
   createdAt: string;
+  status?: ClientStatus;
+  updatedAt?: string;
+  suspendedAt?: string;
   notes?: string;
   gender?: 'H' | 'F';
   dob?: string;
