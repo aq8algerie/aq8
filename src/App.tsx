@@ -1064,13 +1064,13 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => navigate('home')}
-                className="inline-flex rounded-xl bg-white px-3 py-2 shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                className="inline-flex rounded-xl p-0 transition-premium hover:opacity-85 cursor-pointer"
                 aria-label="Retour a l'accueil AQ8 Algerie"
               >
                 <img
                   src="/images/logo.png"
                   alt="AQ8 Algerie"
-                  className="h-14 w-auto max-w-[220px] object-contain"
+                  className="h-14 w-auto max-w-[220px] object-contain brightness-0 invert drop-shadow-sm"
                 />
               </button>
               <p className="text-xs text-slate-400 leading-relaxed">
