@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Clock, MapPin, Users } from "lucide-react";
+import { ArrowRight, Clock, Users } from "lucide-react";
 import { Center } from "../../src/types";
 
 interface HomeCentersPreviewProps {
@@ -68,14 +68,6 @@ export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {
             </div>
           </article>
         ))}
-      </div>
-
-      <div className="flex flex-col gap-3 border-l-2 border-[#ff5757] bg-slate-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="font-display text-base font-bold text-[#242424]">Centres synchronises avec le CRM</h3>
-          <p className="mt-1 text-sm font-medium text-slate-600">Les centres actifs apparaissent sur le site public, les centres suspendus restent masques.</p>
-        </div>
-        <MapPin className="hidden h-5 w-5 text-[#ff5757] sm:block" />
       </div>
     </section>
   );
