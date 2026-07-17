@@ -3,8 +3,8 @@ import { ArrowRight, Calendar, ShieldCheck } from "lucide-react";
 
 export function HomeHero() {
   return (
-    <section className="grid overflow-hidden rounded-lg border border-slate-200 bg-white lg:min-h-[620px] lg:grid-cols-12">
-      <div className="flex items-center px-5 py-12 sm:px-8 sm:py-16 lg:col-span-6 lg:px-12">
+    <section className="grid overflow-hidden rounded-lg border border-slate-200 bg-white lg:grid-cols-12">
+      <div className="flex items-center bg-white px-5 py-10 sm:px-8 sm:py-12 lg:col-span-6 lg:px-12 lg:py-14">
         <div className="max-w-2xl space-y-8">
           <div className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-[#242424]">
             <ShieldCheck className="h-4 w-4 text-[#ff5757]" />
@@ -48,13 +48,15 @@ export function HomeHero() {
         </div>
       </div>
 
-      <div className="relative min-h-[360px] bg-slate-100 sm:min-h-[460px] lg:col-span-6 lg:min-h-full">
-        <img
-          src="/images/aq8algerie.webp"
-          alt="Seance AQ8 dans un centre premium en Algerie"
-          className="h-full w-full object-cover"
-          referrerPolicy="no-referrer"
-        />
+      <div className="flex items-center bg-white px-5 pb-6 sm:px-8 sm:pb-8 lg:col-span-6 lg:p-8 lg:pl-0">
+        <div className="relative h-[260px] w-full overflow-hidden rounded-md bg-white sm:h-[320px] lg:h-[420px]">
+          <img
+            src="/images/aq8algerie.webp"
+            alt="Seance AQ8 dans un centre premium en Algerie"
+            className="h-full w-full object-cover"
+            referrerPolicy="no-referrer"
+          />
+        </div>
       </div>
     </section>
   );
