@@ -22,6 +22,11 @@ export const staticPageSeo: Record<string, Omit<PageSeo, 'canonicalUrl'>> = {
     description: "Découvrez AQ8 Algérie : électrostimulation, Wonder, remise en forme et accompagnement minceur dans nos centres. Trouvez le centre le plus proche.",
     keywords: ["AQ8 Algérie", "électrostimulation Algérie", "EMS Algérie", "Wonder Algérie", "remise en forme Alger", "fitness Alger", "minceur Algérie"]
   },
+  about: {
+    title: "A propos - AQ8 Algerie",
+    description: "Decouvrez AQ8 Algerie, son approche premium de la remise en forme technologique, ses centres, ses seances AQ8 EMS et Wonder.",
+    keywords: ["a propos AQ8 Algerie", "AQ8 Algerie", "centres AQ8", "EMS Algerie", "Wonder Algerie"]
+  },
   aq8: {
     title: "AQ8 EMS - Électrostimulation sans fil en Algérie",
     description: "Découvrez AQ8 EMS, une technologie d’électrostimulation encadrée pour la tonification musculaire, la remise en forme et le suivi personnalisé.",
@@ -53,7 +58,7 @@ export function getSeoForPage(route: string): PageSeo {
   const staticSeo = staticPageSeo[route] || staticPageSeo.home;
   return {
     ...staticSeo,
-    canonicalUrl: `${siteConfig.url}${route === 'home' ? '/' : `/${route}`}`
+    canonicalUrl: `${siteConfig.url}${route === 'home' ? '/' : route === 'about' ? '/a-propos' : `/${route}`}`
   };
 }
 

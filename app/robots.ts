@@ -11,6 +11,7 @@ export default function robots() {
         userAgent: '*',
         allow: [
           '/',
+          '/a-propos',
           '/#/aq8',
           '/#/wonder',
           '/#/centers',

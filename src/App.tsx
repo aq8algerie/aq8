@@ -23,6 +23,7 @@ import {
   Zap,
   Flame,
   CheckCircle,
+  ChevronDown,
   HelpCircle,
   RefreshCw,
   Sparkles,
@@ -81,7 +82,8 @@ import {
   PublicCenters,
   PublicCenterDetail,
   PublicFAQ,
-  PublicContact
+  PublicContact,
+  PublicAbout
 } from './components/PublicViews';
 
 import { saveDocument, syncCollection as syncFirestoreCollection } from './lib/firestoreRepository';
@@ -369,7 +371,7 @@ export default function App() {
   }, [crmRole, crmCenterId]);
 
   // 2. ROUTING & NAVIGATION STATE
-  // 'home' | 'aq8' | 'wonder' | 'centers' | 'center-detail' | 'faq' | 'contact' | 'login' | 'crm'
+  // 'home' | 'about' | 'aq8' | 'wonder' | 'centers' | 'center-detail' | 'faq' | 'contact' | 'login' | 'crm'
   const [currentRoute, setCurrentRoute] = useState<string>('home');
   const [selectedCenterId, setSelectedCenterId] = useState<string>('center-1');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -394,6 +396,9 @@ export default function App() {
         const cleanPath = path === '/' ? 'home' : path.replace(/^\//, '');
         const validRoutes: Record<string, string> = {
           'home': 'home',
+          'a-propos': 'about',
+          'apropos': 'about',
+          'about': 'about',
           'aq8': 'aq8',
           'wonder': 'wonder',
           'centres': 'centers',
@@ -422,6 +427,8 @@ export default function App() {
       targetPath = `/centres/${centerSlug}`;
     } else if (route === 'centers' || route === 'centres') {
       targetPath = '/centres';
+    } else if (route === 'about') {
+      targetPath = '/a-propos';
     } else if (route === 'aq8') {
       targetPath = '/aq8';
     } else if (route === 'wonder') {
@@ -604,19 +611,50 @@ export default function App() {
 
             {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center gap-1 text-xs font-bold text-slate-600">
+              <button
+                onClick={() => navigate('home')}
+                className={`px-3 py-2 rounded-lg transition-premium ${currentRoute === 'home' ? 'text-[#ff5757] bg-rose-50/50' : 'hover:text-[#353535] hover:bg-slate-50'}`}
+              >
+                Accueil
+              </button>
+
+              <div className="group relative">
+                <button
+                  type="button"
+                  className={`flex items-center gap-1 px-3 py-2 rounded-lg transition-premium ${currentRoute === 'aq8' || currentRoute === 'wonder' ? 'text-[#ff5757] bg-rose-50/50' : 'hover:text-[#353535] hover:bg-slate-50'}`}
+                  aria-haspopup="menu"
+                >
+                  Technologie
+                  <ChevronDown className="h-3.5 w-3.5 transition-transform group-hover:rotate-180" />
+                </button>
+
+                <div className="invisible absolute left-0 top-full z-50 mt-2 w-56 rounded-2xl border border-slate-100 bg-white p-2 opacity-0 shadow-xl shadow-slate-900/10 transition-all group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+                  {[
+                    { id: 'aq8', label: 'AQ8 EMS' },
+                    { id: 'wonder', label: 'Wonder Sculpt' }
+                  ].map(link => (
+                    <button
+                      key={link.id}
+                      type="button"
+                      onClick={() => navigate(link.id)}
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition-premium ${currentRoute === link.id ? 'bg-rose-50 text-[#ff5757]' : 'text-slate-600 hover:bg-slate-50 hover:text-[#353535]'}`}
+                    >
+                      {link.label}
+                      <ChevronDown className="h-3.5 w-3.5 -rotate-90 text-slate-300" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {[
-                { id: 'home', label: 'Accueil' },
-                { id: 'aq8', label: 'Technologie AQ8' },
-                { id: 'wonder', label: 'Technologie Wonder' },
+                { id: 'about', label: '\u00c0 propos' },
                 { id: 'centers', label: 'Nos Centres' },
                 { id: 'faq', label: 'FAQ' },
                 { id: 'contact', label: 'Contact' }
               ].map(link => (
                 <button
                   key={link.id}
-                  onClick={() => {
-                    navigate(link.id);
-                  }}
+                  onClick={() => navigate(link.id)}
                   className={`px-3 py-2 rounded-lg transition-premium ${currentRoute === link.id ? 'text-[#ff5757] bg-rose-50/50' : 'hover:text-[#353535] hover:bg-slate-50'}`}
                 >
                   {link.label}
@@ -634,13 +672,6 @@ export default function App() {
                 R&eacute;server
               </button>
               <button
-                onClick={() => handleResetDatabase()}
-                title="Réinitialiser la base de démonstration"
-                className="p-2 text-slate-400 hover:text-[#ff5757] hover:bg-rose-50 rounded-xl transition-premium"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </button>
-              <button
                 onClick={() => navigate('login')}
                 className="px-4 py-2 bg-[#353535] hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-premium shadow-xs flex items-center gap-1.5 cursor-pointer"
               >
@@ -650,12 +681,6 @@ export default function App() {
 
             {/* Mobile menu toggle */}
             <div className="flex md:hidden items-center gap-2">
-              <button
-                onClick={() => handleResetDatabase()}
-                className="p-2 text-slate-400 hover:text-[#ff5757] rounded-xl"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </button>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="p-2 text-slate-600 hover:text-slate-900 rounded-lg focus:outline-none"
@@ -677,12 +702,11 @@ export default function App() {
               </button>
               {[
                 { id: 'home', label: 'Accueil' },
-                { id: 'aq8', label: 'Technologie AQ8' },
-                { id: 'wonder', label: 'Technologie Wonder' },
+                { id: 'about', label: '\u00c0 propos' },
                 { id: 'centers', label: 'Nos Centres' },
                 { id: 'faq', label: 'FAQ' },
                 { id: 'contact', label: 'Contact' },
-                { id: 'login', label: 'Accéder au CRM AQ8' }
+                { id: 'login', label: 'Acc\u00e9der au CRM AQ8' }
               ].map(link => (
                 <button
                   key={link.id}
@@ -696,6 +720,25 @@ export default function App() {
                   {link.label}
                 </button>
               ))}
+
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-2">
+                <div className="px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Technologie</div>
+                {[
+                  { id: 'aq8', label: 'AQ8 EMS' },
+                  { id: 'wonder', label: 'Wonder Sculpt' }
+                ].map(link => (
+                  <button
+                    key={link.id}
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      navigate(link.id);
+                    }}
+                    className={`w-full rounded-xl px-3 py-2.5 text-left ${currentRoute === link.id ? 'bg-white text-[#ff5757] shadow-sm' : 'text-slate-600 hover:bg-white'}`}
+                  >
+                    {link.label}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </header>
@@ -719,6 +762,8 @@ export default function App() {
                 centers={centers}
               />
             )}
+
+            {currentRoute === 'about' && <PublicAbout />}
 
             {currentRoute === 'aq8' && <PublicAQ8 />}
 

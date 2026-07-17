@@ -12,6 +12,7 @@ export default async function sitemap() {
   // Static routes
   const staticRoutes = [
     { url: `${baseUrl}/`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 1.0 },
+    { url: `${baseUrl}/a-propos`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.7 },
     { url: `${baseUrl}/#/aq8`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.8 },
     { url: `${baseUrl}/#/wonder`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.8 },
     { url: `${baseUrl}/#/centers`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.9 },
