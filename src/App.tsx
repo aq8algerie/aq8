@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { Suspense, useState, useEffect, useRef } from 'react';
+import React, { Suspense, useState, useEffect, useMemo, useRef } from 'react';
 import {
   Activity,
   Calendar,
@@ -86,6 +86,7 @@ import {
 } from './components/PublicViews';
 
 import { saveDocument, syncCollection as syncFirestoreCollection } from './lib/firestoreRepository';
+import { getPublicCenters } from './lib/centerVisibility';
 
 const CrmPortal = React.lazy(() =>
   import('./components/CrmPortal').then(module => ({ default: module.CrmPortal }))
@@ -373,7 +374,9 @@ export default function App() {
   // 'home' | 'about' | 'aq8' | 'wonder' | 'centers' | 'center-detail' | 'contact' | 'login' | 'crm'
   const [currentRoute, setCurrentRoute] = useState<string>('home');
   const [selectedCenterId, setSelectedCenterId] = useState<string>('center-1');
+  const [selectedCenterSlug, setSelectedCenterSlug] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const publicCenters = useMemo(() => getPublicCenters(centers), [centers]);
 
   // Path-based routing using HTML5 History API (popstate)
   useEffect(() => {
@@ -389,14 +392,11 @@ export default function App() {
       const centerMatch = path.match(/^\/centres\/([a-zA-Z0-9_-]+)/);
       if (centerMatch) {
         const slug = centerMatch[1];
-        const allCenters = AQ8Database.getCenters();
+        const allCenters = getPublicCenters(AQ8Database.getCenters());
         const found = allCenters.find(c => c.slug === slug);
-        if (found) {
-          setSelectedCenterId(found.id);
-          setCurrentRoute('center-detail');
-        } else {
-          setCurrentRoute('home');
-        }
+        setSelectedCenterSlug(slug);
+        setSelectedCenterId(found?.id || '');
+        setCurrentRoute('center-detail');
       } else {
         const cleanPath = path === '/' ? 'home' : path.replace(/^\//, '');
         const validRoutes: Record<string, string> = {
@@ -423,6 +423,12 @@ export default function App() {
 
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, []);
+
+  useEffect(() => {
+    if (currentRoute !== 'center-detail' || !selectedCenterSlug) return;
+    const center = publicCenters.find(candidate => candidate.slug === selectedCenterSlug);
+    setSelectedCenterId(center?.id || '');
+  }, [currentRoute, publicCenters, selectedCenterSlug]);
 
   // Programmatic navigation helper
   const navigate = (route: string, centerSlug?: string) => {
@@ -754,12 +760,12 @@ export default function App() {
               <PublicHome
                 onNavigate={navigate}
                 onSelectCenter={(id) => {
-                  const center = centers.find(c => c.id === id);
+                  const center = publicCenters.find(c => c.id === id);
                   if (center && center.slug) {
                     navigate('center-detail', center.slug);
                   }
                 }}
-                centers={centers}
+                centers={publicCenters}
               />
             )}
 
@@ -769,19 +775,20 @@ export default function App() {
 
             {currentRoute === 'wonder' && <PublicWonder />}
 
-            {currentRoute === 'centers' && <PublicCenters />}
+            {currentRoute === 'centers' && <PublicCenters centers={publicCenters} />}
 
             {currentRoute === 'center-detail' && (
               <PublicCenterDetail
                 centerId={selectedCenterId}
-                centers={centers}
+                centerSlug={selectedCenterSlug}
+                centers={publicCenters}
                 services={services}
                 onNavigate={navigate}
               />
             )}
 
 
-            {currentRoute === 'contact' && <PublicContact centers={centers} />}
+            {currentRoute === 'contact' && <PublicContact centers={publicCenters} />}
 
             {currentRoute === 'login' && (
               <Suspense fallback={<CrmLoadingState />}>
@@ -859,7 +866,7 @@ export default function App() {
                       className="bg-white/10 text-white rounded-md text-[10px] px-2 py-1 focus:outline-none border border-white/10"
                     >
                       <option value="" disabled className="text-slate-800">-- Choisir un centre --</option>
-                      {centers.map(c => (
+                      {publicCenters.map(c => (
                         <option key={c.id} value={c.id} className="text-slate-800">{c.name} ({c.city})</option>
                       ))}
                     </select>

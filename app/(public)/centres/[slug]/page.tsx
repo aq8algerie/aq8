@@ -20,6 +20,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { getCenterBySlug, getCenters } from "../../../../lib/centers";
+import { Center } from "../../../../src/types";
+import { getPublicCenterBadgeLabel, isCenterPubliclyVisible } from "../../../../src/lib/centerVisibility";
 import { generateCenterSeo } from "../../../../lib/seo";
 import { SeoJsonLd } from "../../../../components/seo/SeoJsonLd";
 import { CenterBookingForm } from "../../../../components/centres/CenterBookingForm";
@@ -28,6 +30,7 @@ interface PageProps {
   params: {
     slug: string;
   };
+  center?: Center;
 }
 
 function getServiceLabel(service: string) {
@@ -57,7 +60,7 @@ function getWhatsAppUrl(phone?: string) {
 }
 
 export async function generateStaticParams() {
-  const centers = getCenters();
+  const centers = getCenters().filter(isCenterPubliclyVisible);
 
   return centers.map((center) => ({
     slug: center.slug,
@@ -67,7 +70,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  const center = getCenterBySlug(params.slug);
+  const center = params.slug ? getCenterBySlug(params.slug) : undefined;
 
   if (!center) {
     return {
@@ -90,8 +93,9 @@ export async function generateMetadata({
   };
 }
 
-export default function CenterDetailPage({ params }: PageProps) {
-  const center = getCenterBySlug(params.slug);
+export default function CenterDetailPage({ params, center: providedCenter }: PageProps) {
+  const center = providedCenter || (params.slug ? getCenterBySlug(params.slug) : undefined);
+  const publicBadgeLabel = center ? getPublicCenterBadgeLabel(center) : "";
 
   if (!center) {
     return (
@@ -152,10 +156,10 @@ export default function CenterDetailPage({ params }: PageProps) {
                   AQ8 {center.city}
                 </span>
 
-                {center.status && (
+                {publicBadgeLabel && (
                   <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-300">
                     <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                    {center.status}
+                    {publicBadgeLabel}
                   </span>
                 )}
               </div>

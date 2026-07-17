@@ -8,6 +8,8 @@ import Link from "next/link";
 import { ArrowRight, MapPin, Sparkles } from "lucide-react";
 import { getSeoForPage } from "../../../lib/seo";
 import { getCenters } from "../../../lib/centers";
+import { Center } from "../../../src/types";
+import { getPublicCenters } from "../../../src/lib/centerVisibility";
 import { CentresList } from "../../../components/centres/CentresList";
 
 export const metadata: Metadata = {
@@ -15,8 +17,8 @@ export const metadata: Metadata = {
   description: getSeoForPage("centers").description,
 };
 
-export default function CentresPage() {
-  const centers = getCenters();
+export default function CentresPage({ centers: providedCenters }: { centers?: Center[] } = {}) {
+  const centers = getPublicCenters(providedCenters || getCenters());
 
   return (
     <main className="bg-white">

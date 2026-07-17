@@ -4,7 +4,7 @@
  */
 
 // Schema mapping for sitemap dynamically (for Next.js App Router migration)
-import { AQ8Database } from '../src/mockData';
+import { getCenters } from '../lib/centers';
 
 export default async function sitemap() {
   const baseUrl = 'https://www.aq8algerie-dz.com';
@@ -20,7 +20,7 @@ export default async function sitemap() {
   ];
 
   // Dynamic Center routes based on our data
-  const centers = AQ8Database.getCenters();
+  const centers = getCenters();
   const dynamicCenterRoutes = centers.map((center) => ({
     url: `${baseUrl}/#/centres/${center.slug}`,
     lastModified: new Date(),

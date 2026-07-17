@@ -5,14 +5,15 @@
 
 import { AQ8Database } from '../src/mockData';
 import { Center } from '../src/types';
+import { getPublicCenters } from '../src/lib/centerVisibility';
 
-export const centers = AQ8Database.getCenters();
+export const centers = getPublicCenters(AQ8Database.getCenters());
 
 export function getCenters(): Center[] {
-  return AQ8Database.getCenters();
+  return getPublicCenters(AQ8Database.getCenters());
 }
 
 export function getCenterBySlug(slug: string): Center | undefined {
-  return AQ8Database.getCenters().find(c => c.slug === slug);
+  return getPublicCenters(AQ8Database.getCenters()).find(c => c.slug === slug);
 }
 

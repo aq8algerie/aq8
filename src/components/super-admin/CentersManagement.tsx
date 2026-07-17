@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Briefcase, Clock, Edit2, LayoutGrid, List, Mail, MapPin, Phone, Plus, Sliders, Trash2 } from 'lucide-react';
+import { Briefcase, Clock, Edit2, LayoutGrid, List, Mail, MapPin, PauseCircle, Phone, PlayCircle, Plus, Sliders, Trash2 } from 'lucide-react';
 import { Center, Client } from '../../types';
+import { getCenterOperationalStatus, getCenterStatusLabel, isCenterSuspended } from '../../lib/centerVisibility';
 
 type CentersManagementProps = {
   centers: Center[];
@@ -8,6 +9,7 @@ type CentersManagementProps = {
   onAddCenter: () => void;
   onEditCenter: (center: Center) => void;
   onDeleteCenter: (centerId: string) => void;
+  onToggleCenterStatus: (centerId: string) => void;
 };
 
 export function CentersManagement({
@@ -15,7 +17,8 @@ export function CentersManagement({
   clients,
   onAddCenter,
   onEditCenter,
-  onDeleteCenter
+  onDeleteCenter,
+  onToggleCenterStatus
 }: CentersManagementProps) {
   const [centersViewMode, setCentersViewMode] = useState<'grid' | 'list'>('grid');
   const [gridLimit, setGridLimit] = useState<number>(3);
@@ -71,15 +74,13 @@ export function CentersManagement({
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {centers.slice(0, gridLimit).map(center => {
                   const clientCount = clients.filter(c => c.centerId === center.id).length;
+                  const operationalStatus = getCenterOperationalStatus(center);
+                  const suspended = isCenterSuspended(center);
                   const statusColors: Record<string, string> = {
                     active: 'bg-emerald-50 text-emerald-700 border-emerald-100',
                     maintenance: 'bg-amber-50 text-amber-700 border-amber-100',
-                    construction: 'bg-blue-50 text-blue-700 border-blue-100'
-                  };
-                  const statusLabel: Record<string, string> = {
-                    active: 'Opérationnel',
-                    maintenance: 'En Maintenance',
-                    construction: 'En Construction'
+                    construction: 'bg-blue-50 text-blue-700 border-blue-100',
+                    suspended: 'bg-rose-50 text-rose-700 border-rose-100'
                   };
 
                   return (
@@ -92,8 +93,8 @@ export function CentersManagement({
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           onError={(e) => { (e.target as any).src = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=600&auto=format&fit=crop'; }}
                         />
-                        <span className={`absolute top-3 left-3 border text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${statusColors[center.status || 'active']}`}>
-                          {statusLabel[center.status || 'active']}
+                        <span className={`absolute top-3 left-3 border text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${statusColors[operationalStatus]}`}>
+                          {getCenterStatusLabel(center)}
                         </span>
                       </div>
 
@@ -141,6 +142,17 @@ export function CentersManagement({
                               className="flex-1 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-xl text-[10px] border border-slate-150 transition-premium cursor-pointer text-center"
                             >
                               Modifier
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onToggleCenterStatus(center.id)}
+                              className={`py-1.5 px-3 font-bold rounded-xl text-[10px] border transition-premium cursor-pointer text-center ${
+                                suspended
+                                  ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-100'
+                                  : 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-100'
+                              }`}
+                            >
+                              {suspended ? 'Reactiver' : 'Suspendre'}
                             </button>
                             <button
                               type="button"
@@ -197,15 +209,13 @@ export function CentersManagement({
                         return (
                           <>
                             {pageData.map(center => {
-                              const statusLabel: Record<string, string> = {
-                                active: 'Opérationnel',
-                                maintenance: 'Maintenance',
-                                construction: 'En Construction'
-                              };
+                              const operationalStatus = getCenterOperationalStatus(center);
+                              const suspended = isCenterSuspended(center);
                               const statusClass: Record<string, string> = {
                                 active: 'bg-emerald-50 text-emerald-700',
                                 maintenance: 'bg-amber-50 text-amber-700',
-                                construction: 'bg-blue-50 text-blue-700'
+                                construction: 'bg-blue-50 text-blue-700',
+                                suspended: 'bg-rose-50 text-rose-700'
                               };
 
                               return (
@@ -228,8 +238,8 @@ export function CentersManagement({
                                     </div>
                                   </td>
                                   <td className="p-4">
-                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${statusClass[center.status || 'active']}`}>
-                                      {statusLabel[center.status || 'active']}
+                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${statusClass[operationalStatus]}`}>
+                                      {getCenterStatusLabel(center)}
                                     </span>
                                   </td>
                                   <td className="p-4 text-right">
@@ -241,6 +251,18 @@ export function CentersManagement({
                                         title="Modifier"
                                       >
                                         <Edit2 className="h-3.5 w-3.5" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => onToggleCenterStatus(center.id)}
+                                        className={`p-1.5 rounded-lg transition-premium cursor-pointer ${
+                                          suspended
+                                            ? 'hover:bg-emerald-50 text-emerald-600'
+                                            : 'hover:bg-amber-50 text-amber-600'
+                                        }`}
+                                        title={suspended ? 'Reactiver le centre public' : 'Suspendre du site public'}
+                                      >
+                                        {suspended ? <PlayCircle className="h-3.5 w-3.5" /> : <PauseCircle className="h-3.5 w-3.5" />}
                                       </button>
                                       <button
                                         type="button"

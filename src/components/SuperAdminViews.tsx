@@ -30,6 +30,7 @@ import {
   List
 } from 'lucide-react';
 import { Center, CenterManager, Service, Package, GeneralSettings, Client, ClientPackage, Payment, Appointment } from '../types';
+import { isCenterSuspended } from '../lib/centerVisibility';
 import { CentersManagement } from './super-admin/CentersManagement';
 import { ManagersManagement } from './super-admin/ManagersManagement';
 import { SettingsPanel } from './super-admin/SettingsPanel';
@@ -316,6 +317,19 @@ export function SuperAdminViews({
     }
   };
 
+  const handleToggleCenterStatus = (id: string) => {
+    const updated = centers.map(center => {
+      if (center.id !== id) return center;
+
+      return {
+        ...center,
+        status: isCenterSuspended(center) ? 'active' : 'suspended'
+      };
+    });
+
+    onUpdateCenters(updated);
+  };
+
   // Open Manager Modal
   const openManagerModal = (mgr: CenterManager | null) => {
     if (mgr) {
@@ -476,6 +490,7 @@ export function SuperAdminViews({
           onAddCenter={() => openCenterModal(null)}
           onEditCenter={openCenterModal}
           onDeleteCenter={handleDeleteCenter}
+          onToggleCenterStatus={handleToggleCenterStatus}
         />
       )}
       {/* C. Gestion Managers */}
@@ -965,9 +980,13 @@ export function SuperAdminViews({
                       value={centerStatus} onChange={(e) => setCenterStatus(e.target.value)}
                       className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none"
                     >
-                      <option value="active">Actif / Opérationnel</option>
-                      <option value="maintenance">En Maintenance</option>
-                      <option value="construction">En Construction</option>
+                      {centerStatus && !['active', 'suspended', 'maintenance', 'construction'].includes(centerStatus.trim().toLowerCase()) && (
+                        <option value={centerStatus}>{centerStatus} / visible actuellement</option>
+                      )}
+                      <option value="active">Actif / visible sur le site public</option>
+                      <option value="suspended">Suspendu / masqué du site public</option>
+                      <option value="maintenance">En maintenance / masqué</option>
+                      <option value="construction">En construction / masqué</option>
                     </select>
                   </div>
 
