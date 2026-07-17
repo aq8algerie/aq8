@@ -587,7 +587,7 @@ export default function App() {
       {/* --- SITE PUBLIC HEADER / NAVIGATION BAR --- */}
       {currentRoute !== 'crm' && (
         <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-150 shadow-xs">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             {/* Logo */}
             <button
               type="button"
@@ -598,7 +598,7 @@ export default function App() {
               <img
                 src="/images/logo.png"
                 alt="AQ8 Algerie"
-                className="h-10 w-auto max-w-[145px] object-contain transition-premium group-hover:scale-[1.02] lg:h-11 lg:max-w-[170px]"
+                className="h-14 w-auto max-w-[205px] object-contain transition-premium group-hover:scale-[1.02] sm:h-[3.75rem] sm:max-w-[225px] lg:h-16 lg:max-w-[245px]"
               />
             </button>
 
@@ -1026,7 +1026,7 @@ export default function App() {
                 <img
                   src="/images/logo.png"
                   alt="AQ8 Algerie"
-                  className="h-10 w-auto max-w-[165px] object-contain"
+                  className="h-14 w-auto max-w-[220px] object-contain"
                 />
               </button>
               <p className="text-xs text-slate-400 leading-relaxed">

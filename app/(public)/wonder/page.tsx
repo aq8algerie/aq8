@@ -72,9 +72,16 @@ export default function WonderPage() {
       <div className="mx-auto max-w-7xl space-y-20 px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
         {/* Hero */}
         <section className="relative overflow-hidden rounded-3xl bg-[#353535] px-4 py-10 xs:px-6 xs:py-14 sm:px-10 lg:px-14 lg:py-20 text-white shadow-xl">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,87,87,0.20),transparent_55%)]" />
-          <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#ff5757]/10 blur-3xl" />
-          <div className="absolute -bottom-28 left-10 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
+          <Image
+            src="/images/prestations/wonder-ems.webp"
+            alt="Seance Wonder EMS dans un centre AQ8 Algerie"
+            width={1600}
+            height={900}
+            priority
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-[#202025]/65" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#353535]/90 via-[#353535]/55 to-[#ff5757]/25" />
 
           <div className="relative z-10 mx-auto max-w-4xl text-center flex flex-col items-center justify-center space-y-7">
             <span className="inline-flex items-center gap-2 rounded-full border border-[#ff5757]/30 bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-[#ff5757]">
