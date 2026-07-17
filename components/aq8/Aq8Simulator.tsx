@@ -38,18 +38,16 @@ export function Aq8Simulator() {
   }, [frequency, intensity]);
 
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-[#353535] px-4 py-10 xs:px-6 xs:py-12 sm:px-10 lg:px-12 text-white shadow-xl">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,87,87,0.18),transparent_55%)]" />
-      <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[#ff5757]/10 blur-3xl" />
+    <section className="relative overflow-hidden rounded-lg bg-[#353535] px-4 py-10 xs:px-6 xs:py-12 sm:px-10 lg:px-12 text-white">
 
       <div className="relative z-10 space-y-8 sm:space-y-10">
         <div className="max-w-2xl space-y-3">
-          <span className="inline-flex items-center gap-2 rounded-full border border-[#ff5757]/30 bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-[#ff5757]">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[#ff5757]/30 bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
             <Sliders className="h-3.5 w-3.5" />
             Simulation visuelle
           </span>
 
-          <h2 className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl lg:text-4xl">
+          <h2 className="font-display text-2xl font-bold text-white sm:text-3xl lg:text-4xl">
             Simulateur d’impulsion AQ8 EMS
           </h2>
 
@@ -64,7 +62,7 @@ export function Aq8Simulator() {
           {/* Controls */}
           <div className="space-y-5 xs:space-y-6 lg:col-span-5">
             <div className="space-y-3">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">
+              <label className="block text-xs font-bold uppercase text-slate-400">
                 Zone musculaire
               </label>
 
@@ -74,9 +72,9 @@ export function Aq8Simulator() {
                     key={zone.id}
                     type="button"
                     onClick={() => setMuscleZone(zone.id)}
-                    className={`rounded-xl px-2.5 py-2.5 text-[11px] xs:text-xs font-bold transition-all ${
+                    className={`rounded-md px-2.5 py-2.5 text-[11px] xs:text-xs font-bold transition-all ${
                       muscleZone === zone.id
-                        ? "bg-[#ff5757] text-white shadow-md shadow-[#ff5757]/20"
+                        ? "bg-[#ff5757] text-white"
                         : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
                     }`}
                   >
@@ -149,12 +147,11 @@ export function Aq8Simulator() {
 
           {/* Visual */}
           <div className="lg:col-span-7">
-            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-slate-950 p-4 xs:p-6 shadow-2xl">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,87,87,0.16),transparent_55%)]" />
+            <div className="relative overflow-hidden rounded-lg border border-white/10 bg-slate-950 p-4 xs:p-6">
 
               <div className="relative z-10 flex min-h-[280px] xs:min-h-[320px] flex-col items-center justify-center gap-6 xs:gap-8">
                 <div className="text-center">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[10px] font-bold uppercase text-emerald-300">
                     <Zap className="h-3 w-3" />
                     {intensity > 0 ? "AQ8 actif" : "En attente"}
                   </span>
@@ -183,17 +180,17 @@ export function Aq8Simulator() {
                 </div>
 
                 <div className="grid w-full max-w-lg grid-cols-3 gap-1.5 xs:gap-2 sm:gap-3 text-center">
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-2 xs:p-3 text-slate-400">
+                  <div className="rounded-md border border-white/10 bg-white/5 p-2 xs:p-3 text-slate-400">
                     <p className="font-bold text-white text-xs xs:text-sm">{frequency} Hz</p>
                     <p className="text-[9px] xs:text-[10px] sm:text-xs mt-0.5">Fréquence</p>
                   </div>
 
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-2 xs:p-3 text-slate-400">
+                  <div className="rounded-md border border-white/10 bg-white/5 p-2 xs:p-3 text-slate-400">
                     <p className="font-bold text-white text-xs xs:text-sm">{intensity}%</p>
                     <p className="text-[9px] xs:text-[10px] sm:text-xs mt-0.5">Intensité</p>
                   </div>
 
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-2 xs:p-3 text-slate-400">
+                  <div className="rounded-md border border-white/10 bg-white/5 p-2 xs:p-3 text-slate-400">
                     <p className="font-bold text-white text-xs xs:text-sm">{pulseWidth} µs</p>
                     <p className="text-[9px] xs:text-[10px] sm:text-xs mt-0.5">Impulsion</p>
                   </div>

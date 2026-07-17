@@ -101,7 +101,7 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
     return (
       <main className="bg-white">
         <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 lg:px-8">
-          <div className="space-y-4 rounded-3xl border border-slate-100 bg-slate-50 p-8">
+          <div className="space-y-4 rounded-lg border border-slate-100 bg-slate-50 p-8">
             <h1 className="font-display text-2xl font-bold text-[#353535]">
               Centre introuvable
             </h1>
@@ -113,7 +113,7 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
 
             <Link
               href="/centres"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#353535] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#ff5757]"
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-[#353535] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#ff5757]"
             >
               Voir tous les centres
               <ArrowRight className="h-4 w-4" />
@@ -134,7 +134,7 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
 
       <div className="mx-auto max-w-7xl space-y-12 px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
         {/* Hero */}
-        <section className="relative overflow-hidden rounded-3xl bg-[#353535] text-white shadow-xl">
+        <section className="relative overflow-hidden rounded-lg bg-[#353535] text-white">
           <div className="absolute inset-0">
             <Image
               src={center.imageUrl || "/images/aq8algerie.webp"}
@@ -145,13 +145,12 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
               className="h-full w-full object-cover opacity-35 grayscale-[15%]"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-[#353535] via-[#353535]/90 to-[#353535]/40" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,87,87,0.22),transparent_55%)]" />
           </div>
 
           <div className="relative z-10 grid gap-10 px-6 py-14 sm:px-10 lg:grid-cols-12 lg:px-14 lg:py-20">
             <div className="space-y-7 lg:col-span-8">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#ff5757]/30 bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-[#ff5757]">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#ff5757]/30 bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
                   <MapPin className="h-3.5 w-3.5" />
                   AQ8 {center.city}
                 </span>
@@ -165,7 +164,7 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
               </div>
 
               <div className="space-y-4">
-                <h1 className="font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+                <h1 className="font-display text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">
                   {center.name}
                 </h1>
 
@@ -176,13 +175,13 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
               </div>
 
               <div className="grid gap-3 text-sm font-medium text-slate-300 sm:grid-cols-2">
-                <div className="flex items-start gap-2 rounded-2xl border border-white/10 bg-white/[0.06] p-4">
+                <div className="flex items-start gap-2 rounded-md border border-white/10 bg-white/[0.06] p-4">
                   <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#ff5757]" />
                   <span>{center.address}</span>
                 </div>
 
                 {center.phone && (
-                  <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.06] p-4">
+                  <div className="flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.06] p-4">
                     <Phone className="h-4 w-4 shrink-0 text-[#ff5757]" />
                     <span>{center.phone}</span>
                   </div>
@@ -192,7 +191,7 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
               <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap">
                 <a
                   href="#booking-form-section"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#ff5757] px-6 py-3 text-sm font-bold text-white shadow-md shadow-[#ff5757]/20 transition-all hover:-translate-y-0.5 hover:bg-[#e94949]"
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff5757] px-6 py-3 text-sm font-bold text-white transition-all hover:bg-[#e94949]"
                 >
                   <Calendar className="h-4 w-4" />
                   Réserver une séance
@@ -200,7 +199,7 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
 
                 <a
                   href="#contact-cta-section"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/10 px-6 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-white/15"
+                  className="inline-flex items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-white/15"
                 >
                   <MessageCircle className="h-4 w-4 text-[#ff5757]" />
                   Contacter le centre
@@ -214,9 +213,9 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
           {/* Left column */}
           <div className="space-y-8 lg:col-span-3 text-slate-700">
             {/* Local SEO */}
-            <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8">
+            <section className="rounded-lg border border-slate-100 bg-white p-6 sm:p-8">
               <div className="space-y-4">
-                <span className="inline-flex items-center gap-2 rounded-full bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-[#ff5757]">
+                <span className="inline-flex items-center gap-2 rounded-full bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
                   <Sparkles className="h-3.5 w-3.5" />
                   Centre AQ8 à {center.city}
                 </span>
@@ -247,9 +246,9 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
 
             {/* Important notes */}
             {center.importantNotes && center.importantNotes.length > 0 && (
-              <section className="rounded-3xl border border-slate-100 border-l-4 border-l-[#ff5757] bg-white p-6 shadow-sm">
+              <section className="rounded-lg border border-slate-100 border-l-4 border-l-[#ff5757] bg-white p-6">
                 <div className="mb-5 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ff5757]/10 text-[#ff5757]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#ff5757]/10 text-[#ff5757]">
                     <Info className="h-5 w-5" />
                   </div>
 
@@ -262,7 +261,7 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
                   {center.importantNotes.map((note, index) => (
                     <div
                       key={`${note}-${index}`}
-                      className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4"
+                      className="flex items-start gap-3 rounded-md bg-slate-50 p-4"
                     >
                       <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#ff5757]" />
                       <p className="text-sm font-medium leading-relaxed text-slate-600">
@@ -287,9 +286,9 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+                <div className="rounded-lg border border-slate-100 bg-white p-6">
                   <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-[#353535]">
+                    <h3 className="text-sm font-bold uppercase text-[#353535]">
                       Horaires hommes
                     </h3>
                     <span className="rounded-full bg-[#ff5757]/10 px-2 py-1 text-[10px] font-bold uppercase text-[#ff5757]">
@@ -316,9 +315,9 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
                   )}
                 </div>
 
-                <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+                <div className="rounded-lg border border-slate-100 bg-white p-6">
                   <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-[#353535]">
+                    <h3 className="text-sm font-bold uppercase text-[#353535]">
                       Horaires femmes
                     </h3>
                     <span className="rounded-full bg-teal-50 px-2 py-1 text-[10px] font-bold uppercase text-teal-600">
@@ -362,9 +361,9 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
                 {center.services.map((service) => (
                   <article
                     key={service}
-                    className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
+                    className="rounded-lg border border-slate-100 bg-white p-6 transition-all"
                   >
-                    <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#ff5757]/10 text-[#ff5757]">
+                    <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-md bg-[#ff5757]/10 text-[#ff5757]">
                       <CheckCircle2 className="h-5 w-5" />
                     </div>
 
@@ -397,7 +396,7 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
                   {center.equipment.map((item, index) => (
                     <div
                       key={`${item}-${index}`}
-                      className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-slate-100 bg-white p-4 text-center shadow-sm"
+                      className="flex flex-col items-center justify-center gap-3 rounded-lg border border-slate-100 bg-white p-4 text-center"
                     >
                       <div className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-100 bg-slate-50 text-lg">
                         {index === 0
@@ -419,9 +418,9 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
             )}
 
             {/* Cancellation */}
-            <section className="rounded-3xl border border-rose-100 bg-rose-50/60 p-6">
+            <section className="rounded-lg border border-rose-100 bg-rose-50/60 p-6">
               <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ff5757]/10 text-[#ff5757]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#ff5757]/10 text-[#ff5757]">
                   <ShieldAlert className="h-5 w-5" />
                 </div>
 
@@ -436,7 +435,7 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
                   votre rendez-vous au moins 1 heure à l’avance.
                 </p>
 
-                <p className="rounded-2xl border border-[#ff5757]/10 bg-[#ff5757]/5 p-4 font-semibold text-[#ff5757]">
+                <p className="rounded-md border border-[#ff5757]/10 bg-[#ff5757]/5 p-4 font-semibold text-[#ff5757]">
                   En cas d’absence non annulée dans les délais, un crédit peut
                   être déduit du forfait en cours.
                 </p>
@@ -464,12 +463,12 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
         {/* Contact CTA */}
         <section
           id="contact-cta-section"
-          className="scroll-mt-24 rounded-3xl bg-[#353535] p-6 text-white shadow-xl sm:p-8"
+          className="scroll-mt-24 rounded-lg bg-[#353535] p-6 text-white sm:p-8"
         >
           <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
             <div className="space-y-5">
               <div className="space-y-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#ff5757]">
+                <span className="text-xs font-bold uppercase text-[#ff5757]">
                   Contact rapide
                 </span>
 
@@ -507,7 +506,7 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
               <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap">
                 <a
                   href="#booking-form-section"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#ff5757] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#e94949]"
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff5757] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#e94949]"
                 >
                   <Calendar className="h-4 w-4" />
                   Réserver ma séance
@@ -519,7 +518,7 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
                       href={getWhatsAppUrl(center.phone)}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-500"
+                      className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-500"
                     >
                       <MessageCircle className="h-4 w-4" />
                       WhatsApp
@@ -527,7 +526,7 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
 
                     <a
                       href={`tel:${center.phone}`}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/10 px-5 py-3 text-sm font-bold text-white transition-all hover:bg-white/15"
+                      className="inline-flex items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-5 py-3 text-sm font-bold text-white transition-all hover:bg-white/15"
                     >
                       <Phone className="h-4 w-4" />
                       Appeler
@@ -537,7 +536,7 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
               </div>
             </div>
 
-            <div className="h-64 overflow-hidden rounded-3xl border border-white/10 bg-slate-950 shadow-inner">
+            <div className="h-64 overflow-hidden rounded-lg border border-white/10 bg-slate-950">
               <iframe
                 title={`Carte de ${center.name}`}
                 src={mapUrl}

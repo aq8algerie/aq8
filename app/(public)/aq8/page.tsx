@@ -64,7 +64,7 @@ export default function Aq8Page() {
     <main className="bg-white">
       <div className="mx-auto max-w-7xl space-y-20 px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
         {/* Hero */}
-        <section className="relative overflow-hidden rounded-3xl bg-[#353535] px-4 py-10 xs:px-6 xs:py-14 sm:px-10 lg:px-14 lg:py-20 text-white shadow-xl">
+        <section className="relative overflow-hidden rounded-lg bg-[#353535] px-4 py-10 xs:px-6 xs:py-14 sm:px-10 lg:px-14 lg:py-20 text-white">
           <Image
             src="/images/prestations/aq8.webp"
             alt="Seance AQ8 EMS dans un centre AQ8 Algerie"
@@ -77,13 +77,13 @@ export default function Aq8Page() {
           <div className="absolute inset-0 bg-gradient-to-br from-[#353535]/90 via-[#353535]/55 to-[#ff5757]/25" />
 
           <div className="relative z-10 mx-auto max-w-4xl text-center flex flex-col items-center justify-center space-y-7">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#ff5757]/30 bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-[#ff5757]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#ff5757]/30 bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
               <Zap className="h-3.5 w-3.5" />
               Technologie AQ8 EMS
             </span>
 
             <div className="space-y-5 max-w-3xl mx-auto">
-              <h1 className="font-display text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
+              <h1 className="font-display text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
                 AQ8 EMS — électrostimulation active et encadrée
               </h1>
 
@@ -98,7 +98,7 @@ export default function Aq8Page() {
               <Link
                 href="/centres"
                 aria-label="Trouver un centre AQ8 en Algérie"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#ff5757] px-6 py-3 text-sm font-bold text-white shadow-md shadow-[#ff5757]/20 transition-all hover:-translate-y-0.5 hover:bg-[#e94949]"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff5757] px-6 py-3 text-sm font-bold text-white transition-all hover:bg-[#e94949]"
               >
                 Trouver un centre
                 <ArrowRight className="h-4 w-4" />
@@ -107,7 +107,7 @@ export default function Aq8Page() {
               <Link
                 href="/wonder"
                 aria-label="Découvrir Wonder Sculpt"
-                className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/10 px-6 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-white/15"
+                className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/10 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-white/15"
               >
                 Découvrir Wonder
               </Link>
@@ -118,12 +118,12 @@ export default function Aq8Page() {
         {/* Intro */}
         <section className="grid gap-10 lg:grid-cols-12 lg:items-center">
           <div className="space-y-5 lg:col-span-5">
-            <span className="inline-flex items-center gap-2 rounded-full bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-[#ff5757]">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
               <Sparkles className="h-3.5 w-3.5" />
               Électrostimulation active
             </span>
 
-            <h2 className="font-display text-2xl font-bold tracking-tight text-[#353535] sm:text-3xl lg:text-4xl">
+            <h2 className="font-display text-2xl font-bold text-[#353535] sm:text-3xl lg:text-4xl">
               Qu’est-ce que AQ8 EMS ?
             </h2>
 
@@ -147,9 +147,9 @@ export default function Aq8Page() {
               return (
                 <article
                   key={benefit.title}
-                  className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
+                  className="rounded-lg border border-slate-100 bg-white p-6 transition-all"
                 >
-                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#ff5757]/10 text-[#ff5757]">
+                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-md bg-[#ff5757]/10 text-[#ff5757]">
                     <Icon className="h-5 w-5" />
                   </div>
 
@@ -167,15 +167,15 @@ export default function Aq8Page() {
         </section>
 
         {/* Objectives */}
-        <section className="rounded-3xl border border-slate-100 bg-slate-50 px-6 py-12 sm:px-10 lg:px-12">
+        <section className="rounded-lg border border-slate-100 bg-slate-50 px-6 py-12 sm:px-10 lg:px-12">
           <div className="grid gap-10 lg:grid-cols-12 lg:items-start">
             <div className="space-y-4 lg:col-span-5">
-              <span className="inline-flex items-center gap-2 rounded-full bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-[#ff5757]">
+              <span className="inline-flex items-center gap-2 rounded-full bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
                 <Dumbbell className="h-3.5 w-3.5" />
                 Objectifs possibles
               </span>
 
-              <h2 className="font-display text-2xl font-bold tracking-tight text-[#353535] sm:text-3xl">
+              <h2 className="font-display text-2xl font-bold text-[#353535] sm:text-3xl">
                 Pour quels objectifs choisir AQ8 ?
               </h2>
 
@@ -190,7 +190,7 @@ export default function Aq8Page() {
               {objectives.map((objective) => (
                 <div
                   key={objective}
-                  className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm"
+                  className="flex items-center gap-3 rounded-md border border-slate-100 bg-white px-4 py-3"
                 >
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-[#ff5757]" />
                   <span className="text-sm font-semibold text-slate-700">
@@ -208,12 +208,12 @@ export default function Aq8Page() {
         {/* Session process */}
         <section className="space-y-10">
           <div className="mx-auto max-w-2xl space-y-4 text-center">
-            <span className="inline-flex items-center gap-2 rounded-full bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-[#ff5757]">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
               <Clock className="h-3.5 w-3.5" />
               Déroulement
             </span>
 
-            <h2 className="font-display text-2xl font-bold tracking-tight text-[#353535] sm:text-3xl lg:text-4xl">
+            <h2 className="font-display text-2xl font-bold text-[#353535] sm:text-3xl lg:text-4xl">
               Comment se déroule une séance AQ8 ?
             </h2>
 
@@ -228,14 +228,14 @@ export default function Aq8Page() {
             {steps.map((step, index) => (
               <article
                 key={step}
-                className="relative overflow-hidden rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
+                className="relative overflow-hidden rounded-lg border border-slate-100 bg-white p-6 transition-all"
               >
                 <span className="absolute right-4 top-4 font-mono text-4xl font-black leading-none text-[#ff5757]/10">
                   {String(index + 1).padStart(2, "0")}
                 </span>
 
                 <div className="relative space-y-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ff5757]/10 text-sm font-black text-[#ff5757]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#ff5757]/10 text-sm font-black text-[#ff5757]">
                     {index + 1}
                   </div>
 
@@ -249,9 +249,9 @@ export default function Aq8Page() {
         </section>
 
         {/* Safety note */}
-        <section className="rounded-3xl border border-amber-200 bg-amber-50 px-6 py-6 sm:px-8">
+        <section className="rounded-lg border border-amber-200 bg-amber-50 px-6 py-6 sm:px-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-700">
               <ShieldCheck className="h-5 w-5" />
             </div>
 
@@ -272,11 +272,10 @@ export default function Aq8Page() {
         </section>
 
         {/* Final CTA */}
-        <section className="relative overflow-hidden rounded-3xl bg-[#353535] px-6 py-12 text-center text-white shadow-xl sm:px-10">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(255,87,87,0.16),transparent_55%)]" />
+        <section className="relative overflow-hidden rounded-lg bg-[#353535] px-6 py-12 text-center text-white sm:px-10">
 
           <div className="relative z-10 mx-auto max-w-2xl space-y-5">
-            <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
+            <h2 className="font-display text-2xl font-bold sm:text-3xl">
               Envie d’essayer AQ8 EMS ?
             </h2>
 
@@ -289,7 +288,7 @@ export default function Aq8Page() {
               <Link
                 href="/centres"
                 aria-label="Trouver un centre AQ8"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#ff5757] px-6 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-[#e94949]"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff5757] px-6 py-3 text-sm font-bold text-white transition-all hover:bg-[#e94949]"
               >
                 Trouver un centre
                 <ArrowRight className="h-4 w-4" />
@@ -298,7 +297,7 @@ export default function Aq8Page() {
               <Link
                 href="/contact"
                 aria-label="Contacter AQ8 Algérie"
-                className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/10 px-6 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-white/15"
+                className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/10 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-white/15"
               >
                 Nous contacter
               </Link>

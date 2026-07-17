@@ -94,8 +94,8 @@ export function ContactForm({ centers }: ContactFormProps) {
 
   if (submitted) {
     return (
-      <div className="rounded-3xl border border-emerald-100 bg-emerald-50 p-8 text-center shadow-sm">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+      <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-8 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-md bg-emerald-100 text-emerald-700">
           <CheckCircle2 className="h-7 w-7" />
         </div>
 
@@ -112,7 +112,7 @@ export function ContactForm({ centers }: ContactFormProps) {
           <button
             type="button"
             onClick={() => setSubmitted(false)}
-            className="mt-3 rounded-xl bg-[#353535] px-6 py-3 text-sm font-bold text-white transition-all hover:bg-[#ff5757] cursor-pointer"
+            className="mt-3 rounded-md bg-[#353535] px-6 py-3 text-sm font-bold text-white transition-all hover:bg-[#ff5757] cursor-pointer"
           >
             Envoyer un autre message
           </button>
@@ -122,9 +122,9 @@ export function ContactForm({ centers }: ContactFormProps) {
   }
 
   return (
-    <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8">
+    <section className="rounded-lg border border-slate-100 bg-white p-6 sm:p-8">
       <div className="mb-6 space-y-3">
-        <span className="text-xs font-bold uppercase tracking-wider text-[#ff5757]">
+        <span className="text-xs font-bold uppercase text-[#ff5757]">
           Formulaire de contact
         </span>
 
@@ -139,7 +139,7 @@ export function ContactForm({ centers }: ContactFormProps) {
       </div>
 
       {errorMsg && (
-        <div className="mb-5 rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm font-semibold text-rose-700 flex items-start gap-2">
+        <div className="mb-5 rounded-md border border-rose-100 bg-rose-50 p-4 text-sm font-semibold text-rose-700 flex items-start gap-2">
           <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
           {errorMsg}
         </div>
@@ -155,7 +155,7 @@ export function ContactForm({ centers }: ContactFormProps) {
             onChange={(e) => setName(e.target.value)}
             placeholder="Yacine Gherbi"
             disabled={isLoading}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+            className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
           />
         </div>
 
@@ -169,7 +169,7 @@ export function ContactForm({ centers }: ContactFormProps) {
               onChange={(e) => setPhone(e.target.value)}
               placeholder="0660 44 88 99"
               disabled={isLoading}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+              className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
             />
           </div>
 
@@ -181,7 +181,7 @@ export function ContactForm({ centers }: ContactFormProps) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="yacine@email.com"
               disabled={isLoading}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+              className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
             />
           </div>
         </div>
@@ -193,7 +193,7 @@ export function ContactForm({ centers }: ContactFormProps) {
               value={requestType}
               onChange={(e) => setRequestType(e.target.value as RequestType)}
               disabled={isLoading}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+              className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
             >
               {requestTypes.map((type) => (
                 <option key={type.value} value={type.value}>
@@ -209,7 +209,7 @@ export function ContactForm({ centers }: ContactFormProps) {
               value={selectedCenter}
               onChange={(e) => setSelectedCenter(e.target.value)}
               disabled={isLoading}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+              className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
             >
               <option value="general">Demande générale</option>
               {centers.map((center) => (
@@ -229,14 +229,14 @@ export function ContactForm({ centers }: ContactFormProps) {
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Bonjour, j'aimerais avoir plus d'informations sur..."
             disabled={isLoading}
-            className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+            className="w-full resize-none rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
           />
         </div>
 
         <button
           type="submit"
           disabled={isLoading}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#ff5757] px-5 py-3 text-sm font-bold text-white shadow-md shadow-[#ff5757]/20 transition-all hover:bg-[#e94949] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#ff5757] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#e94949] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <>

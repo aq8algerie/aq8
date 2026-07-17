@@ -597,12 +597,12 @@ export default function App() {
   const canUseCrmRoleSwitcher = isDevToolsEnabled && crmRole === 'super_admin';
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fafafa] selection:bg-[#ff5757]/30 selection:text-[#353535]">
+    <div className="min-h-screen flex flex-col bg-white selection:bg-[#ff5757]/20 selection:text-[#242424]">
 
       {/* --- SITE PUBLIC HEADER / NAVIGATION BAR --- */}
       {currentRoute !== 'crm' && (
-        <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-150 shadow-xs">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur-xl">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between">
             {/* Logo */}
             <button
               type="button"
@@ -613,15 +613,15 @@ export default function App() {
               <img
                 src="/images/logo.png"
                 alt="AQ8 Algerie"
-                className="h-14 w-auto max-w-[205px] object-contain transition-premium group-hover:scale-[1.02] sm:h-[3.75rem] sm:max-w-[225px] lg:h-16 lg:max-w-[245px]"
+                className="h-12 w-auto max-w-[190px] object-contain transition-premium group-hover:opacity-90 sm:h-14 sm:max-w-[215px] lg:h-[3.75rem] lg:max-w-[235px]"
               />
             </button>
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden md:flex items-center gap-1 text-xs font-bold text-slate-600">
+            <nav className="hidden md:flex items-center gap-1 text-sm font-semibold text-slate-600">
               <button
                 onClick={() => navigate('home')}
-                className={`px-3 py-2 rounded-lg transition-premium ${currentRoute === 'home' ? 'text-[#ff5757] bg-rose-50/50' : 'hover:text-[#353535] hover:bg-slate-50'}`}
+                className={`rounded-md px-3 py-2 transition-premium ${currentRoute === 'home' ? 'text-[#ff5757]' : 'hover:bg-slate-50 hover:text-[#242424]'}`}
               >
                 Accueil
               </button>
@@ -629,7 +629,7 @@ export default function App() {
               <div className="group relative">
                 <button
                   type="button"
-                  className={`flex items-center gap-1 px-3 py-2 rounded-lg transition-premium ${currentRoute === 'aq8' || currentRoute === 'wonder' ? 'text-[#ff5757] bg-rose-50/50' : 'hover:text-[#353535] hover:bg-slate-50'}`}
+                  className={`flex items-center gap-1 rounded-md px-3 py-2 transition-premium ${currentRoute === 'aq8' || currentRoute === 'wonder' ? 'text-[#ff5757]' : 'hover:bg-slate-50 hover:text-[#242424]'}`}
                   aria-haspopup="menu"
                 >
                   Technologie
@@ -662,7 +662,7 @@ export default function App() {
                 <button
                   key={link.id}
                   onClick={() => navigate(link.id)}
-                  className={`px-3 py-2 rounded-lg transition-premium ${currentRoute === link.id ? 'text-[#ff5757] bg-rose-50/50' : 'hover:text-[#353535] hover:bg-slate-50'}`}
+                  className={`rounded-md px-3 py-2 transition-premium ${currentRoute === link.id ? 'text-[#ff5757]' : 'hover:bg-slate-50 hover:text-[#242424]'}`}
                 >
                   {link.label}
                 </button>
@@ -673,16 +673,16 @@ export default function App() {
             <div className="hidden md:flex items-center gap-2">
               <button
                 onClick={handlePublicReservationClick}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#ff5757] px-4 py-2 text-xs font-extrabold text-white shadow-md shadow-[#ff5757]/20 transition-premium hover:bg-[#e94949] cursor-pointer"
+                className="inline-flex items-center gap-2 rounded-md bg-[#ff5757] px-4 py-2.5 text-xs font-bold text-white transition-premium hover:bg-[#e94949] cursor-pointer"
               >
                 <Calendar className="h-4 w-4" />
                 R&eacute;server
               </button>
               <button
                 onClick={() => navigate('login')}
-                className="px-4 py-2 bg-[#353535] hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-premium shadow-xs flex items-center gap-1.5 cursor-pointer"
+                className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-[#242424] transition-premium hover:border-[#242424] cursor-pointer"
               >
-                <ShieldCheck className="h-4 w-4 text-[#ff5757]" /> Accès CRM AQ8
+                <ShieldCheck className="h-4 w-4 text-[#ff5757]" /> Acces CRM
               </button>
             </div>
 
@@ -754,7 +754,7 @@ export default function App() {
       <main className="flex-1">
         {(currentRoute !== 'crm' || !crmRole) ? (
           /* PUBLIC PAGES WRAPPER */
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
 
             {currentRoute === 'home' && (
               <PublicHome
@@ -1065,38 +1065,36 @@ export default function App() {
 
       {/* --- SITE PUBLIC FOOTER --- */}
       {currentRoute !== 'crm' && (
-        <footer className="bg-[#353535] text-white border-t border-slate-800 pt-16 pb-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-4 gap-8">
+        <footer className="border-t border-slate-200 bg-[#242424] pt-14 pb-8 text-white">
+          <div className="max-w-7xl mx-auto grid gap-8 px-4 sm:px-6 md:grid-cols-4 lg:px-8">
             <div className="space-y-4">
               <button
                 type="button"
                 onClick={() => navigate('home')}
-                className="inline-flex rounded-xl p-0 transition-premium hover:opacity-85 cursor-pointer"
+                className="inline-flex p-0 transition-premium hover:opacity-85 cursor-pointer"
                 aria-label="Retour a l'accueil AQ8 Algerie"
               >
                 <img
                   src="/images/logo.png"
                   alt="AQ8 Algerie"
-                  className="h-14 w-auto max-w-[220px] object-contain brightness-0 invert drop-shadow-sm"
+                  className="h-12 w-auto max-w-[210px] object-contain brightness-0 invert"
                 />
               </button>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Leader de l'électrostimulation sans fil et de la remise en forme technologique en Algérie. Prestations haut de gamme adaptées à tous les profils.
-              </p>
+              <p className="text-xs text-slate-400 leading-relaxed">AQ8 Algerie reunit EMS, Wonder et accompagnement centre par centre pour une experience claire, encadree et premium.</p>
             </div>
 
             <div className="space-y-4 text-xs">
-              <h4 className="font-bold uppercase tracking-wider text-[#ff5757] font-display">Nos Technologies</h4>
+              <h4 className="font-display text-sm font-bold text-white">Technologies</h4>
               <ul className="space-y-2 text-slate-400">
-                <li><button onClick={() => navigate('aq8')} className="hover:text-white transition">AQ8 Électrostimulation (EMS)</button></li>
-                <li><button onClick={() => navigate('wonder')} className="hover:text-white transition">Wonder Muscle Sculpting</button></li>
+                <li><button onClick={() => navigate('aq8')} className="hover:text-white transition">AQ8 EMS</button></li>
+                <li><button onClick={() => navigate('wonder')} className="hover:text-white transition">Wonder Sculpt</button></li>
               </ul>
             </div>
 
             <div className="space-y-4 text-xs">
-              <h4 className="font-bold uppercase tracking-wider text-white font-display">Réseau d'Établissements</h4>
+              <h4 className="font-display text-sm font-bold text-white">Centres</h4>
               <ul className="space-y-2 text-slate-400">
-                {centers.map(c => (
+                {publicCenters.map(c => (
                   <li key={c.id}>
                     <button
                       onClick={() => {
@@ -1112,7 +1110,7 @@ export default function App() {
             </div>
 
             <div className="space-y-4 text-xs">
-              <h4 className="font-bold uppercase tracking-wider text-white font-display">Contact & Siège</h4>
+              <h4 className="font-display text-sm font-bold text-white">Contact</h4>
               <p className="text-slate-400 leading-relaxed flex items-start gap-1.5">
                 <MapPin className="h-4 w-4 text-[#ff5757] shrink-0 mt-0.5" />
                 {settings?.addressAlgérie || '12 Rue des Glycines, Hydra, Alger'}
@@ -1123,8 +1121,8 @@ export default function App() {
             </div>
           </div>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-6 border-t border-white/5 text-center text-xs text-slate-500">
-            <p>© 2026 AQ8 Algérie. Tous droits réservés. Refonte modernisée et optimisée.</p>
+          <div className="max-w-7xl mx-auto mt-10 border-t border-white/10 px-4 pt-6 text-center text-xs text-slate-500 sm:px-6 lg:px-8">
+            <p>2026 AQ8 Algerie. Tous droits reserves.</p>
           </div>
         </footer>
       )}

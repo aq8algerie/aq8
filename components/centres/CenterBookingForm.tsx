@@ -283,9 +283,9 @@ export function CenterBookingForm({
 
   if (successMsg) {
     return (
-      <div className="rounded-3xl border border-emerald-100 bg-emerald-50 p-6 shadow-sm">
+      <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-6">
         <div className="space-y-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+          <div className="flex h-12 w-12 items-center justify-center rounded-md bg-emerald-100 text-emerald-700">
             <CheckCircle2 className="h-6 w-6" />
           </div>
           <div className="space-y-2">
@@ -295,7 +295,7 @@ export function CenterBookingForm({
             <p className="text-sm font-medium leading-relaxed text-emerald-800">
               {successMsg}
             </p>
-            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs font-bold text-amber-800 space-y-1.5">
+            <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4 text-xs font-bold text-amber-800 space-y-1.5">
               <p className="font-medium leading-relaxed text-amber-800">
                 La confirmation finale reste faite par l'equipe du centre apres verification du planning et du paiement.
               </p>
@@ -304,7 +304,7 @@ export function CenterBookingForm({
           <button
             type="button"
             onClick={() => setSuccessMsg("")}
-            className="w-full rounded-xl bg-[#353535] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#ff5757] cursor-pointer"
+            className="w-full rounded-md bg-[#353535] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#ff5757] cursor-pointer"
           >
             Faire une autre reservation
           </button>
@@ -314,9 +314,9 @@ export function CenterBookingForm({
   }
 
   return (
-    <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+    <div className="rounded-lg border border-slate-100 bg-white p-6">
       <div className="mb-5 space-y-2">
-        <span className="text-xs font-bold uppercase tracking-wider text-[#ff5757]">
+        <span className="text-xs font-bold uppercase text-[#ff5757]">
           Reservation en ligne
         </span>
         <h2 className="font-display text-xl font-bold text-[#353535]">
@@ -327,10 +327,10 @@ export function CenterBookingForm({
         </p>
       </div>
 
-      <div className="mb-5 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm">
+      <div className="mb-5 rounded-md border border-slate-100 bg-slate-50 p-4 text-sm">
         <div className="flex items-center justify-between gap-3">
           <span className="font-bold text-slate-700">Capacite par heure</span>
-          <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#ff5757] shadow-sm">
+          <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#ff5757]">
             {capacitySummary}
           </span>
         </div>
@@ -340,7 +340,7 @@ export function CenterBookingForm({
       </div>
 
       {errorMsg && (
-        <div className="mb-4 rounded-2xl border border-rose-100 bg-rose-50 p-3 text-sm font-semibold text-rose-700 flex items-start gap-2">
+        <div className="mb-4 rounded-md border border-rose-100 bg-rose-50 p-3 text-sm font-semibold text-rose-700 flex items-start gap-2">
           <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
           {errorMsg}
         </div>
@@ -357,7 +357,7 @@ export function CenterBookingForm({
               onChange={(e) => setFirstName(e.target.value)}
               placeholder="Amira"
               disabled={isLoading}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+              className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
             />
           </div>
           <div className="space-y-1.5">
@@ -369,7 +369,7 @@ export function CenterBookingForm({
               onChange={(e) => setLastName(e.target.value)}
               placeholder="Cherif"
               disabled={isLoading}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+              className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
             />
           </div>
         </div>
@@ -383,7 +383,7 @@ export function CenterBookingForm({
             onChange={(e) => setPhone(e.target.value)}
             placeholder="0550 11 22 33"
             disabled={isLoading}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+            className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
           />
         </div>
 
@@ -395,7 +395,7 @@ export function CenterBookingForm({
             onChange={(e) => setEmail(e.target.value)}
             placeholder="amira@email.com"
             disabled={isLoading}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+            className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
           />
         </div>
 
@@ -405,7 +405,7 @@ export function CenterBookingForm({
             value={service}
             onChange={(e) => setService(e.target.value)}
             disabled={isLoading}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+            className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
           >
             {services.map((item) => (
               <option key={item} value={item}>
@@ -424,7 +424,7 @@ export function CenterBookingForm({
               value={bookingDate}
               onChange={(e) => setBookingDate(e.target.value)}
               disabled={isLoading}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+              className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
             />
           </div>
           <div className="space-y-1.5">
@@ -433,7 +433,7 @@ export function CenterBookingForm({
               value={bookingTime}
               onChange={(e) => setBookingTime(e.target.value)}
               disabled={isLoading || availabilityLoading || hours.length === 0}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+              className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
             >
               {hours.length === 0 && (
                 <option value="">Centre ferme ce jour</option>
@@ -452,7 +452,7 @@ export function CenterBookingForm({
         </div>
 
         {hours.length > 0 && (
-          <div className="rounded-2xl border border-slate-100 bg-white p-3 text-xs font-semibold text-slate-600 shadow-sm">
+          <div className="rounded-md border border-slate-100 bg-white p-3 text-xs font-semibold text-slate-600">
             {availabilityLoading ? (
               <span className="inline-flex items-center gap-2 text-slate-500">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -471,7 +471,7 @@ export function CenterBookingForm({
         <button
           type="submit"
           disabled={!canSubmit}
-          className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#ff5757] px-5 py-3 text-sm font-bold text-white shadow-md shadow-[#ff5757]/20 transition-all hover:bg-[#e94949] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+          className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#ff5757] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#e94949] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <>

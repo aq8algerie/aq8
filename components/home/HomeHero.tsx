@@ -1,107 +1,65 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  Activity,
-  MapPin,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { ArrowRight, Calendar, MapPin, ShieldCheck } from "lucide-react";
 
 export function HomeHero() {
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-[#353535] px-4 py-12 xs:px-6 xs:py-16 sm:px-12 md:px-16 lg:py-20 text-white shadow-xl">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,87,87,0.20),transparent_55%)]" />
-      <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#ff5757]/10 blur-3xl" />
-      <div className="absolute -bottom-32 left-10 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
+    <section className="relative isolate min-h-[560px] overflow-hidden rounded-lg bg-[#202020] text-white lg:min-h-[620px]">
+      <img
+        src="/images/aq8algerie.webp"
+        alt="Seance AQ8 dans un centre premium en Algerie"
+        className="absolute inset-0 h-full w-full object-cover"
+        referrerPolicy="no-referrer"
+      />
+      <div className="absolute inset-0 bg-[#151515]/58" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#151515]/92 via-[#151515]/68 to-[#151515]/20" />
 
-      <div className="relative z-10 grid items-center gap-8 lg:gap-12 lg:grid-cols-12">
-        {/* Left content */}
-        <div className="max-w-3xl space-y-7 lg:col-span-7">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#ff5757]/30 bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-[#ff5757]">
-            <Sparkles className="h-3.5 w-3.5" />
-            Électrostimulation • Wonder • Remise en forme
+      <div className="relative z-10 flex min-h-[560px] items-center px-5 py-14 sm:px-8 lg:min-h-[620px] lg:px-14">
+        <div className="max-w-3xl space-y-8">
+          <div className="inline-flex items-center gap-2 rounded-md border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold text-white backdrop-blur">
+            <ShieldCheck className="h-4 w-4 text-[#ff5757]" />
+            EMS, Wonder et accompagnement centre par centre
           </div>
 
           <div className="space-y-5">
-            <h1 className="font-display text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
-              AQ8 Algérie — électrostimulation, Wonder et remise en forme
+            <h1 className="font-display text-4xl font-bold leading-[1.04] text-white sm:text-6xl lg:text-7xl">
+              AQ8 Algerie
             </h1>
-
-            <p className="max-w-2xl text-sm font-medium leading-relaxed text-slate-300 sm:text-base lg:text-lg">
-              Découvrez des séances encadrées AQ8 et Wonder dans nos centres,
-              avec un accompagnement personnalisé selon vos objectifs :
-              tonification, suivi corporel, remise en forme et bien-être.
+            <p className="max-w-2xl text-base font-medium leading-relaxed text-white/82 sm:text-lg">
+              Une experience de remise en forme technologique plus claire, plus
+              encadree et plus premium, avec des centres, horaires et demandes
+              de reservation accessibles en quelques gestes.
             </p>
           </div>
 
-          <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap">
-            <Link
-              href="/centres"
-              aria-label="Trouver un centre AQ8 en Algérie"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#ff5757] px-6 py-3 text-sm font-semibold text-white shadow-md shadow-[#ff5757]/20 transition-all hover:-translate-y-0.5 hover:bg-[#e94949]"
-            >
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <Link href="/centres" aria-label="Trouver un centre AQ8 en Algerie" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff5757] px-6 py-3 text-sm font-bold text-white transition-premium hover:bg-[#e94949]">
               Trouver un centre
               <ArrowRight className="h-4 w-4" />
             </Link>
-
-            <Link
-              href="/aq8"
-              aria-label="Découvrir la technologie AQ8"
-              className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-white/15"
-            >
-              Découvrir AQ8
-            </Link>
-
-            <Link
-              href="/wonder"
-              aria-label="Découvrir la technologie Wonder"
-              className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-semibold text-slate-300 transition-all hover:bg-white/5 hover:text-white"
-            >
-              Découvrir Wonder
+            <Link href="/contact" aria-label="Demander une reservation AQ8" className="inline-flex items-center justify-center gap-2 rounded-md border border-white/20 bg-white/10 px-6 py-3 text-sm font-bold text-white backdrop-blur transition-premium hover:bg-white/16">
+              <Calendar className="h-4 w-4 text-[#ff5757]" />
+              Reserver
             </Link>
           </div>
 
-          <div className="grid gap-3 pt-4 sm:grid-cols-3">
-            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2.5 text-xs text-slate-300">
-              <ShieldCheck className="h-4 w-4 shrink-0 text-[#ff5757]" />
-              Séances encadrées
-            </div>
-
-            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2.5 text-xs text-slate-300">
-              <Activity className="h-4 w-4 shrink-0 text-[#ff5757]" />
-              Suivi personnalisé
-            </div>
-
-            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2.5 text-xs text-slate-300">
-              <MapPin className="h-4 w-4 shrink-0 text-[#ff5757]" />
-              Centres en Algérie
-            </div>
-          </div>
-        </div>
-
-        {/* Right visual */}
-        <div className="lg:col-span-5">
-          <div className="relative mx-auto max-w-lg lg:max-w-none">
-            <div className="relative overflow-hidden rounded-3xl">
-              <img
-                src="/images/aq8algerie.webp"
-                alt="Séance AQ8 électrostimulation en Algérie"
-                className="h-[250px] xs:h-[320px] sm:h-[420px] md:h-[500px] lg:h-[580px] w-full rounded-3xl object-cover"
-                referrerPolicy="no-referrer"
-              />
-
-              <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 rounded-2xl border border-white/10 bg-[#353535]/85 p-4 backdrop-blur">
-                <p className="text-xs font-bold uppercase tracking-wider text-[#ff5757]">
-                  AQ8 Algérie
-                </p>
-                <p className="mt-1 text-sm font-semibold leading-relaxed text-white">
-                  Des séances encadrées dans un cadre moderne, clair et organisé.
-                </p>
+          <dl className="grid max-w-2xl grid-cols-1 gap-3 pt-4 sm:grid-cols-3">
+            {[
+              ["Centres", "Reseau AQ8 Algerie"],
+              ["AQ8 + Wonder", "Deux technologies"],
+              ["Suivi", "Seances encadrees"],
+            ].map(([value, label]) => (
+              <div key={value} className="border-l border-white/20 pl-4">
+                <dt className="text-sm font-bold text-white">{value}</dt>
+                <dd className="mt-1 text-xs font-medium text-white/62">{label}</dd>
               </div>
-            </div>
-          </div>
+            ))}
+          </dl>
         </div>
+      </div>
+
+      <div className="absolute bottom-5 right-5 hidden items-center gap-2 rounded-md border border-white/12 bg-[#151515]/70 px-3 py-2 text-xs font-medium text-white/78 backdrop-blur sm:flex">
+        <MapPin className="h-4 w-4 text-[#ff5757]" />
+        Centres dynamiques selon disponibilite
       </div>
     </section>
   );
