@@ -380,7 +380,7 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
   const centerRef = db.collection('centers').doc(data.centerId);
   const slotRef = db.collection('appointment_slots').doc(data.centerId).collection('slots').doc(slotId);
   const publicSlotRef = db.collection('public_booking_slots').doc(data.centerId).collection('slots').doc(slotId);
-  let reservedCenterName = center.name;
+  let reservedCenter = center;
 
   await db.runTransaction(async transaction => {
     const transactionCenterSnapshot = await transaction.get(centerRef);
@@ -388,7 +388,7 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
       throw new Error('Centre introuvable.');
     }
     const transactionCenter = { id: transactionCenterSnapshot.id, ...(transactionCenterSnapshot.data() as Omit<Center, 'id'>) } as Center;
-    reservedCenterName = transactionCenter.name;
+    reservedCenter = transactionCenter;
 
     const slotSnapshot = await transaction.get(slotRef);
     const slot = await normalizeAdminSlot(transaction, db, slotSnapshot, data.centerId, dateTime, createdAt, transactionCenter);
@@ -422,14 +422,14 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
 
   const reservation = {
     reservationId: requestRef.id,
-    centerName: reservedCenterName,
+    centerName: reservedCenter.name,
     service: data.service,
     bookingDate: data.bookingDate,
     bookingTime: data.bookingTime,
   };
 
   sendPublicReservationNotifications({
-    center: { ...center, name: reservedCenterName },
+    center: reservedCenter,
     input: data,
     reservationId: requestRef.id,
   }).catch(error => {
@@ -509,27 +509,6 @@ async function startServer() {
 
   app.get('/api/email-notifications/health', (req, res) => {
     res.json({ ok: true, email: getEmailNotificationDiagnostics() });
-  });
-
-  app.get('/api/email-notifications/centers', async (req, res) => {
-    try {
-      const snapshot = await getAdminDb().collection('centers').get();
-      const centers = snapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() } as Center))
-        .map(center => ({
-          id: center.id,
-          name: center.name,
-          slug: center.slug || null,
-          status: center.status || null,
-          email: center.email || null,
-        }))
-        .sort((a, b) => a.name.localeCompare(b.name));
-
-      res.json({ ok: true, centers });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Lecture des centres impossible.';
-      res.status(500).json({ ok: false, error: message });
-    }
   });
 
   app.post('/api/contact-messages', async (req, res) => {

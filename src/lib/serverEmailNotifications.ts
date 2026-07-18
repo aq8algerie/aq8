@@ -261,8 +261,12 @@ export function getEmailNotificationDiagnostics() {
 }
 
 function centerRecipients(center?: Center | null): string[] {
-  const config = getEmailConfig();
-  return uniqueEmails([center?.email, ...config.adminRecipients]);
+  return uniqueEmails([center?.email]);
+}
+
+function adminRecipients(excluding: string[] = []): string[] {
+  const excluded = new Set(excluding.map(email => email.toLowerCase()));
+  return getEmailConfig().adminRecipients.filter(email => !excluded.has(email));
 }
 
 async function getDoc<T>(db: Firestore, collectionName: string, id: string): Promise<T | null> {
@@ -339,11 +343,18 @@ export async function sendPublicReservationNotifications(params: {
     note: "La confirmation finale reste faite par l'equipe du centre apres verification du planning et du paiement.",
   });
 
+  const centerTo = centerRecipients(center);
   const results = await Promise.all([
     sendEmail({
-      to: centerRecipients(center),
+      to: centerTo,
       replyTo: input.email || config.replyTo,
       subject: `Nouvelle pre-reservation AQ8 - ${center.name} - ${shortRef}`,
+      ...adminTemplate,
+    }),
+    sendEmail({
+      to: adminRecipients(centerTo),
+      replyTo: input.email || config.replyTo,
+      subject: `Copie admin - Nouvelle pre-reservation AQ8 - ${center.name} - ${shortRef}`,
       ...adminTemplate,
     }),
     sendEmail({
@@ -401,6 +412,12 @@ export async function sendPublicContactNotifications(params: {
       to: centerRecipients(center),
       replyTo: message.email || config.replyTo,
       subject: `Nouveau message AQ8 - ${requestTypeLabels[message.requestType]} - ${shortRef}`,
+      ...adminTemplate,
+    }),
+    sendEmail({
+      to: adminRecipients(centerRecipients(center)),
+      replyTo: message.email || config.replyTo,
+      subject: `Copie admin - Nouveau message AQ8 - ${requestTypeLabels[message.requestType]} - ${shortRef}`,
       ...adminTemplate,
     }),
     sendEmail({
