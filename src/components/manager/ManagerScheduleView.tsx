@@ -16,6 +16,7 @@ import { getTodayDateString } from '../../lib/centerManagerUtils';
 import { validateAppointment } from '../../lib/appointmentRules';
 import { getBookingHoursForDate } from '../../lib/bookingCapacityRules';
 import { db } from '../../lib/firebase';
+import { notifyCrmEmailBestEffort } from '../../lib/emailNotificationClient';
 import { ProfessionalConfirmDialog } from './ProfessionalConfirmDialog';
 import { ProfessionalToast, ProfessionalToastState, ToastAction, ToastType } from './ProfessionalToast';
 import { PendingBookingRequestsPanel } from './schedule/PendingBookingRequestsPanel';
@@ -369,15 +370,23 @@ export function ManagerScheduleView({
         throw new Error(validation.error || 'Reservation invalide.');
       }
 
+      const appointmentId = `apt-${req.id}`;
       await acceptBookingRequestInTransaction(db, {
         requestId: req.id,
         centerId,
         existingClientId: existingClient?.id,
         newClientId: `cli-${req.id}`,
-        appointmentId: `apt-${req.id}`,
+        appointmentId,
         serviceId: matchedService.id,
         duration: matchedService.duration || 20,
         createdAt: getTodayDateString()
+      });
+
+      notifyCrmEmailBestEffort({
+        type: 'booking_request_accepted',
+        centerId,
+        requestId: req.id,
+        appointmentId,
       });
 
       showToast(`${req.firstName} ${req.lastName} est ajoute au planning.`, 'success', 'booking-request', 'Pre-reservation acceptee');
@@ -396,6 +405,13 @@ export function ManagerScheduleView({
         requestId: req.id,
         centerId
       });
+
+      notifyCrmEmailBestEffort({
+        type: 'booking_request_rejected',
+        centerId,
+        requestId: req.id,
+      });
+
       showToast(`La demande de ${req.firstName} ${req.lastName} est refusee et la place est liberee.`, 'success', 'cancelled', 'Pre-reservation refusee');
     } catch (error) {
       showToast(getErrorMessage(error, 'Erreur lors du traitement.'), 'error');

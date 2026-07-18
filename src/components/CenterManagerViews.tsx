@@ -43,6 +43,7 @@ import { getTodayDateString } from '../lib/centerManagerUtils';
 import { validateAppointment } from '../lib/appointmentRules';
 import { findActivePackageForClient, validateDeduction } from '../lib/packageRules';
 import { db } from '../lib/firebase';
+import { notifyCrmEmailBestEffort } from '../lib/emailNotificationClient';
 import { doc, updateDoc } from 'firebase/firestore';
 import {
   AppointmentMutationOptions,
@@ -450,8 +451,9 @@ export function CenterManagerViews({
     }
 
     try {
+      const appointmentId = `apt-${Date.now()}`;
       await createAppointmentInTransaction(db, {
-        appointmentId: `apt-${Date.now()}`,
+        appointmentId,
         clientId: aptData.clientId,
         serviceId: aptData.serviceId,
         centerId,
@@ -459,6 +461,12 @@ export function CenterManagerViews({
         duration: selectedService ? selectedService.duration : 20,
         notes: aptData.notes,
         createdAt: new Date().toISOString()
+      });
+
+      notifyCrmEmailBestEffort({
+        type: 'appointment_booked',
+        centerId,
+        appointmentId,
       });
 
       setShowAptModal(false);
@@ -494,10 +502,17 @@ export function CenterManagerViews({
     }
 
     try {
-      await completeAppointmentWithSessionDeduction(db, {
+      const completion = await completeAppointmentWithSessionDeduction(db, {
         appointmentId: apt.id,
         centerId,
         clientPackageId: activePkg.id
+      });
+
+      notifyCrmEmailBestEffort({
+        type: 'appointment_completed',
+        centerId,
+        appointmentId: apt.id,
+        sessionsRemaining: completion.sessionsRemaining,
       });
 
       if (!options.silent) {
@@ -530,6 +545,12 @@ export function CenterManagerViews({
       await cancelAppointmentInTransaction(db, {
         appointmentId: apt.id,
         centerId
+      });
+
+      notifyCrmEmailBestEffort({
+        type: 'appointment_cancelled',
+        centerId,
+        appointmentId: apt.id,
       });
 
       if (!options.silent) {
@@ -581,6 +602,13 @@ export function CenterManagerViews({
         ...appointmentToSave,
         updatedAt: new Date().toISOString()
       });
+
+      notifyCrmEmailBestEffort({
+        type: 'appointment_updated',
+        centerId,
+        appointmentId: appointmentToSave.id,
+      });
+
       return { ok: true };
     } catch (error) {
       return fail(getErrorMessage(error, 'Erreur lors de la mise a jour de la reservation.'));
@@ -610,12 +638,19 @@ export function CenterManagerViews({
     }
 
     try {
+      const clientPackageId = `clipkg-${Date.now()}`;
       await assignPackageToClient(db, {
-        clientPackageId: `clipkg-${Date.now()}`,
+        clientPackageId,
         centerId,
         clientId,
         packageId,
         purchaseDate: getTodayDateString()
+      });
+
+      notifyCrmEmailBestEffort({
+        type: 'package_assigned',
+        centerId,
+        clientPackageId,
       });
 
       setShowPackageAssignModal(false);
@@ -635,12 +670,14 @@ export function CenterManagerViews({
     autoActivatePackage: boolean;
   }) => {
     const now = Date.now();
+    const paymentId = `pay-${now}`;
+    const clientPackageId = payData.autoActivatePackage ? `clipkg-${now}` : undefined;
     const generatedReceipt = payData.receiptNumber || `REC-${now.toString().slice(-6)}`;
 
     try {
       await recordPaymentWithOptionalPackage(db, {
-        paymentId: `pay-${now}`,
-        clientPackageId: payData.autoActivatePackage ? `clipkg-${now}` : undefined,
+        paymentId,
+        clientPackageId,
         centerId,
         clientId: payData.clientId,
         packageId: payData.packageId,
@@ -649,6 +686,13 @@ export function CenterManagerViews({
         receiptNumber: generatedReceipt,
         date: getTodayDateString(),
         autoActivatePackage: payData.autoActivatePackage
+      });
+
+      notifyCrmEmailBestEffort({
+        type: 'payment_recorded',
+        centerId,
+        paymentId,
+        ...(clientPackageId ? { clientPackageId } : {}),
       });
 
       setShowPaymentModal(false);

@@ -3,8 +3,6 @@
 import { FormEvent, useMemo, useState } from "react";
 import { CheckCircle2, Send, Loader2, AlertCircle } from "lucide-react";
 import type { Center } from "../../src/types";
-import { collection, addDoc } from "firebase/firestore";
-import { db } from "../../src/lib/firebase";
 import {
   CONTACT_REQUEST_TYPES,
   PublicContactRequestType,
@@ -76,11 +74,16 @@ export function ContactForm({ centers }: ContactFormProps) {
     setIsLoading(true);
 
     try {
-      await addDoc(collection(db, "contact_messages"), {
-        ...validation.data,
-        status: "new",
-        createdAt: new Date().toISOString(),
+      const response = await fetch("/api/contact-messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(validation.data),
       });
+      const payload = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
+
+      if (!response.ok || payload?.ok !== true) {
+        throw new Error(payload?.error || "Envoi impossible.");
+      }
 
       setSubmitted(true);
       resetForm();

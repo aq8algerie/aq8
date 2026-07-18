@@ -1,15 +1,21 @@
+import 'dotenv/config';
 import express from 'express';
 import path from 'path';
 import fs from 'fs/promises';
 import { createServer as createViteServer } from 'vite';
 import { applicationDefault, getApps as getAdminApps, initializeApp as initializeAdminApp } from 'firebase-admin/app';
+import { getAuth as getAdminAuth } from 'firebase-admin/auth';
 import { DocumentSnapshot, Firestore, Transaction, getFirestore as getAdminFirestore } from 'firebase-admin/firestore';
 
 // Import SEO helpers and mock database
 import { getSeoForPage, generateCenterSeo, PageSeo } from './lib/seo';
 import { AQ8Database } from './src/mockData';
 import { Appointment, Center, Service } from './src/types';
-import { PublicBookingRequestInput, validatePublicBookingRequest } from './src/lib/publicFormValidation';
+import {
+  PublicBookingRequestInput,
+  validatePublicBookingRequest,
+  validatePublicContactMessage,
+} from './src/lib/publicFormValidation';
 import {
   BookingServiceType,
   CenterBookingConfig,
@@ -20,6 +26,13 @@ import {
   getSlotCapacity,
   isCenterOpenForDateTime,
 } from './src/lib/bookingCapacityRules';
+import {
+  CrmEmailNotificationPayload,
+  sendCrmEmailNotification,
+  getEmailNotificationDiagnostics,
+  sendPublicContactNotifications,
+  sendPublicReservationNotifications,
+} from './src/lib/serverEmailNotifications';
 
 const PORT = Number(process.env.PORT || 3000);
 
@@ -47,11 +60,26 @@ type AppointmentSlot = {
   migratedFromLegacy?: boolean;
 };
 
-function getAdminDb(): Firestore {
+type CrmUserProfile = {
+  role?: string;
+  centerId?: string | null;
+  active?: boolean;
+};
+
+function ensureAdminApp() {
   if (getAdminApps().length === 0) {
     initializeAdminApp({ credential: applicationDefault() });
   }
+}
+
+function getAdminDb(): Firestore {
+  ensureAdminApp();
   return getAdminFirestore();
+}
+
+function getAdminAuthInstance() {
+  ensureAdminApp();
+  return getAdminAuth();
 }
 
 function isBookingServiceType(value: unknown): value is BookingServiceType {
@@ -223,6 +251,94 @@ function findReservableService(center: Center, services: Service[], serviceType:
   ));
 }
 
+function httpError(message: string, statusCode: number) {
+  const error = new Error(message) as Error & { statusCode?: number };
+  error.statusCode = statusCode;
+  return error;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function hasString(value: Record<string, unknown>, key: string): boolean {
+  return typeof value[key] === 'string' && String(value[key]).trim().length > 0;
+}
+
+function isCrmEmailPayload(value: unknown): value is CrmEmailNotificationPayload {
+  if (!isPlainObject(value) || !hasString(value, 'type') || !hasString(value, 'centerId')) return false;
+
+  switch (value.type) {
+    case 'booking_request_accepted':
+      return hasString(value, 'requestId');
+    case 'booking_request_rejected':
+      return hasString(value, 'requestId');
+    case 'appointment_booked':
+    case 'appointment_updated':
+    case 'appointment_cancelled':
+    case 'appointment_completed':
+      return hasString(value, 'appointmentId');
+    case 'package_assigned':
+      return hasString(value, 'clientPackageId');
+    case 'payment_recorded':
+      return hasString(value, 'paymentId');
+    default:
+      return false;
+  }
+}
+
+async function verifyCrmEmailAccess(req: express.Request, centerId: string): Promise<void> {
+  const authorization = req.header('authorization') || '';
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+  if (!match) {
+    throw httpError('Authentification CRM requise.', 401);
+  }
+
+  const decodedToken = await getAdminAuthInstance().verifyIdToken(match[1]);
+  const profileSnapshot = await getAdminDb().collection('users').doc(decodedToken.uid).get();
+  if (!profileSnapshot.exists) {
+    throw httpError('Profil CRM introuvable.', 403);
+  }
+
+  const profile = profileSnapshot.data() as CrmUserProfile;
+  if (profile.active !== true || (profile.role !== 'super_admin' && profile.role !== 'center_manager')) {
+    throw httpError('Profil CRM non autorise.', 403);
+  }
+
+  if (profile.role === 'center_manager' && profile.centerId !== centerId) {
+    throw httpError('Ce centre ne correspond pas au manager connecte.', 403);
+  }
+}
+
+async function createPublicContactMessage(input: unknown) {
+  const db = getAdminDb();
+  const centersSnapshot = await db.collection('centers').get();
+  const centers = centersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Center));
+  const validation = validatePublicContactMessage(input as Parameters<typeof validatePublicContactMessage>[0], centers.map(center => center.id));
+
+  if (validation.valid === false) {
+    throw httpError(validation.error, 400);
+  }
+
+  const createdAt = new Date().toISOString();
+  const messageRef = await db.collection('contact_messages').add({
+    ...validation.data,
+    status: 'new',
+    createdAt,
+  });
+
+  const selectedCenter = centers.find(center => center.id === validation.data.centerId) || null;
+  sendPublicContactNotifications({
+    center: selectedCenter,
+    messageId: messageRef.id,
+    message: validation.data,
+  }).catch(error => {
+    console.error('Public contact email notification failed:', error);
+  });
+
+  return { messageId: messageRef.id };
+}
+
 async function createPublicReservation(input: PublicBookingRequestInput) {
   const db = getAdminDb();
   const requestedCenterId = String(input.centerId || '').trim();
@@ -304,13 +420,23 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
     transaction.set(publicSlotRef, buildPublicBookingSlot(nextSlot));
   });
 
-  return {
+  const reservation = {
     reservationId: requestRef.id,
     centerName: reservedCenterName,
     service: data.service,
     bookingDate: data.bookingDate,
     bookingTime: data.bookingTime,
   };
+
+  sendPublicReservationNotifications({
+    center: { ...center, name: reservedCenterName },
+    input: data,
+    reservationId: requestRef.id,
+  }).catch(error => {
+    console.error('Public reservation email notification failed:', error);
+  });
+
+  return reservation;
 }
 
 function injectSeo(html: string, seo: PageSeo): string {
@@ -381,6 +507,21 @@ async function startServer() {
   const app = express();
   app.use(express.json({ limit: '32kb' }));
 
+  app.get('/api/email-notifications/health', (req, res) => {
+    res.json({ ok: true, email: getEmailNotificationDiagnostics() });
+  });
+
+  app.post('/api/contact-messages', async (req, res) => {
+    try {
+      const result = await createPublicContactMessage(req.body);
+      res.status(201).json({ ok: true, ...result });
+    } catch (error) {
+      const statusCode = typeof error === 'object' && error && 'statusCode' in error ? Number((error as { statusCode?: number }).statusCode) : 500;
+      const message = error instanceof Error ? error.message : 'Message impossible.';
+      res.status(Number.isFinite(statusCode) ? statusCode : 500).json({ ok: false, error: message });
+    }
+  });
+
   app.post('/api/public-reservations', async (req, res) => {
     try {
       const reservation = await createPublicReservation(req.body as PublicBookingRequestInput);
@@ -388,6 +529,23 @@ async function startServer() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Reservation impossible.';
       res.status(400).json({ ok: false, error: message });
+    }
+  });
+
+  app.post('/api/email-notifications/crm', async (req, res) => {
+    try {
+      if (!isCrmEmailPayload(req.body)) {
+        res.status(400).json({ ok: false, error: 'Notification CRM invalide.' });
+        return;
+      }
+
+      await verifyCrmEmailAccess(req, req.body.centerId);
+      const result = await sendCrmEmailNotification(getAdminDb(), req.body);
+      res.status(200).json({ ok: true, result });
+    } catch (error) {
+      const statusCode = typeof error === 'object' && error && 'statusCode' in error ? Number((error as { statusCode?: number }).statusCode) : 500;
+      const message = error instanceof Error ? error.message : 'Notification email impossible.';
+      res.status(Number.isFinite(statusCode) ? statusCode : 500).json({ ok: false, error: message });
     }
   });
 
