@@ -511,6 +511,27 @@ async function startServer() {
     res.json({ ok: true, email: getEmailNotificationDiagnostics() });
   });
 
+  app.get('/api/email-notifications/centers', async (req, res) => {
+    try {
+      const snapshot = await getAdminDb().collection('centers').get();
+      const centers = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as Center))
+        .map(center => ({
+          id: center.id,
+          name: center.name,
+          slug: center.slug || null,
+          status: center.status || null,
+          email: center.email || null,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      res.json({ ok: true, centers });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Lecture des centres impossible.';
+      res.status(500).json({ ok: false, error: message });
+    }
+  });
+
   app.post('/api/contact-messages', async (req, res) => {
     try {
       const result = await createPublicContactMessage(req.body);
