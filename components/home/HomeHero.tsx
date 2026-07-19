@@ -48,12 +48,12 @@ export function HomeHero() {
         </div>
       </div>
 
-      <div className="flex items-end justify-center bg-white px-5 pb-8 sm:px-8 lg:col-span-6 lg:px-10 lg:py-10 lg:pl-0">
-        <div className="relative h-[230px] w-full overflow-hidden bg-white sm:h-[285px] lg:h-[335px]">
+      <div className="flex items-end justify-center bg-white px-5 pb-8 sm:px-8 lg:col-span-6 lg:px-8 lg:py-8 lg:pl-0">
+        <div className="relative h-[260px] w-full overflow-hidden bg-white sm:h-[330px] lg:h-[390px]">
           <img
             src="/images/aq8algerie.webp"
             alt="Seance AQ8 dans un centre premium en Algerie"
-            className="h-full w-full object-contain object-bottom lg:object-right-bottom"
+            className="h-full w-full scale-[1.16] object-contain object-bottom translate-x-2 sm:scale-[1.18] lg:translate-x-[-3%] lg:scale-[1.22] lg:object-right-bottom"
             referrerPolicy="no-referrer"
           />
         </div>
