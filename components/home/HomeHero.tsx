@@ -3,7 +3,7 @@ import { ArrowRight, Calendar, ShieldCheck } from "lucide-react";
 
 export function HomeHero() {
   return (
-    <section className="relative grid overflow-visible rounded-lg border border-[#f5d6d6] bg-[linear-gradient(135deg,#fff8f7_0%,#ffffff_46%,#fff1ed_100%)] shadow-[0_24px_80px_rgba(255,87,87,0.10)] lg:grid-cols-12 lg:items-center">
+    <section className="relative grid overflow-visible rounded-lg bg-[linear-gradient(135deg,#fff8f7_0%,#ffffff_46%,#fff1ed_100%)] shadow-[0_24px_80px_rgba(255,87,87,0.10)] lg:grid-cols-12 lg:items-center">
       <div className="relative z-10 flex items-center px-5 py-9 sm:px-8 sm:py-10 lg:col-span-6 lg:px-12 lg:py-12">
         <div className="max-w-2xl space-y-7">
           <div className="inline-flex max-w-full items-center gap-2 rounded-md border border-white/80 bg-white/75 px-3 py-2 text-xs font-semibold text-[#242424] shadow-sm backdrop-blur">
