@@ -9,7 +9,7 @@ const features = [
 
 export function HomeWhyChoose() {
   return (
-    <section className="grid gap-10 rounded-lg border border-[#f5d6d6] bg-[linear-gradient(135deg,#fff8f7_0%,#ffffff_46%,#fff1ed_100%)] p-6 shadow-[0_24px_80px_rgba(255,87,87,0.10)] sm:p-8 lg:grid-cols-12 lg:p-10">
+    <section className="grid gap-10 rounded-lg bg-[linear-gradient(135deg,#fff8f7_0%,#ffffff_46%,#fff1ed_100%)] p-6 shadow-[0_24px_80px_rgba(255,87,87,0.10)] sm:p-8 lg:grid-cols-12 lg:p-10">
       <div className="space-y-4 lg:col-span-4">
         <p className="inline-flex items-center gap-2 rounded-md border border-white/80 bg-white/75 px-3 py-2 text-sm font-bold text-[#ff5757] shadow-sm backdrop-blur"><MapPinned className="h-4 w-4" />Experience AQ8</p>
         <h2 className="font-display text-3xl font-bold leading-tight text-[#242424] sm:text-4xl">Une experience plus lisible, du choix du centre a la seance.</h2>
