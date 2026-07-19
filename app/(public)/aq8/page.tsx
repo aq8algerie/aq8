@@ -67,7 +67,7 @@ export default function Aq8Page() {
         <section className="relative overflow-hidden rounded-lg bg-[#353535] px-4 py-10 xs:px-6 xs:py-14 sm:px-10 lg:px-14 lg:py-20 text-white">
           <Image
             src="/images/prestations/aq8.webp"
-            alt="Seance AQ8 EMS dans un centre AQ8 Algerie"
+            alt="Séance AQ8 EMS dans un centre AQ8 Algérie"
             width={1600}
             height={900}
             priority
@@ -128,7 +128,7 @@ export default function Aq8Page() {
             </h2>
 
             <p className="text-sm font-medium leading-relaxed text-slate-600 sm:text-base">
-              AQ8 EMS is une technologie d’électrostimulation utilisée pendant
+              AQ8 EMS est une technologie d’électrostimulation utilisée pendant
               une séance active. Le client effectue des mouvements simples et
               guidés, tandis que la stimulation musculaire accompagne l’effort.
             </p>

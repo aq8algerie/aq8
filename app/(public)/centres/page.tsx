@@ -25,17 +25,17 @@ export default function CentresPage({ centers: providedCenters }: { centers?: Ce
       <div className="mx-auto max-w-7xl space-y-12 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
         <section className="grid gap-8 border-b border-slate-200 pb-10 lg:grid-cols-12 lg:items-end">
           <div className="space-y-4 lg:col-span-8">
-            <p className="inline-flex items-center gap-2 text-sm font-bold text-[#ff5757]"><MapPin className="h-4 w-4" />Reseau AQ8 Algerie</p>
-            <h1 className="font-display text-4xl font-bold leading-tight text-[#242424] sm:text-5xl">Nos centres AQ8 en Algerie</h1>
-            <p className="max-w-2xl text-sm font-medium leading-relaxed text-slate-600 sm:text-base">Consultez les centres actifs, leurs prestations, horaires, consignes pratiques et moyens de reservation. Les centres suspendus ou en maintenance sont automatiquement masques du site public.</p>
+            <p className="inline-flex items-center gap-2 text-sm font-bold text-[#ff5757]"><MapPin className="h-4 w-4" />Réseau AQ8 Algérie</p>
+            <h1 className="font-display text-4xl font-bold leading-tight text-[#242424] sm:text-5xl">Nos centres AQ8 en Algérie</h1>
+            <p className="max-w-2xl text-sm font-medium leading-relaxed text-slate-600 sm:text-base">Consultez les centres actifs, leurs prestations, horaires, consignes pratiques et moyens de réservation. Les centres suspendus ou en maintenance sont automatiquement masqués du site public.</p>
           </div>
           <div className="flex flex-col gap-3 lg:col-span-4 lg:items-end">
-            <Link href="/aq8" aria-label="Decouvrir AQ8 EMS" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#242424] px-5 py-3 text-sm font-bold text-white transition-premium hover:bg-[#ff5757]">
-              Decouvrir AQ8 EMS
+            <Link href="/aq8" aria-label="Découvrir AQ8 EMS" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#242424] px-5 py-3 text-sm font-bold text-white transition-premium hover:bg-[#ff5757]">
+              Découvrir AQ8 EMS
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/wonder" aria-label="Decouvrir Wonder Sculpt" className="inline-flex items-center justify-center rounded-md border border-slate-300 px-5 py-3 text-sm font-bold text-[#242424] transition-premium hover:border-[#ff5757] hover:text-[#ff5757]">
-              Decouvrir Wonder
+            <Link href="/wonder" aria-label="Découvrir Wonder Sculpt" className="inline-flex items-center justify-center rounded-md border border-slate-300 px-5 py-3 text-sm font-bold text-[#242424] transition-premium hover:border-[#ff5757] hover:text-[#ff5757]">
+              Découvrir Wonder
             </Link>
           </div>
         </section>

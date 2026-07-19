@@ -29,20 +29,20 @@ export function PublicAbout() {
   useSeo('about');
 
   const pillars = [
-    { title: 'Encadrement', desc: 'Chaque centre accompagne ses clients avec des consignes claires, un suivi humain et une progression adaptee.', icon: ShieldAlert },
-    { title: 'Technologies', desc: 'AQ8 EMS et Wonder reunissent deux approches complementaires : active, ciblee et encadree.', icon: Sparkles },
-    { title: 'Reseau local', desc: 'Les centres gardent leurs horaires, capacites et informations publiques a jour depuis le CRM.', icon: MapPin },
+    { title: 'Encadrement', desc: 'Chaque centre accompagne ses clients avec des consignes claires, un suivi humain et une progression adaptée.', icon: ShieldAlert },
+    { title: 'Technologies', desc: 'AQ8 EMS et Wonder réunissent deux approches complémentaires : active, ciblée et encadrée.', icon: Sparkles },
+    { title: 'Réseau local', desc: 'Les centres gardent leurs horaires, capacités et informations publiques à jour depuis le CRM.', icon: MapPin },
   ];
 
   const faqItems = [
-    { question: "Qu'est-ce que AQ8 EMS ?", answer: "AQ8 EMS est une approche d'electrostimulation musculaire active. Le client realise des mouvements encadres pendant que la stimulation accompagne l'effort, avec une intensite adaptee selon son profil et ses objectifs." },
-    { question: 'Quelle est la difference entre AQ8 et Wonder ?', answer: "AQ8 est une seance active basee sur l'electrostimulation pendant le mouvement. Wonder est une approche de sculpting corporel cible pour accompagner la tonification et le suivi de certaines zones." },
-    { question: 'Comment reserver une seance AQ8 ou Wonder ?', answer: "Il suffit de choisir un centre AQ8, de consulter ses horaires et consignes, puis d'envoyer une demande de reservation. L'equipe du centre recontacte ensuite le client pour confirmer le creneau selon les disponibilites." },
-    { question: 'Combien de seances sont conseillees ?', answer: "La frequence depend du profil, des objectifs, de la prestation choisie et des recommandations de l'equipe du centre. Un premier echange permet d'orienter le client vers un rythme adapte." },
-    { question: 'Faut-il apporter une tenue specifique ?', answer: 'Oui, certains centres peuvent demander une tenue ou des equipements precis. Les consignes exactes sont indiquees sur la page de chaque centre.' },
-    { question: 'La seance est-elle douloureuse ?', answer: "La sensation varie selon les personnes et l'intensite choisie. L'equipe du centre adapte progressivement les reglages selon le profil, les sensations et le niveau de confort." },
-    { question: 'Y a-t-il des contre-indications ?', answer: 'En cas de grossesse, pacemaker, dispositif medical implante, epilepsie, probleme cardiaque, trouble circulatoire ou doute medical, il est recommande de demander un avis medical avant toute seance.' },
-    { question: 'Les resultats sont-ils garantis ?', answer: "Non. Les resultats peuvent varier selon le profil, la regularite des seances, l'hygiene de vie, les objectifs et l'accompagnement suivi." },
+    { question: "Qu'est-ce que AQ8 EMS ?", answer: "AQ8 EMS est une approche d'électrostimulation musculaire active. Le client réalise des mouvements encadrés pendant que la stimulation accompagne l'effort, avec une intensité adaptée selon son profil et ses objectifs." },
+    { question: 'Quelle est la différence entre AQ8 et Wonder ?', answer: "AQ8 est une séance active basée sur l'électrostimulation pendant le mouvement. Wonder est une approche de sculpting corporel ciblé pour accompagner la tonification et le suivi de certaines zones." },
+    { question: 'Comment réserver une séance AQ8 ou Wonder ?', answer: "Il suffit de choisir un centre AQ8, de consulter ses horaires et consignes, puis d'envoyer une demande de réservation. L'équipe du centre recontacte ensuite le client pour confirmer le créneau selon les disponibilités." },
+    { question: 'Combien de séances sont conseillées ?', answer: "La fréquence dépend du profil, des objectifs, de la prestation choisie et des recommandations de l'équipe du centre. Un premier échange permet d'orienter le client vers un rythme adapté." },
+    { question: 'Faut-il apporter une tenue spécifique ?', answer: 'Oui, certains centres peuvent demander une tenue ou des équipements précis. Les consignes exactes sont indiquées sur la page de chaque centre.' },
+    { question: 'La séance est-elle douloureuse ?', answer: "La sensation varie selon les personnes et l'intensité choisie. L'équipe du centre adapte progressivement les réglages selon le profil, les sensations et le niveau de confort." },
+    { question: 'Y a-t-il des contre-indications ?', answer: 'En cas de grossesse, pacemaker, dispositif médical implanté, épilepsie, problème cardiaque, trouble circulatoire ou doute médical, il est recommandé de demander un avis médical avant toute séance.' },
+    { question: 'Les résultats sont-ils garantis ?', answer: "Non. Les résultats peuvent varier selon le profil, la régularité des séances, l'hygiène de vie, les objectifs et l'accompagnement suivi." },
   ];
 
   return (
@@ -50,13 +50,13 @@ export function PublicAbout() {
       <SeoJsonLd type="faq" />
       <section className="grid gap-10 border-b border-slate-200 pb-12 lg:grid-cols-12 lg:items-end">
         <div className="space-y-5 lg:col-span-8">
-          <p className="inline-flex items-center gap-2 text-sm font-bold text-[#ff5757]"><CheckCircle className="h-4 w-4" />A propos</p>
-          <h1 className="font-display text-4xl font-bold leading-tight text-[#242424] sm:text-5xl">AQ8 Algerie, une experience technologique claire et encadree.</h1>
-          <p className="max-w-2xl text-sm font-medium leading-relaxed text-slate-600 sm:text-base">AQ8 Algerie accompagne ses clients avec des technologies EMS et Wonder, des centres de proximite et une reservation pensee pour etre simple, fiable et rassurante.</p>
+          <p className="inline-flex items-center gap-2 text-sm font-bold text-[#ff5757]"><CheckCircle className="h-4 w-4" />À propos</p>
+          <h1 className="font-display text-4xl font-bold leading-tight text-[#242424] sm:text-5xl">AQ8 Algérie, une expérience technologique claire et encadrée.</h1>
+          <p className="max-w-2xl text-sm font-medium leading-relaxed text-slate-600 sm:text-base">AQ8 Algérie accompagne ses clients avec des technologies EMS et Wonder, des centres de proximité et une réservation pensée pour être simple, fiable et rassurante.</p>
         </div>
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-5 lg:col-span-4">
           <p className="text-sm font-bold text-[#242424]">Positionnement</p>
-          <p className="mt-2 text-sm font-medium leading-relaxed text-slate-600">Une marque premium, mais accessible : des informations precises, des centres actifs et un parcours public sans friction.</p>
+          <p className="mt-2 text-sm font-medium leading-relaxed text-slate-600">Une marque premium, mais accessible : des informations précises, des centres actifs et un parcours public sans friction.</p>
         </div>
       </section>
 
@@ -76,8 +76,8 @@ export function PublicAbout() {
       <section className="grid gap-8 rounded-lg border border-slate-200 bg-[#242424] p-6 text-white sm:p-8 lg:grid-cols-12 lg:items-center">
         <div className="space-y-4 lg:col-span-8">
           <p className="inline-flex items-center gap-2 text-sm font-bold text-[#ff5757]"><CheckCircle className="h-4 w-4" />Notre promesse</p>
-          <h2 className="font-display text-3xl font-bold leading-tight sm:text-4xl">Rendre la reservation et le suivi plus simples pour chaque client.</h2>
-          <p className="text-sm font-medium leading-relaxed text-white/70 sm:text-base">Le site public permet de decouvrir les technologies, comparer les centres, consulter les informations pratiques et envoyer une demande de reservation au centre choisi.</p>
+          <h2 className="font-display text-3xl font-bold leading-tight sm:text-4xl">Rendre la réservation et le suivi plus simples pour chaque client.</h2>
+          <p className="text-sm font-medium leading-relaxed text-white/70 sm:text-base">Le site public permet de découvrir les technologies, comparer les centres, consulter les informations pratiques et envoyer une demande de réservation au centre choisi.</p>
         </div>
         <div className="lg:col-span-4 lg:text-right">
           <a href="/centres" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff5757] px-6 py-3 text-sm font-bold text-white transition-premium hover:bg-[#e94949]">Voir nos centres<ArrowRight className="h-4 w-4" /></a>
@@ -86,9 +86,9 @@ export function PublicAbout() {
 
       <section className="mx-auto max-w-4xl space-y-6">
         <div className="space-y-3 text-center">
-          <p className="inline-flex items-center justify-center gap-2 text-sm font-bold text-[#ff5757]"><HelpCircle className="h-4 w-4" />Questions frequentes</p>
-          <h2 className="font-display text-3xl font-bold leading-tight text-[#242424]">Les reponses essentielles avant votre premiere seance.</h2>
-          <p className="mx-auto max-w-2xl text-sm font-medium leading-relaxed text-slate-600 sm:text-base">Horaires, reservation, equipements et precautions peuvent varier selon le centre choisi. Cette section rassemble les informations generales les plus utiles.</p>
+          <p className="inline-flex items-center justify-center gap-2 text-sm font-bold text-[#ff5757]"><HelpCircle className="h-4 w-4" />Questions fréquentes</p>
+          <h2 className="font-display text-3xl font-bold leading-tight text-[#242424]">Les réponses essentielles avant votre première séance.</h2>
+          <p className="mx-auto max-w-2xl text-sm font-medium leading-relaxed text-slate-600 sm:text-base">Horaires, réservation, équipements et précautions peuvent varier selon le centre choisi. Cette section rassemble les informations générales les plus utiles.</p>
         </div>
         <div className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
           {faqItems.map((item, index) => (

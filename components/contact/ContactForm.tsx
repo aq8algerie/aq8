@@ -16,8 +16,8 @@ type ContactFormProps = {
 type RequestType = PublicContactRequestType;
 
 const requestTypeLabels: Record<RequestType, string> = {
-  general: "Question g?n?rale",
-  reservation: "Demande li?e ? une r?servation",
+  general: "Question générale",
+  reservation: "Demande liée à une réservation",
   partnership: "Partenariat / franchise",
   recruitment: "Recrutement",
 };

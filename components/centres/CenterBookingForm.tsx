@@ -243,7 +243,7 @@ export function CenterBookingForm({
     }
 
     if (selectedAvailability?.isFull) {
-      setErrorMsg("Ce creneau vient d'etre complet. Veuillez choisir une autre heure.");
+      setErrorMsg("Ce créneau vient d'être complet. Veuillez choisir une autre heure.");
       return;
     }
 
@@ -258,11 +258,11 @@ export function CenterBookingForm({
       const payload = (await response.json().catch(() => null)) as ReservationResponse | null;
 
       if (!response.ok || payload?.ok !== true) {
-        throw new Error(payload?.error || "Reservation impossible pour ce creneau.");
+        throw new Error(payload?.error || "Réservation impossible pour ce créneau.");
       }
 
       setSuccessMsg(
-        `Votre creneau est pre-reserve pour le centre ${centerName}. L'equipe du centre vous contactera pour confirmer definitivement le rendez-vous.`,
+        `Votre créneau est pré-réservé pour le centre ${centerName}. L'équipe du centre vous contactera pour confirmer définitivement le rendez-vous.`,
       );
 
       setFirstName("");
@@ -275,7 +275,7 @@ export function CenterBookingForm({
       setBookingTime(getBookingHoursForDate(centerId, nextDate, bookingCenter)[0] || "");
     } catch (err) {
       console.error("Booking submission error:", err);
-      setErrorMsg(err instanceof Error ? err.message : "Une erreur est survenue. Veuillez reessayer ou contacter directement le centre.");
+      setErrorMsg(err instanceof Error ? err.message : "Une erreur est survenue. Veuillez réessayer ou contacter directement le centre.");
     } finally {
       setIsLoading(false);
     }
@@ -290,14 +290,14 @@ export function CenterBookingForm({
           </div>
           <div className="space-y-2">
             <h2 className="font-display text-xl font-bold text-emerald-900">
-              Creneau pre-reserve
+              Créneau pré-réservé
             </h2>
             <p className="text-sm font-medium leading-relaxed text-emerald-800">
               {successMsg}
             </p>
             <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4 text-xs font-bold text-amber-800 space-y-1.5">
               <p className="font-medium leading-relaxed text-amber-800">
-                La confirmation finale reste faite par l'equipe du centre apres verification du planning et du paiement.
+                La confirmation finale reste faite par l'équipe du centre après vérification du planning et du paiement.
               </p>
             </div>
           </div>
@@ -306,7 +306,7 @@ export function CenterBookingForm({
             onClick={() => setSuccessMsg("")}
             className="w-full rounded-md bg-[#353535] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#ff5757] cursor-pointer"
           >
-            Faire une autre reservation
+            Faire une autre réservation
           </button>
         </div>
       </div>
@@ -317,25 +317,25 @@ export function CenterBookingForm({
     <div className="rounded-lg border border-slate-100 bg-white p-6">
       <div className="mb-5 space-y-2">
         <span className="text-xs font-bold uppercase text-[#ff5757]">
-          Reservation en ligne
+          Réservation en ligne
         </span>
         <h2 className="font-display text-xl font-bold text-[#353535]">
           Dans votre centre de {centerCity}
         </h2>
         <p className="text-sm font-medium leading-relaxed text-slate-500">
-          Choisissez une prestation, une date et une heure disponible. Le creneau est bloque en attente de confirmation par le centre.
+          Choisissez une prestation, une date et une heure disponible. Le créneau est bloqué en attente de confirmation par le centre.
         </p>
       </div>
 
       <div className="mb-5 rounded-md border border-slate-100 bg-slate-50 p-4 text-sm">
         <div className="flex items-center justify-between gap-3">
-          <span className="font-bold text-slate-700">Capacite par heure</span>
+          <span className="font-bold text-slate-700">Capacité par heure</span>
           <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#ff5757]">
             {capacitySummary}
           </span>
         </div>
         <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500">
-          Les disponibilites se mettent a jour automatiquement selon les reservations deja prises et les demandes en attente.
+          Les disponibilités se mettent à jour automatiquement selon les réservations déjà prises et les demandes en attente.
         </p>
       </div>
 
@@ -349,7 +349,7 @@ export function CenterBookingForm({
       <form onSubmit={handleSubmit} className="space-y-4 text-sm font-semibold text-slate-700">
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-slate-600">Prenom *</label>
+            <label className="text-slate-600">Prénom *</label>
             <input
               type="text"
               required
@@ -375,7 +375,7 @@ export function CenterBookingForm({
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-slate-600">Telephone *</label>
+          <label className="text-slate-600">Téléphone *</label>
           <input
             type="tel"
             required
@@ -400,7 +400,7 @@ export function CenterBookingForm({
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-slate-600">Prestation souhaitee</label>
+          <label className="text-slate-600">Prestation souhaitée</label>
           <select
             value={service}
             onChange={(e) => setService(e.target.value)}
@@ -417,7 +417,7 @@ export function CenterBookingForm({
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-slate-600">Date souhaitee</label>
+            <label className="text-slate-600">Date souhaitée</label>
             <input
               type="date"
               min={bookingMinimumDate}
@@ -436,7 +436,7 @@ export function CenterBookingForm({
               className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
             >
               {hours.length === 0 && (
-                <option value="">Centre ferme ce jour</option>
+                <option value="">Centre fermé ce jour</option>
               )}
               {hours.map((hour) => {
                 const availability = hourAvailability[hour];
@@ -456,13 +456,13 @@ export function CenterBookingForm({
             {availabilityLoading ? (
               <span className="inline-flex items-center gap-2 text-slate-500">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Verification des disponibilites...
+                Vérification des disponibilités...
               </span>
             ) : selectedAvailability?.isFull ? (
-              <span className="text-rose-700">Ce creneau est complet pour {getServiceLabel(service)}.</span>
+              <span className="text-rose-700">Ce créneau est complet pour {getServiceLabel(service)}.</span>
             ) : selectedAvailability ? (
               <span className="text-emerald-700">
-                {selectedAvailability.remaining} place{selectedAvailability.remaining > 1 ? "s" : ""} disponible{selectedAvailability.remaining > 1 ? "s" : ""} pour {getServiceLabel(service)} a {bookingTime}.
+                {selectedAvailability.remaining} place{selectedAvailability.remaining > 1 ? "s" : ""} disponible{selectedAvailability.remaining > 1 ? "s" : ""} pour {getServiceLabel(service)} à {bookingTime}.
               </span>
             ) : null}
           </div>
@@ -476,18 +476,18 @@ export function CenterBookingForm({
           {isLoading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Reservation en cours...
+              Réservation en cours...
             </>
           ) : (
             <>
               <Calendar className="h-4 w-4" />
-              Pre-reserver mon creneau
+              Pré-réserver mon créneau
             </>
           )}
         </button>
 
         <p className="text-xs font-medium leading-relaxed text-slate-500">
-          La reservation bloque une place disponible, puis l'equipe du centre confirme definitivement le rendez-vous.
+          La réservation bloque une place disponible, puis l'équipe du centre confirme définitivement le rendez-vous.
         </p>
       </form>
     </div>

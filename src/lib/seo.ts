@@ -23,9 +23,9 @@ export const staticPageSeo: Record<string, Omit<PageSeo, 'canonicalUrl'>> = {
     keywords: ["AQ8 Algérie", "électrostimulation Algérie", "EMS Algérie", "Wonder Algérie", "remise en forme Alger", "fitness Alger", "minceur Algérie"]
   },
   about: {
-    title: "A propos - AQ8 Algerie",
-    description: "Decouvrez AQ8 Algerie, son approche premium, ses centres, ses seances AQ8 EMS et Wonder, ainsi que les questions frequentes avant reservation.",
-    keywords: ["a propos AQ8 Algerie", "questions frequentes AQ8", "AQ8 Algerie", "centres AQ8", "EMS Algerie", "Wonder Algerie"]
+    title: "À propos - AQ8 Algérie",
+    description: "Découvrez AQ8 Algérie, son approche premium, ses centres, ses séances AQ8 EMS et Wonder, ainsi que les questions fréquentes avant réservation.",
+    keywords: ["à propos AQ8 Algérie", "questions fréquentes AQ8", "AQ8 Algérie", "centres AQ8", "EMS Algérie", "Wonder Algérie"]
   },
   aq8: {
     title: "AQ8 EMS - Électrostimulation sans fil en Algérie",

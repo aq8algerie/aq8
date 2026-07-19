@@ -9,10 +9,10 @@ interface HomeCentersPreviewProps {
 function getCenterAudienceLabel(center: Center) {
   const hasWomenHours = (center.womenHours?.length ?? 0) > 0;
   const hasMenHours = (center.menHours?.length ?? 0) > 0;
-  if (hasWomenHours && hasMenHours) return "Creneaux hommes & femmes";
-  if (hasWomenHours) return "Creneaux femmes";
-  if (hasMenHours) return "Creneaux hommes";
-  return "Horaires a confirmer";
+  if (hasWomenHours && hasMenHours) return "Créneaux hommes & femmes";
+  if (hasWomenHours) return "Créneaux femmes";
+  if (hasMenHours) return "Créneaux hommes";
+  return "Horaires à confirmer";
 }
 
 export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {
@@ -23,8 +23,8 @@ export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {
       <section className="rounded-lg border border-slate-200 bg-white px-6 py-12 text-center sm:px-10">
         <div className="mx-auto max-w-xl space-y-4">
           <p className="text-sm font-bold text-[#ff5757]">Centres AQ8</p>
-          <h2 className="font-display text-2xl font-bold text-[#242424] sm:text-3xl">Nos centres seront bientot disponibles</h2>
-          <p className="text-sm font-medium leading-relaxed text-slate-600">Les centres AQ8 seront affiches ici avec leurs horaires, prestations, consignes et moyens de contact.</p>
+          <h2 className="font-display text-2xl font-bold text-[#242424] sm:text-3xl">Nos centres seront bientôt disponibles</h2>
+          <p className="text-sm font-medium leading-relaxed text-slate-600">Les centres AQ8 seront affichés ici avec leurs horaires, prestations, consignes et moyens de contact.</p>
         </div>
       </section>
     );
@@ -34,11 +34,11 @@ export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {
     <section className="space-y-8">
       <div className="flex flex-col justify-between gap-5 border-b border-slate-200 pb-8 sm:flex-row sm:items-end">
         <div className="max-w-2xl space-y-3">
-          <p className="text-sm font-bold text-[#ff5757]">Reseau AQ8 Algerie</p>
+          <p className="text-sm font-bold text-[#ff5757]">Réseau AQ8 Algérie</p>
           <h2 className="font-display text-3xl font-bold leading-tight text-[#242424] sm:text-4xl">Choisir un centre devient plus simple.</h2>
-          <p className="text-sm font-medium leading-relaxed text-slate-600 sm:text-base">Chaque centre affiche ses prestations, ses horaires, ses consignes et son acces reservation avec une information maintenue a jour.</p>
+          <p className="text-sm font-medium leading-relaxed text-slate-600 sm:text-base">Chaque centre affiche ses prestations, ses horaires, ses consignes et son accès réservation avec une information maintenue à jour.</p>
         </div>
-        <Link href="/centres" aria-label="Voir tous les centres AQ8 en Algerie" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#242424] px-5 py-3 text-sm font-bold text-white transition-premium hover:bg-[#ff5757]">
+        <Link href="/centres" aria-label="Voir tous les centres AQ8 en Algérie" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#242424] px-5 py-3 text-sm font-bold text-white transition-premium hover:bg-[#ff5757]">
           Voir les centres
           <span className="rounded bg-white/12 px-2 py-0.5 text-xs">{centers.length}</span>
           <ArrowRight className="h-4 w-4" />
@@ -61,7 +61,7 @@ export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {
                 <div className="flex items-center gap-2"><Users className="h-4 w-4 text-[#ff5757]" />{getCenterAudienceLabel(center)}</div>
                 {center.schedule && <div className="flex items-start gap-2"><Clock className="mt-0.5 h-4 w-4 text-[#ff5757]" /><span>{center.schedule}</span></div>}
               </div>
-              <Link href={"/centres/" + center.slug} aria-label={"Decouvrir le centre AQ8 " + center.name} className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-300 px-4 py-2.5 text-sm font-bold text-[#242424] transition-premium hover:border-[#ff5757] hover:text-[#ff5757]">
+              <Link href={"/centres/" + center.slug} aria-label={"Découvrir le centre AQ8 " + center.name} className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-300 px-4 py-2.5 text-sm font-bold text-[#242424] transition-premium hover:border-[#ff5757] hover:text-[#ff5757]">
                 Voir le centre
                 <ArrowRight className="h-4 w-4" />
               </Link>

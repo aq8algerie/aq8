@@ -4,16 +4,16 @@ import { ArrowRight, Activity, Dumbbell, ShieldCheck, Target, Zap } from "lucide
 const technologies = [
   {
     title: "AQ8 EMS",
-    label: "Seance active",
+    label: "Séance active",
     href: "/aq8",
     image: "/images/prestations/aq8.webp",
-    alt: "Seance AQ8 EMS en Algerie",
+    alt: "Séance AQ8 EMS en Algérie",
     icon: Zap,
-    description: "Une seance d'electrostimulation active, guidee par l'equipe du centre, avec une intensite adaptee au profil et aux objectifs.",
+    description: "Une séance d'électrostimulation active, guidée par l'équipe du centre, avec une intensité adaptée au profil et aux objectifs.",
     points: [
       { icon: Activity, text: "Travail musculaire global" },
-      { icon: ShieldCheck, text: "Intensite personnalisee" },
-      { icon: Dumbbell, text: "Mouvements encadres" },
+      { icon: ShieldCheck, text: "Intensité personnalisée" },
+      { icon: Dumbbell, text: "Mouvements encadrés" },
     ],
   },
   {
@@ -21,13 +21,13 @@ const technologies = [
     label: "Sculpting cible",
     href: "/wonder",
     image: "/images/prestations/wonder-ems.webp",
-    alt: "Seance Wonder Sculpt AQ8 Algerie",
+    alt: "Séance Wonder Sculpt AQ8 Algérie",
     icon: Target,
-    description: "Une approche ciblee pour accompagner la tonification et le suivi de certaines zones, dans un cadre clair et rassurant.",
+    description: "Une approche ciblée pour accompagner la tonification et le suivi de certaines zones, dans un cadre clair et rassurant.",
     points: [
-      { icon: Target, text: "Zones ciblees" },
+      { icon: Target, text: "Zones ciblées" },
       { icon: Activity, text: "Suivi de silhouette" },
-      { icon: ShieldCheck, text: "Consignes adaptees" },
+      { icon: ShieldCheck, text: "Consignes adaptées" },
     ],
   },
 ];
@@ -39,12 +39,12 @@ export function HomeTechnologies() {
         <div className="space-y-3 lg:col-span-7">
           <p className="text-sm font-bold text-[#ff5757]">AQ8 & Wonder</p>
           <h2 className="font-display text-3xl font-bold leading-tight text-[#242424] sm:text-4xl">
-            Deux technologies complementaires, presentees simplement.
+            Deux technologies complémentaires, présentées simplement.
           </h2>
         </div>
         <p className="text-sm font-medium leading-relaxed text-slate-600 lg:col-span-5">
-          L'experience publique met l'essentiel devant le client : comprendre la
-          technologie, choisir un centre, puis envoyer une demande de reservation.
+          L'expérience publique met l'essentiel devant le client : comprendre la
+          technologie, choisir un centre, puis envoyer une demande de réservation.
         </p>
       </div>
 
@@ -80,8 +80,8 @@ export function HomeTechnologies() {
                     );
                   })}
                 </div>
-                <Link href={technology.href} aria-label={"Decouvrir " + technology.title} className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-4 py-2.5 text-sm font-bold text-[#242424] transition-premium hover:border-[#ff5757] hover:text-[#ff5757]">
-                  Decouvrir
+                <Link href={technology.href} aria-label={"Découvrir " + technology.title} className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-4 py-2.5 text-sm font-bold text-[#242424] transition-premium hover:border-[#ff5757] hover:text-[#ff5757]">
+                  Découvrir
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>

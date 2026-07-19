@@ -74,7 +74,7 @@ export default function WonderPage() {
         <section className="relative overflow-hidden rounded-lg bg-[#353535] px-4 py-10 xs:px-6 xs:py-14 sm:px-10 lg:px-14 lg:py-20 text-white">
           <Image
             src="/images/prestations/wonder-ems.webp"
-            alt="Seance Wonder EMS dans un centre AQ8 Algerie"
+            alt="Séance Wonder EMS dans un centre AQ8 Algérie"
             width={1600}
             height={900}
             priority

@@ -608,11 +608,11 @@ export default function App() {
               type="button"
               onClick={() => navigate('home')}
               className="flex items-center cursor-pointer group"
-              aria-label="Retour a l'accueil AQ8 Algerie"
+              aria-label="Retour à l'accueil AQ8 Algérie"
             >
               <img
                 src="/images/logo.png"
-                alt="AQ8 Algerie"
+                alt="AQ8 Algérie"
                 className="h-12 w-auto max-w-[190px] object-contain transition-premium group-hover:opacity-90 sm:h-14 sm:max-w-[215px] lg:h-[3.75rem] lg:max-w-[235px]"
               />
             </button>
@@ -933,7 +933,7 @@ export default function App() {
                         { id: 'centers' as const, label: 'Gestion Centres', icon: Building },
                         { id: 'managers' as const, label: 'Managers & Accès', icon: Users },
                         { id: 'stats' as const, label: 'Analyses Réseau', icon: BarChart3 },
-                        { id: 'settings' as const, label: 'Parametres Généraux', icon: Settings }
+                        { id: 'settings' as const, label: 'Paramètres Généraux', icon: Settings }
                       ].map(tab => {
                         const Icon = tab.icon;
                         const isActive = crmSuperAdminTab === tab.id;
@@ -965,7 +965,7 @@ export default function App() {
                         { id: 'bookings' as const, label: 'Réservations', icon: Calendar },
                         { id: 'payments' as const, label: 'Paiements Encaissés', icon: DollarSign },
                         { id: 'services' as const, label: 'Prestations & Forfaits', icon: Layers },
-                        { id: 'settings' as const, label: 'Parametres', icon: Settings }
+                        { id: 'settings' as const, label: 'Paramètres', icon: Settings }
                       ].map(tab => {
                         const Icon = tab.icon;
                         const isActive = crmCenterManagerTab === tab.id;
@@ -1072,15 +1072,15 @@ export default function App() {
                 type="button"
                 onClick={() => navigate('home')}
                 className="inline-flex p-0 transition-premium hover:opacity-85 cursor-pointer"
-                aria-label="Retour a l'accueil AQ8 Algerie"
+                aria-label="Retour à l'accueil AQ8 Algérie"
               >
                 <img
                   src="/images/logo.png"
-                  alt="AQ8 Algerie"
+                  alt="AQ8 Algérie"
                   className="h-12 w-auto max-w-[210px] object-contain brightness-0 invert"
                 />
               </button>
-              <p className="text-xs text-slate-400 leading-relaxed">AQ8 Algerie reunit EMS, Wonder et accompagnement centre par centre pour une experience claire, encadree et premium.</p>
+              <p className="text-xs text-slate-400 leading-relaxed">AQ8 Algérie réunit EMS, Wonder et accompagnement centre par centre pour une expérience claire, encadrée et premium.</p>
             </div>
 
             <div className="space-y-4 text-xs">
@@ -1122,7 +1122,7 @@ export default function App() {
           </div>
 
           <div className="max-w-7xl mx-auto mt-10 border-t border-white/10 px-4 pt-6 text-center text-xs text-slate-500 sm:px-6 lg:px-8">
-            <p>2026 AQ8 Algerie. Tous droits reserves.</p>
+            <p>2026 AQ8 Algérie. Tous droits réservés.</p>
           </div>
         </footer>
       )}
