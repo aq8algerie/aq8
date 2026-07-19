@@ -51,8 +51,9 @@ function getEmailConfig() {
   );
   const appUrl = (process.env.APP_URL || process.env.PUBLIC_APP_URL || 'https://aq8algerie.com').replace(/\/+$/, '');
   const enabled = process.env.EMAIL_NOTIFICATIONS_ENABLED !== 'false';
+  const adminCopiesEnabled = process.env.EMAIL_ADMIN_COPIES_ENABLED === 'true';
 
-  return { apiKey, from, replyTo, adminRecipients, appUrl, enabled };
+  return { apiKey, from, replyTo, adminRecipients, appUrl, enabled, adminCopiesEnabled };
 }
 
 function splitEmails(value: string): string[] {
@@ -255,7 +256,8 @@ export function getEmailNotificationDiagnostics() {
     fromConfigured: Boolean(config.from),
     fromDomain,
     replyToConfigured: Boolean(config.replyTo),
-    adminRecipientsCount: config.adminRecipients.length,
+    adminCopiesEnabled: config.adminCopiesEnabled,
+    adminRecipientsCount: config.adminCopiesEnabled ? config.adminRecipients.length : 0,
     appUrl: config.appUrl,
   };
 }
@@ -265,8 +267,10 @@ function centerRecipients(center?: Center | null): string[] {
 }
 
 function adminRecipients(excluding: string[] = []): string[] {
+  const config = getEmailConfig();
+  if (!config.adminCopiesEnabled) return [];
   const excluded = new Set(excluding.map(email => email.toLowerCase()));
-  return getEmailConfig().adminRecipients.filter(email => !excluded.has(email));
+  return config.adminRecipients.filter(email => !excluded.has(email));
 }
 
 async function getDoc<T>(db: Firestore, collectionName: string, id: string): Promise<T | null> {
