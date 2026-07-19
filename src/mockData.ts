@@ -177,6 +177,46 @@ export const INITIAL_CENTERS: Center[] = [
       'Un change pour repartir'
     ],
     cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est important d’annuler au moins 1 heure à l’avance pour éviter que le système ne déduise le crédit de votre forfait en cours. Merci'
+  },
+  {
+    id: 'center-6',
+    name: 'AQ8 Draria',
+    city: 'Alger',
+    address: 'Cite 142 logts, Draria 16000, Algerie',
+    phone: '0770397387',
+    email: 'wonderaq8@gmail.com',
+    imageUrl: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?q=80&w=600&auto=format&fit=crop',
+    services: ['aq8', 'wonder'],
+    schedule: 'Samedi - Jeudi : 08:00 - 18:00 | Vendredi : Ferme',
+    description: 'Centre AQ8 Draria pour vos seances AQ8 EMS et Wonder, avec une capacite adaptee par heure et une equipe dediee.',
+    slug: 'draria',
+    status: 'Ouvert',
+    importantNotes: [
+      'Ouvert de 8h a 18h du samedi au jeudi, ferme le vendredi.',
+      'Localisation GPS : AQ8 Draria.',
+      'Gerante : Mme Yasmina Ikhlef - +213 560933133.',
+      'Vous devez prendre vos rendez-vous LA VEILLE avant 21h30 (pas le jour meme).',
+      'Les reservations se font par heure complete (Ex : de 10h a 11h, et non de 10h30 a 11h30).',
+      'Il peut y avoir un decalage de votre rendez-vous du au fuseau horaire, mais l heure selectionnee reste la reference.',
+      'IMPORTANT : Vous devez recevoir votre recu de paiement directement au centre pour valider votre paiement.'
+    ],
+    menHours: ['08h00 => 18h00 (Samedi - Jeudi)'],
+    womenHours: ['08h00 => 18h00 (Samedi - Jeudi)'],
+    equipment: [
+      'Un tee shirt manches longues et un bas fin en coton',
+      'Une paire de baskets propres',
+      'Un change pour repartir'
+    ],
+    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister a votre seance, il est important d annuler au moins 1 heure a l avance pour eviter que le systeme ne deduise le credit de votre forfait en cours. Merci',
+    bookingCapacity: { aq8: 2, wonder: 1 },
+    bookingHours: {
+      '0': [{ start: '08:00', end: '18:00' }],
+      '1': [{ start: '08:00', end: '18:00' }],
+      '2': [{ start: '08:00', end: '18:00' }],
+      '3': [{ start: '08:00', end: '18:00' }],
+      '4': [{ start: '08:00', end: '18:00' }],
+      '6': [{ start: '08:00', end: '18:00' }]
+    }
   }
 ];
 
@@ -214,6 +254,13 @@ export const INITIAL_MANAGERS: CenterManager[] = [
     name: 'Nassim Meziane',
     email: 'nassim@aq8algerie.com',
     centerId: 'center-5',
+    active: true
+  },
+  {
+    id: 'mgr-6',
+    name: 'Yasmina Ikhlef',
+    email: 'wonderaq8@gmail.com',
+    centerId: 'center-6',
     active: true
   }
 ];
