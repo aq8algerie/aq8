@@ -150,14 +150,14 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
           <div className="relative z-10 grid gap-10 px-6 py-14 sm:px-10 lg:grid-cols-12 lg:px-14 lg:py-20">
             <div className="space-y-7 lg:col-span-8">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#ff5757]/30 bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#ff5757]/30 bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757] backdrop-blur-sm">
                   <MapPin className="h-3.5 w-3.5" />
                   AQ8 {center.city}
                 </span>
 
                 {publicBadgeLabel && (
-                  <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-300">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                  <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-300 backdrop-blur-sm">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
                     {publicBadgeLabel}
                   </span>
                 )}
@@ -246,9 +246,10 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
 
             {/* Important notes */}
             {center.importantNotes && center.importantNotes.length > 0 && (
-              <section className="rounded-lg border border-slate-100 border-l-4 border-l-[#ff5757] bg-white p-6">
+              <section className="rounded-lg border border-slate-200 bg-[linear-gradient(135deg,#fcfcfd_0%,#ffffff_100%)] p-6 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 h-full w-[4px] bg-[#ff5757]" />
                 <div className="mb-5 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#ff5757]/10 text-[#ff5757]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#ff5757]/10 text-[#ff5757] shadow-inner">
                     <Info className="h-5 w-5" />
                   </div>
 
@@ -261,7 +262,7 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
                   {center.importantNotes.map((note, index) => (
                     <div
                       key={`${note}-${index}`}
-                      className="flex items-start gap-3 rounded-md bg-slate-50 p-4"
+                      className="flex items-start gap-3 rounded-md border border-slate-100 bg-white/70 p-4 shadow-sm"
                     >
                       <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#ff5757]" />
                       <p className="text-sm font-medium leading-relaxed text-slate-600">
@@ -361,9 +362,9 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
                 {center.services.map((service) => (
                   <article
                     key={service}
-                    className="rounded-lg border border-slate-100 bg-white p-6 transition-all"
+                    className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition-premium hover:border-[#ff5757]/30 hover:shadow-md"
                   >
-                    <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-md bg-[#ff5757]/10 text-[#ff5757]">
+                    <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-md bg-[#ff5757]/10 text-[#ff5757] shadow-inner">
                       <CheckCircle2 className="h-5 w-5" />
                     </div>
 
@@ -418,9 +419,10 @@ export default function CenterDetailPage({ params, center: providedCenter }: Pag
             )}
 
             {/* Cancellation */}
-            <section className="rounded-lg border border-rose-100 bg-rose-50/60 p-6">
+            <section className="rounded-lg border border-rose-100 bg-rose-50/40 p-6 relative overflow-hidden shadow-sm">
+              <div className="absolute top-0 left-0 w-[4px] h-full bg-[#ff5757]" />
               <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#ff5757]/10 text-[#ff5757]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#ff5757]/10 text-[#ff5757] shadow-inner">
                   <ShieldAlert className="h-5 w-5" />
                 </div>
 

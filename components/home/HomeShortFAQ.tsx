@@ -20,11 +20,13 @@ export function HomeShortFAQ() {
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
-      <div className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
-        {faqs.map((faq) => (
-          <article key={faq.q} className="grid gap-3 p-5 sm:grid-cols-12 sm:p-6">
-            <h3 className="font-display text-base font-bold text-[#242424] sm:col-span-4">{faq.q}</h3>
-            <p className="text-sm font-medium leading-relaxed text-slate-600 sm:col-span-8">{faq.a}</p>
+      <div className="grid gap-6 md:grid-cols-3">
+        {faqs.map((faq, index) => (
+          <article key={faq.q} className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition-premium hover:border-[#ff5757]/30 hover:shadow-md">
+            <div className="absolute top-0 left-0 h-[3px] w-full bg-slate-100 transition-colors group-hover:bg-[#ff5757]" />
+            <span className="font-mono text-xs font-bold text-[#ff5757] uppercase tracking-wider">Question 0{index + 1}</span>
+            <h3 className="mt-2 font-display text-base font-bold text-[#242424]">{faq.q}</h3>
+            <p className="mt-3 text-sm font-medium leading-relaxed text-slate-600">{faq.a}</p>
           </article>
         ))}
       </div>

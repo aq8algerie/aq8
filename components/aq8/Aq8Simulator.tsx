@@ -66,16 +66,18 @@ export function Aq8Simulator() {
                 Zone musculaire
               </label>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2" role="tablist">
                 {zones.map((zone) => (
                   <button
                     key={zone.id}
                     type="button"
+                    role="tab"
+                    aria-selected={muscleZone === zone.id}
                     onClick={() => setMuscleZone(zone.id)}
-                    className={`rounded-md px-2.5 py-2.5 text-[11px] xs:text-xs font-bold transition-all ${
+                    className={`rounded-md px-2.5 py-2.5 text-[11px] xs:text-xs font-bold transition-premium ${
                       muscleZone === zone.id
-                        ? "bg-[#ff5757] text-white"
-                        : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                        ? "bg-[#ff5757] text-white shadow-md shadow-[#ff5757]/20"
+                        : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
                     }`}
                   >
                     {zone.label}
@@ -87,7 +89,7 @@ export function Aq8Simulator() {
             <div className="space-y-3">
               <div className="flex justify-between gap-4 text-xs font-bold text-slate-300">
                 <span>Fréquence</span>
-                <span className="text-[#ff5757]">
+                <span className="text-[#ff5757] transition-all">
                   {frequency} Hz · {getFrequencyLabel(frequency)}
                 </span>
               </div>
@@ -98,7 +100,7 @@ export function Aq8Simulator() {
                 max="100"
                 value={frequency}
                 onChange={(event) => setFrequency(Number(event.target.value))}
-                className="w-full accent-[#ff5757]"
+                className="w-full accent-[#ff5757] cursor-pointer transition-all duration-200"
                 aria-label="Fréquence d’impulsion"
               />
 
@@ -111,7 +113,7 @@ export function Aq8Simulator() {
             <div className="space-y-3">
               <div className="flex justify-between gap-4 text-xs font-bold text-slate-300">
                 <span>Intensité</span>
-                <span className="text-amber-400">
+                <span className="text-amber-400 transition-all">
                   {intensity}% · {getIntensityLabel(intensity)}
                 </span>
               </div>
@@ -122,7 +124,7 @@ export function Aq8Simulator() {
                 max="100"
                 value={intensity}
                 onChange={(event) => setIntensity(Number(event.target.value))}
-                className="w-full accent-amber-400"
+                className="w-full accent-amber-400 cursor-pointer transition-all duration-200"
                 aria-label="Intensité générale"
               />
             </div>
@@ -139,7 +141,7 @@ export function Aq8Simulator() {
                 max="400"
                 value={pulseWidth}
                 onChange={(event) => setPulseWidth(Number(event.target.value))}
-                className="w-full accent-slate-300"
+                className="w-full accent-slate-300 cursor-pointer transition-all duration-200"
                 aria-label="Largeur d’impulsion"
               />
             </div>
@@ -147,12 +149,14 @@ export function Aq8Simulator() {
 
           {/* Visual */}
           <div className="lg:col-span-7">
-            <div className="relative overflow-hidden rounded-lg border border-white/10 bg-slate-950 p-4 xs:p-6">
+            <div className="relative overflow-hidden rounded-lg border border-white/10 bg-slate-950/80 backdrop-blur-md p-4 xs:p-6 shadow-[0_0_30px_rgba(255,87,87,0.12)]">
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#ff5757]/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-amber-400/5 rounded-full blur-2xl pointer-events-none" />
 
               <div className="relative z-10 flex min-h-[280px] xs:min-h-[320px] flex-col items-center justify-center gap-6 xs:gap-8">
                 <div className="text-center">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[10px] font-bold uppercase text-emerald-300">
-                    <Zap className="h-3 w-3" />
+                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[10px] font-bold uppercase text-emerald-300 transition-all duration-300">
+                    <Zap className="h-3 w-3 animate-bounce" />
                     {intensity > 0 ? "AQ8 actif" : "En attente"}
                   </span>
 
@@ -173,13 +177,14 @@ export function Aq8Simulator() {
                       style={{
                         height: intensity === 0 ? "12%" : `${height}%`,
                         animationDelay: `${index * 80}ms`,
+                        filter: intensity > 0 ? `drop-shadow(0 0 5px ${intensity > 60 ? '#fcd34d' : '#ff5757'})` : 'none',
                       }}
                       className="w-2 xs:w-2.5 sm:w-3 md:w-4 rounded-t bg-gradient-to-t from-[#ff5757] to-amber-300 transition-all duration-300 motion-safe:animate-pulse"
                     />
                   ))}
                 </div>
 
-                <div className="grid w-full max-w-lg grid-cols-3 gap-1.5 xs:gap-2 sm:gap-3 text-center">
+                <div className="grid w-full max-w-lg grid-cols-3 gap-1.5 xs:gap-2 sm:gap-3 text-center" aria-live="polite">
                   <div className="rounded-md border border-white/10 bg-white/5 p-2 xs:p-3 text-slate-400">
                     <p className="font-bold text-white text-xs xs:text-sm">{frequency} Hz</p>
                     <p className="text-[9px] xs:text-[10px] sm:text-xs mt-0.5">Fréquence</p>

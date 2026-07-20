@@ -1,6 +1,7 @@
 import React from 'react';
 import { Center, Service } from '../../types';
 import CenterDetailPage from '../../../app/(public)/centres/[slug]/page';
+import { CenterDetailSkeleton } from './CenterDetailSkeleton';
 
 export function PublicCenterDetail({
   centerId,
@@ -13,6 +14,10 @@ export function PublicCenterDetail({
   services: Service[];
   onNavigate: (route: any) => void;
 }) {
+  if (centers.length === 0) {
+    return <CenterDetailSkeleton />;
+  }
+
   const center = centers.find(c => c.id === centerId) || centers.find(c => c.slug === centerSlug);
 
   return <CenterDetailPage params={{ slug: centerSlug || center?.slug || '' }} center={center} />;

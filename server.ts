@@ -8,7 +8,7 @@ import { getAuth as getAdminAuth } from 'firebase-admin/auth';
 import { DocumentSnapshot, Firestore, Transaction, getFirestore as getAdminFirestore } from 'firebase-admin/firestore';
 
 // Import SEO helpers and mock database
-import { getSeoForPage, generateCenterSeo, PageSeo } from './lib/seo';
+import { getSeoForPage, generateCenterSeo, PageSeo, generateJsonLd } from './lib/seo';
 import { AQ8Database } from './src/mockData';
 import { Appointment, Center, Service } from './src/types';
 import {
@@ -439,7 +439,8 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
   return reservation;
 }
 
-function injectSeo(html: string, seo: PageSeo): string {
+function injectSeo(html: string, seoInfo: { seo: PageSeo, jsonLd: string }): string {
+  const { seo, jsonLd } = seoInfo;
   let modifiedHtml = html;
   
   // Clean up any existing titles or meta tags
@@ -465,6 +466,7 @@ function injectSeo(html: string, seo: PageSeo): string {
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${seo.title}" />
     <meta name="twitter:description" content="${seo.description}" />
+    ${jsonLd}
   `;
 
   // Inject right after <head> or before </head>
@@ -475,7 +477,7 @@ function injectSeo(html: string, seo: PageSeo): string {
   }
 }
 
-function getSeoForUrl(urlPath: string): PageSeo {
+function getSeoForUrl(urlPath: string): { seo: PageSeo; jsonLd: string } {
   // Match a dynamic center slug URL
   const centerMatch = urlPath.match(/^\/centres\/([a-zA-Z0-9_-]+)/);
   if (centerMatch) {
@@ -483,7 +485,9 @@ function getSeoForUrl(urlPath: string): PageSeo {
     const centers = AQ8Database.getCenters();
     const center = centers.find(c => c.slug === slug);
     if (center) {
-      return generateCenterSeo(center);
+      const seo = generateCenterSeo(center);
+      const jsonLd = generateJsonLd('center-detail', center);
+      return { seo, jsonLd };
     }
   }
 
@@ -496,11 +500,15 @@ function getSeoForUrl(urlPath: string): PageSeo {
     'centres': 'centers',
     'centers': 'centers',
     'faq': 'faq',
-    'contact': 'contact'
+    'contact': 'contact',
+    'a-propos': 'about',
+    'about': 'about'
   };
 
   const routeKey = validRoutes[cleanPath] || 'home';
-  return getSeoForPage(routeKey);
+  const seo = getSeoForPage(routeKey);
+  const jsonLd = generateJsonLd(routeKey);
+  return { seo, jsonLd };
 }
 
 async function startServer() {

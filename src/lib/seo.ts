@@ -123,3 +123,90 @@ export function useSeo(route: string, center?: Center) {
   }, [route, center]);
 }
 
+export function generateJsonLd(route: string, center?: Center): string {
+  let schema: any = null;
+
+  if (route === 'center-detail' && center) {
+    schema = {
+      "@context": "https://schema.org",
+      "@type": "SportsActivityLocation",
+      "@id": `${siteConfig.url}/centres/${center.slug}`,
+      "name": center.name,
+      "description": center.description || `Centre AQ8 de remise en forme et d'électrostimulation à ${center.city}.`,
+      "url": `${siteConfig.url}/centres/${center.slug}`,
+      "telephone": center.phone || "",
+      "image": center.imageUrl || `${siteConfig.url}${siteConfig.defaultImage}`,
+      "priceRange": "$$",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": center.address,
+        "addressLocality": center.city,
+        "addressCountry": "DZ"
+      },
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Saturday",
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday"
+          ],
+          "opens": "08:00",
+          "closes": "21:00"
+        }
+      ]
+    };
+  } else if (route === 'home') {
+    schema = {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": `${siteConfig.url}/#organization`,
+      "name": siteConfig.name,
+      "url": siteConfig.url,
+      "logo": `${siteConfig.url}${siteConfig.logoImage}`,
+      "image": `${siteConfig.url}${siteConfig.defaultImage}`,
+      "description": siteConfig.description,
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+213-23-48-50-60",
+        "contactType": "customer service",
+        "areaServed": "DZ",
+        "availableLanguage": ["French", "Arabic"]
+      }
+    };
+  } else if (route === 'about') {
+    const questions = [
+      {
+        q: "Qu'est-ce que l'EMS AQ8 ?",
+        a: "L'AQ8 est une technologie espagnole d'électromyostimulation (EMS) sans fil. Grâce à une combinaison d'entraînement légère et d'un boîtier de contrôle d'une portée de 100 mètres, vous sollicitez simultanément 350 muscles profonds. Une séance de 20 minutes équivaut en intensité à 4 heures de musculation traditionnelle."
+      },
+      {
+        q: "La technologie Wonder est-elle différente de l'AQ8 ?",
+        a: "Oui, la technologie Wonder se focalise sur l'hypertrophie passive et l'élimination des graisses localisées en position allongée ou semi-assise. Elle émet de puissantes ondes électromagnétiques combinées à l'EMS pour engendrer 52 000 contractions en 25 minutes, ciblant fessiers, abdominaux et cuisses."
+      },
+      {
+        q: "Combien de séances par semaine sont conseillées ?",
+        a: "Pour l'EMS AQ8, 1 à 2 séances de 20 minutes par semaine suffisent largement, espacées de 72 heures pour laisser les fibres musculaires se régénérer. Pour Wonder, une cure de 2 séances par semaine sur 4 à 6 semaines est préconisée pour obtenir un galbe parfait."
+      }
+    ];
+
+    schema = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": questions.map(item => ({
+        "@type": "Question",
+        "name": item.q,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": item.a
+        }
+      }))
+    };
+  }
+
+  return schema ? `<script type="application/ld+json">${JSON.stringify(schema)}</script>` : '';
+}
+

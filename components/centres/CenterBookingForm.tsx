@@ -314,7 +314,8 @@ export function CenterBookingForm({
   }
 
   return (
-    <div className="rounded-lg border border-slate-100 bg-white p-6">
+    <div className="rounded-lg border border-slate-200/80 bg-white p-6 shadow-[0_24px_60px_rgba(255,87,87,0.06)] relative overflow-hidden ring-1 ring-slate-100/50">
+      <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-[#ff5757] to-amber-400" />
       <div className="mb-5 space-y-2">
         <span className="text-xs font-bold uppercase text-[#ff5757]">
           Réservation en ligne
@@ -471,7 +472,7 @@ export function CenterBookingForm({
         <button
           type="submit"
           disabled={!canSubmit}
-          className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#ff5757] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#e94949] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+          className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#ff5757] px-5 py-3 text-sm font-bold text-white transition-premium hover:bg-[#e94949] hover:shadow-lg hover:shadow-[#ff5757]/15 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <>

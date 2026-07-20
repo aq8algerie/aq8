@@ -77,10 +77,10 @@ export function SeoJsonLd({ type, center }: SeoJsonLdProps) {
     schemaData = {
       "@context": "https://schema.org",
       "@type": "SportsActivityLocation",
-      "@id": `${siteConfig.url}/#/centres/${center.slug}`,
+      "@id": `${siteConfig.url}/centres/${center.slug}`,
       "name": center.name,
       "description": center.description || `Centre AQ8 de remise en forme et d'électrostimulation à ${center.city}.`,
-      "url": `${siteConfig.url}/#/centres/${center.slug}`,
+      "url": `${siteConfig.url}/centres/${center.slug}`,
       "telephone": center.phone,
       "image": center.imageUrl,
       "priceRange": "$$",

@@ -90,14 +90,14 @@ export function PublicAbout() {
           <h2 className="font-display text-3xl font-bold leading-tight text-[#242424]">Les réponses essentielles avant votre première séance.</h2>
           <p className="mx-auto max-w-2xl text-sm font-medium leading-relaxed text-slate-600 sm:text-base">Horaires, réservation, équipements et précautions peuvent varier selon le centre choisi. Cette section rassemble les informations générales les plus utiles.</p>
         </div>
-        <div className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
+        <div className="space-y-4">
           {faqItems.map((item, index) => (
-            <details key={item.question} className="group p-5 sm:p-6" open={index === 0}>
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-left">
-                <h3 className="font-display text-base font-bold text-[#242424] group-open:text-[#ff5757] sm:text-lg">{item.question}</h3>
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-[#ff5757] transition-transform group-open:rotate-45">+</span>
+            <details key={item.question} className="group rounded-lg border border-slate-200 bg-white p-5 sm:p-6 transition-premium hover:border-[#ff5757]/30 hover:shadow-sm" open={index === 0}>
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-left outline-none">
+                <h3 className="font-display text-base font-bold text-[#242424] group-open:text-[#ff5757] transition-colors sm:text-lg">{item.question}</h3>
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-50 text-[#ff5757] transition-all group-open:bg-[#ff5757] group-open:text-white group-open:rotate-45">+</span>
               </summary>
-              <p className="mt-3 max-w-3xl text-sm font-medium leading-relaxed text-slate-600 sm:text-base">{item.answer}</p>
+              <p className="mt-4 max-w-3xl text-sm font-medium leading-relaxed text-slate-600 border-t border-slate-100 pt-4 sm:text-base">{item.answer}</p>
             </details>
           ))}
         </div>

@@ -69,16 +69,18 @@ export function WonderCycle() {
               Choisissez une zone cible
             </span>
 
-            <div className="grid grid-cols-3 gap-1.5 xs:gap-2">
+            <div className="grid grid-cols-3 gap-1.5 xs:gap-2" role="tablist">
               {muscleGroups.map((zone) => (
                 <button
                   key={zone.id}
                   type="button"
+                  role="tab"
+                  aria-selected={muscleGroup === zone.id}
                   onClick={() => setMuscleGroup(zone.id)}
-                  className={`rounded-md px-2 py-2 text-[11px] xs:text-xs font-bold transition-all ${
+                  className={`rounded-md px-2 py-2 text-[11px] xs:text-xs font-bold transition-premium ${
                     muscleGroup === zone.id
-                      ? "bg-[#353535] text-white"
-                      : "border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                      ? "bg-[#353535] text-white shadow-md"
+                      : "border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   {zone.label}
@@ -89,17 +91,19 @@ export function WonderCycle() {
         </div>
 
         <div className="lg:col-span-7">
-          <div className="rounded-lg border border-slate-100 bg-slate-50 p-3.5 xs:p-5 sm:p-6">
-            <div className="mb-6 grid grid-cols-3 gap-1 xs:gap-2 border-b border-slate-200 pb-4">
+          <div className="rounded-lg border border-slate-100 bg-slate-50 p-3.5 xs:p-5 sm:p-6 shadow-inner">
+            <div className="mb-6 grid grid-cols-3 gap-1 xs:gap-2 border-b border-slate-200 pb-4" role="tablist">
               {(Object.keys(stages) as StageKey[]).map((key) => (
                 <button
                   key={key}
                   type="button"
+                  role="tab"
+                  aria-selected={sessionStage === key}
                   onClick={() => setSessionStage(key)}
-                  className={`rounded-md px-1.5 py-2.5 xs:px-3 xs:py-3 text-[10px] xs:text-xs font-bold transition-all ${
+                  className={`rounded-md px-1.5 py-2.5 xs:px-3 xs:py-3 text-[10px] xs:text-xs font-bold transition-premium ${
                     sessionStage === key
-                      ? "bg-[#ff5757] text-white"
-                      : "bg-white text-slate-500 hover:bg-slate-100"
+                      ? "bg-[#ff5757] text-white shadow-md shadow-[#ff5757]/20"
+                      : "bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                   }`}
                 >
                   {stages[key].name}
@@ -107,9 +111,9 @@ export function WonderCycle() {
               ))}
             </div>
 
-            <div className="rounded-lg border border-slate-100 bg-white p-4 xs:p-6">
+            <div className="rounded-lg border border-slate-100 bg-white p-4 xs:p-6 shadow-premium transition-premium hover:shadow-[0_20px_50px_rgba(0,0,0,0.03)]" aria-live="polite">
               <div className="flex flex-col gap-4 xs:gap-6 sm:flex-row sm:items-start">
-                <div className="flex h-12 w-12 xs:h-14 xs:w-14 shrink-0 items-center justify-center rounded-md bg-[#ff5757]/10 text-[#ff5757]">
+                <div className="flex h-12 w-12 xs:h-14 xs:w-14 shrink-0 items-center justify-center rounded-md bg-[#ff5757]/10 text-[#ff5757] shadow-inner transition-transform duration-500 hover:rotate-12">
                   <ActiveIcon className="h-6 w-6" />
                 </div>
 
@@ -125,7 +129,7 @@ export function WonderCycle() {
                       </h3>
                     </div>
 
-                    <span className="w-fit rounded-full bg-[#ff5757]/10 px-3 py-1 text-[10px] font-bold uppercase text-[#ff5757]">
+                    <span className="w-fit rounded-full bg-[#ff5757]/10 px-3 py-1 text-[10px] font-bold uppercase text-[#ff5757] animate-pulse-subtle">
                       {activeStage.speed}
                     </span>
                   </div>
