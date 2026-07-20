@@ -137,7 +137,10 @@ export default function App() {
   const [crmSuperAdminTab, setCrmSuperAdminTab] = useState<'dashboard' | 'centers' | 'managers' | 'stats' | 'settings'>('dashboard');
   const [crmCenterManagerTab, setCrmCenterManagerTab] = useState<'dashboard' | 'schedule' | 'clients' | 'bookings' | 'payments' | 'services' | 'settings'>('dashboard');
   const [crmSidebarOpen, setCrmSidebarOpen] = useState(false);
-  const isDevToolsEnabled = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true';
+  const isDevToolsEnabled = 
+    (typeof process !== 'undefined' && (process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === 'true')) ||
+    // @ts-ignore
+    (typeof import.meta !== 'undefined' && import.meta.env && (import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true'));
 
   const toggleDarkMode = () => {
     setIsDarkMode(prev => {

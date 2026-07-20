@@ -1,8 +1,9 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { AlertCircle, Calendar, CheckCircle2, Loader2 } from "lucide-react";
+import { AlertCircle, Calendar, CheckCircle2, Loader2, Sun, CloudSun, Moon, ShieldCheck, Flame } from "lucide-react";
 import { collection, doc, onSnapshot, query, where } from "firebase/firestore";
+import { motion } from "motion/react";
 import { db } from "../../src/lib/firebase";
 import { Center } from "../../src/types";
 import {
@@ -177,6 +178,38 @@ export function CenterBookingForm({
     () => hours.filter((hour) => !hourAvailability[hour]?.isFull),
     [hourAvailability, hours],
   );
+
+  const [activePeriod, setActivePeriod] = useState<"all" | "morning" | "afternoon" | "evening">("all");
+
+  const hoursByPeriod = useMemo(() => {
+    const morning: string[] = [];
+    const afternoon: string[] = [];
+    const evening: string[] = [];
+
+    for (const hour of hours) {
+      const h = Number(hour.slice(0, 2));
+      if (h < 12) {
+        morning.push(hour);
+      } else if (h < 17) {
+        afternoon.push(hour);
+      } else {
+        evening.push(hour);
+      }
+    }
+
+    return { morning, afternoon, evening };
+  }, [hours]);
+
+  const filteredHours = useMemo(() => {
+    if (activePeriod === "morning") return hoursByPeriod.morning;
+    if (activePeriod === "afternoon") return hoursByPeriod.afternoon;
+    if (activePeriod === "evening") return hoursByPeriod.evening;
+    return hours;
+  }, [activePeriod, hours, hoursByPeriod]);
+
+  useEffect(() => {
+    setActivePeriod("all");
+  }, [bookingDate]);
 
   const selectedAvailability = bookingTime ? hourAvailability[bookingTime] : undefined;
   const selectedSlotIsFull = Boolean(selectedAvailability?.isFull);
@@ -493,39 +526,130 @@ export function CenterBookingForm({
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-slate-600">Date souhaitée</label>
+                <label className="text-slate-600 block">Date souhaitée *</label>
                 <input
                   type="date"
                   min={bookingMinimumDate}
                   value={bookingDate}
                   onChange={(e) => setBookingDate(e.target.value)}
                   disabled={isLoading}
-                  className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+                  className="w-full sm:w-1/2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60 font-semibold"
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-slate-600">Heure disponible</label>
-                <select
-                  value={bookingTime}
-                  onChange={(e) => setBookingTime(e.target.value)}
-                  disabled={isLoading || availabilityLoading || hours.length === 0}
-                  className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
-                >
-                  {hours.length === 0 && (
-                    <option value="">Centre fermé ce jour</option>
-                  )}
-                  {hours.map((hour) => {
-                    const availability = hourAvailability[hour];
-                    const isFull = availability?.isFull ?? false;
-                    return (
-                      <option key={hour} value={hour} disabled={isFull}>
-                        {hour} - {getEndHourLabel(hour)} | {isFull ? "complet" : `${availability.remaining}/${availability.capacity} places`}
-                      </option>
-                    );
-                  })}
-                </select>
+
+              <div className="space-y-2">
+                <label className="text-slate-600 block">Heures disponibles *</label>
+                {hours.length === 0 ? (
+                  <div className="rounded-md border border-amber-100 bg-amber-50/30 p-4 text-center text-xs font-semibold text-amber-800">
+                    Le centre est fermé à cette date. Veuillez choisir un autre jour.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {/* Time of day filters */}
+                    <div className="flex flex-wrap gap-1 bg-slate-100/70 p-1 rounded-xl">
+                      {[
+                        { id: "all", label: "Toute la journée", icon: Calendar },
+                        { id: "morning", label: "Matin", icon: Sun, count: hoursByPeriod.morning.length },
+                        { id: "afternoon", label: "Après-midi", icon: CloudSun, count: hoursByPeriod.afternoon.length },
+                        { id: "evening", label: "Soirée", icon: Moon, count: hoursByPeriod.evening.length },
+                      ].map((tab) => {
+                        const Icon = tab.icon;
+                        const isTabActive = activePeriod === tab.id;
+                        // Hide tabs for periods that have no slots
+                        if (tab.id !== "all" && tab.count === 0) return null;
+
+                        return (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => setActivePeriod(tab.id as any)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-premium cursor-pointer ${
+                              isTabActive
+                                ? "bg-white text-slate-800 shadow-sm"
+                                : "text-slate-500 hover:text-slate-800"
+                            }`}
+                          >
+                            <Icon className={`h-3.5 w-3.5 ${isTabActive ? "text-[#ff5757]" : ""}`} />
+                            <span>{tab.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {filteredHours.length === 0 ? (
+                      <div className="text-center py-6 text-xs text-slate-400 font-bold border border-dashed border-slate-200 rounded-xl">
+                        Aucun créneau disponible pour cette période.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-2.5 relative isolate" role="radiogroup" aria-label="Heure de réservation">
+                        {filteredHours.map((hour) => {
+                          const availability = hourAvailability[hour];
+                          const isFull = availability?.isFull ?? false;
+                          const isSelected = bookingTime === hour;
+                          const remaining = availability?.remaining ?? 0;
+
+                          return (
+                            <motion.button
+                              key={hour}
+                              type="button"
+                              disabled={isLoading || isFull}
+                              onClick={() => setBookingTime(hour)}
+                              whileHover={isFull ? {} : { scale: 1.02 }}
+                              whileTap={isFull ? {} : { scale: 0.98 }}
+                              layout
+                              className={`relative flex flex-col items-center justify-center rounded-xl p-3 border text-center transition-all outline-none focus:ring-2 focus:ring-[#ff5757]/50 ${
+                                isSelected
+                                  ? "border-[#ff5757] text-white shadow-lg shadow-[#ff5757]/15 z-10"
+                                  : isFull
+                                  ? "bg-slate-50 border-slate-100 text-slate-400 cursor-not-allowed"
+                                  : remaining === 1
+                                  ? "bg-amber-50/50 border-amber-200 text-amber-900 hover:bg-amber-50 hover:border-amber-300"
+                                  : "bg-white border-slate-200 text-[#353535] hover:bg-slate-50 hover:border-slate-300"
+                              }`}
+                              aria-checked={isSelected}
+                              aria-label={`Créneau de ${hour} à ${getEndHourLabel(hour)}, ${isFull ? "complet" : remaining === 1 ? "dernière place" : `${remaining} places disponibles`}`}
+                            >
+                              {/* Sliding background bubble */}
+                              {isSelected && (
+                                <motion.div
+                                  layoutId="selectedHourBubble"
+                                  className="absolute inset-0 bg-[#ff5757] rounded-xl z-0"
+                                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                                />
+                              )}
+
+                              <span className="relative z-10 text-xs font-extrabold tracking-tight">
+                                {hour} - {getEndHourLabel(hour)}
+                              </span>
+                              
+                              <span className={`relative z-10 mt-1.5 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                                isSelected
+                                  ? "bg-white/20 text-white"
+                                  : isFull
+                                  ? "bg-slate-200/50 text-slate-400"
+                                  : remaining === 1
+                                  ? "bg-amber-100 text-amber-700 animate-pulse"
+                                  : "bg-emerald-50 text-emerald-700"
+                              }`}>
+                                {isFull ? (
+                                  "Complet"
+                                ) : remaining === 1 ? (
+                                  <>
+                                    <Flame className="h-2.5 w-2.5 animate-pulse" /> 1 place
+                                  </>
+                                ) : (
+                                  `${remaining} places`
+                                )}
+                              </span>
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -545,7 +669,29 @@ export function CenterBookingForm({
                 ) : null}
               </div>
             )}
-
+            {/* Dynamic selection summary card */}
+            {bookingTime && bookingDate && service && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-xl border border-slate-100 bg-[#fbfbfe] p-4 text-xs font-semibold space-y-2 mt-4 shadow-sm"
+              >
+                <div className="flex items-center gap-1.5 text-slate-500 uppercase tracking-widest text-[9px] font-extrabold">
+                  <ShieldCheck className="h-3.5 w-3.5 text-[#ff5757]" /> Récapitulatif de votre demande
+                </div>
+                <div className="text-slate-800 space-y-1">
+                  <p>
+                    Prestation : <span className="font-bold text-[#ff5757]">{getServiceLabel(service)}</span>
+                  </p>
+                  <p>
+                    Centre : <span className="font-bold">{resolvedCenterName} ({resolvedCenterCity})</span>
+                  </p>
+                  <p>
+                    Date & Heure : <span className="font-bold text-[#ff5757]">{new Date(bookingDate).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span> à <span className="font-bold text-[#ff5757]">{bookingTime}</span>
+                  </p>
+                </div>
+              </motion.div>
+            )}
             <button
               type="submit"
               disabled={!canSubmit}

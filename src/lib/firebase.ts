@@ -14,18 +14,31 @@ const defaultFirebaseConfig = {
   measurementId: "G-0R2CRGZRT9",
 };
 
-function envOrDefault(value: string | undefined, fallback: string): string {
-  return value?.trim() || fallback;
+function getEnv(viteName: string, nextName: string): string | undefined {
+  if (typeof process !== 'undefined' && process.env && process.env[nextName]) {
+    return process.env[nextName];
+  }
+  // @ts-ignore
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[viteName]) {
+    // @ts-ignore
+    return import.meta.env[viteName];
+  }
+  return undefined;
+}
+
+function envOrDefault(viteName: string, nextName: string, fallback: string): string {
+  const val = getEnv(viteName, nextName);
+  return val?.trim() || fallback;
 }
 
 const firebaseConfig = {
-  apiKey: envOrDefault(import.meta.env.VITE_FIREBASE_API_KEY, defaultFirebaseConfig.apiKey),
-  authDomain: envOrDefault(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN, defaultFirebaseConfig.authDomain),
-  projectId: envOrDefault(import.meta.env.VITE_FIREBASE_PROJECT_ID, defaultFirebaseConfig.projectId),
-  storageBucket: envOrDefault(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET, defaultFirebaseConfig.storageBucket),
-  messagingSenderId: envOrDefault(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID, defaultFirebaseConfig.messagingSenderId),
-  appId: envOrDefault(import.meta.env.VITE_FIREBASE_APP_ID, defaultFirebaseConfig.appId),
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID?.trim() || defaultFirebaseConfig.measurementId,
+  apiKey: envOrDefault("VITE_FIREBASE_API_KEY", "NEXT_PUBLIC_FIREBASE_API_KEY", defaultFirebaseConfig.apiKey),
+  authDomain: envOrDefault("VITE_FIREBASE_AUTH_DOMAIN", "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN", defaultFirebaseConfig.authDomain),
+  projectId: envOrDefault("VITE_FIREBASE_PROJECT_ID", "NEXT_PUBLIC_FIREBASE_PROJECT_ID", defaultFirebaseConfig.projectId),
+  storageBucket: envOrDefault("VITE_FIREBASE_STORAGE_BUCKET", "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET", defaultFirebaseConfig.storageBucket),
+  messagingSenderId: envOrDefault("VITE_FIREBASE_MESSAGING_SENDER_ID", "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID", defaultFirebaseConfig.messagingSenderId),
+  appId: envOrDefault("VITE_FIREBASE_APP_ID", "NEXT_PUBLIC_FIREBASE_APP_ID", defaultFirebaseConfig.appId),
+  measurementId: getEnv("VITE_FIREBASE_MEASUREMENT_ID", "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID")?.trim() || defaultFirebaseConfig.measurementId,
 };
 
 export const app = initializeApp(firebaseConfig);

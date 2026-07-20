@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -142,6 +142,66 @@ export function ManagerScheduleView({
 
   const handleNavToday = () => {
     setFocusedDate(new Date());
+  };
+
+  const handleExportCSV = () => {
+    const headers = [
+      'ID de Reservation',
+      'Client (Prenom)',
+      'Client (Nom)',
+      'Telephone',
+      'E-mail',
+      'Date & Heure',
+      'Duree (min)',
+      'Prestation',
+      'Technologie',
+      'Statut',
+      'Notes'
+    ];
+
+    const rows = appointmentsToRender.map(apt => {
+      const client = centerClients.find(c => c.id === apt.clientId);
+      const service = services.find(s => s.id === apt.serviceId);
+      const tech = getTechnologyForClient(apt.clientId);
+      const statusLabel = apt.status === 'booked' ? 'Planifie' : apt.status === 'completed' ? 'Valide' : 'Annule';
+      
+      return [
+        apt.id,
+        client ? client.firstName : '',
+        client ? client.lastName : '',
+        client ? `${client.phone}` : '',
+        client ? client.email : '',
+        apt.dateTime,
+        apt.duration,
+        service ? service.name : '',
+        tech || '',
+        statusLabel,
+        apt.notes || ''
+      ];
+    });
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(val => {
+        const str = String(val ?? '');
+        return `"${str.replace(/"/g, '""')}"`;
+      }).join(','))
+    ].join('\r\n');
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const dateStr = formatDateToYYYYMMDD(focusedDate);
+    const filename = `planning_${centerId}_${viewType}_${dateStr}.csv`;
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showToast(`Planning exporte : ${filename}`, 'success');
   };
   // 3. Client and Package Metadata Helpers
   const { centerClients, centerAppointments } = getCenterScheduleData(centerId, clients, appointments);
@@ -467,6 +527,7 @@ export function ManagerScheduleView({
         onNavToday={handleNavToday}
         onNavNext={handleNavNext}
         onSearchTermChange={setSearchTerm}
+        onExportClick={handleExportCSV}
       />
       <ScheduleBulkActionsBar
         selectedCount={selectedIds.length}

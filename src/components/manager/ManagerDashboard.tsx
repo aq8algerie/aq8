@@ -20,6 +20,7 @@ import {
   CheckCircle,
   HelpCircle
 } from 'lucide-react';
+import { motion } from 'motion/react';
 import { Client, Appointment, Payment, Measurement, Service, Package, ClientPackage } from '../../types';
 import { StatCard } from './cards/StatCard';
 import { QuickActionsCard } from './cards/QuickActionsCard';
@@ -414,7 +415,7 @@ export function ManagerDashboard({
                   <div className="relative w-16 h-16">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 44 44">
                       <circle cx="22" cy="22" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="2.5" />
-                      <circle
+                      <motion.circle
                         cx="22"
                         cy="22"
                         r={radius}
@@ -422,9 +423,10 @@ export function ManagerDashboard({
                         stroke="#ff5757"
                         strokeWidth="3"
                         strokeDasharray={circ}
-                        strokeDashoffset={circ - (womenRate / 100) * circ}
+                        initial={{ strokeDashoffset: circ }}
+                        animate={{ strokeDashoffset: circ - (womenRate / 100) * circ }}
+                        transition={{ duration: 1.0, ease: "easeOut" }}
                         strokeLinecap="round"
-                        style={{ transition: "stroke-dashoffset 0.8s ease" }}
                       />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center font-mono">
@@ -442,7 +444,7 @@ export function ManagerDashboard({
                       <div className="relative w-16 h-16">
                         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 44 44">
                           <circle cx="22" cy="22" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="2.5" />
-                          <circle
+                          <motion.circle
                             cx="22"
                             cy="22"
                             r={radius}
@@ -450,9 +452,10 @@ export function ManagerDashboard({
                             stroke="#3b82f6"
                             strokeWidth="3"
                             strokeDasharray={circ}
-                            strokeDashoffset={circ - (menRate / 100) * circ}
+                            initial={{ strokeDashoffset: circ }}
+                            animate={{ strokeDashoffset: circ - (menRate / 100) * circ }}
+                            transition={{ duration: 1.0, ease: "easeOut" }}
                             strokeLinecap="round"
-                            style={{ transition: "stroke-dashoffset 0.8s ease" }}
                           />
                         </svg>
                         <div className="absolute inset-0 flex items-center justify-center font-mono">
@@ -528,12 +531,14 @@ export function ManagerDashboard({
                   return (
                     <div key={day} className="flex-1 flex flex-col items-center gap-2 group relative">
                       <div className="w-full bg-slate-50 rounded-t-lg relative flex items-end h-32 border border-slate-100/50">
-                        <div
-                          style={{ height: `${count > 0 ? heightPct : 4}%` }}
-                          className={`w-full rounded-t-md transition-all duration-500 ${
+                        <motion.div
+                          initial={{ height: 0 }}
+                          animate={{ height: `${count > 0 ? heightPct : 4}%` }}
+                          transition={{ duration: 0.8, ease: "easeOut" }}
+                          className={`w-full rounded-t-md ${
                             count > 0 ? 'bg-gradient-to-t from-[#353535] to-[#ff5757] group-hover:to-rose-400' : 'bg-slate-200/50'
                           }`}
-                        ></div>
+                        ></motion.div>
                         {/* Hover Tooltip */}
                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-10 shadow-xs">
                           {count} séance{count > 1 ? 's' : ''}
@@ -569,10 +574,12 @@ export function ManagerDashboard({
                       <span className="font-mono text-slate-500">{count} séance{count > 1 ? 's' : ''}</span>
                     </div>
                     <div className="h-3 w-full bg-slate-50 rounded-lg overflow-hidden border border-slate-100/50">
-                      <div
-                        style={{ width: `${count > 0 ? pct : 1}%` }}
-                        className="h-full bg-gradient-to-r from-slate-700 to-[#ff5757] transition-all duration-500"
-                      ></div>
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${count > 0 ? pct : 1}%` }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        className="h-full bg-gradient-to-r from-slate-700 to-[#ff5757]"
+                      ></motion.div>
                     </div>
                   </div>
                 );
@@ -589,10 +596,12 @@ export function ManagerDashboard({
                   <div key={month} className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 flex flex-col items-center justify-between gap-2">
                     <span className="font-bold text-slate-600 block">{month}</span>
                     <div className="h-16 w-3 bg-slate-100 rounded-full relative flex items-end">
-                      <div
-                        style={{ height: `${count > 0 ? pct : 4}%` }}
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: `${count > 0 ? pct : 4}%` }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
                         className="w-full bg-[#ff5757] rounded-full"
-                      ></div>
+                      ></motion.div>
                     </div>
                     <span className="text-[10px] font-bold text-slate-400 font-mono">{count}</span>
                   </div>
@@ -669,10 +678,27 @@ export function ManagerDashboard({
                         })}
 
                         {/* Gradient Area under curve */}
-                        <path d={areaPath} fill="url(#localAreaGrad)" />
+                        <motion.path
+                          d={areaPath}
+                          fill="url(#localAreaGrad)"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.8, delay: 0.5 }}
+                        />
 
                         {/* Line path with Glow filter */}
-                        <path d={linePath} fill="none" stroke="#ff5757" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" filter="url(#localGlow)" />
+                        <motion.path
+                          d={linePath}
+                          fill="none"
+                          stroke="#ff5757"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          filter="url(#localGlow)"
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ duration: 1.5, ease: "easeInOut" }}
+                        />
 
                         {/* Interactive dots and hover hitboxes */}
                         {points.map((p, i) => (

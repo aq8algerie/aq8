@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -44,7 +44,10 @@ export function CrmPortal({
   const [resetError, setResetError] = useState<string | null>(null);
   const [isResetting, setIsResetting] = useState(false);
 
-  const isDemoLoginEnabled = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true';
+  const isDemoLoginEnabled = 
+    (typeof process !== 'undefined' && (process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === 'true')) ||
+    // @ts-ignore
+    (typeof import.meta !== 'undefined' && import.meta.env && (import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true'));
   const isAuthBusy = isSubmitting || isGoogleSubmitting;
 
   const loadUserProfile = async (uid: string): Promise<UserProfile> => {

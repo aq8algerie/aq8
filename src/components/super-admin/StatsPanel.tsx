@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Venus } from 'lucide-react';
+import { motion } from 'motion/react';
 import { Appointment, Center, Client, Payment } from '../../types';
 
 type StatsPanelProps = {
@@ -34,17 +35,44 @@ export function StatsPanel({
                   const wonderPercent = 100 - aq8Percent;
                   return (
                     <>
-                      <div className="relative w-36 h-36">
+                      <motion.div
+                        className="relative w-36 h-36"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.8 }}
+                      >
                         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                           <circle cx="18" cy="18" r="15.915" fill="none" stroke="#e2e8f0" strokeWidth="3" />
-                          <circle cx="18" cy="18" r="15.915" fill="none" stroke="#ff5757" strokeWidth="3.5" strokeDasharray={`${aq8Percent} ${wonderPercent}`} strokeDashoffset="25" />
-                          <circle cx="18" cy="18" r="15.915" fill="none" stroke="#353535" strokeWidth="3.5" strokeDasharray={`${wonderPercent} ${aq8Percent}`} strokeDashoffset={`${25 + aq8Percent}`} />
+                          <motion.circle
+                            cx="18"
+                            cy="18"
+                            r="15.915"
+                            fill="none"
+                            stroke="#ff5757"
+                            strokeWidth="3.5"
+                            strokeDasharray={`${aq8Percent} ${wonderPercent}`}
+                            initial={{ strokeDashoffset: 125 }}
+                            animate={{ strokeDashoffset: 25 }}
+                            transition={{ duration: 1.2, ease: "easeOut" }}
+                          />
+                          <motion.circle
+                            cx="18"
+                            cy="18"
+                            r="15.915"
+                            fill="none"
+                            stroke="#353535"
+                            strokeWidth="3.5"
+                            strokeDasharray={`${wonderPercent} ${aq8Percent}`}
+                            initial={{ strokeDashoffset: 125 + aq8Percent }}
+                            animate={{ strokeDashoffset: 25 + aq8Percent }}
+                            transition={{ duration: 1.2, ease: "easeOut" }}
+                          />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                           <span className="text-xl font-bold font-display text-slate-800">{clients.length}</span>
                           <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider">Membres</span>
                         </div>
-                      </div>
+                      </motion.div>
                       <div className="space-y-2 text-xs">
                         <div className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                           <div className="w-3 h-3 bg-[#ff5757] rounded-sm shrink-0"></div>
@@ -125,7 +153,7 @@ export function StatsPanel({
                       <div className="relative w-24 h-24">
                         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 50 50">
                           <circle cx="25" cy="25" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="3" />
-                          <circle
+                          <motion.circle
                             cx="25"
                             cy="25"
                             r={radius}
@@ -133,9 +161,10 @@ export function StatsPanel({
                             stroke="#ff5757"
                             strokeWidth="3.5"
                             strokeDasharray={circ}
-                            strokeDashoffset={circ - (occ.womenRate / 100) * circ}
+                            initial={{ strokeDashoffset: circ }}
+                            animate={{ strokeDashoffset: circ - (occ.womenRate / 100) * circ }}
+                            transition={{ duration: 1.2, ease: "easeOut" }}
                             strokeLinecap="round"
-                            style={{ transition: "stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)" }}
                           />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center font-mono">
@@ -155,7 +184,7 @@ export function StatsPanel({
                           <div className="relative w-24 h-24">
                             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 50 50">
                               <circle cx="25" cy="25" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="3" />
-                              <circle
+                              <motion.circle
                                 cx="25"
                                 cy="25"
                                 r={radius}
@@ -163,9 +192,10 @@ export function StatsPanel({
                                 stroke="#3b82f6"
                                 strokeWidth="3.5"
                                 strokeDasharray={circ}
-                                strokeDashoffset={circ - (occ.menRate / 100) * circ}
+                                initial={{ strokeDashoffset: circ }}
+                                animate={{ strokeDashoffset: circ - (occ.menRate / 100) * circ }}
+                                transition={{ duration: 1.2, ease: "easeOut" }}
                                 strokeLinecap="round"
-                                style={{ transition: "stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)" }}
                               />
                             </svg>
                             <div className="absolute inset-0 flex flex-col items-center justify-center font-mono">
@@ -216,10 +246,12 @@ export function StatsPanel({
                           <span className="font-mono text-[#ff5757]">{d.revenue.toLocaleString()} DZD</span>
                         </div>
                         <div className="h-4 w-full bg-slate-50 rounded-lg overflow-hidden border border-slate-100/50">
-                          <div
-                            style={{ width: `${d.revenue > 0 ? widthPct : 2}%` }}
-                            className="h-full bg-gradient-to-r from-slate-700 to-[#ff5757] rounded-lg transition-all duration-500"
-                          ></div>
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${d.revenue > 0 ? widthPct : 2}%` }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                            className="h-full bg-gradient-to-r from-slate-700 to-[#ff5757] rounded-lg"
+                          ></motion.div>
                         </div>
                       </div>
                     );

@@ -1,10 +1,10 @@
-﻿/**
+/**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import React from 'react';
-import { Calendar, ChevronLeft, ChevronRight, LayoutGrid, Plus, Search } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, LayoutGrid, Plus, Search, Download } from 'lucide-react';
 
 export type ScheduleViewType = 'day' | 'week' | 'month' | 'horizontal_grid';
 
@@ -20,6 +20,7 @@ interface ScheduleToolbarProps {
   onNavToday: () => void;
   onNavNext: () => void;
   onSearchTermChange: (value: string) => void;
+  onExportClick?: () => void;
 }
 
 export function ScheduleToolbar({
@@ -34,6 +35,7 @@ export function ScheduleToolbar({
   onNavToday,
   onNavNext,
   onSearchTermChange,
+  onExportClick,
 }: ScheduleToolbarProps) {
   return (
     <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-xs space-y-4">
@@ -86,6 +88,16 @@ export function ScheduleToolbar({
             </button>
           </div>
 
+          {onExportClick && (
+            <button
+              id="btn-schedule-export"
+              onClick={onExportClick}
+              className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 font-semibold text-slate-700 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition shadow-xs"
+              title="Exporter le planning au format CSV (Excel)"
+            >
+              <Download className="h-4 w-4 text-[#ff5757]" /> Exporter
+            </button>
+          )}
           <button
             id="btn-schedule-add-rdv"
             onClick={onBookAppointmentClick}

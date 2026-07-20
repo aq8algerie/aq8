@@ -18,15 +18,20 @@
     "paths": {
       "@/*": [
         "./*"
-      ],
-      "next/link": [
-        "./components/Link.tsx"
-      ],
-      "next/image": [
-        "./components/Image.tsx"
       ]
     },
     "allowImportingTsExtensions": true,
-    "noEmit": true
-  }
+    "noEmit": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ]
 }

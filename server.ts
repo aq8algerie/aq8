@@ -1,14 +1,13 @@
 import 'dotenv/config';
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import path from 'path';
-import fs from 'fs/promises';
-import { createServer as createViteServer } from 'vite';
+import next from 'next';
 import { applicationDefault, getApps as getAdminApps, initializeApp as initializeAdminApp } from 'firebase-admin/app';
 import { getAuth as getAdminAuth } from 'firebase-admin/auth';
 import { DocumentSnapshot, Firestore, Transaction, getFirestore as getAdminFirestore } from 'firebase-admin/firestore';
 
-// Import SEO helpers and mock database
-import { getSeoForPage, generateCenterSeo, PageSeo, generateJsonLd } from './lib/seo';
+// Import mock database
 import { AQ8Database } from './src/mockData';
 import { Appointment, Center, Service } from './src/types';
 import {
@@ -439,104 +438,157 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
   return reservation;
 }
 
-function injectSeo(html: string, seoInfo: { seo: PageSeo, jsonLd: string }): string {
-  const { seo, jsonLd } = seoInfo;
-  let modifiedHtml = html;
+async function checkAndExpirePendingBookings(db: Firestore) {
+  const cutoffTime = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
   
-  // Clean up any existing titles or meta tags
-  modifiedHtml = modifiedHtml.replace(/<title>.*?<\/title>/gi, '');
-  modifiedHtml = modifiedHtml.replace(/<meta\s+name="description"\s+content=".*?"\s*\/?>/gi, '');
-  modifiedHtml = modifiedHtml.replace(/<meta\s+name="keywords"\s+content=".*?"\s*\/?>/gi, '');
-  modifiedHtml = modifiedHtml.replace(/<link\s+rel="canonical"\s+href=".*?"\s*\/?>/gi, '');
-  modifiedHtml = modifiedHtml.replace(/<link\s+rel="(?:icon|shortcut icon)"[^>]*>/gi, '');
-  modifiedHtml = modifiedHtml.replace(/<link\s+rel="apple-touch-icon"[^>]*>/gi, '');
-
-  // Generate complete set of optimized SEO tags
-  const metaTags = `
-    <title>${seo.title}</title>
-    <meta name="description" content="${seo.description}" />
-    <meta name="keywords" content="${seo.keywords.join(', ')}" />
-    <link rel="canonical" href="${seo.canonicalUrl}" />
-    <link rel="icon" type="image/png" href="/images/favicon.png" />
-    <link rel="apple-touch-icon" href="/images/favicon.png" />
-    <meta property="og:title" content="${seo.title}" />
-    <meta property="og:description" content="${seo.description}" />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="${seo.canonicalUrl}" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${seo.title}" />
-    <meta name="twitter:description" content="${seo.description}" />
-    ${jsonLd}
-  `;
-
-  // Inject right after <head> or before </head>
-  if (modifiedHtml.includes('<head>')) {
-    return modifiedHtml.replace('<head>', `<head>\n    ${metaTags}`);
-  } else {
-    return modifiedHtml.replace('</head>', `${metaTags}\n</head>`);
-  }
-}
-
-function getSeoForUrl(urlPath: string): { seo: PageSeo; jsonLd: string } {
-  // Match a dynamic center slug URL
-  const centerMatch = urlPath.match(/^\/centres\/([a-zA-Z0-9_-]+)/);
-  if (centerMatch) {
-    const slug = centerMatch[1];
-    const centers = AQ8Database.getCenters();
-    const center = centers.find(c => c.slug === slug);
-    if (center) {
-      const seo = generateCenterSeo(center);
-      const jsonLd = generateJsonLd('center-detail', center);
-      return { seo, jsonLd };
+  try {
+    console.log(`[Cleaner] Checking for pending bookings older than 48 hours (cutoff: ${cutoffTime})...`);
+    
+    const pendingSnap = await db.collection('booking_requests')
+      .where('status', '==', 'pending')
+      .get();
+      
+    if (pendingSnap.empty) {
+      console.log('[Cleaner] No pending booking requests found.');
+      return;
     }
+    
+    let expiredCount = 0;
+    
+    for (const docSnap of pendingSnap.docs) {
+      const request = docSnap.data();
+      const createdAt = request.createdAt || '';
+      
+      if (createdAt && createdAt < cutoffTime) {
+        const requestId = docSnap.id;
+        const centerId = request.centerId;
+        const bookingDate = request.bookingDate;
+        const bookingTime = request.bookingTime;
+        
+        console.log(`[Cleaner] Expiring booking request ${requestId} (created at ${createdAt}) at center ${centerId}`);
+        
+        await db.runTransaction(async transaction => {
+          // 1. Mark request as expired
+          transaction.update(docSnap.ref, { 
+            status: 'expired',
+            updatedAt: new Date().toISOString()
+          });
+          
+          // 2. Load center config
+          const centerRef = db.collection('centers').doc(centerId);
+          const centerSnap = await transaction.get(centerRef);
+          
+          let centerConfig: any = undefined;
+          if (centerSnap.exists) {
+            centerConfig = { id: centerSnap.id, ...centerSnap.data() };
+          }
+          
+          // 3. Load the corresponding slot
+          const dateTime = `${bookingDate}T${bookingTime}`;
+          const slotId = getBookingSlotId(dateTime);
+          const slotRef = db.collection('appointment_slots').doc(centerId).collection('slots').doc(slotId);
+          
+          const slotSnap = await transaction.get(slotRef);
+          if (slotSnap.exists) {
+            const slot = slotSnap.data() as AppointmentSlot;
+            const entryId = `request-${requestId}`;
+            
+            if (slot.appointments && slot.appointments[entryId]) {
+              const updatedAppointments = { ...slot.appointments };
+              delete updatedAppointments[entryId];
+              
+              const updatedSlot: AppointmentSlot = {
+                ...slot,
+                appointments: updatedAppointments,
+                updatedAt: new Date().toISOString()
+              };
+              
+              const recomputedSlot = recomputeSlot(updatedSlot, centerConfig);
+              
+              transaction.set(slotRef, recomputedSlot);
+              
+              const publicSlotRef = db.collection('public_booking_slots').doc(centerId).collection('slots').doc(slotId);
+              transaction.set(publicSlotRef, buildPublicBookingSlot(recomputedSlot));
+              
+              console.log(`[Cleaner] Released slot hold for ${entryId} on ${dateTime}`);
+            }
+          }
+        });
+        
+        expiredCount++;
+      }
+    }
+    
+    console.log(`[Cleaner] Finished clean-up. Expired ${expiredCount} requests.`);
+  } catch (error) {
+    console.error('[Cleaner] Error running expired booking cleaner:', error);
   }
-
-  // Match static pages
-  const cleanPath = urlPath === '/' ? 'home' : urlPath.replace(/^\//, '');
-  const validRoutes: Record<string, string> = {
-    'home': 'home',
-    'aq8': 'aq8',
-    'wonder': 'wonder',
-    'centres': 'centers',
-    'centers': 'centers',
-    'faq': 'faq',
-    'contact': 'contact',
-    'a-propos': 'about',
-    'about': 'about',
-    'reservation': 'booking'
-  };
-
-  const routeKey = validRoutes[cleanPath] || 'home';
-  const seo = getSeoForPage(routeKey);
-  const jsonLd = generateJsonLd(routeKey);
-  return { seo, jsonLd };
 }
 
 async function startServer() {
   const app = express();
+  app.set('trust proxy', 1);
   app.use(express.json({ limit: '32kb' }));
 
-  app.get('/api/email-notifications/health', (req, res) => {
-    res.json({ ok: true, email: getEmailNotificationDiagnostics() });
+  const publicApiLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5, // Limit each IP to 5 requests per windowMs
+    message: {
+      ok: false,
+      error: 'Trop de requêtes soumises depuis cette adresse IP. Veuillez réessayer dans une heure.',
+    },
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  });
+
+  // Apply public API limiter
+  app.use('/api/public-reservations', publicApiLimiter);
+  app.use('/api/contact-messages', publicApiLimiter);
+
+  // API endpoints
+  app.post('/api/public-reservations', async (req, res) => {
+    try {
+      const data = req.body as PublicBookingRequestInput;
+      const validation = validatePublicBookingRequest(data);
+      if (!validation.valid) {
+        res.status(400).json({ ok: false, error: (validation as any).error });
+        return;
+      }
+
+      const reservation = await createPublicReservation(data);
+      res.status(201).json({ ok: true, reservation });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Reservation impossible.';
+      res.status(400).json({ ok: false, error: message });
+    }
   });
 
   app.post('/api/contact-messages', async (req, res) => {
     try {
-      const result = await createPublicContactMessage(req.body);
-      res.status(201).json({ ok: true, ...result });
-    } catch (error) {
-      const statusCode = typeof error === 'object' && error && 'statusCode' in error ? Number((error as { statusCode?: number }).statusCode) : 500;
-      const message = error instanceof Error ? error.message : 'Message impossible.';
-      res.status(Number.isFinite(statusCode) ? statusCode : 500).json({ ok: false, error: message });
-    }
-  });
+      const data = req.body;
+      const validation = validatePublicContactMessage(data);
+      if (!validation.valid) {
+        res.status(400).json({ ok: false, error: (validation as any).error });
+        return;
+      }
 
-  app.post('/api/public-reservations', async (req, res) => {
-    try {
-      const reservation = await createPublicReservation(req.body as PublicBookingRequestInput);
-      res.status(201).json({ ok: true, reservation });
+      const db = getAdminDb();
+      const messageRef = await db.collection('contact_messages').add({
+        ...data,
+        createdAt: new Date().toISOString(),
+        status: 'new'
+      });
+
+      sendPublicContactNotifications({
+        message: data,
+        messageId: messageRef.id,
+      }).catch(error => {
+        console.error('Public contact email notification failed:', error);
+      });
+
+      res.status(201).json({ ok: true, id: messageRef.id });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Reservation impossible.';
+      const message = error instanceof Error ? error.message : 'Message impossible.';
       res.status(400).json({ ok: false, error: message });
     }
   });
@@ -566,55 +618,29 @@ async function startServer() {
   // Serve the public directory assets
   app.use('/public', express.static(path.join(process.cwd(), 'public')));
 
-  if (process.env.NODE_ENV !== 'production') {
-    // Development mode with Vite's Dev Middleware
-    console.log('Starting server in DEVELOPMENT mode...');
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'custom'
-    });
+  // Next.js integration
+  const dev = process.env.NODE_ENV !== 'production';
+  const nextApp = (next as any)({ dev });
+  const nextHandler = nextApp.getRequestHandler();
 
-    app.use(vite.middlewares);
+  await nextApp.prepare();
 
-    app.use('*', async (req, res, next) => {
-      const url = req.originalUrl;
-      try {
-        let template = await fs.readFile(path.resolve(process.cwd(), 'index.html'), 'utf-8');
-        template = await vite.transformIndexHtml(url, template);
-        
-        // Dynamic SEO injection
-        const seo = getSeoForUrl(req.path);
-        const html = injectSeo(template, seo);
-        
-        res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
-      } catch (e) {
-        vite.ssrFixStacktrace(e as Error);
-        next(e);
-      }
-    });
-  } else {
-    // Production mode serving built assets from dist/
-    console.log('Starting server in PRODUCTION mode...');
-    const distPath = path.join(process.cwd(), 'dist');
-    
-    // Serve client-side static assets
-    app.use(express.static(distPath, { index: false }));
+  // Route all other requests to Next.js handler
+  app.all('*', (req, res) => {
+    return nextHandler(req, res);
+  });
 
-    app.use('*', async (req, res, next) => {
-      try {
-        const templatePath = path.join(distPath, 'index.html');
-        const template = await fs.readFile(templatePath, 'utf-8');
-        
-        // Dynamic SEO injection
-        const seo = getSeoForUrl(req.path);
-        const html = injectSeo(template, seo);
-        
-        res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
-      } catch (e) {
-        next(e);
-      }
+  // Start the background expired booking holds cleaner
+  const adminDb = getAdminDb();
+  checkAndExpirePendingBookings(adminDb).catch(err => {
+    console.error('Initial background cleaner execution failed:', err);
+  });
+  // Run every 6 hours
+  setInterval(() => {
+    checkAndExpirePendingBookings(adminDb).catch(err => {
+      console.error('Background cleaner interval execution failed:', err);
     });
-  }
+  }, 6 * 60 * 60 * 1000);
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running at http://0.0.0.0:${PORT}`);
