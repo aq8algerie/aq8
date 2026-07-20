@@ -16,13 +16,15 @@ type ContactFormProps = {
 type RequestType = PublicContactRequestType;
 
 const requestTypeLabels: Record<RequestType, string> = {
-  general: "Question générale",
+  general: "Question générale / Renseignements",
   reservation: "Demande liée à une réservation",
-  partnership: "Partenariat / franchise",
+  partnership: "Partenariat, Franchise ou Inscription de centre",
   recruitment: "Recrutement",
 };
 
-const requestTypes = CONTACT_REQUEST_TYPES.map((value) => ({
+const allowedRequestTypes: RequestType[] = ["general", "partnership", "recruitment"];
+
+const requestTypes = allowedRequestTypes.map((value) => ({
   value,
   label: requestTypeLabels[value],
 }));

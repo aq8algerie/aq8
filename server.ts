@@ -502,7 +502,8 @@ function getSeoForUrl(urlPath: string): { seo: PageSeo; jsonLd: string } {
     'faq': 'faq',
     'contact': 'contact',
     'a-propos': 'about',
-    'about': 'about'
+    'about': 'about',
+    'reservation': 'booking'
   };
 
   const routeKey = validRoutes[cleanPath] || 'home';

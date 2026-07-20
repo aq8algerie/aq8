@@ -76,7 +76,8 @@ import {
   PublicCenters,
   PublicCenterDetail,
   PublicContact,
-  PublicAbout
+  PublicAbout,
+  PublicBooking
 } from './components/PublicViews';
 
 import { saveDocument, syncCollection as syncFirestoreCollection } from './lib/firestoreRepository';
@@ -342,7 +343,7 @@ export default function App() {
   }, [crmRole, crmCenterId]);
 
   // 2. ROUTING & NAVIGATION STATE
-  // 'home' | 'about' | 'aq8' | 'wonder' | 'centers' | 'center-detail' | 'contact' | 'login' | 'crm'
+  // 'home' | 'about' | 'aq8' | 'wonder' | 'centers' | 'center-detail' | 'contact' | 'booking' | 'login' | 'crm'
   const [currentRoute, setCurrentRoute] = useState<string>('home');
   const [selectedCenterId, setSelectedCenterId] = useState<string>('center-1');
   const [selectedCenterSlug, setSelectedCenterSlug] = useState<string>('');
@@ -380,6 +381,8 @@ export default function App() {
           'centres': 'centers',
           'centers': 'centers',
           'contact': 'contact',
+          'reservation': 'booking',
+          'reserver': 'booking',
           'login': 'login',
           'crm': 'crm'
         };
@@ -416,6 +419,8 @@ export default function App() {
       targetPath = '/wonder';
     } else if (route === 'contact') {
       targetPath = '/contact';
+    } else if (route === 'booking' || route === 'reservation') {
+      targetPath = '/reservation';
     } else if (route === 'login') {
       targetPath = '/login';
     } else if (route === 'crm') {
@@ -533,7 +538,7 @@ export default function App() {
       return;
     }
 
-    navigate('centers');
+    navigate('booking');
   };
 
   // Calculate high-level stats for Super Admin
@@ -732,6 +737,8 @@ export default function App() {
               />
             )}
 
+
+            {currentRoute === 'booking' && <PublicBooking />}
 
             {currentRoute === 'contact' && <PublicContact centers={publicCenters} />}
 

@@ -27,7 +27,7 @@ export function HomeHero() {
               Trouver un centre
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/contact" aria-label="Demander une réservation AQ8" className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-[#242424] transition-premium hover:border-[#242424]">
+            <Link href="/reservation" aria-label="Demander une réservation AQ8" className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-[#242424] transition-premium hover:border-[#242424]">
               <Calendar className="h-4 w-4 text-[#ff5757]" />
               Réserver
             </Link>

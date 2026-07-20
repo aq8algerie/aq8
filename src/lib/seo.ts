@@ -46,6 +46,11 @@ export const staticPageSeo: Record<string, Omit<PageSeo, 'canonicalUrl'>> = {
     title: "Contactez AQ8 Algérie - Réservations et Informations",
     description: "Contactez nos centres AQ8 Algérie ou notre direction pour obtenir des renseignements, réserver une séance d'EMS ou demander un accompagnement minceur.",
     keywords: ["contact AQ8 Algérie", "numéro téléphone AQ8", "réservation EMS Alger"]
+  },
+  booking: {
+    title: "Réservez votre séance - AQ8 Algérie",
+    description: "Planifiez et pré-réservez votre séance d'électrostimulation AQ8 EMS ou Wonder dans le centre de votre choix en Algérie.",
+    keywords: ["réservation AQ8", "réserver EMS Algérie", "réserver Wonder Sculpt", "séance d'électrostimulation"]
   }
 };
 
@@ -53,7 +58,15 @@ export function getSeoForPage(route: string): PageSeo {
   const staticSeo = staticPageSeo[route] || staticPageSeo.home;
   return {
     ...staticSeo,
-    canonicalUrl: `${siteConfig.url}${route === 'home' ? '/' : route === 'about' ? '/a-propos' : `/${route}`}`
+    canonicalUrl: `${siteConfig.url}${
+      route === 'home' 
+        ? '/' 
+        : route === 'about' 
+        ? '/a-propos' 
+        : route === 'booking'
+        ? '/reservation'
+        : `/${route}`
+    }`
   };
 }
 

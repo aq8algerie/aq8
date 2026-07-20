@@ -22,8 +22,9 @@ import { PublicWonder } from './public/PublicWonder';
 import { PublicCenters } from './public/PublicCenters';
 import { PublicCenterDetail } from './public/PublicCenterDetail';
 import { PublicContact } from './public/PublicContact';
+import { PublicBooking } from './public/PublicBooking';
 
-export { PublicAQ8, PublicWonder, PublicCenters, PublicCenterDetail, PublicContact };
+export { PublicAQ8, PublicWonder, PublicCenters, PublicCenterDetail, PublicContact, PublicBooking };
 
 export function PublicAbout() {
   useSeo('about');
