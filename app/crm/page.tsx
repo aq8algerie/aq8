@@ -59,6 +59,7 @@ import { getPublicCenters } from "@/src/lib/centerVisibility";
 import { CrmPortal } from "@/src/components/CrmPortal";
 import { SuperAdminViews } from "@/src/components/SuperAdminViews";
 import { CenterManagerViews } from "@/src/components/CenterManagerViews";
+import { SuperAdminTabId } from "@/src/components/super-admin/SuperAdminTabs";
 
 type CrmRole = "super_admin" | "center_manager";
 
@@ -97,7 +98,7 @@ export default function CrmPage() {
   const [bookingRequests, setBookingRequests] = useState<BookingRequest[]>([]);
 
   // Navigation and UI state within the CRM
-  const [crmSuperAdminTab, setCrmSuperAdminTab] = useState<"dashboard" | "centers" | "managers" | "stats" | "settings">("dashboard");
+  const [crmSuperAdminTab, setCrmSuperAdminTab] = useState<SuperAdminTabId>("dashboard");
   const [crmCenterManagerTab, setCrmCenterManagerTab] = useState<"dashboard" | "schedule" | "clients" | "bookings" | "payments" | "services" | "settings">("dashboard");
   const [crmSidebarOpen, setCrmSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -437,7 +438,8 @@ export default function CrmPage() {
                   { id: "centers" as const, label: "Gestion Centres", icon: Building },
                   { id: "managers" as const, label: "Managers & Accès", icon: Users },
                   { id: "stats" as const, label: "Analyses Réseau", icon: BarChart3 },
-                  { id: "settings" as const, label: "Paramètres Généraux", icon: Settings }
+                  { id: "settings" as const, label: "Paramètres Généraux", icon: Settings },
+                  { id: "audit" as const, label: "Journal d'Audit", icon: ShieldCheck }
                 ].map(tab => {
                   const Icon = tab.icon;
                   const isActive = crmSuperAdminTab === tab.id;
@@ -531,6 +533,8 @@ export default function CrmPage() {
               onUpdateSettings={updateSettings}
               activeTab={crmSuperAdminTab}
               onTabChange={setCrmSuperAdminTab}
+              userId={auth.currentUser?.uid || ""}
+              userName={loggedManagerName}
             />
           </Suspense>
         ) : (
@@ -551,6 +555,8 @@ export default function CrmPage() {
               onUpdateMeasurements={updateMeasurements}
               activeTab={crmCenterManagerTab}
               onTabChange={setCrmCenterManagerTab}
+              userId={auth.currentUser?.uid || ""}
+              userName={loggedManagerName}
             />
           </Suspense>
         )}

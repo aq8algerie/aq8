@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+"use client";
+
 import React from 'react';
 import { ArrowRight, CheckCircle, HelpCircle, MapPin, ShieldAlert, Sparkles } from 'lucide-react';
 import { Center, Service } from '../types';
@@ -17,14 +19,8 @@ import { HomeHowItWorks } from '@/components/home/HomeHowItWorks';
 import { HomeShortFAQ } from '@/components/home/HomeShortFAQ';
 import { HomeFinalCTA } from '@/components/home/HomeFinalCTA';
 
-import { PublicAQ8 } from './public/PublicAQ8';
-import { PublicWonder } from './public/PublicWonder';
-import { PublicCenters } from './public/PublicCenters';
-import { PublicCenterDetail } from './public/PublicCenterDetail';
-import { PublicContact } from './public/PublicContact';
-import { PublicBooking } from './public/PublicBooking';
-
-export { PublicAQ8, PublicWonder, PublicCenters, PublicCenterDetail, PublicContact, PublicBooking };
+// The following sub-views are only used in the legacy Vite App.tsx. 
+// We omit them here to avoid bringing Next.js server page metadata into client bundles.
 
 export function PublicAbout() {
   useSeo('about');

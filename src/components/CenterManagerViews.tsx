@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { logCrmAction } from '../lib/auditLogger';
 import {
   Center,
   Client,
@@ -77,7 +78,9 @@ export function CenterManagerViews({
   onUpdatePayments,
   onUpdateMeasurements,
   activeTab,
-  onTabChange
+  onTabChange,
+  userId,
+  userName
 }: {
   centerId: string;
   centers: Center[];
@@ -94,6 +97,8 @@ export function CenterManagerViews({
   onUpdateMeasurements: (measurements: Measurement[]) => void;
   activeTab?: SubTabId;
   onTabChange?: (tab: SubTabId) => void;
+  userId: string;
+  userName: string;
 }) {
   const [localActiveSubTab, setLocalActiveSubTab] = useState<SubTabId>('dashboard');
   const activeSubTab = activeTab || localActiveSubTab;
@@ -262,6 +267,17 @@ export function CenterManagerViews({
     setConfirmingPaymentDelete(true);
 
     try {
+      const p = payments.find(payment => payment.id === pendingPaymentDeleteId);
+      const cl = p ? clients.find(client => client.id === p.clientId) : null;
+      logCrmAction(userId, userName, 'center_manager', {
+        action: 'DELETE_PAYMENT',
+        details: `Suppression de l'encaissement de ${p?.amount || 0} DZD${cl ? ` pour le client ${cl.firstName} ${cl.lastName}` : ''}`,
+        targetId: pendingPaymentDeleteId,
+        targetType: 'payment',
+        centerId,
+        centerName: currentCenter?.name
+      });
+
       const updated = payments.filter(payment => payment.id !== pendingPaymentDeleteId);
       onUpdatePayments(updated);
       triggerToast('Encaissement supprime avec succes.', 'success', 'payment', 'Encaissement supprime');
@@ -319,6 +335,19 @@ export function CenterManagerViews({
 
       if (pendingClientAction.kind === 'delete') {
         onUpdateClients(clients.filter(client => !(actionIds.has(client.id) && client.centerId === centerId)));
+        
+        pendingClientAction.clientIds.forEach(cId => {
+          const clObj = clients.find(client => client.id === cId);
+          logCrmAction(userId, userName, 'center_manager', {
+            action: 'DELETE_CLIENT',
+            details: `Suppression du client : ${clObj ? `${clObj.firstName} ${clObj.lastName}` : cId}`,
+            targetId: cId,
+            targetType: 'client',
+            centerId,
+            centerName: currentCenter?.name
+          });
+        });
+
         if (selectedClientId && actionIds.has(selectedClientId)) {
           setSelectedClientId(null);
         }
@@ -341,6 +370,24 @@ export function CenterManagerViews({
           }
           return nextClient;
         }));
+
+        pendingClientAction.clientIds.forEach(cId => {
+          const clObj = clients.find(client => client.id === cId);
+          const act = pendingClientAction.status === 'suspended' ? 'SUSPEND_CLIENT' : 'ACTIVATE_CLIENT';
+          const dts = pendingClientAction.status === 'suspended'
+            ? `Suspension du client : ${clObj ? `${clObj.firstName} ${clObj.lastName}` : cId}`
+            : `Réactivation du client : ${clObj ? `${clObj.firstName} ${clObj.lastName}` : cId}`;
+          
+          logCrmAction(userId, userName, 'center_manager', {
+            action: act,
+            details: dts,
+            targetId: cId,
+            targetType: 'client',
+            centerId,
+            centerName: currentCenter?.name
+          });
+        });
+
         triggerToast(
           pendingClientAction.status === 'suspended' ? 'Client suspendu avec succes.' : 'Client reactive avec succes.',
           'success',
@@ -401,6 +448,16 @@ export function CenterManagerViews({
       };
 
       onUpdateClients(clients.map(client => client.id === editingClient.id ? updatedClient : client));
+      
+      logCrmAction(userId, userName, 'center_manager', {
+        action: 'UPDATE_CLIENT',
+        details: `Modification de la fiche du client : ${baseFields.firstName} ${baseFields.lastName}`,
+        targetId: editingClient.id,
+        targetType: 'client',
+        centerId,
+        centerName: currentCenter?.name
+      });
+
       closeClientModal();
       triggerToast('Fiche de ' + updatedClient.firstName + ' ' + updatedClient.lastName + ' mise a jour.', 'success', 'updated', 'Client modifie');
       return;
@@ -415,6 +472,16 @@ export function CenterManagerViews({
     };
 
     onUpdateClients([...clients, newClient]);
+    
+    logCrmAction(userId, userName, 'center_manager', {
+      action: 'CREATE_CLIENT',
+      details: `Création du client : ${newClient.firstName} ${newClient.lastName}`,
+      targetId: newClient.id,
+      targetType: 'client',
+      centerId,
+      centerName: currentCenter?.name
+    });
+
     closeClientModal();
     triggerToast('Adherent ' + newClient.firstName + ' ' + newClient.lastName + ' enregistre avec succes !');
   };
@@ -463,6 +530,15 @@ export function CenterManagerViews({
         createdAt: new Date().toISOString()
       });
 
+      logCrmAction(userId, userName, 'center_manager', {
+        action: 'CREATE_APPOINTMENT',
+        details: `Planification d'un rendez-vous le ${aptData.date} à ${aptData.time} pour le client : ${clientObj ? `${clientObj.firstName} ${clientObj.lastName}` : aptData.clientId}`,
+        targetId: appointmentId,
+        targetType: 'appointment',
+        centerId,
+        centerName: currentCenter?.name
+      });
+
       notifyCrmEmailBestEffort({
         type: 'appointment_booked',
         centerId,
@@ -508,6 +584,15 @@ export function CenterManagerViews({
         clientPackageId: activePkg.id
       });
 
+      logCrmAction(userId, userName, 'center_manager', {
+        action: 'COMPLETE_APPOINTMENT',
+        details: `Validation de la séance du ${apt.dateTime.replace('T', ' ')} pour le client : ${cl ? `${cl.firstName} ${cl.lastName}` : apt.clientId} (Forfait restant : ${completion.sessionsRemaining} séances)`,
+        targetId: apt.id,
+        targetType: 'appointment',
+        centerId,
+        centerName: currentCenter?.name
+      });
+
       notifyCrmEmailBestEffort({
         type: 'appointment_completed',
         centerId,
@@ -545,6 +630,16 @@ export function CenterManagerViews({
       await cancelAppointmentInTransaction(db, {
         appointmentId: apt.id,
         centerId
+      });
+
+      const cl = clients.find(c => c.id === apt.clientId);
+      logCrmAction(userId, userName, 'center_manager', {
+        action: 'CANCEL_APPOINTMENT',
+        details: `Annulation de la séance du ${apt.dateTime.replace('T', ' ')} pour le client : ${cl ? `${cl.firstName} ${cl.lastName}` : apt.clientId}`,
+        targetId: apt.id,
+        targetType: 'appointment',
+        centerId,
+        centerName: currentCenter?.name
       });
 
       notifyCrmEmailBestEffort({
@@ -603,6 +698,15 @@ export function CenterManagerViews({
         updatedAt: new Date().toISOString()
       });
 
+      logCrmAction(userId, userName, 'center_manager', {
+        action: 'UPDATE_APPOINTMENT',
+        details: `Modification de la séance du client : ${clientObj ? `${clientObj.firstName} ${clientObj.lastName}` : appointment.clientId} (Nouvelle date/heure : ${appointment.dateTime.replace('T', ' ')})`,
+        targetId: appointment.id,
+        targetType: 'appointment',
+        centerId,
+        centerName: currentCenter?.name
+      });
+
       notifyCrmEmailBestEffort({
         type: 'appointment_updated',
         centerId,
@@ -619,6 +723,17 @@ export function CenterManagerViews({
     const fail = (message: string): CrmActionResult => ({ ok: false, error: message });
 
     try {
+      const apt = appointments.find(a => a.id === appointmentId);
+      const cl = apt ? clients.find(c => c.id === apt.clientId) : null;
+      logCrmAction(userId, userName, 'center_manager', {
+        action: 'DELETE_APPOINTMENT',
+        details: `Suppression du rendez-vous du ${apt ? apt.dateTime.replace('T', ' ') : ''} pour le client : ${cl ? `${cl.firstName} ${cl.lastName}` : (apt?.clientId || '')}`,
+        targetId: appointmentId,
+        targetType: 'appointment',
+        centerId,
+        centerName: currentCenter?.name
+      });
+
       await deleteAppointmentInTransaction(db, {
         appointmentId,
         centerId
@@ -645,6 +760,16 @@ export function CenterManagerViews({
         clientId,
         packageId,
         purchaseDate: getTodayDateString()
+      });
+
+      const pkg = packages.find(p => p.id === packageId);
+      logCrmAction(userId, userName, 'center_manager', {
+        action: 'ASSIGN_PACKAGE',
+        details: `Affectation du forfait ${pkg?.name || packageId} au client : ${client ? `${client.firstName} ${client.lastName}` : clientId}`,
+        targetId: clientPackageId,
+        targetType: 'client_package',
+        centerId,
+        centerName: currentCenter?.name
       });
 
       notifyCrmEmailBestEffort({
@@ -688,6 +813,17 @@ export function CenterManagerViews({
         autoActivatePackage: payData.autoActivatePackage
       });
 
+      const cl = clients.find(c => c.id === payData.clientId);
+      const pkg = packages.find(p => p.id === payData.packageId);
+      logCrmAction(userId, userName, 'center_manager', {
+        action: 'RECORD_PAYMENT',
+        details: `Enregistrement d'un paiement de ${payData.amount} DZD par ${payData.method} pour le client : ${cl ? `${cl.firstName} ${cl.lastName}` : payData.clientId}${pkg ? ` (Achat forfait : ${pkg.name})` : ''}`,
+        targetId: paymentId,
+        targetType: 'payment',
+        centerId,
+        centerName: currentCenter?.name
+      });
+
       notifyCrmEmailBestEffort({
         type: 'payment_recorded',
         centerId,
@@ -729,6 +865,17 @@ export function CenterManagerViews({
     };
 
     onUpdateMeasurements([...measurements, newMeas]);
+
+    const cl = clients.find(c => c.id === measData.clientId);
+    logCrmAction(userId, userName, 'center_manager', {
+      action: 'RECORD_MEASUREMENTS',
+      details: `Enregistrement des mensurations (Poids : ${measData.weight} kg) pour le client : ${cl ? `${cl.firstName} ${cl.lastName}` : measData.clientId}`,
+      targetId: newMeas.id,
+      targetType: 'measurement',
+      centerId,
+      centerName: currentCenter?.name
+    });
+
     setShowMeasurementModal(false);
     triggerToast('Mensurations enregistrées avec succès !');
   };
@@ -849,6 +996,8 @@ export function CenterManagerViews({
                 onBookAppointmentClick={() => setShowAptModal(true)}
                 bookingRequests={bookingRequests.filter(r => r.centerId === centerId)}
                 currentCenter={currentCenter}
+                userId={userId}
+                userName={userName}
               />
             )}
 

@@ -8,3 +8,4 @@ coverage/
 !.env.example
 db-audit/out/
 scratch/
+.next/

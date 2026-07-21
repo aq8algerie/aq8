@@ -20,5 +20,5 @@ export function PublicCenterDetail({
 
   const center = centers.find(c => c.id === centerId) || centers.find(c => c.slug === centerSlug);
 
-  return <CenterDetailPage params={{ slug: centerSlug || center?.slug || '' }} center={center} />;
+  return <CenterDetailPage params={Promise.resolve({ slug: centerSlug || center?.slug || '' })} />;
 }

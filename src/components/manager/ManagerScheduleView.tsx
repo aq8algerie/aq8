@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { logCrmAction } from '../../lib/auditLogger';
 import { Center, Client, Appointment, Service, ClientPackage, Package, BookingRequest } from '../../types';
 import {
   acceptBookingRequestInTransaction,
@@ -62,6 +63,8 @@ interface ManagerScheduleViewProps {
   onBookAppointmentClick: () => void;
   bookingRequests?: BookingRequest[];
   currentCenter: Center;
+  userId: string;
+  userName: string;
 }
 
 
@@ -85,6 +88,8 @@ export function ManagerScheduleView({
   onBookAppointmentClick,
   bookingRequests = [],
   currentCenter,
+  userId,
+  userName,
 }: ManagerScheduleViewProps) {
   // 1. Navigation and View Mode States
   const [viewType, setViewType] = useState<ScheduleViewType>('day');
@@ -442,6 +447,15 @@ export function ManagerScheduleView({
         createdAt: getTodayDateString()
       });
 
+      logCrmAction(userId, userName, 'center_manager', {
+        action: 'ACCEPT_BOOKING_REQUEST',
+        details: `Approbation de la demande de réservation en ligne pour : ${req.firstName} ${req.lastName} (Date : ${req.bookingDate} à ${req.bookingTime})`,
+        targetId: req.id,
+        targetType: 'booking_request',
+        centerId,
+        centerName: currentCenter?.name
+      });
+
       notifyCrmEmailBestEffort({
         type: 'booking_request_accepted',
         centerId,
@@ -464,6 +478,15 @@ export function ManagerScheduleView({
       await rejectBookingRequestInTransaction(db, {
         requestId: req.id,
         centerId
+      });
+
+      logCrmAction(userId, userName, 'center_manager', {
+        action: 'REJECT_BOOKING_REQUEST',
+        details: `Rejet de la demande de réservation en ligne pour : ${req.firstName} ${req.lastName} (Date : ${req.bookingDate} à ${req.bookingTime})`,
+        targetId: req.id,
+        targetType: 'booking_request',
+        centerId,
+        centerName: currentCenter?.name
       });
 
       notifyCrmEmailBestEffort({

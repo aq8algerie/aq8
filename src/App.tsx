@@ -67,18 +67,16 @@ import {
   where
 } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { SuperAdminTabId } from './components/super-admin/SuperAdminTabs';
 
 // Import our modular subcomponents
-import {
-  PublicHome,
-  PublicAQ8,
-  PublicWonder,
-  PublicCenters,
-  PublicCenterDetail,
-  PublicContact,
-  PublicAbout,
-  PublicBooking
-} from './components/PublicViews';
+import { PublicHome, PublicAbout } from './components/PublicViews';
+import { PublicAQ8 } from './components/public/PublicAQ8';
+import { PublicWonder } from './components/public/PublicWonder';
+import { PublicCenters } from './components/public/PublicCenters';
+import { PublicCenterDetail } from './components/public/PublicCenterDetail';
+import { PublicContact } from './components/public/PublicContact';
+import { PublicBooking } from './components/public/PublicBooking';
 
 import { saveDocument, syncCollection as syncFirestoreCollection } from './lib/firestoreRepository';
 import { getPublicCenters } from './lib/centerVisibility';
@@ -134,7 +132,7 @@ export default function App() {
   const [crmRole, setCrmRole] = useState<CrmRole | null>(null);
   const [crmCenterId, setCrmCenterId] = useState<string | null>(null);
   const [loggedManagerName, setLoggedManagerName] = useState<string>('');
-  const [crmSuperAdminTab, setCrmSuperAdminTab] = useState<'dashboard' | 'centers' | 'managers' | 'stats' | 'settings'>('dashboard');
+  const [crmSuperAdminTab, setCrmSuperAdminTab] = useState<SuperAdminTabId>('dashboard');
   const [crmCenterManagerTab, setCrmCenterManagerTab] = useState<'dashboard' | 'schedule' | 'clients' | 'bookings' | 'payments' | 'services' | 'settings'>('dashboard');
   const [crmSidebarOpen, setCrmSidebarOpen] = useState(false);
   const isDevToolsEnabled = 
@@ -989,6 +987,8 @@ export default function App() {
                   onUpdateSettings={updateSettings}
                   activeTab={crmSuperAdminTab}
                   onTabChange={setCrmSuperAdminTab}
+                  userId={auth.currentUser?.uid || ""}
+                  userName={loggedManagerName}
                 />
                 </Suspense>
               ) : (
@@ -1010,6 +1010,8 @@ export default function App() {
                   onUpdateMeasurements={updateMeasurements}
                   activeTab={crmCenterManagerTab}
                   onTabChange={setCrmCenterManagerTab}
+                  userId={auth.currentUser?.uid || ""}
+                  userName={loggedManagerName}
                 />
                 </Suspense>
               )}

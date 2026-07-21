@@ -27,10 +27,9 @@ import { SeoJsonLd } from "../../../../components/seo/SeoJsonLd";
 import { CenterBookingForm } from "../../../../components/centres/CenterBookingForm";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
-  center?: Center;
+  }>;
 }
 
 function getServiceLabel(service: string) {
@@ -70,7 +69,8 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  const center = params.slug ? getCenterBySlug(params.slug) : undefined;
+  const { slug } = await params;
+  const center = slug ? getCenterBySlug(slug) : undefined;
 
   if (!center) {
     return {
@@ -93,8 +93,9 @@ export async function generateMetadata({
   };
 }
 
-export default function CenterDetailPage({ params, center: providedCenter }: PageProps) {
-  const center = providedCenter || (params.slug ? getCenterBySlug(params.slug) : undefined);
+export default async function CenterDetailPage({ params }: PageProps) {
+  const { slug } = await params;
+  const center = slug ? getCenterBySlug(slug) : undefined;
   const publicBadgeLabel = center ? getPublicCenterBadgeLabel(center) : "";
 
   if (!center) {

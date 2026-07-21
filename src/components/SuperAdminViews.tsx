@@ -1,9 +1,9 @@
-﻿/**
+/**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Building,
   Users,
@@ -27,8 +27,13 @@ import {
   Activity,
   Layers,
   LayoutGrid,
-  List
+  List,
+  Search,
+  ShieldCheck
 } from 'lucide-react';
+import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { logCrmAction } from '../lib/auditLogger';
 import { Center, CenterManager, Service, Package, GeneralSettings, Client, ClientPackage, Payment, Appointment } from '../types';
 import { isCenterSuspended } from '../lib/centerVisibility';
 import { CentersManagement } from './super-admin/CentersManagement';
@@ -37,6 +42,7 @@ import { SettingsPanel } from './super-admin/SettingsPanel';
 import { StatsPanel } from './super-admin/StatsPanel';
 import { SuperAdminDashboard } from './super-admin/SuperAdminDashboard';
 import { SuperAdminTabs, SuperAdminTabId } from './super-admin/SuperAdminTabs';
+import { AuditLogPanel } from './super-admin/AuditLogPanel';
 
 export function SuperAdminViews({
   centers,
@@ -57,7 +63,9 @@ export function SuperAdminViews({
   onUpdatePackages,
   onUpdateSettings,
   activeTab,
-  onTabChange
+  onTabChange,
+  userId,
+  userName
 }: {
   centers: Center[];
   managers: CenterManager[];
@@ -78,10 +86,38 @@ export function SuperAdminViews({
   onUpdateSettings: (settings: GeneralSettings) => void;
   activeTab?: SuperAdminTabId;
   onTabChange?: (tab: SuperAdminTabId) => void;
+  userId: string;
+  userName: string;
 }) {
   const [localActiveSubTab, setLocalActiveSubTab] = useState<SuperAdminTabId>('dashboard');
   const activeSubTab = activeTab || localActiveSubTab;
   const setActiveSubTab = onTabChange || setLocalActiveSubTab;
+
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(true);
+
+  useEffect(() => {
+    if (activeSubTab === 'audit') {
+      const q = query(
+        collection(db, 'audit_logs'),
+        orderBy('timestamp', 'desc'),
+        limit(200)
+      );
+      
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const logs: any[] = [];
+        snapshot.forEach((doc) => {
+          logs.push({ id: doc.id, ...doc.data() });
+        });
+        setAuditLogs(logs);
+        setLoadingLogs(false);
+      }, (error) => {
+        console.error("Failed to load audit logs:", error);
+        setLoadingLogs(false);
+      });
+      return unsubscribe;
+    }
+  }, [activeSubTab]);
 
   // Modal States
   const [showCenterModal, setShowCenterModal] = useState(false);
@@ -232,6 +268,13 @@ export function SuperAdminViews({
 
     // 1. Create or update center
     if (editingCenter) {
+      logCrmAction(userId, userName, 'super_admin', {
+        action: 'UPDATE_CENTER',
+        details: `Modification des paramètres du centre : ${centerName} (${centerCity})`,
+        targetId: editingCenter.id,
+        targetType: 'center'
+      });
+
       const updated = centers.map(c => c.id === editingCenter.id ? {
         ...c,
         name: centerName,
@@ -257,6 +300,13 @@ export function SuperAdminViews({
       } : c);
       onUpdateCenters(updated);
     } else {
+      logCrmAction(userId, userName, 'super_admin', {
+        action: 'CREATE_CENTER',
+        details: `Création du nouveau centre : ${centerName} (${centerCity})`,
+        targetId: centerIdToUse,
+        targetType: 'center'
+      });
+
       const newCenter: Center = {
         id: centerIdToUse,
         name: centerName,
@@ -312,12 +362,33 @@ export function SuperAdminViews({
   };
 
   const handleDeleteCenter = (id: string) => {
+    const c = centers.find(center => center.id === id);
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce centre ? Tous les clients et réservations associés seront orphelins.')) {
+      logCrmAction(userId, userName, 'super_admin', {
+        action: 'DELETE_CENTER',
+        details: `Suppression du centre : ${c?.name || id}`,
+        targetId: id,
+        targetType: 'center'
+      });
       onUpdateCenters(centers.filter(c => c.id !== id));
     }
   };
 
   const handleToggleCenterStatus = (id: string) => {
+    const c = centers.find(center => center.id === id);
+    const wasSuspended = c ? isCenterSuspended(c) : false;
+    const action = wasSuspended ? 'ACTIVATE_CENTER' : 'SUSPEND_CENTER';
+    const details = wasSuspended 
+      ? `Réactivation du centre : ${c?.name || id}` 
+      : `Suspension temporaire du centre : ${c?.name || id}`;
+
+    logCrmAction(userId, userName, 'super_admin', {
+      action,
+      details,
+      targetId: id,
+      targetType: 'center'
+    });
+
     const updated = centers.map(center => {
       if (center.id !== id) return center;
 
@@ -351,6 +422,13 @@ export function SuperAdminViews({
   const handleManagerSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingManager) {
+      logCrmAction(userId, userName, 'super_admin', {
+        action: 'UPDATE_MANAGER',
+        details: `Mise à jour du manager : ${mgrName} (${mgrEmail})`,
+        targetId: editingManager.id,
+        targetType: 'manager'
+      });
+
       const targetEmail = editingManager.email.toLowerCase().trim();
       const updated = managers.map(m => m.email.toLowerCase().trim() === targetEmail ? {
         ...m,
@@ -360,8 +438,16 @@ export function SuperAdminViews({
       } : m);
       onUpdateManagers(updated);
     } else {
+      const newMgrId = `mgr-${Date.now()}`;
+      logCrmAction(userId, userName, 'super_admin', {
+        action: 'CREATE_MANAGER',
+        details: `Création du nouveau manager : ${mgrName} (${mgrEmail})`,
+        targetId: newMgrId,
+        targetType: 'manager'
+      });
+
       const newMgr: CenterManager = {
-        id: `mgr-${Date.now()}`,
+        id: newMgrId,
         name: mgrName.trim(),
         email: mgrEmail.trim(),
         centerId: mgrCenterId,
@@ -375,12 +461,32 @@ export function SuperAdminViews({
   const handleDeleteManager = (email: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce gérant ainsi que tous ses accès ?')) {
       const targetEmail = email.toLowerCase().trim();
+      const m = managers.find(mgr => mgr.email.toLowerCase().trim() === targetEmail);
+      logCrmAction(userId, userName, 'super_admin', {
+        action: 'DELETE_MANAGER',
+        details: `Suppression définitive du gérant : ${m?.name || email}`,
+        targetId: m?.id || null,
+        targetType: 'manager'
+      });
       onUpdateManagers(managers.filter(m => m.email.toLowerCase().trim() !== targetEmail));
     }
   };
 
   const toggleManagerActive = (email: string, currentActive: boolean) => {
     const targetEmail = email.toLowerCase().trim();
+    const m = managers.find(mgr => mgr.email.toLowerCase().trim() === targetEmail);
+    const action = currentActive ? 'DEACTIVATE_MANAGER' : 'ACTIVATE_MANAGER';
+    const details = currentActive 
+      ? `Désactivation de l'accès du gérant : ${m?.name || email}` 
+      : `Réactivation de l'accès du gérant : ${m?.name || email}`;
+
+    logCrmAction(userId, userName, 'super_admin', {
+      action,
+      details,
+      targetId: m?.id || null,
+      targetType: 'manager'
+    });
+
     const updated = managers.map(m => m.email.toLowerCase().trim() === targetEmail ? { ...m, active: !currentActive } : m);
     onUpdateManagers(updated);
   };
@@ -408,6 +514,13 @@ export function SuperAdminViews({
   const handleServiceSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingService) {
+      logCrmAction(userId, userName, 'super_admin', {
+        action: 'UPDATE_SERVICE',
+        details: `Modification de la prestation : ${srvName} (Prix : ${srvPrice} DZD)`,
+        targetId: editingService.id,
+        targetType: 'service'
+      });
+
       const updated = services.map(s => s.id === editingService.id ? {
         ...s,
         name: srvName,
@@ -418,8 +531,16 @@ export function SuperAdminViews({
       } : s);
       onUpdateServices(updated);
     } else {
+      const newSrvId = `srv-${Date.now()}`;
+      logCrmAction(userId, userName, 'super_admin', {
+        action: 'CREATE_SERVICE',
+        details: `Création d'une nouvelle prestation : ${srvName} (Prix : ${srvPrice} DZD)`,
+        targetId: newSrvId,
+        targetType: 'service'
+      });
+
       const newSrv: Service = {
-        id: `srv-${Date.now()}`,
+        id: newSrvId,
         name: srvName,
         type: srvType,
         duration: srvDuration,
@@ -433,6 +554,13 @@ export function SuperAdminViews({
 
   const handleDeleteService = (id: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette prestation ?')) {
+      const s = services.find(srv => srv.id === id);
+      logCrmAction(userId, userName, 'super_admin', {
+        action: 'DELETE_SERVICE',
+        details: `Suppression de la prestation : ${s?.name || id}`,
+        targetId: id,
+        targetType: 'service'
+      });
       onUpdateServices(services.filter(s => s.id !== id));
     }
   };
@@ -522,7 +650,23 @@ export function SuperAdminViews({
       {activeSubTab === 'settings' && (
         <SettingsPanel
           settings={settings}
-          onSave={onUpdateSettings}
+          onSave={(newSettings) => {
+            logCrmAction(userId, userName, 'super_admin', {
+              action: 'UPDATE_SETTINGS',
+              details: `Modification des paramètres généraux du réseau CRM`,
+              targetType: 'settings'
+            });
+            onUpdateSettings(newSettings);
+          }}
+        />
+      )}
+
+      {/* G. Journal d'Audit */}
+      {activeSubTab === 'audit' && (
+        <AuditLogPanel
+          centers={centers}
+          logs={auditLogs}
+          loading={loadingLogs}
         />
       )}
       {/* --- ALL MODALS --- */}
