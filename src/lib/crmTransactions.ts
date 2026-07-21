@@ -6,6 +6,7 @@ import {
   Transaction,
 } from 'firebase/firestore';
 import { Appointment, BookingRequest, Center, Client, ClientPackage, Package, Payment, Service } from '../types';
+import { isPackageExpired } from './packageRules';
 import {
   BookingServiceType,
   CenterBookingConfig,
@@ -575,8 +576,8 @@ export async function completeAppointmentWithSessionDeduction(
     if (clientPackage.centerId !== params.centerId || clientPackage.clientId !== appointment.clientId) {
       throw new Error('Le forfait actif ne correspond pas a cette reservation.');
     }
-    if (clientPackage.status !== 'active' || clientPackage.sessionsRemaining <= 0) {
-      throw new Error("Le forfait actif de cet adherent est epuise.");
+    if (clientPackage.status !== 'active' || clientPackage.sessionsRemaining <= 0 || isPackageExpired(clientPackage)) {
+      throw new Error("Le forfait actif de cet adhérent est épuisé ou a expiré (limite de 1 mois et demi dépassée).");
     }
 
     const sessionsRemaining = clientPackage.sessionsRemaining - 1;

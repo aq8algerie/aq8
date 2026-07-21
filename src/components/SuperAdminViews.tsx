@@ -43,6 +43,7 @@ import { StatsPanel } from './super-admin/StatsPanel';
 import { SuperAdminDashboard } from './super-admin/SuperAdminDashboard';
 import { SuperAdminTabs, SuperAdminTabId } from './super-admin/SuperAdminTabs';
 import { AuditLogPanel } from './super-admin/AuditLogPanel';
+import { PaymentsPanel } from './super-admin/PaymentsPanel';
 
 export function SuperAdminViews({
   centers,
@@ -645,6 +646,16 @@ export function SuperAdminViews({
           wonderClientsCount={wonderClientsCount}
         />
       )}
+      {/* Payments Network Tracking */}
+      {activeSubTab === 'payments' && (
+        <PaymentsPanel
+          centers={centers}
+          clients={clients}
+          payments={payments}
+          packages={packages}
+        />
+      )}
+
       {/* F. Settings */}
       {/* F. Settings */}
       {activeSubTab === 'settings' && (

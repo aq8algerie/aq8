@@ -75,9 +75,12 @@ export function CrmPortal({
     const centerId = profile.role === 'center_manager' ? profile.centerId || null : null;
 
     if (profile.role === 'center_manager') {
-      const centerExists = centers.some(c => c.id === centerId);
-      if (!centerExists) {
-        throw new Error('Votre centre de rattachement est inexistant ou desactive.');
+      const associatedCenter = centers.find(c => c.id === centerId);
+      if (!associatedCenter) {
+        throw new Error('Votre centre de rattachement est inexistant ou désactivé.');
+      }
+      if (associatedCenter.status === 'showcase' || associatedCenter.status === 'suspended') {
+        throw new Error("L'accès CRM de votre centre est temporairement suspendu. Veuillez contacter la direction.");
       }
     }
 

@@ -6,6 +6,24 @@
 import { Client, ClientPackage, Appointment } from '../types';
 
 /**
+ * Check if a client package is expired (more than 45 days since purchase)
+ */
+export function isPackageExpired(clientPackage: ClientPackage): boolean {
+  if (clientPackage.status === 'expired') return true;
+  if (!clientPackage.purchaseDate) return false;
+  
+  const purchase = new Date(clientPackage.purchaseDate);
+  if (isNaN(purchase.getTime())) return false;
+  
+  // Calculate date diff in days
+  const today = new Date();
+  const diffTime = today.getTime() - purchase.getTime();
+  const diffDays = diffTime / (1000 * 60 * 60 * 24);
+  
+  return diffDays > 45;
+}
+
+/**
  * Find active packages for a specific client with remaining sessions
  */
 export function findActivePackageForClient(
@@ -13,7 +31,10 @@ export function findActivePackageForClient(
   clientPackages: ClientPackage[]
 ): ClientPackage | undefined {
   return clientPackages.find(
-    cp => cp.clientId === clientId && cp.status === 'active' && cp.sessionsRemaining > 0
+    cp => cp.clientId === clientId && 
+          cp.status === 'active' && 
+          cp.sessionsRemaining > 0 &&
+          !isPackageExpired(cp)
   );
 }
 

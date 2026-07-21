@@ -49,6 +49,7 @@ type SlotAvailability = {
 type ReservationResponse = {
   ok?: boolean;
   error?: string;
+  warning?: string;
   reservation?: {
     reservationId: string;
     centerName: string;
@@ -134,6 +135,7 @@ export function CenterBookingForm({
   const resolvedCenterName = bookingCenter?.name || "";
   const resolvedCenterCity = bookingCenter?.city || "";
   const resolvedServices = bookingCenter?.services || [];
+  const isShowcaseOnly = bookingCenter?.status === 'showcase' || bookingCenter?.status === 'suspended';
 
   const bookingMinimumDate = useMemo(() => getBookingMinimumDate(), []);
   const defaultDate = useMemo(() => {
@@ -345,7 +347,7 @@ export function CenterBookingForm({
       }
 
       setSuccessMsg(
-        `Votre créneau est pré-réservé pour le centre ${resolvedCenterName}. L'équipe du centre vous contactera pour confirmer définitivement le rendez-vous.`,
+        payload?.warning || `Votre créneau est pré-réservé pour le centre ${resolvedCenterName}. L'équipe du centre vous contactera pour confirmer définitivement le rendez-vous.`,
       );
 
       setFirstName("");
@@ -435,6 +437,21 @@ export function CenterBookingForm({
       {!resolvedCenterId ? (
         <div className="rounded-md border border-amber-100 bg-amber-50/40 p-4 text-center text-sm font-medium text-amber-800 space-y-2">
           <p>Veuillez sélectionner un centre ci-dessus pour planifier votre séance.</p>
+        </div>
+      ) : isShowcaseOnly ? (
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/60 p-5 space-y-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+            <AlertCircle className="h-5 w-5" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-display text-sm font-bold text-amber-900">
+              Réservations en ligne désactivées
+            </h3>
+            <p className="text-xs font-semibold leading-relaxed text-amber-800">
+              Les réservations en ligne sont temporairement désactivées pour le centre de {resolvedCenterCity}. 
+              Veuillez contacter le centre directement ou vous rendre sur place pour planifier vos séances.
+            </p>
+          </div>
         </div>
       ) : (
         <>

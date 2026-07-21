@@ -6,6 +6,7 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
 import { ClientPackage, Package } from '../../../types';
+import { isPackageExpired } from '../../../lib/packageRules';
 
 interface ActivePackageCardProps {
   clientPackages: ClientPackage[];
@@ -27,22 +28,27 @@ export function ActivePackageCard({
           <div className="space-y-3">
             {clientPackages.map(cp => {
               const pack = packages.find(p => p.id === cp.packageId);
+              const expired = isPackageExpired(cp);
+              const statusLabel = expired ? 'Expiré' : cp.status === 'active' ? 'Actif' : cp.status === 'completed' ? 'Consommé' : cp.status;
+              const statusColor = expired ? 'bg-rose-100 text-rose-700' : cp.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-500';
+              const sessionsRemaining = expired ? 0 : cp.sessionsRemaining;
+              
               return (
                 <div key={cp.id} className="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-2 text-xs">
                   <div className="flex justify-between items-start">
                     <span className="font-bold text-slate-800 font-display">{pack?.name || 'Forfait'}</span>
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase ${cp.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-500'}`}>
-                      {cp.status === 'active' ? 'Actif' : cp.status === 'completed' ? 'Consommé' : cp.status}
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase ${statusColor}`}>
+                      {statusLabel}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs pt-1">
                     <span className="text-slate-500 font-medium">Séances restantes:</span>
-                    <span className="font-mono font-bold text-sm text-[#ff5757]">{cp.sessionsRemaining} / {cp.totalSessions}</span>
+                    <span className="font-mono font-bold text-sm text-[#ff5757]">{sessionsRemaining} / {cp.totalSessions}</span>
                   </div>
                   {/* Visual progress bar */}
                   <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
                     <div 
-                      style={{ width: `${(cp.sessionsRemaining / cp.totalSessions) * 100}%` }} 
+                      style={{ width: `${(sessionsRemaining / cp.totalSessions) * 100}%` }} 
                       className="bg-[#ff5757] h-full transition-all"
                     ></div>
                   </div>

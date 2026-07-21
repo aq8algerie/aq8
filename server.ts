@@ -9,7 +9,7 @@ import { DocumentSnapshot, Firestore, Transaction, getFirestore as getAdminFires
 
 // Import mock database
 import { AQ8Database } from './src/mockData';
-import { Appointment, Center, Service } from './src/types';
+import { Appointment, Center, Service, Client, ClientPackage } from './src/types';
 import {
   PublicBookingRequestInput,
   validatePublicBookingRequest,
@@ -366,6 +366,65 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
   }
 
   const data = validation.data;
+
+  // Check client status and negative balance rules
+  const phoneSearch = String(data.phone || '').trim();
+  let warningMessage: string | undefined = undefined;
+
+  if (phoneSearch) {
+    const clientsSnap = await db.collection('clients')
+      .where('phone', '==', phoneSearch)
+      .where('centerId', '==', data.centerId)
+      .get();
+
+    if (!clientsSnap.empty) {
+      const clientDoc = clientsSnap.docs[0];
+      const clientId = clientDoc.id;
+
+      // Fetch client packages
+      const pkgsSnap = await db.collection('client_packages')
+        .where('clientId', '==', clientId)
+        .get();
+
+      const clientPkgs = pkgsSnap.docs.map(doc => doc.data() as ClientPackage);
+
+      // Check if they have ANY active package with remaining sessions that is NOT expired (45 days)
+      const hasActiveValidPackage = clientPkgs.some(cp => {
+        if (cp.status !== 'active' || cp.sessionsRemaining <= 0) return false;
+        if (!cp.purchaseDate) return false;
+        const purchase = new Date(cp.purchaseDate);
+        if (isNaN(purchase.getTime())) return false;
+
+        const diffTime = Date.now() - purchase.getTime();
+        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+        return diffDays <= 45;
+      });
+
+      if (!hasActiveValidPackage) {
+        // Client has a negative / zero balance.
+        // Check if they already have future appointments (status === 'booked')
+        const appointmentsSnap = await db.collection('appointments')
+          .where('clientId', '==', clientId)
+          .where('status', '==', 'booked')
+          .get();
+
+        // Check if they already have pending booking requests (status === 'pending')
+        const requestsSnap = await db.collection('booking_requests')
+          .where('phone', '==', phoneSearch)
+          .where('centerId', '==', data.centerId)
+          .where('status', '==', 'pending')
+          .get();
+
+        const hasFutureOrPending = !appointmentsSnap.empty || !requestsSnap.empty;
+
+        if (hasFutureOrPending) {
+          throw new Error("Votre forfait est épuisé ou expiré et vous avez déjà une séance planifiée. Veuillez vous rendre au centre pour régler votre forfait afin de pouvoir réserver à nouveau.");
+        } else {
+          warningMessage = "Votre forfait est épuisé ou expiré. Votre créneau est pré-réservé, mais veuillez vous rendre au centre pour régler votre forfait lors de votre séance, sans quoi vous ne pourrez plus prendre de nouveaux rendez-vous.";
+        }
+      }
+    }
+  }
   const serviceType = data.service as BookingServiceType;
   const service = findReservableService(center, services, serviceType);
   if (!service) {
@@ -425,6 +484,7 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
     service: data.service,
     bookingDate: data.bookingDate,
     bookingTime: data.bookingTime,
+    ...(warningMessage ? { warning: warningMessage } : {})
   };
 
   sendPublicReservationNotifications({
@@ -556,7 +616,7 @@ async function startServer() {
       }
 
       const reservation = await createPublicReservation(data);
-      res.status(201).json({ ok: true, reservation });
+      res.status(201).json({ ok: true, reservation, warning: (reservation as any).warning });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Reservation impossible.';
       res.status(400).json({ ok: false, error: message });

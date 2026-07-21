@@ -27,6 +27,7 @@ export function getCenterOperationalStatus(center: Center): 'active' | 'suspende
 export function getCenterStatusLabel(center: Center): string {
   const status = normalizeCenterStatus(center.status);
   if (status === 'suspended') return 'Suspendu';
+  if (status === 'showcase') return 'Vitrine uniquement';
   if (status === 'maintenance') return 'En maintenance';
   if (status === 'construction') return 'En construction';
   if (status === 'active') return 'Operationnel';

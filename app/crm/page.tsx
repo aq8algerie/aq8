@@ -146,6 +146,18 @@ export default function CrmPage() {
           return;
         }
 
+        if (profile.role === "center_manager" && profile.centerId) {
+          const centerSnap = await getDoc(doc(db, "centers", profile.centerId));
+          if (centerSnap.exists()) {
+            const cStatus = (centerSnap.data()?.status || 'active').trim().toLowerCase();
+            if (cStatus === 'showcase' || cStatus === 'suspended') {
+              await signOut(auth);
+              setAuthReady(true);
+              return;
+            }
+          }
+        }
+
         setCrmRole(profile.role as CrmRole);
         setCrmCenterId(profile.role === "center_manager" ? profile.centerId || null : null);
         setLoggedManagerName(profile.displayName || profile.name || user.displayName || user.email || "Utilisateur CRM");
@@ -438,6 +450,7 @@ export default function CrmPage() {
                   { id: "centers" as const, label: "Gestion Centres", icon: Building },
                   { id: "managers" as const, label: "Managers & Accès", icon: Users },
                   { id: "stats" as const, label: "Analyses Réseau", icon: BarChart3 },
+                  { id: "payments" as const, label: "Paiements Réseau", icon: DollarSign },
                   { id: "settings" as const, label: "Paramètres Généraux", icon: Settings },
                   { id: "audit" as const, label: "Journal d'Audit", icon: ShieldCheck }
                 ].map(tab => {
