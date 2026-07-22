@@ -31,6 +31,7 @@ import { formatDZD } from '../../lib/centerManagerUtils';
 import { SubTabId } from './ManagerTabs';
 import { AppointmentMutationOptions, CrmActionResult } from '../../lib/crmTransactions';
 import { isPackageExpired } from '../../lib/packageRules';
+import { analyzeClientRetention } from '../../lib/crmRetention';
 
 interface ManagerDashboardProps {
   centerId: string;
@@ -133,6 +134,11 @@ export function ManagerDashboard({
     return !hasValidPackage;
   });
   const negativeBalanceCount = negativeBalanceClients.length;
+
+  // 4. Analysis Retention & Inactivité (> 30 jours)
+  const retentionAnalysis = analyzeClientRetention(clients, appointments, clientPackages, centerId);
+  const inactive30dClients = retentionAnalysis.filter(r => r.isInactive30Days);
+  const inactive30dCount = inactive30dClients.length;
 
   // 3. Résumé journalier des séances du jour
   const todayCompleted = todayBookings.filter(a => a.status === 'completed').length;
@@ -321,9 +327,35 @@ export function ManagerDashboard({
         />
       </div>
 
-      {/* === ALERTES MÉTIER === */}
-      {(expiringCount > 0 || expiredCount > 0 || negativeBalanceCount > 0) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {/* === ALERTES MÉTIER & RELANCES PROACTIVES === */}
+      {(expiringCount > 0 || expiredCount > 0 || negativeBalanceCount > 0 || inactive30dCount > 0) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* Alerte: Inactifs > 30j */}
+          {inactive30dCount > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-start gap-3 p-4 bg-purple-50 border border-purple-200 rounded-2xl"
+            >
+              <div className="h-9 w-9 shrink-0 bg-purple-100 text-purple-700 rounded-xl flex items-center justify-center">
+                <Clock className="h-4.5 w-4.5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-purple-900">Relance inactivité (&gt; 30j)</p>
+                <p className="text-[11px] text-purple-800 font-medium leading-snug mt-0.5">
+                  <span className="font-mono font-black text-sm text-purple-950">{inactive30dCount}</span> membre{inactive30dCount > 1 ? 's' : ''} sans séance depuis plus de 30 jours.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => onOpenTab('clients')}
+                  className="text-[10px] font-bold text-purple-800 hover:text-purple-950 underline mt-1 cursor-pointer"
+                >
+                  Relancer par téléphone/WhatsApp →
+                </button>
+              </div>
+            </motion.div>
+          )}
+
           {/* Alerte: Forfaits sur le point d'expirer */}
           {expiringCount > 0 && (
             <motion.div
@@ -389,16 +421,16 @@ export function ManagerDashboard({
                 <TrendingDown className="h-4.5 w-4.5" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-700">Membres sans crédit valide</p>
+                <p className="text-xs font-bold text-slate-800">Sans crédit / forfait</p>
                 <p className="text-[11px] text-slate-600 font-medium leading-snug mt-0.5">
-                  <span className="font-mono font-black text-sm text-slate-900">{negativeBalanceCount}</span> membre{negativeBalanceCount > 1 ? 's' : ''} sans forfait actif — à régulariser en cabine.
+                  <span className="font-mono font-black text-sm text-slate-900">{negativeBalanceCount}</span> client{negativeBalanceCount > 1 ? 's' : ''} n'{negativeBalanceCount > 1 ? 'ont' : 'a'} aucun forfait actif disponible.
                 </p>
                 <button
                   type="button"
                   onClick={() => onOpenTab('clients')}
-                  className="text-[10px] font-bold text-slate-600 hover:text-slate-900 underline mt-1 cursor-pointer"
+                  className="text-[10px] font-bold text-slate-700 hover:text-slate-900 underline mt-1 cursor-pointer"
                 >
-                  Voir les membres →
+                  Proposer un forfait →
                 </button>
               </div>
             </motion.div>

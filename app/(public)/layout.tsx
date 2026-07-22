@@ -91,6 +91,12 @@ export default function PublicLayout({
                 Nos Centres
               </Link>
               <Link
+                href="/faq"
+                className={`rounded-md px-3 py-2 transition-premium ${isActive("/faq") ? "text-[#ff5757]" : "hover:bg-slate-50 hover:text-[#242424]"}`}
+              >
+                FAQ
+              </Link>
+              <Link
                 href="/contact"
                 className={`rounded-md px-3 py-2 transition-premium ${isActive("/contact") ? "text-[#ff5757]" : "hover:bg-slate-50 hover:text-[#242424]"}`}
               >
@@ -142,6 +148,7 @@ export default function PublicLayout({
               { id: "/", label: "Accueil" },
               { id: "/a-propos", label: "À propos" },
               { id: "/centres", label: "Nos Centres" },
+              { id: "/faq", label: "FAQ & Questions" },
               { id: "/contact", label: "Contact" },
               { id: "/login", label: "Accéder au CRM AQ8" }
             ].map(link => (
@@ -200,10 +207,12 @@ export default function PublicLayout({
           </div>
 
           <div className="space-y-4 text-xs">
-            <h4 className="font-display text-sm font-bold text-white">Technologies</h4>
+            <h4 className="font-display text-sm font-bold text-white">Navigation & Info</h4>
             <ul className="space-y-2 text-slate-400">
               <li><Link href="/aq8" className="hover:text-white transition">AQ8 EMS</Link></li>
               <li><Link href="/wonder" className="hover:text-white transition">Wonder Sculpt</Link></li>
+              <li><Link href="/faq" className="hover:text-white transition text-[#ff5757]">Foire aux questions (FAQ)</Link></li>
+              <li><Link href="/a-propos" className="hover:text-white transition">À propos d'AQ8</Link></li>
             </ul>
           </div>
 

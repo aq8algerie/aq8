@@ -1074,6 +1074,7 @@ export function CenterManagerViews({
                 centerId={centerId}
                 clients={clients}
                 clientPackages={clientPackages}
+                appointments={appointments}
                 onSelectClient={setSelectedClientId}
                 onEditClient={openEditClientModal}
                 onUpdateClientStatus={requestClientStatusChange}

@@ -1,8 +1,3 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Award,
@@ -22,13 +17,19 @@ import {
   User,
   Users,
   Venus,
+  PhoneCall,
+  MessageCircle,
+  AlertTriangle,
+  Clock
 } from 'lucide-react';
-import { Client, ClientPackage, ClientStatus } from '../../types';
+import { Appointment, Client, ClientPackage, ClientStatus } from '../../types';
+import { analyzeClientRetention } from '../../lib/crmRetention';
 
 interface ManagerClientsViewProps {
   centerId: string;
   clients: Client[];
   clientPackages: ClientPackage[];
+  appointments?: Appointment[];
   onSelectClient: (clientId: string) => void;
   onEditClient: (clientId: string) => void;
   onUpdateClientStatus: (clientIds: string[], status: ClientStatus) => void;
@@ -37,11 +38,13 @@ interface ManagerClientsViewProps {
 }
 
 type StatusFilter = 'all' | ClientStatus;
+type SubFilterType = 'all' | 'has_active' | 'no_active' | 'inactive_30d' | 'renewal_needed';
 
 export function ManagerClientsView({
   centerId,
   clients,
   clientPackages,
+  appointments = [],
   onSelectClient,
   onEditClient,
   onUpdateClientStatus,
@@ -56,12 +59,20 @@ export function ManagerClientsView({
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
 
   const [genderFilter, setGenderFilter] = useState<'all' | 'H' | 'F'>('all');
-  const [subFilter, setSubFilter] = useState<'all' | 'has_active' | 'no_active'>('all');
+  const [subFilter, setSubFilter] = useState<SubFilterType>('all');
   const [periodFilter, setPeriodFilter] = useState<'all' | 'this_month' | 'this_year'>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   const clientPageSizes = [20, 50, 100, 200] as const;
   const centerClients = useMemo(() => clients.filter(client => client.centerId === centerId), [centerId, clients]);
+
+  // Retention Map analysis
+  const retentionMap = useMemo(() => {
+    const analysis = analyzeClientRetention(clients, appointments, clientPackages, centerId);
+    const map = new Map<string, ReturnType<typeof analyzeClientRetention>[0]>();
+    analysis.forEach(item => map.set(item.client.id, item));
+    return map;
+  }, [clients, appointments, clientPackages, centerId]);
 
   const safeText = (value: unknown) => String(value ?? '').trim();
   const getClientStatus = (client: Client): ClientStatus => client.status === 'suspended' ? 'suspended' : 'active';
@@ -94,10 +105,14 @@ export function ManagerClientsView({
 
     if (statusFilter !== 'all' && getClientStatus(client) !== statusFilter) return false;
 
+    const retention = retentionMap.get(client.id);
+
     if (subFilter !== 'all') {
       const activePackage = hasActivePackage(client);
       if (subFilter === 'has_active' && !activePackage) return false;
       if (subFilter === 'no_active' && activePackage) return false;
+      if (subFilter === 'inactive_30d' && (!retention || !retention.isInactive30Days)) return false;
+      if (subFilter === 'renewal_needed' && (!retention || !retention.needsPackageRenewal)) return false;
     }
 
     if (periodFilter !== 'all') {
@@ -112,7 +127,7 @@ export function ManagerClientsView({
     }
 
     return true;
-  }), [centerClients, clientPackages, genderFilter, periodFilter, searchQuery, statusFilter, subFilter]);
+  }), [centerClients, clientPackages, genderFilter, periodFilter, searchQuery, statusFilter, subFilter, retentionMap]);
 
   const totalPages = Math.max(1, Math.ceil(filteredClients.length / listPageSize));
   const paginatedClients = filteredClients.slice((listPage - 1) * listPageSize, listPage * listPageSize);
@@ -177,14 +192,35 @@ export function ManagerClientsView({
 
   const renderStatusBadge = (client: Client) => {
     const suspended = isSuspended(client);
+    const retention = retentionMap.get(client.id);
+
     return (
-      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${
-        suspended
-          ? 'border border-amber-100 bg-amber-50 text-amber-700'
-          : 'border border-emerald-100 bg-emerald-50 text-emerald-700'
-      }`}>
-        {suspended ? 'Suspendu' : 'Actif'}
-      </span>
+      <div className="flex flex-wrap gap-1 items-center">
+        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${
+          suspended
+            ? 'border border-amber-100 bg-amber-50 text-amber-700'
+            : 'border border-emerald-100 bg-emerald-50 text-emerald-700'
+        }`}>
+          {suspended ? 'Suspendu' : 'Actif'}
+        </span>
+
+        {retention?.isInactive30Days && (
+          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold border border-rose-200 bg-rose-50 text-rose-700 animate-pulse">
+            <Clock className="h-2.5 w-2.5" /> Inactif ({retention.daysInactive}j)
+          </span>
+        )}
+
+        {retention?.needsPackageRenewal && (
+          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold border border-amber-200 bg-amber-50 text-amber-800">
+            <AlertTriangle className="h-2.5 w-2.5" />
+            {retention.renewalReason === 'expired'
+              ? 'Forfait expiré'
+              : retention.renewalReason === 'low_credit'
+              ? `Solde bas (${retention.sessionsRemaining} séa.)`
+              : 'Sans forfait'}
+          </span>
+        )}
+      </div>
     );
   };
 
@@ -207,17 +243,34 @@ export function ManagerClientsView({
   const renderClientActions = (client: Client, layout: 'grid' | 'list') => {
     const suspended = isSuspended(client);
     const buttonBase = layout === 'grid'
-      ? 'min-w-0 rounded-xl px-2.5 py-2 text-[10px] font-extrabold transition cursor-pointer inline-flex items-center justify-center gap-1.5'
-      : 'rounded-lg px-2.5 py-1.5 text-[10px] font-extrabold transition cursor-pointer inline-flex items-center justify-center gap-1.5';
+      ? 'min-w-0 rounded-xl px-2 py-2 text-[10px] font-extrabold transition cursor-pointer inline-flex items-center justify-center gap-1'
+      : 'rounded-lg px-2 py-1.5 text-[10px] font-extrabold transition cursor-pointer inline-flex items-center justify-center gap-1';
+
+    const phone = client.phone ? client.phone.replace(/\s+/g, '') : '';
+    const whatsappUrl = phone ? `https://wa.me/${phone.startsWith('0') ? '213' + phone.slice(1) : phone}` : '';
 
     return (
-      <div className={layout === 'grid' ? 'grid grid-cols-2 gap-2' : 'flex flex-wrap justify-end gap-1.5'}>
+      <div className={layout === 'grid' ? 'grid grid-cols-2 gap-1.5' : 'flex flex-wrap justify-end gap-1 border-t sm:border-0 pt-2 sm:pt-0'}>
         <button type="button" onClick={() => onSelectClient(client.id)} className={`${buttonBase} bg-slate-100 text-slate-700 hover:bg-[#353535] hover:text-white`}>
           <Eye className="h-3.5 w-3.5" /> Fiche
         </button>
+
+        {phone ? (
+          <a href={`tel:${phone}`} className={`${buttonBase} bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white`}>
+            <PhoneCall className="h-3.5 w-3.5" /> Appeler
+          </a>
+        ) : null}
+
+        {whatsappUrl ? (
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className={`${buttonBase} bg-teal-50 text-teal-700 hover:bg-teal-600 hover:text-white`}>
+            <MessageCircle className="h-3.5 w-3.5" /> Relancer
+          </a>
+        ) : null}
+
         <button type="button" onClick={() => onEditClient(client.id)} className={`${buttonBase} bg-sky-50 text-sky-700 hover:bg-sky-600 hover:text-white`}>
           <Edit3 className="h-3.5 w-3.5" /> Modifier
         </button>
+
         <button
           type="button"
           onClick={() => onUpdateClientStatus([client.id], suspended ? 'active' : 'suspended')}
@@ -230,8 +283,9 @@ export function ManagerClientsView({
           {suspended ? <PlayCircle className="h-3.5 w-3.5" /> : <PauseCircle className="h-3.5 w-3.5" />}
           {suspended ? 'Reactiver' : 'Suspendre'}
         </button>
+
         <button type="button" onClick={() => onDeleteClients([client.id])} className={`${buttonBase} bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white`}>
-          <Trash2 className="h-3.5 w-3.5" /> Supprimer
+          <Trash2 className="h-3.5 w-3.5" /> Suppr.
         </button>
       </div>
     );
@@ -242,10 +296,10 @@ export function ManagerClientsView({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="font-display text-base font-bold text-slate-800">
-            Fichier Clients Adherents ({centerClients.length})
+            Fichier Clients & Relances Rétention ({centerClients.length})
           </h3>
           <p className="text-[10px] font-medium text-slate-400">
-            {activeCount} actifs ? {suspendedCount} suspendus ? selection et actions rapides.
+            {activeCount} actifs • {suspendedCount} suspendus • Suivi des réabonnements et inactivité.
           </p>
         </div>
 
@@ -296,7 +350,7 @@ export function ManagerClientsView({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
           <div className="space-y-1">
             <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Genre</label>
-            <select value={genderFilter} onChange={(event) => setGenderFilter(event.target.value as 'all' | 'H' | 'F')} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] text-slate-700 focus:outline-none">
+            <select value={genderFilter} onChange={(event) => setGenderFilter(event.target.value as 'all' | 'H' | 'F')} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] text-slate-700 focus:outline-none font-bold">
               <option value="all">Tous les genres</option>
               <option value="H">Homme</option>
               <option value="F">Femme</option>
@@ -305,7 +359,7 @@ export function ManagerClientsView({
 
           <div className="space-y-1">
             <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Statut client</label>
-            <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as StatusFilter)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] text-slate-700 focus:outline-none">
+            <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as StatusFilter)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] text-slate-700 focus:outline-none font-bold">
               <option value="all">Tous les statuts</option>
               <option value="active">Actifs</option>
               <option value="suspended">Suspendus</option>
@@ -313,11 +367,13 @@ export function ManagerClientsView({
           </div>
 
           <div className="space-y-1">
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Abonnement</label>
-            <select value={subFilter} onChange={(event) => setSubFilter(event.target.value as 'all' | 'has_active' | 'no_active')} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] text-slate-700 focus:outline-none">
-              <option value="all">Tous les abonnements</option>
-              <option value="has_active">Avec abonnement actif</option>
-              <option value="no_active">Sans abonnement actif</option>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Abonnement & Relances</label>
+            <select value={subFilter} onChange={(event) => setSubFilter(event.target.value as SubFilterType)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] text-slate-700 focus:outline-none font-bold">
+              <option value="all">Tous les profils</option>
+              <option value="has_active">Avec forfait actif</option>
+              <option value="no_active">Sans forfait actif</option>
+              <option value="inactive_30d">🚨 Relance : Inactifs (&gt; 30 jours)</option>
+              <option value="renewal_needed">⏳ Relance : Forfait à renouveler</option>
             </select>
           </div>
 
