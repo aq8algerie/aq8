@@ -35,13 +35,13 @@ export type CrmEmailNotificationPayload =
   | { type: 'package_assigned'; centerId: string; clientPackageId: string }
   | { type: 'payment_recorded'; centerId: string; paymentId: string; clientPackageId?: string };
 
-const BRAND_NAME = 'AQ8 Algerie';
+const BRAND_NAME = 'AQ8 Algérie';
 const BRAND_COLOR = '#ff5757';
 const DARK_COLOR = '#242424';
 
 function getEmailConfig() {
   const apiKey = (process.env.RESEND_API_KEY || process.env.EMAIL_RESEND_API_KEY || '').trim();
-  const from = (process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL || 'AQ8 Algerie <notifications@aq8algerie-dz.com>').trim();
+  const from = (process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL || 'AQ8 Algérie <notifications@aq8algerie-dz.com>').trim();
   const replyTo = (process.env.EMAIL_REPLY_TO || process.env.ADMIN_NOTIFICATION_EMAILS || 'notifications@aq8algerie-dz.com').split(',')[0].trim();
   const adminRecipients = splitEmails(
     process.env.ADMIN_NOTIFICATION_EMAILS ||
@@ -87,7 +87,7 @@ function escapeHtml(value: unknown): string {
 }
 
 function formatDate(value?: string): string {
-  if (!value) return 'Date a confirmer';
+  if (!value) return 'Date à confirmer';
   const normalized = value.includes('T') ? value : `${value}T00:00:00`;
   const parsed = new Date(normalized);
   if (Number.isNaN(parsed.getTime())) return value;
@@ -100,16 +100,16 @@ function formatDate(value?: string): string {
 }
 
 function formatTime(value?: string): string {
-  if (!value) return 'Horaire a confirmer';
+  if (!value) return 'Horaire à confirmer';
   if (/^\d{2}:\d{2}$/.test(value)) return value;
   const time = value.split('T')[1];
   return time ? time.slice(0, 5) : value;
 }
 
 function formatDateTime(value?: string): string {
-  if (!value) return 'Date et horaire a confirmer';
+  if (!value) return 'Date et horaire à confirmer';
   const [date, time] = value.split('T');
-  return `${formatDate(date)} a ${formatTime(time)}`;
+  return `${formatDate(date)} à ${formatTime(time)}`;
 }
 
 function formatDzd(amount?: number): string {
@@ -185,7 +185,7 @@ function emailLayout(params: {
             ${cta}
           </div>
           <div style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:20px 32px;color:#64748b;font-size:12px;line-height:1.55;">
-            Message automatique AQ8 Algerie. Pour toute question, repondez directement a cet e-mail ou contactez votre centre.
+            Message automatique AQ8 Algérie. Pour toute question, répondez directement à cet e-mail ou contactez votre centre.
           </div>
         </div>
       </body>
@@ -321,30 +321,30 @@ export async function sendPublicReservationNotifications(params: {
   const config = getEmailConfig();
   const shortRef = reservationId.slice(0, 8).toUpperCase();
   const rows: Array<[string, unknown]> = [
-    ['Reference', shortRef],
+    ['Référence', shortRef],
     ['Centre', center.name],
     ['Client', `${input.firstName} ${input.lastName}`.trim()],
-    ['Telephone', input.phone],
-    ['E-mail', input.email || 'Non renseigne'],
+    ['Téléphone', input.phone],
+    ['E-mail', input.email || 'Non renseigné'],
     ['Prestation', serviceLabel(input.service)],
-    ['Date souhaitee', formatDate(input.bookingDate)],
+    ['Date souhaitée', formatDate(input.bookingDate)],
     ['Heure', input.bookingTime],
   ];
 
   const adminTemplate = emailLayout({
-    eyebrow: 'Nouvelle pre-reservation',
-    title: 'Un client vient de pre-reserver un creneau.',
-    intro: 'La demande est disponible dans le CRM du centre. Le creneau est bloque en attente de validation par le manager.',
+    eyebrow: 'Nouvelle pré-réservation',
+    title: 'Un client vient de pré-réserver un créneau.',
+    intro: 'La demande est disponible dans le CRM du centre. Le créneau est bloqué en attente de validation par le manager.',
     rows,
-    cta: { label: 'Ouvrir les pre-reservations', href: `${config.appUrl}/crm` },
+    cta: { label: 'Ouvrir les pré-réservations', href: `${config.appUrl}/crm` },
   });
 
   const clientTemplate = emailLayout({
-    eyebrow: 'Pre-reservation recue',
-    title: `Bonjour ${input.firstName}, votre creneau est bien pre-reserve.`,
-    intro: "L'equipe du centre va verifier le planning et vous recontactera pour confirmer definitivement le rendez-vous.",
+    eyebrow: 'Pré-réservation reçue',
+    title: `Bonjour ${input.firstName}, votre créneau est bien pré-réservé.`,
+    intro: "L'équipe du centre va vérifier le planning et vous recontactera pour confirmer définitivement le rendez-vous.",
     rows,
-    note: "La confirmation finale reste faite par l'equipe du centre apres verification du planning et du paiement.",
+    note: "La confirmation finale reste faite par l'équipe du centre après vérification du planning et du paiement.",
   });
 
   const centerTo = centerRecipients(center);
@@ -352,19 +352,19 @@ export async function sendPublicReservationNotifications(params: {
     sendEmail({
       to: centerTo,
       replyTo: input.email || config.replyTo,
-      subject: `Nouvelle pre-reservation AQ8 - ${center.name} - ${shortRef}`,
+      subject: `Nouvelle pré-réservation AQ8 - ${center.name} - ${shortRef}`,
       ...adminTemplate,
     }),
     sendEmail({
       to: adminRecipients(centerTo),
       replyTo: input.email || config.replyTo,
-      subject: `Copie admin - Nouvelle pre-reservation AQ8 - ${center.name} - ${shortRef}`,
+      subject: `Copie admin - Nouvelle pré-réservation AQ8 - ${center.name} - ${shortRef}`,
       ...adminTemplate,
     }),
     sendEmail({
       to: uniqueEmails([input.email]),
       replyTo: center.email || config.replyTo,
-      subject: `Votre pre-reservation AQ8 - ${center.name} - ${shortRef}`,
+      subject: `Votre pré-réservation AQ8 - ${center.name} - ${shortRef}`,
       ...clientTemplate,
     }),
   ]);
@@ -381,33 +381,33 @@ export async function sendPublicContactNotifications(params: {
   const { center, message, messageId } = params;
   const shortRef = messageId.slice(0, 8).toUpperCase();
   const requestTypeLabels: Record<PublicContactRequestType, string> = {
-    general: 'Question generale',
-    reservation: 'Demande liee a une reservation',
+    general: 'Question générale',
+    reservation: 'Demande liée à une réservation',
     partnership: 'Partenariat / franchise',
     recruitment: 'Recrutement',
   };
   const rows: Array<[string, unknown]> = [
-    ['Reference', shortRef],
+    ['Référence', shortRef],
     ['Nom', message.name],
-    ['Telephone', message.phone],
-    ['E-mail', message.email || 'Non renseigne'],
+    ['Téléphone', message.phone],
+    ['E-mail', message.email || 'Non renseigné'],
     ['Objet', requestTypeLabels[message.requestType]],
-    ['Centre', center?.name || (message.centerId === 'general' ? 'Demande generale' : message.centerId)],
-    ['Message', message.message || 'Non renseigne'],
+    ['Centre', center?.name || (message.centerId === 'general' ? 'Demande générale' : message.centerId)],
+    ['Message', message.message || 'Non renseigné'],
   ];
 
   const adminTemplate = emailLayout({
     eyebrow: 'Nouveau message public',
-    title: 'Un nouveau message vient du site AQ8 Algerie.',
-    intro: 'Le message est enregistre dans Firestore et peut etre traite par l equipe.',
+    title: 'Un nouveau message vient du site AQ8 Algérie.',
+    intro: "Le message est enregistré dans Firestore et peut être traité par l'équipe.",
     rows,
     cta: { label: 'Ouvrir le CRM', href: `${config.appUrl}/crm` },
   });
 
   const clientTemplate = emailLayout({
-    eyebrow: 'Message recu',
-    title: `Merci ${message.name}, votre message est bien recu.`,
-    intro: "L'equipe AQ8 Algerie reviendra vers vous selon la nature de votre demande.",
+    eyebrow: 'Message reçu',
+    title: `Merci ${message.name}, votre message est bien reçu.`,
+    intro: "L'équipe AQ8 Algérie reviendra vers vous selon la nature de votre demande.",
     rows: rows.filter(([label]) => label !== 'Message'),
   });
 
@@ -427,7 +427,7 @@ export async function sendPublicContactNotifications(params: {
     sendEmail({
       to: uniqueEmails([message.email]),
       replyTo: center?.email || config.replyTo,
-      subject: `Votre message AQ8 Algerie - ${shortRef}`,
+      subject: `Votre message AQ8 Algérie - ${shortRef}`,
       ...clientTemplate,
     }),
   ]);
@@ -444,38 +444,38 @@ async function sendAppointmentEmail(db: Firestore, payload: Extract<CrmEmailNoti
     ['Client', clientName(client)],
     ['Prestation', service?.name || serviceLabel(service?.type)],
     ['Date et heure', formatDateTime(appointment.dateTime)],
-    ['Duree', `${appointment.duration} min`],
+    ['Durée', `${appointment.duration} min`],
   ];
 
   const copy = {
     appointment_booked: {
-      eyebrow: 'Rendez-vous confirme',
-      title: 'Votre seance AQ8 est planifiee.',
-      intro: "Votre rendez-vous a ete ajoute au planning du centre. Merci de vous presenter quelques minutes avant l'heure indiquee.",
-      subject: 'Confirmation de votre seance AQ8',
+      eyebrow: 'Rendez-vous confirmé',
+      title: 'Votre séance AQ8 est planifiée.',
+      intro: "Votre rendez-vous a été ajouté au planning du centre. Merci de vous présenter quelques minutes avant l'heure indiquée.",
+      subject: 'Confirmation de votre séance AQ8',
       note: center?.cancellationRule || undefined,
     },
     appointment_updated: {
-      eyebrow: 'Rendez-vous mis a jour',
-      title: 'Votre rendez-vous AQ8 a ete modifie.',
-      intro: 'Voici les nouvelles informations de votre seance.',
-      subject: 'Mise a jour de votre rendez-vous AQ8',
+      eyebrow: 'Rendez-vous mis à jour',
+      title: 'Votre rendez-vous AQ8 a été modifié.',
+      intro: 'Voici les nouvelles informations de votre séance.',
+      subject: 'Mise à jour de votre rendez-vous AQ8',
       note: center?.cancellationRule || undefined,
     },
     appointment_cancelled: {
-      eyebrow: 'Rendez-vous annule',
-      title: 'Votre seance AQ8 a ete annulee.',
-      intro: "Le creneau n'est plus reserve. Vous pouvez contacter votre centre pour choisir une nouvelle date.",
-      subject: 'Annulation de votre seance AQ8',
+      eyebrow: 'Rendez-vous annulé',
+      title: 'Votre séance AQ8 a été annulée.',
+      intro: "Le créneau n'est plus réservé. Vous pouvez contacter votre centre pour choisir une nouvelle date.",
+      subject: 'Annulation de votre séance AQ8',
       note: undefined,
     },
     appointment_completed: {
-      eyebrow: 'Seance validee',
-      title: 'Votre seance AQ8 est bien validee.',
+      eyebrow: 'Séance validée',
+      title: 'Votre séance AQ8 est bien validée.',
       intro: payload.type === 'appointment_completed' && typeof payload.sessionsRemaining === 'number'
-        ? `Un credit a ete deduit de votre forfait. Il vous reste ${payload.sessionsRemaining} seance(s).`
-        : 'Un credit a ete deduit de votre forfait.',
-      subject: 'Seance AQ8 validee',
+        ? `Un crédit a été déduit de votre forfait. Il vous reste ${payload.sessionsRemaining} séance(s).`
+        : 'Un crédit a été déduit de votre forfait.',
+      subject: 'Séance AQ8 validée',
       note: undefined,
     },
   }[payload.type];
@@ -510,13 +510,13 @@ async function sendBookingRequestDecisionEmail(db: Firestore, payload: Extract<C
   ];
 
   const template = emailLayout({
-    eyebrow: isAccepted ? 'Reservation confirmee' : 'Pre-reservation refusee',
+    eyebrow: isAccepted ? 'Réservation confirmée' : 'Pré-réservation refusée',
     title: isAccepted
-      ? 'Votre rendez-vous AQ8 est confirme.'
-      : "Votre demande de reservation n'a pas pu etre confirmee.",
+      ? 'Votre rendez-vous AQ8 est confirmé.'
+      : "Votre demande de réservation n'a pas pu être confirmée.",
     intro: isAccepted
-      ? "Le centre a valide votre demande. Votre creneau est maintenant inscrit au planning."
-      : "Le creneau demande n'est plus disponible ou ne peut pas etre confirme. Contactez le centre pour choisir une autre disponibilite.",
+      ? "Le centre a validé votre demande. Votre créneau est maintenant inscrit au planning."
+      : "Le créneau demandé n'est plus disponible ou ne peut pas être confirmé. Contactez le centre pour choisir une autre disponibilité.",
     rows,
     note: isAccepted ? center?.cancellationRule : undefined,
   });
@@ -524,7 +524,7 @@ async function sendBookingRequestDecisionEmail(db: Firestore, payload: Extract<C
   return sendEmail({
     to: uniqueEmails([request.email]),
     replyTo: center?.email || getEmailConfig().replyTo,
-    subject: isAccepted ? 'Confirmation de votre reservation AQ8' : 'Suite a votre demande de reservation AQ8',
+    subject: isAccepted ? 'Confirmation de votre réservation AQ8' : 'Suite à votre demande de réservation AQ8',
     ...template,
   });
 }
@@ -541,22 +541,22 @@ async function sendPackageAssignedEmail(db: Firestore, payload: Extract<CrmEmail
   if (!client) return { sent: false, skipped: 'client_not_found' };
 
   const template = emailLayout({
-    eyebrow: 'Forfait active',
+    eyebrow: 'Forfait activé',
     title: 'Votre forfait AQ8 est actif.',
-    intro: "Votre forfait est maintenant disponible dans votre centre. Vous pouvez planifier vos seances avec l'equipe.",
+    intro: "Votre forfait est maintenant disponible dans votre centre. Vous pouvez planifier vos séances avec l'équipe.",
     rows: [
       ['Centre', center?.name || payload.centerId],
       ['Client', clientName(client)],
       ['Forfait', pack?.name || clientPackage.packageId],
       ['Sessions', `${clientPackage.sessionsRemaining} / ${clientPackage.totalSessions}`],
-      ['Date activation', formatDate(clientPackage.purchaseDate)],
+      ['Date d\'activation', formatDate(clientPackage.purchaseDate)],
     ],
   });
 
   return sendEmail({
     to: uniqueEmails([client.email]),
     replyTo: center?.email || getEmailConfig().replyTo,
-    subject: `Votre forfait AQ8 est active - ${pack?.name || 'AQ8'}`,
+    subject: `Votre forfait AQ8 est activé - ${pack?.name || 'AQ8'}`,
     ...template,
   });
 }
@@ -575,25 +575,25 @@ async function sendPaymentRecordedEmail(db: Firestore, payload: Extract<CrmEmail
 
   const hasActivation = Boolean(clientPackage);
   const template = emailLayout({
-    eyebrow: hasActivation ? 'Paiement recu et forfait active' : 'Paiement recu',
-    title: hasActivation ? 'Votre paiement est enregistre et votre forfait est actif.' : 'Votre paiement est bien enregistre.',
-    intro: 'Voici le recapitulatif de votre reglement AQ8.',
+    eyebrow: hasActivation ? 'Paiement reçu et forfait activé' : 'Paiement reçu',
+    title: hasActivation ? 'Votre paiement est enregistré et votre forfait est actif.' : 'Votre paiement est bien enregistré.',
+    intro: 'Voici le récapitulatif de votre règlement AQ8.',
     rows: [
       ['Centre', center?.name || payload.centerId],
       ['Client', clientName(client)],
       ['Forfait', pack?.name || payment.packageId],
       ['Montant', formatDzd(payment.amount)],
       ['Mode', payment.method],
-      ['Reference recu', payment.receiptNumber || payment.id],
+      ['Référence reçu', payment.receiptNumber || payment.id],
       ['Date', formatDate(payment.date)],
-      ['Sessions activees', clientPackage ? `${clientPackage.sessionsRemaining} / ${clientPackage.totalSessions}` : undefined],
+      ['Sessions activées', clientPackage ? `${clientPackage.sessionsRemaining} / ${clientPackage.totalSessions}` : undefined],
     ],
   });
 
   return sendEmail({
     to: uniqueEmails([client.email]),
     replyTo: center?.email || getEmailConfig().replyTo,
-    subject: hasActivation ? 'Paiement recu et forfait AQ8 active' : 'Paiement AQ8 recu',
+    subject: hasActivation ? 'Paiement reçu et forfait AQ8 activé' : 'Paiement AQ8 reçu',
     ...template,
   });
 }
