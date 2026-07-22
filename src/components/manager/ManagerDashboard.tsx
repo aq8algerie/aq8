@@ -18,7 +18,10 @@ import {
   Activity,
   CheckCircle2,
   CheckCircle,
-  HelpCircle
+  HelpCircle,
+  AlertTriangle,
+  TrendingDown,
+  Zap
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Client, Appointment, Payment, Measurement, Service, Package, ClientPackage } from '../../types';
@@ -27,6 +30,7 @@ import { QuickActionsCard } from './cards/QuickActionsCard';
 import { formatDZD } from '../../lib/centerManagerUtils';
 import { SubTabId } from './ManagerTabs';
 import { AppointmentMutationOptions, CrmActionResult } from '../../lib/crmTransactions';
+import { isPackageExpired } from '../../lib/packageRules';
 
 interface ManagerDashboardProps {
   centerId: string;
@@ -98,6 +102,43 @@ export function ManagerDashboard({
   const filteredRevenue = filteredPayments.reduce((acc, curr) => acc + curr.amount, 0);
   const filteredAppointmentsCount = filteredAppointments.length;
   const filteredMeasurementsCount = filteredMeasurements.length;
+
+  // --- ALERTES METIER ---
+
+  // 1. Forfaits sur le point d'expirer (< 7 jours restants, actifs)
+  const centerClientIds = new Set(centerClients.map(c => c.id));
+  const centerClientPackages = clientPackages.filter(cp => centerClientIds.has(cp.clientId));
+  
+  const expiringPackages = centerClientPackages.filter(cp => {
+    if (cp.status !== 'active' || cp.sessionsRemaining <= 0) return false;
+    if (!cp.purchaseDate) return false;
+    const purchase = new Date(cp.purchaseDate);
+    if (isNaN(purchase.getTime())) return false;
+    const diffDays = (Date.now() - purchase.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays >= 38 && diffDays <= 45; // Entre 38 et 45 jours = expire dans < 7j
+  });
+
+  const expiringCount = expiringPackages.length;
+  const expiredPackages = centerClientPackages.filter(cp => isPackageExpired(cp) && cp.status !== 'expired' && cp.status !== 'completed');
+  const expiredCount = expiredPackages.length;
+
+  // 2. Clients en solde négatif (aucun forfait actif valide, ni expiré réglé)
+  const negativeBalanceClients = centerClients.filter(client => {
+    const clientPkgs = centerClientPackages.filter(cp => cp.clientId === client.id);
+    const hasValidPackage = clientPkgs.some(cp =>
+      cp.status === 'active' &&
+      cp.sessionsRemaining > 0 &&
+      !isPackageExpired(cp)
+    );
+    return !hasValidPackage;
+  });
+  const negativeBalanceCount = negativeBalanceClients.length;
+
+  // 3. Résumé journalier des séances du jour
+  const todayCompleted = todayBookings.filter(a => a.status === 'completed').length;
+  const todayBooked = todayBookings.filter(a => a.status === 'booked').length;
+  const todayTotal = todayBookings.length;
+  const todayCompletionRate = todayTotal > 0 ? Math.round((todayCompleted / todayTotal) * 100) : 0;
 
   // Global static breakdowns (for the visual breakdown panels)
   const totalClients = centerClients.length || 1;
@@ -278,6 +319,150 @@ export function ManagerDashboard({
           trend={{ text: "↑ 3 nouveaux bilans", isPositive: true }}
           borderLeftClass="border-l-4 border-l-rose-500"
         />
+      </div>
+
+      {/* === ALERTES MÉTIER === */}
+      {(expiringCount > 0 || expiredCount > 0 || negativeBalanceCount > 0) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {/* Alerte: Forfaits sur le point d'expirer */}
+          {expiringCount > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl"
+            >
+              <div className="h-9 w-9 shrink-0 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center">
+                <AlertTriangle className="h-4.5 w-4.5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-amber-800">Forfaits expirant bientôt</p>
+                <p className="text-[11px] text-amber-700 font-medium leading-snug mt-0.5">
+                  <span className="font-mono font-black text-sm text-amber-900">{expiringCount}</span> forfait{expiringCount > 1 ? 's' : ''} arrive{expiringCount > 1 ? 'nt' : ''} à échéance dans moins de 7 jours.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => onOpenTab('clients')}
+                  className="text-[10px] font-bold text-amber-700 hover:text-amber-900 underline mt-1 cursor-pointer"
+                >
+                  Voir les membres →
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Alerte: Forfaits déjà expirés non clôturés */}
+          {expiredCount > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="flex items-start gap-3 p-4 bg-rose-50 border border-rose-200 rounded-2xl"
+            >
+              <div className="h-9 w-9 shrink-0 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center">
+                <Zap className="h-4.5 w-4.5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-rose-800">Forfaits expirés détectés</p>
+                <p className="text-[11px] text-rose-700 font-medium leading-snug mt-0.5">
+                  <span className="font-mono font-black text-sm text-rose-900">{expiredCount}</span> forfait{expiredCount > 1 ? 's' : ''} dépassé{expiredCount > 1 ? 's' : ''} la limite de 45 jours — séances bloquées.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => onOpenTab('clients')}
+                  className="text-[10px] font-bold text-rose-700 hover:text-rose-900 underline mt-1 cursor-pointer"
+                >
+                  Régulariser →
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Alerte: Clients sans forfait valide */}
+          {negativeBalanceCount > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-start gap-3 p-4 bg-slate-100 border border-slate-200 rounded-2xl"
+            >
+              <div className="h-9 w-9 shrink-0 bg-slate-200 text-slate-600 rounded-xl flex items-center justify-center">
+                <TrendingDown className="h-4.5 w-4.5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-slate-700">Membres sans crédit valide</p>
+                <p className="text-[11px] text-slate-600 font-medium leading-snug mt-0.5">
+                  <span className="font-mono font-black text-sm text-slate-900">{negativeBalanceCount}</span> membre{negativeBalanceCount > 1 ? 's' : ''} sans forfait actif — à régulariser en cabine.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => onOpenTab('clients')}
+                  className="text-[10px] font-bold text-slate-600 hover:text-slate-900 underline mt-1 cursor-pointer"
+                >
+                  Voir les membres →
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      )}
+
+      {/* Résumé journalier en haut du tableau de bord */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 bg-[#ff5757]/10 rounded-lg flex items-center justify-center">
+              <Activity className="h-4 w-4 text-[#ff5757]" />
+            </div>
+            <div>
+              <h3 className="font-bold font-display text-slate-800 text-xs uppercase tracking-wider">Résumé de la Journée</h3>
+              <p className="text-[10px] text-slate-400 font-medium">Suivi des séances en temps réel</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => onOpenTab('schedule')}
+            className="self-start sm:self-auto text-xs text-[#ff5757] font-semibold hover:underline cursor-pointer"
+          >
+            Ouvrir le planning →
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* Total aujourd'hui */}
+          <div className="bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Total Planifiées</span>
+            <span className="text-2xl font-black font-mono text-slate-800">{todayTotal}</span>
+            <span className="text-[10px] font-semibold text-slate-500 block mt-0.5">séances</span>
+          </div>
+
+          {/* Effectuées */}
+          <div className="bg-emerald-50 rounded-xl p-3 text-center border border-emerald-100">
+            <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-wider block mb-1">Effectuées</span>
+            <span className="text-2xl font-black font-mono text-emerald-700">{todayCompleted}</span>
+            <span className="text-[10px] font-semibold text-emerald-500 block mt-0.5">confirmées</span>
+          </div>
+
+          {/* À valider */}
+          <div className="bg-amber-50 rounded-xl p-3 text-center border border-amber-100">
+            <span className="text-[9px] font-bold text-amber-500 uppercase tracking-wider block mb-1">À Valider</span>
+            <span className="text-2xl font-black font-mono text-amber-700">{todayBooked}</span>
+            <span className="text-[10px] font-semibold text-amber-500 block mt-0.5">en attente</span>
+          </div>
+
+          {/* Taux d'avancement */}
+          <div className="bg-[#ff5757]/5 rounded-xl p-3 text-center border border-[#ff5757]/15 relative overflow-hidden">
+            <span className="text-[9px] font-bold text-[#ff5757] uppercase tracking-wider block mb-1">Avancement</span>
+            <span className="text-2xl font-black font-mono text-[#ff5757]">{todayCompletionRate}%</span>
+            <span className="text-[10px] font-semibold text-[#ff5757]/70 block mt-0.5">taux du jour</span>
+            {/* Thin progress underline */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#ff5757]/10">
+              <div
+                className="h-full bg-[#ff5757] transition-all duration-700"
+                style={{ width: `${todayCompletionRate}%` }}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Visual Analytique breakdown rows (Gender + Technologies) */}
@@ -759,12 +944,19 @@ export function ManagerDashboard({
         {/* Bookings panel today */}
         <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 shadow-xs space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="font-bold font-display text-slate-800 text-xs uppercase tracking-wider">Séances d'Aujourd'hui</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold font-display text-slate-800 text-xs uppercase tracking-wider">Séances d'Aujourd'hui</h3>
+              {todayBooked > 0 && (
+                <span className="bg-amber-100 text-amber-700 text-[9px] font-black px-2 py-0.5 rounded-full animate-pulse">
+                  {todayBooked} à valider
+                </span>
+              )}
+            </div>
             <button
               onClick={() => onOpenTab('schedule')}
               className="text-xs text-[#ff5757] font-semibold hover:underline cursor-pointer"
             >
-              Ouvrir le Planning →
+              Planning →
             </button>
           </div>
 
@@ -773,12 +965,24 @@ export function ManagerDashboard({
               {todayBookings.map(apt => {
                 const cl = centerClients.find(c => c.id === apt.clientId);
                 const srv = services.find(s => s.id === apt.serviceId);
+                // Check if client has valid credit
+                const clientPkgs = centerClientPackages.filter(cp => cp.clientId === apt.clientId);
+                const hasCredit = clientPkgs.some(cp =>
+                  cp.status === 'active' && cp.sessionsRemaining > 0 && !isPackageExpired(cp)
+                );
                 return (
-                  <div key={apt.id} className="py-3 flex justify-between items-center text-xs">
-                    <div className="space-y-1">
-                      <span className="font-bold text-slate-800 block">
-                        {cl ? `${cl.firstName} ${cl.lastName}` : 'Client Inconnu'}
-                      </span>
+                  <div key={apt.id} className="py-3 flex justify-between items-center text-xs gap-2">
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-slate-800 truncate">
+                          {cl ? `${cl.firstName} ${cl.lastName}` : 'Client Inconnu'}
+                        </span>
+                        {!hasCredit && apt.status === 'booked' && (
+                          <span className="shrink-0 text-[9px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md">
+                            ⚠ Sans crédit
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-1 text-[11px] text-slate-500">
                         <Clock className="h-3 w-3 shrink-0" />
                         <span className="font-mono">{apt.dateTime.split('T')[1]}</span>
@@ -787,7 +991,7 @@ export function ManagerDashboard({
                       </div>
                     </div>
 
-                    <div className="flex gap-1.5">
+                    <div className="flex gap-1.5 shrink-0">
                       {apt.status === 'booked' ? (
                         <>
                           <button

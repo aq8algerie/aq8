@@ -42,7 +42,8 @@ import { MeasurementModal } from './manager/modals/MeasurementModal';
 // Utilities & Business rules
 import { getTodayDateString } from '../lib/centerManagerUtils';
 import { validateAppointment } from '../lib/appointmentRules';
-import { findActivePackageForClient, validateDeduction } from '../lib/packageRules';
+import { findActivePackageForClient, validateDeduction, isPackageExpired } from '../lib/packageRules';
+import { AlertTriangle } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { notifyCrmEmailBestEffort } from '../lib/emailNotificationClient';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -574,7 +575,18 @@ export function CenterManagerViews({
     const validation = validateDeduction(apt, cl, activePkg, centerId);
 
     if (validation.valid === false || !activePkg) {
-      return fail(validation.error || 'Erreur lors du traitement du forfait.');
+      // Enhanced error message for expired packages
+      const errorMsg = validation.error || 'Erreur lors du traitement du forfait.';
+      const isExpiredPkg = validation.error?.toLowerCase().includes('expir') ||
+        (activePkg === undefined && clientPackages.some(cp =>
+          cp.clientId === apt.clientId && isPackageExpired(cp) && cp.status === 'active'
+        ));
+
+      const enrichedMsg = isExpiredPkg
+        ? `⏳ Forfait expiré — La limite de 45 jours a été dépassée pour cet adhérent. Veuillez renouveler son abonnement avant de valider cette séance.`
+        : errorMsg;
+
+      return fail(enrichedMsg);
     }
 
     try {
@@ -883,6 +895,36 @@ export function CenterManagerViews({
   // Select a client for deep-dive profiles
   const activeClient = centerClients.find(c => c.id === selectedClientId);
 
+  // --- NOTIFICATIONS INTERNES ---
+
+  // 1. Badge "Réservations": nombre de demandes en attente pour ce centre
+  const centerBookingRequests = bookingRequests.filter(r => r.centerId === centerId);
+  const pendingRequestsCount = centerBookingRequests.filter(r => r.status === 'pending').length;
+
+  // 2. Parmi les demandes en attente, identifier celles de clients sans forfait valide
+  const centerClientPackages = clientPackages.filter(cp =>
+    centerClients.some(c => c.id === cp.clientId)
+  );
+
+  const pendingRequestsWithoutCredit = centerBookingRequests.filter(r => {
+    if (r.status !== 'pending') return false;
+    // Find client by phone number
+    const client = centerClients.find(c => c.phone === r.phone);
+    if (!client) return false; // New/unknown client — no credit by definition
+    const hasValidPackage = centerClientPackages.some(cp =>
+      cp.clientId === client.id &&
+      cp.status === 'active' &&
+      cp.sessionsRemaining > 0 &&
+      !isPackageExpired(cp)
+    );
+    return !hasValidPackage;
+  });
+  const noCreditPendingCount = pendingRequestsWithoutCredit.length;
+
+  // Badges map for ManagerTabs
+  const tabBadges: Partial<Record<SubTabId, number>> = {};
+  if (pendingRequestsCount > 0) tabBadges.bookings = pendingRequestsCount;
+
   return (
     <div id="center-manager-views-container" className="space-y-6">
       <ProfessionalToast
@@ -923,6 +965,31 @@ export function CenterManagerViews({
         onConfirm={confirmClientAction}
       />
 
+      {/* Bannière de notification: RDV en attente sans crédit */}
+      {noCreditPendingCount > 0 && (
+        <div className="flex items-start gap-3 p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-xs">
+          <div className="h-8 w-8 shrink-0 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center">
+            <AlertTriangle className="h-4 w-4" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-amber-900">
+              <span className="font-mono">{noCreditPendingCount}</span> demande{noCreditPendingCount > 1 ? 's' : ''} en attente de client{noCreditPendingCount > 1 ? 's' : ''} sans forfait valide
+            </p>
+            <p className="text-amber-700 font-medium leading-snug mt-0.5">
+              Ces adhérent{noCreditPendingCount > 1 ? 's ont' : ' a'} pris un rendez-vous en ligne malgré un solde vide ou expiré. 
+              Lors de la séance, veillez à régulariser le paiement du forfait.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('bookings')}
+            className="shrink-0 px-3 py-1.5 bg-amber-200 hover:bg-amber-300 text-amber-900 font-bold rounded-xl transition cursor-pointer text-[10px] whitespace-nowrap"
+          >
+            Voir les demandes
+          </button>
+        </div>
+      )}
+
       {/* Top Header Location Banner */}
       <ManagerTopBanner currentCenter={currentCenter} />
 
@@ -932,6 +999,7 @@ export function CenterManagerViews({
           activeTab={activeSubTab}
           onTabChange={setActiveSubTab}
           onClearSelectedClient={() => setSelectedClientId(null)}
+          badges={tabBadges}
         />
       )}
 

@@ -88,10 +88,10 @@ export function CentersManagement({
                       {/* Image Header with Badge */}
                       <div className="h-40 relative bg-slate-100 overflow-hidden">
                         <img
-                          src={center.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=600&auto=format&fit=crop'}
+                          src={center.imageUrl || '/images/aq8algerie.webp'}
                           alt={center.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          onError={(e) => { (e.target as any).src = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=600&auto=format&fit=crop'; }}
+                          onError={(e) => { (e.target as any).src = '/images/aq8algerie.webp'; }}
                         />
                         <span className={`absolute top-3 left-3 border text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${statusColors[operationalStatus]}`}>
                           {getCenterStatusLabel(center)}
