@@ -23,54 +23,59 @@ export function ManagersManagement({
   const [managersGridLimit, setManagersGridLimit] = useState<number>(3);
   const [managersListPage, setManagersListPage] = useState<number>(1);
 
-  return (        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <div>
-              <h3 className="font-bold font-display text-slate-800 text-base">Gérants de Centres & Accès CRM ({
-                (() => {
-                  const map: Record<string, boolean> = {};
-                  managers.forEach(m => { map[m.email.toLowerCase().trim()] = true; });
-                  return Object.keys(map).length;
-                })()
-              })</h3>
-              <p className="text-[10px] text-slate-400 font-medium">Visualisez et configurez les droits d'accès des gérants de vos centres.</p>
-            </div>
+  const [searchQuery, setSearchQuery] = useState('');
 
-            <div className="flex items-center gap-2 self-stretch sm:self-auto">
-              {/* View Toggle */}
-              <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200/50">
-                <button
-                  type="button"
-                  onClick={() => setManagersViewMode('grid')}
-                  className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                    managersViewMode === 'grid' ? 'bg-white text-[#ff5757] shadow-xs' : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                  title="Vue Grille"
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setManagersViewMode('list')}
-                  className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                    managersViewMode === 'list' ? 'bg-white text-[#ff5757] shadow-xs' : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                  title="Vue Liste"
-                >
-                  <List className="h-4 w-4" />
-                </button>
-              </div>
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+          <h3 className="font-extrabold font-display text-slate-800 text-base flex items-center gap-2">
+            Gérants de Centres & Accès CRM ({
+              (() => {
+                const map: Record<string, boolean> = {};
+                managers.forEach(m => { map[m.email.toLowerCase().trim()] = true; });
+                return Object.keys(map).length;
+              })()
+            })
+          </h3>
+          <p className="text-[11px] text-slate-500 font-medium">Visualisez et configurez les comptes utilisateurs et droits d'accès des gérants.</p>
+        </div>
 
-              {/* Nouveau Manager Button */}
-              <button
-                type="button"
-                onClick={() => onAddManager()}
-                className="flex-1 sm:flex-initial px-3.5 py-1.5 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-xs text-white rounded-xl transition-premium flex items-center justify-center gap-1 cursor-pointer"
-              >
-                <Plus className="h-4 w-4" /> Nouveau Manager
-              </button>
-            </div>
+        <div className="flex items-center gap-2 self-stretch sm:self-auto">
+          {/* View Toggle */}
+          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200/50">
+            <button
+              type="button"
+              onClick={() => setManagersViewMode('grid')}
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                managersViewMode === 'grid' ? 'bg-white text-[#ff5757] shadow-xs' : 'text-slate-500 hover:text-slate-800'
+              }`}
+              title="Vue Grille"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setManagersViewMode('list')}
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                managersViewMode === 'list' ? 'bg-white text-[#ff5757] shadow-xs' : 'text-slate-500 hover:text-slate-800'
+              }`}
+              title="Vue Liste"
+            >
+              <List className="h-4 w-4" />
+            </button>
           </div>
+
+          {/* Nouveau Manager Button */}
+          <button
+            type="button"
+            onClick={() => onAddManager()}
+            className="flex-1 sm:flex-initial px-4 py-2 bg-[#ff5757] hover:bg-[#e04646] font-bold text-xs text-white rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <Plus className="h-4 w-4" /> Nouveau Manager
+          </button>
+        </div>
+      </div>
 
           {/* Grouped Unique Managers list */}
           {(() => {

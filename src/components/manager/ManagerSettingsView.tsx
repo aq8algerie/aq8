@@ -248,20 +248,34 @@ export function ManagerSettingsView({
 
   return (
     <div id="manager-settings-view" className="space-y-6">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 shadow-xs">
-            <Settings className="h-3.5 w-3.5 text-[#ff5757]" />
-            Parametres manager
+      {/* Luxury Header Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1e1e1e] via-[#2a2a2a] to-[#121212] p-6 text-white shadow-xl border border-slate-800">
+        <div className="absolute top-0 right-0 h-64 w-64 translate-x-12 -translate-y-12 rounded-full bg-[#ff5757]/10 blur-3xl pointer-events-none" />
+        <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-widest text-[#ff8080] backdrop-blur-md">
+              <Settings className="h-3.5 w-3.5 text-[#ff5757]" />
+              Centre & Configuration CRM
+            </div>
+            <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
+              {currentCenter.name} <span className="text-slate-400 font-normal text-lg">({currentCenter.city})</span>
+            </h2>
+            <p className="max-w-2xl text-xs font-medium leading-relaxed text-slate-300">
+              Gérez l'image de marque, la capacité de réservation AQ8 & Wonder, ainsi que les informations de la fiche publique de votre centre.
+            </p>
           </div>
-          <h3 className="font-display text-lg font-bold text-slate-800">Parametres du centre</h3>
-          <p className="max-w-2xl text-xs font-medium leading-relaxed text-slate-500">
-            Gere les disponibilites de reservation, les informations publiques et les textes affiches sur la fiche du centre.
-          </p>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-400 backdrop-blur-xs">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              {currentCenter.status || 'Centre Opérationnel'}
+            </span>
+          </div>
         </div>
       </div>
 
-      <div id="manager-settings-tabs" className="overflow-x-auto rounded-2xl border border-slate-100 bg-white p-1.5 shadow-xs">
+      {/* Segmented Premium Navigation Tabs */}
+      <div id="manager-settings-tabs" className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-sm backdrop-blur-md">
         <div className="grid min-w-[720px] grid-cols-3 gap-1.5 lg:min-w-0">
           {SETTINGS_TABS.map(tab => {
             const Icon = tab.icon;
@@ -273,18 +287,20 @@ export function ManagerSettingsView({
                 id={`settings-tab-${tab.id}`}
                 type="button"
                 onClick={() => setActiveSettingsTab(tab.id)}
-                className={`flex items-center gap-3 rounded-xl px-3 py-3 text-left transition cursor-pointer ${
+                className={`flex items-center gap-3.5 rounded-xl px-4 py-3.5 text-left transition-all duration-300 cursor-pointer ${
                   isActive
-                    ? 'bg-[#353535] text-white shadow-sm'
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                    ? 'bg-gradient-to-r from-[#2a2a2a] to-[#3a3a3a] text-white shadow-md border border-slate-700/50'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
               >
-                <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${isActive ? 'bg-white/15' : 'bg-slate-100'}`}>
-                  <Icon className="h-4.5 w-4.5" />
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
+                  isActive ? 'bg-[#ff5757] text-white shadow-sm' : 'bg-slate-100 text-slate-500'
+                }`}>
+                  <Icon className="h-5 w-5" />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[12px] font-bold leading-tight">{tab.label}</span>
-                  <span className={`mt-1 block text-[10px] font-medium leading-snug ${isActive ? 'text-white/75' : 'text-slate-400'}`}>
+                  <span className="block text-[13px] font-black leading-tight tracking-tight">{tab.label}</span>
+                  <span className={`mt-0.5 block text-[10px] font-medium leading-snug ${isActive ? 'text-slate-300' : 'text-slate-400'}`}>
                     {tab.helper}
                   </span>
                 </span>
