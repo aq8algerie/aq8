@@ -135,6 +135,16 @@ export function useSeo(route: string, center?: Center) {
       document.head.appendChild(canonical);
     }
     canonical.setAttribute('href', seo.canonicalUrl);
+
+    // 5. Ensure Favicon Link
+    let favicon = document.querySelector('link[rel="icon"]');
+    if (!favicon) {
+      favicon = document.createElement('link');
+      favicon.setAttribute('rel', 'icon');
+      favicon.setAttribute('type', 'image/png');
+      document.head.appendChild(favicon);
+    }
+    favicon.setAttribute('href', '/images/favicon.png');
   }, [route, center]);
 }
 
