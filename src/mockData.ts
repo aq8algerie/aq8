@@ -223,15 +223,15 @@ export const INITIAL_CENTERS: Center[] = [
 export const INITIAL_MANAGERS: CenterManager[] = [
   {
     id: 'mgr-1',
-    name: 'Karim Benchikh',
-    email: 'karim@aq8algerie.com',
+    name: 'Merouane Anane',
+    email: 'merouaneanane@gmail.com',
     centerId: 'center-1',
     active: true
   },
   {
     id: 'mgr-2',
-    name: 'Amel Mansouri',
-    email: 'amel@aq8algerie.com',
+    name: 'Gérante Ouled Fayet',
+    email: 'sola_705@hotmail.com',
     centerId: 'center-2',
     active: true
   },
@@ -251,14 +251,14 @@ export const INITIAL_MANAGERS: CenterManager[] = [
   },
   {
     id: 'mgr-5',
-    name: 'Nassim Meziane',
-    email: 'nassim@aq8algerie.com',
+    name: 'Gérant Sidi Yahia',
+    email: 'sculptfitcenter@gmail.com',
     centerId: 'center-5',
     active: true
   },
   {
     id: 'mgr-6',
-    name: 'Yasmina Ikhlef',
+    name: 'Mme Yasmina Ikhlef',
     email: 'wonderaq8@gmail.com',
     centerId: 'center-6',
     active: true
