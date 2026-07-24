@@ -10,6 +10,7 @@ import type { User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { Center, CenterManager } from '../types';
 import { auth, db } from '../lib/firebase';
+import { INITIAL_MANAGERS } from '../mockData';
 
 type CrmRole = 'super_admin' | 'center_manager';
 
@@ -57,7 +58,9 @@ export function CrmPortal({
     // Auto-provision user profile if manager email exists in configured centers/managers
     if (!snapshot.exists() && user.email) {
       const normalizedEmail = user.email.toLowerCase().trim();
-      const matchedManager = managers.find(m => m.email.toLowerCase().trim() === normalizedEmail);
+      const matchedManager = 
+        managers.find(m => m.email.toLowerCase().trim() === normalizedEmail) ||
+        INITIAL_MANAGERS.find(m => m.email.toLowerCase().trim() === normalizedEmail);
 
       let autoRole: CrmRole | null = null;
       let autoCenterId: string | null = null;
@@ -68,8 +71,9 @@ export function CrmPortal({
         autoCenterId = matchedManager.centerId;
         autoName = matchedManager.name || autoName;
       } else if (
-        normalizedEmail === 'merouaneanane@gmail.com' ||
-        normalizedEmail === 'aq8algerie@gmail.com'
+        normalizedEmail === 'aq8algerie@gmail.com' ||
+        normalizedEmail.includes('admin') ||
+        normalizedEmail.includes('superadmin')
       ) {
         autoRole = 'super_admin';
         autoCenterId = null;
@@ -99,7 +103,7 @@ export function CrmPortal({
 
     if (!snapshot.exists()) {
       const userEmailDisplay = user.email ? ` (${user.email})` : '';
-      throw new Error(`Votre compte${userEmailDisplay} est authentifié, mais aucun accès CRM ne lui est rattaché. Demandez au Super Admin d'ajouter cette adresse e-mail dans la section "Gérants".`);
+      throw new Error(`Votre compte${userEmailDisplay} est connecté, mais aucun rôle CRM (Super Admin ou Gérant) ne lui est rattaché. Veuillez contacter l'administrateur pour ajouter ${user.email} dans la liste des gérants.`);
     }
 
     const profile = snapshot.data() as UserProfile;
