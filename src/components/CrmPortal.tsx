@@ -52,72 +52,83 @@ export function CrmPortal({
   const isAuthBusy = isSubmitting || isGoogleSubmitting;
 
   const loadUserProfile = async (user: User): Promise<UserProfile> => {
-    const userRef = doc(db, 'users', user.uid);
-    let snapshot = await getDoc(userRef);
+    const normalizedEmail = (user.email || '').toLowerCase().trim();
 
-    // Auto-provision user profile if manager email exists in configured centers/managers
-    if (!snapshot.exists() && user.email) {
-      const normalizedEmail = user.email.toLowerCase().trim();
-      const matchedManager = 
-        managers.find(m => m.email.toLowerCase().trim() === normalizedEmail) ||
-        INITIAL_MANAGERS.find(m => m.email.toLowerCase().trim() === normalizedEmail);
+    // Look up manager in passed props OR initial seed managers list
+    const matchedManager = 
+      managers.find(m => m.email.toLowerCase().trim() === normalizedEmail) ||
+      INITIAL_MANAGERS.find(m => m.email.toLowerCase().trim() === normalizedEmail);
 
-      let autoRole: CrmRole | null = null;
-      let autoCenterId: string | null = null;
-      let autoName = user.displayName || user.email;
+    let defaultRole: CrmRole | null = null;
+    let defaultCenterId: string | null = null;
+    let defaultName = user.displayName || user.email || 'Utilisateur CRM';
 
-      if (matchedManager) {
-        autoRole = 'center_manager';
-        autoCenterId = matchedManager.centerId;
-        autoName = matchedManager.name || autoName;
-      } else if (
-        normalizedEmail === 'aq8algerie@gmail.com' ||
-        normalizedEmail.includes('admin') ||
-        normalizedEmail.includes('superadmin')
-      ) {
-        autoRole = 'super_admin';
-        autoCenterId = null;
+    if (matchedManager) {
+      defaultRole = 'center_manager';
+      defaultCenterId = matchedManager.centerId;
+      defaultName = matchedManager.name || defaultName;
+    } else if (
+      normalizedEmail === 'aq8algerie@gmail.com' ||
+      normalizedEmail.includes('admin') ||
+      normalizedEmail.includes('superadmin')
+    ) {
+      defaultRole = 'super_admin';
+      defaultCenterId = null;
+    }
+
+    try {
+      const userRef = doc(db, 'users', user.uid);
+
+      // Create a 5-second timeout for getDoc so network issues never freeze the UI
+      const fetchPromise = getDoc(userRef);
+      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
+      const snapshot = await Promise.race([fetchPromise, timeoutPromise]);
+
+      if (snapshot && snapshot.exists()) {
+        const profile = snapshot.data() as UserProfile;
+        if (profile.active === false) {
+          throw new Error('Votre accès CRM est désactivé. Contactez un administrateur.');
+        }
+        return profile;
       }
 
-      if (autoRole) {
+      // If document doesn't exist yet, attempt to write it
+      if (defaultRole) {
         const newProfile: UserProfile = {
-          role: autoRole,
-          centerId: autoCenterId,
-          name: autoName,
+          role: defaultRole,
+          centerId: defaultCenterId,
+          name: defaultName,
           active: true,
         };
 
-        try {
-          await setDoc(userRef, {
-            ...newProfile,
-            uid: user.uid,
-            email: normalizedEmail,
-            createdAt: new Date().toISOString(),
-          });
-          snapshot = await getDoc(userRef);
-        } catch (provisionErr) {
-          console.warn('Auto-provisioning user profile failed:', provisionErr);
-        }
+        setDoc(userRef, {
+          ...newProfile,
+          uid: user.uid,
+          email: normalizedEmail,
+          createdAt: new Date().toISOString(),
+        }).catch((err) => console.warn('Background setDoc profile creation:', err));
+
+        return newProfile;
+      }
+    } catch (dbErr: any) {
+      console.warn('Firestore user fetch failed, using fallback:', dbErr);
+      if (dbErr?.message?.includes('désactivé')) {
+        throw dbErr;
       }
     }
 
-    if (!snapshot.exists()) {
-      const userEmailDisplay = user.email ? ` (${user.email})` : '';
-      throw new Error(`Votre compte${userEmailDisplay} est connecté, mais aucun rôle CRM (Super Admin ou Gérant) ne lui est rattaché. Veuillez contacter l'administrateur pour ajouter ${user.email} dans la liste des gérants.`);
+    // Fallback if Firestore query timed out or failed but user matches a manager email
+    if (defaultRole) {
+      return {
+        role: defaultRole,
+        centerId: defaultCenterId,
+        name: defaultName,
+        active: true,
+      };
     }
 
-    const profile = snapshot.data() as UserProfile;
-    if (profile.active === false) {
-      throw new Error('Votre accès CRM est désactivé. Contactez un administrateur.');
-    }
-    if (profile.role !== 'super_admin' && profile.role !== 'center_manager') {
-      throw new Error('Votre rôle CRM est invalide ou manquant.');
-    }
-    if (profile.role === 'center_manager' && !profile.centerId) {
-      throw new Error('Votre profil gérant n’est rattaché à aucun centre.');
-    }
-
-    return profile;
+    const userEmailDisplay = user.email ? ` (${user.email})` : '';
+    throw new Error(`Votre compte${userEmailDisplay} est connecté, mais aucun rôle CRM (Super Admin ou Gérant) ne lui est rattaché. Veuillez contacter l'administrateur pour ajouter ${user.email} dans la liste des gérants.`);
   };
 
   const completeAuthenticatedLogin = async (user: User) => {
