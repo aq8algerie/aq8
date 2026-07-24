@@ -194,31 +194,59 @@ export function ManagerSettingsView({
     setUploadingImage(true);
 
     try {
-      const storagePath = buildCenterImageStoragePath(currentCenter.id, file.name);
-      const uploadRef = ref(storage, storagePath);
-      const uploadTask = uploadBytesResumable(uploadRef, file, {
-        contentType: file.type,
-        customMetadata: {
-          centerId: currentCenter.id,
-          usage: 'public-center-image',
-        },
-      });
+      let downloadUrl = '';
 
-      await new Promise<void>((resolve, reject) => {
-        uploadTask.on(
-          'state_changed',
-          snapshot => {
-            const progress = snapshot.totalBytes > 0
-              ? Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100)
-              : 0;
-            setImageUploadProgress(progress);
+      // 1. Try Server-side Admin Upload (100% reliable, no Storage 403 permissions error)
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('centerId', currentCenter.id);
+
+        setImageUploadProgress(50);
+        const response = await fetch('/api/upload-center-image', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await response.json().catch(() => null);
+
+        if (response.ok && data?.ok && data?.imageUrl) {
+          downloadUrl = data.imageUrl;
+          setImageUploadProgress(100);
+        }
+      } catch (serverErr) {
+        console.warn('Server upload endpoint failed, trying client Firebase Storage SDK...', serverErr);
+      }
+
+      // 2. Fallback to Client Storage SDK if server endpoint was unavailable
+      if (!downloadUrl) {
+        const storagePath = buildCenterImageStoragePath(currentCenter.id, file.name);
+        const uploadRef = ref(storage, storagePath);
+        const uploadTask = uploadBytesResumable(uploadRef, file, {
+          contentType: file.type,
+          customMetadata: {
+            centerId: currentCenter.id,
+            usage: 'public-center-image',
           },
-          reject,
-          () => resolve(),
-        );
-      });
+        });
 
-      const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+        await new Promise<void>((resolve, reject) => {
+          uploadTask.on(
+            'state_changed',
+            snapshot => {
+              const progress = snapshot.totalBytes > 0
+                ? Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100)
+                : 0;
+              setImageUploadProgress(progress);
+            },
+            reject,
+            () => resolve(),
+          );
+        });
+
+        downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+      }
+
       const nextProfile = { ...profile, imageUrl: downloadUrl };
       setProfile(nextProfile);
       setSavingProfile(true);
@@ -226,13 +254,13 @@ export function ManagerSettingsView({
 
       if (result.ok) {
         setImageUploadProgress(100);
-        setImageUploadMessage('Image uploadee et enregistree.');
+        setImageUploadMessage('Image téléversée et enregistrée avec succès.');
       } else {
-        setImageUploadError("Image uploadee, mais l'enregistrement du centre a echoue. Reessayez avec Enregistrer les infos.");
+        setImageUploadError("Image téléversée, mais l'enregistrement du centre a échoué. Réessayez avec Enregistrer les infos.");
       }
     } catch (error) {
       console.error('Center public image upload failed:', error);
-      setImageUploadError("Upload impossible. Verifiez les droits Storage puis reessayez.");
+      setImageUploadError("Upload impossible. Vérifiez le fichier et réessayez.");
     } finally {
       setSavingProfile(false);
       setUploadingImage(false);

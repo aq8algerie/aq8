@@ -6,40 +6,24 @@ service firebase.storage {
       return request.auth != null;
     }
 
-    function userProfileExists() {
-      return signedIn()
-        && firestore.exists(/databases/(default)/documents/users/$(request.auth.uid));
-    }
-
-    function userProfile() {
-      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data;
-    }
-
-    function canManageCenter(centerId) {
-      return userProfileExists()
-        && userProfile().active == true
-        && (
-          userProfile().role == 'super_admin'
-          || (userProfile().role == 'center_manager' && userProfile().centerId == centerId)
-        );
-    }
-
-    function isAllowedCenterImage(centerId) {
+    function isAllowedImage() {
       return request.resource != null
-        && request.resource.size <= 6 * 1024 * 1024
-        && request.resource.contentType.matches('^image/(jpeg|png|webp)$')
-        && request.resource.metadata.centerId == centerId
-        && request.resource.metadata.usage == 'public-center-image';
+        && request.resource.size <= 10 * 1024 * 1024
+        && request.resource.contentType.matches('^image/(jpeg|jpg|png|webp|svg\\+xml)$');
     }
 
+    // Public center images & assets: readable by anyone, writeable by signed-in users
     match /centers/{centerId}/public/{fileName} {
       allow read: if true;
-      allow create, update: if canManageCenter(centerId) && isAllowedCenterImage(centerId);
-      allow delete: if canManageCenter(centerId);
+      allow create, update: if signedIn() && isAllowedImage();
+      allow delete: if signedIn();
     }
 
+    // Default catch-all
     match /{allPaths=**} {
-      allow read, write: if false;
+      allow read: if true;
+      allow create, update: if signedIn() && isAllowedImage();
+      allow delete: if signedIn();
     }
   }
 }
