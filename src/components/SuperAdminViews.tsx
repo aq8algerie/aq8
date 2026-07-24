@@ -29,7 +29,9 @@ import {
   LayoutGrid,
   List,
   Search,
-  ShieldCheck
+  ShieldCheck,
+  UploadCloud,
+  Loader2
 } from 'lucide-react';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -141,6 +143,55 @@ export function SuperAdminViews({
   const [centerHasAq8, setCenterHasAq8] = useState(true);
   const [centerHasWonder, setCenterHasWonder] = useState(true);
   const [centerImg, setCenterImg] = useState('');
+  const [uploadingCenterImg, setUploadingCenterImg] = useState(false);
+  const [centerImgUploadError, setCenterImgUploadError] = useState('');
+
+  const handleCenterImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
+    if (!file) return;
+
+    setCenterImgUploadError('');
+    setUploadingCenterImg(true);
+
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      let uploadedUrl = dataUrl;
+
+      try {
+        const response = await fetch('/api/upload-center-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            centerId: editingCenter?.id || 'new-center',
+            imageBase64: dataUrl,
+            fileName: file.name,
+            mimeType: file.type,
+          }),
+        });
+
+        const data = await response.json().catch(() => null);
+        if (response.ok && data?.ok && data?.imageUrl) {
+          uploadedUrl = data.imageUrl;
+        }
+      } catch (err) {
+        console.warn('Server upload endpoint unreachable, using Data URL:', err);
+      }
+
+      setCenterImg(uploadedUrl);
+    } catch (err) {
+      console.error('Center image upload failed:', err);
+      setCenterImgUploadError('Erreur lors du téléversement de l\'image.');
+    } finally {
+      setUploadingCenterImg(false);
+      event.currentTarget.value = '';
+    }
+  };
 
   // Customizable advanced Center States
   const [centerStatus, setCenterStatus] = useState('active');
@@ -779,17 +830,46 @@ export function SuperAdminViews({
                     </div>
                   </div>
 
-                  {/* Image Select with Presets & Live Preview */}
+                  {/* Image Select with Presets, File Upload & Live Preview */}
                   <div className="space-y-2">
-                    <label className="font-semibold text-slate-600 block">Photo du Centre</label>
+                    <div className="flex items-center justify-between">
+                      <label className="font-semibold text-slate-600 block">Photo du Centre</label>
+                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#ff5757] hover:bg-[#e04646] text-white font-bold text-[11px] rounded-xl cursor-pointer transition shadow-xs">
+                        {uploadingCenterImg ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            Téléversement...
+                          </>
+                        ) : (
+                          <>
+                            <UploadCloud className="h-3.5 w-3.5" />
+                            Téléverser une photo
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/jpg"
+                          onChange={handleCenterImageUpload}
+                          disabled={uploadingCenterImg}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {centerImgUploadError && (
+                      <p className="text-[11px] font-semibold text-rose-600 bg-rose-50 p-2 rounded-xl border border-rose-100">
+                        {centerImgUploadError}
+                      </p>
+                    )}
+
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
                       <div className="sm:col-span-2 space-y-1.5">
                         <input
                           type="text" value={centerImg} onChange={(e) => setCenterImg(e.target.value)}
-                          placeholder="URL de l'image ou choisissez un modèle" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757]"
+                          placeholder="URL de l'image ou téléversez votre fichier" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757]"
                         />
                         {/* Image Presets Selector */}
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           {[
                             { name: 'Fitness Moderne', url: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=600&auto=format&fit=crop' },
                             { name: 'Studio EMS', url: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600&auto=format&fit=crop' },
