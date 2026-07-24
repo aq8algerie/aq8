@@ -6,6 +6,7 @@ import next from 'next';
 import { applicationDefault, getApps as getAdminApps, initializeApp as initializeAdminApp } from 'firebase-admin/app';
 import { getAuth as getAdminAuth } from 'firebase-admin/auth';
 import { DocumentSnapshot, Firestore, Transaction, getFirestore as getAdminFirestore } from 'firebase-admin/firestore';
+import { getStorage as getAdminStorage } from 'firebase-admin/storage';
 
 // Import mock database
 import { AQ8Database } from './src/mockData';
@@ -588,7 +589,7 @@ async function checkAndExpirePendingBookings(db: Firestore) {
 async function startServer() {
   const app = express();
   app.set('trust proxy', 1);
-  app.use(express.json({ limit: '32kb' }));
+  app.use(express.json({ limit: '15mb' }));
 
   const publicApiLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
@@ -606,6 +607,68 @@ async function startServer() {
   app.use('/api/contact-messages', publicApiLimiter);
 
   // API endpoints
+  app.post('/api/upload-center-image', async (req, res) => {
+    try {
+      const { centerId, imageBase64, fileName, mimeType } = req.body || {};
+      const targetCenterId = String(centerId || '').trim();
+      const targetBase64 = String(imageBase64 || '').trim();
+      const targetFileName = String(fileName || 'center-image.png').trim();
+      const targetMimeType = String(mimeType || 'image/png').trim();
+
+      if (!targetBase64 || !targetCenterId) {
+        res.status(400).json({ ok: false, error: 'Fichier image ou identifiant du centre manquant.' });
+        return;
+      }
+
+      let buffer: Buffer;
+      let finalMimeType = targetMimeType;
+      const matches = targetBase64.match(/^data:([^;]+);base64,(.+)$/);
+      if (matches) {
+        finalMimeType = matches[1] || targetMimeType;
+        buffer = Buffer.from(matches[2], 'base64');
+      } else {
+        buffer = Buffer.from(targetBase64, 'base64');
+      }
+
+      const bucketName = process.env.FIREBASE_ADMIN_STORAGE_BUCKET || 'aq8algerie-4f675.firebasestorage.app';
+      let imageUrl = targetBase64.startsWith('data:') ? targetBase64 : `data:${finalMimeType};base64,${targetBase64}`;
+
+      try {
+        ensureAdminApp();
+        const storageBucket = getAdminStorage().bucket(bucketName);
+        const sanitizedFileName = targetFileName
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9._-]+/g, '-');
+
+        const destinationPath = `centers/${targetCenterId}/public/${Date.now()}-${sanitizedFileName}`;
+        const fileRef = storageBucket.file(destinationPath);
+
+        await fileRef.save(buffer, {
+          metadata: {
+            contentType: finalMimeType,
+            metadata: {
+              centerId: targetCenterId,
+              usage: 'public-center-image',
+            },
+          },
+          public: true,
+        });
+
+        await fileRef.makePublic().catch(() => null);
+        imageUrl = `https://storage.googleapis.com/${bucketName}/${destinationPath}`;
+      } catch (storageError) {
+        console.warn('Direct Cloud Storage bucket upload failed, using Data URL storage fallback:', storageError);
+      }
+
+      res.status(200).json({ ok: true, imageUrl });
+    } catch (error) {
+      console.error('Express upload-center-image error:', error);
+      const message = error instanceof Error ? error.message : 'Erreur upload image.';
+      res.status(500).json({ ok: false, error: message });
+    }
+  });
   app.post('/api/public-reservations', async (req, res) => {
     try {
       const data = req.body as PublicBookingRequestInput;

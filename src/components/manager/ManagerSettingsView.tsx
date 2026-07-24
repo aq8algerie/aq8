@@ -5,10 +5,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { Building2, CalendarClock, ExternalLink, FileText, Image as ImageIcon, Loader2, Mail, MapPin, Phone, Save, Settings, UploadCloud } from 'lucide-react';
-import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { Center } from '../../types';
 import { CrmActionResult } from '../../lib/crmTransactions';
-import { storage } from '../../lib/firebase';
 import { ManagerBookingSettingsPanel } from './ManagerBookingSettingsPanel';
 
 type CenterProfileSettings = Pick<Center,
@@ -194,59 +192,39 @@ export function ManagerSettingsView({
     setUploadingImage(true);
 
     try {
-      let downloadUrl = '';
+      // 1. Convert file to base64 Data URL locally
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
 
-      // 1. Try Server-side Admin Upload (100% reliable, no Storage 403 permissions error)
+      setImageUploadProgress(50);
+      let downloadUrl = dataUrl;
+
+      // 2. Call API server upload endpoint (bypasses Firebase client Storage authorization rules)
       try {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('centerId', currentCenter.id);
-
-        setImageUploadProgress(50);
         const response = await fetch('/api/upload-center-image', {
           method: 'POST',
-          body: formData,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            centerId: currentCenter.id,
+            imageBase64: dataUrl,
+            fileName: file.name,
+            mimeType: file.type,
+          }),
         });
 
         const data = await response.json().catch(() => null);
-
         if (response.ok && data?.ok && data?.imageUrl) {
           downloadUrl = data.imageUrl;
-          setImageUploadProgress(100);
         }
       } catch (serverErr) {
-        console.warn('Server upload endpoint failed, trying client Firebase Storage SDK...', serverErr);
+        console.warn('Server upload endpoint unreachable, using Data URL directly:', serverErr);
       }
 
-      // 2. Fallback to Client Storage SDK if server endpoint was unavailable
-      if (!downloadUrl) {
-        const storagePath = buildCenterImageStoragePath(currentCenter.id, file.name);
-        const uploadRef = ref(storage, storagePath);
-        const uploadTask = uploadBytesResumable(uploadRef, file, {
-          contentType: file.type,
-          customMetadata: {
-            centerId: currentCenter.id,
-            usage: 'public-center-image',
-          },
-        });
-
-        await new Promise<void>((resolve, reject) => {
-          uploadTask.on(
-            'state_changed',
-            snapshot => {
-              const progress = snapshot.totalBytes > 0
-                ? Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100)
-                : 0;
-              setImageUploadProgress(progress);
-            },
-            reject,
-            () => resolve(),
-          );
-        });
-
-        downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-      }
-
+      setImageUploadProgress(85);
       const nextProfile = { ...profile, imageUrl: downloadUrl };
       setProfile(nextProfile);
       setSavingProfile(true);
