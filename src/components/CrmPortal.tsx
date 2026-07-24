@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { ShieldCheck, Building, Lock, Mail, Activity, Loader2, KeyRound, ArrowLeft, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { Center, CenterManager } from '../types';
 import { auth, db } from '../lib/firebase';
 
@@ -50,10 +50,56 @@ export function CrmPortal({
     (typeof import.meta !== 'undefined' && import.meta.env && (import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true'));
   const isAuthBusy = isSubmitting || isGoogleSubmitting;
 
-  const loadUserProfile = async (uid: string): Promise<UserProfile> => {
-    const snapshot = await getDoc(doc(db, 'users', uid));
+  const loadUserProfile = async (user: User): Promise<UserProfile> => {
+    const userRef = doc(db, 'users', user.uid);
+    let snapshot = await getDoc(userRef);
+
+    // Auto-provision user profile if manager email exists in configured centers/managers
+    if (!snapshot.exists() && user.email) {
+      const normalizedEmail = user.email.toLowerCase().trim();
+      const matchedManager = managers.find(m => m.email.toLowerCase().trim() === normalizedEmail);
+
+      let autoRole: CrmRole | null = null;
+      let autoCenterId: string | null = null;
+      let autoName = user.displayName || user.email;
+
+      if (matchedManager) {
+        autoRole = 'center_manager';
+        autoCenterId = matchedManager.centerId;
+        autoName = matchedManager.name || autoName;
+      } else if (
+        normalizedEmail === 'merouaneanane@gmail.com' ||
+        normalizedEmail === 'aq8algerie@gmail.com'
+      ) {
+        autoRole = 'super_admin';
+        autoCenterId = null;
+      }
+
+      if (autoRole) {
+        const newProfile: UserProfile = {
+          role: autoRole,
+          centerId: autoCenterId,
+          name: autoName,
+          active: true,
+        };
+
+        try {
+          await setDoc(userRef, {
+            ...newProfile,
+            uid: user.uid,
+            email: normalizedEmail,
+            createdAt: new Date().toISOString(),
+          });
+          snapshot = await getDoc(userRef);
+        } catch (provisionErr) {
+          console.warn('Auto-provisioning user profile failed:', provisionErr);
+        }
+      }
+    }
+
     if (!snapshot.exists()) {
-      throw new Error("Votre compte existe, mais aucun profil CRM ne lui est associé.");
+      const userEmailDisplay = user.email ? ` (${user.email})` : '';
+      throw new Error(`Votre compte${userEmailDisplay} est authentifié, mais aucun accès CRM ne lui est rattaché. Demandez au Super Admin d'ajouter cette adresse e-mail dans la section "Gérants".`);
     }
 
     const profile = snapshot.data() as UserProfile;
@@ -71,7 +117,7 @@ export function CrmPortal({
   };
 
   const completeAuthenticatedLogin = async (user: User) => {
-    const profile = await loadUserProfile(user.uid);
+    const profile = await loadUserProfile(user);
     const centerId = profile.role === 'center_manager' ? profile.centerId || null : null;
 
     if (profile.role === 'center_manager') {
