@@ -151,7 +151,12 @@ export function CenterManagerViews({
   // Find center metadata
   const currentCenter = centers.find(c => c.id === centerId) || centers[0];
 
-  const handleSaveCenterUpdate = async (payload: Partial<Center>, successMessage: string, successTitle: string): Promise<CrmActionResult> => {
+  const handleSaveCenterUpdate = async (
+    payload: Partial<Center>,
+    successMessage: string,
+    successTitle: string,
+    audit: { action: string; details: string; targetType?: string }
+  ): Promise<CrmActionResult> => {
     if (!currentCenter) {
       const message = 'Centre introuvable.';
       triggerToast(message, 'error');
@@ -163,10 +168,18 @@ export function CenterManagerViews({
         ...payload,
         updatedAt: new Date().toISOString(),
       });
+      await logCrmAction(userId, userName, 'center_manager', {
+        action: audit.action,
+        details: audit.details,
+        targetId: centerId,
+        targetType: audit.targetType || 'center',
+        centerId,
+        centerName: currentCenter.name,
+      });
       triggerToast(successMessage, 'success', 'updated', successTitle);
       return { ok: true };
     } catch (error) {
-      const message = getErrorMessage(error, 'Erreur lors de la mise a jour du centre.');
+      const message = getErrorMessage(error, 'Erreur lors de la mise à jour du centre.');
       triggerToast(message, 'error');
       return { ok: false, error: message };
     }
@@ -181,16 +194,26 @@ export function CenterManagerViews({
         bookingCapacity: settings.bookingCapacity,
         bookingHours: settings.bookingHours,
       },
-      'Parametres de reservation mis a jour.',
-      'Parametres enregistres'
+      'Paramètres de réservation mis à jour.',
+      'Paramètres enregistrés',
+      {
+        action: 'UPDATE_BOOKING_SETTINGS',
+        details: `Mise à jour des paramètres de réservation du centre : ${currentCenter.name}`,
+        targetType: 'center',
+      }
     );
   };
 
   const handleSaveCenterProfile = async (settings: Partial<Center>): Promise<CrmActionResult> => (
     handleSaveCenterUpdate(
       settings,
-      'Informations du centre mises a jour.',
-      'Centre mis a jour'
+      'Informations du centre mises à jour.',
+      'Centre mis à jour',
+      {
+        action: 'UPDATE_CENTER_PUBLIC_PROFILE',
+        details: `Mise à jour des informations publiques du centre : ${currentCenter.name}`,
+        targetType: 'center',
+      }
     )
   );
 
@@ -238,8 +261,8 @@ export function CenterManagerViews({
     ? centerClients.find(client => client.id === pendingPaymentDelete.clientId)
     : null;
   const pendingPaymentDeleteDescription = pendingPaymentDelete
-    ? `Paiement de ${pendingPaymentDelete.amount.toLocaleString()} DZD${pendingPaymentClient ? ` pour ${pendingPaymentClient.firstName} ${pendingPaymentClient.lastName}` : ``}. Il sera retire du registre des encaissements.`
-    : 'Cet encaissement sera retire du registre des encaissements.';
+    ? `Paiement de ${pendingPaymentDelete.amount.toLocaleString()} DZD${pendingPaymentClient ? ` pour ${pendingPaymentClient.firstName} ${pendingPaymentClient.lastName}` : ``}. Il sera retiré du registre des encaissements.`
+    : 'Cet encaissement sera retiré du registre des encaissements.';
 
   const pendingClientActionClients = pendingClientAction
     ? pendingClientAction.clientIds
@@ -256,12 +279,12 @@ export function CenterManagerViews({
     ? 'Supprimer ' + (pendingClientCount > 1 ? 'ces clients' : 'ce client') + ' ?'
     : pendingClientAction?.status === 'suspended'
       ? 'Suspendre ' + (pendingClientCount > 1 ? 'ces clients' : 'ce client') + ' ?'
-      : 'Reactiver ' + (pendingClientCount > 1 ? 'ces clients' : 'ce client') + ' ?';
+      : 'Réactiver ' + (pendingClientCount > 1 ? 'ces clients' : 'ce client') + ' ?';
   const pendingClientActionDescription = pendingClientAction?.kind === 'delete'
-    ? pendingClientNames + pendingClientSuffix + ' sera retire du fichier clients du centre. Les historiques deja enregistres peuvent rester visibles dans les autres modules.'
+    ? pendingClientNames + pendingClientSuffix + ' sera retiré du fichier clients du centre. Les historiques déjà enregistrés peuvent rester visibles dans les autres modules.'
     : pendingClientAction?.status === 'suspended'
-      ? pendingClientNames + pendingClientSuffix + ' ne pourra plus etre utilise pour de nouvelles actions operationnelles tant qu il reste suspendu.'
-      : pendingClientNames + pendingClientSuffix + ' sera reactif dans le fichier clients.';
+      ? pendingClientNames + pendingClientSuffix + ' ne pourra plus être utilisé pour de nouvelles actions opérationnelles tant qu\'il reste suspendu.'
+      : pendingClientNames + pendingClientSuffix + ' sera réactivé dans le fichier clients.';
 
   const confirmPaymentDelete = () => {
     if (!pendingPaymentDeleteId || confirmingPaymentDelete) return;
@@ -270,6 +293,9 @@ export function CenterManagerViews({
     try {
       const p = payments.find(payment => payment.id === pendingPaymentDeleteId);
       const cl = p ? clients.find(client => client.id === p.clientId) : null;
+
+      const updated = payments.filter(payment => payment.id !== pendingPaymentDeleteId);
+      onUpdatePayments(updated);
       logCrmAction(userId, userName, 'center_manager', {
         action: 'DELETE_PAYMENT',
         details: `Suppression de l'encaissement de ${p?.amount || 0} DZD${cl ? ` pour le client ${cl.firstName} ${cl.lastName}` : ''}`,
@@ -279,9 +305,7 @@ export function CenterManagerViews({
         centerName: currentCenter?.name
       });
 
-      const updated = payments.filter(payment => payment.id !== pendingPaymentDeleteId);
-      onUpdatePayments(updated);
-      triggerToast('Encaissement supprime avec succes.', 'success', 'payment', 'Encaissement supprime');
+      triggerToast('Encaissement supprimé avec succès.', 'success', 'payment', 'Encaissement supprimé');
     } finally {
       setConfirmingPaymentDelete(false);
       setPendingPaymentDeleteId(null);
@@ -311,7 +335,7 @@ export function CenterManagerViews({
   const requestClientStatusChange = (clientIds: string[], status: ClientStatus) => {
     const scopedIds = clientIds.filter(clientId => centerClients.some(client => client.id === clientId));
     if (scopedIds.length === 0) {
-      triggerToast('Aucun client valide selectionne.', 'error');
+      triggerToast('Aucun client valide sélectionné.', 'error');
       return;
     }
     setPendingClientAction({ kind: 'status', clientIds: Array.from(new Set(scopedIds)), status });
@@ -320,7 +344,7 @@ export function CenterManagerViews({
   const requestClientDelete = (clientIds: string[]) => {
     const scopedIds = clientIds.filter(clientId => centerClients.some(client => client.id === clientId));
     if (scopedIds.length === 0) {
-      triggerToast('Aucun client valide selectionne.', 'error');
+      triggerToast('Aucun client valide sélectionné.', 'error');
       return;
     }
     setPendingClientAction({ kind: 'delete', clientIds: Array.from(new Set(scopedIds)) });
@@ -353,10 +377,10 @@ export function CenterManagerViews({
           setSelectedClientId(null);
         }
         triggerToast(
-          actionIds.size + ' client' + (actionIds.size > 1 ? 's' : '') + ' supprime' + (actionIds.size > 1 ? 's' : '') + '.',
+          actionIds.size + ' client' + (actionIds.size > 1 ? 's' : '') + ' supprimé' + (actionIds.size > 1 ? 's' : '') + '.',
           'success',
           'deleted',
-          'Client supprime'
+          'Client supprimé'
         );
       } else {
         onUpdateClients(clients.map(client => {
@@ -390,10 +414,10 @@ export function CenterManagerViews({
         });
 
         triggerToast(
-          pendingClientAction.status === 'suspended' ? 'Client suspendu avec succes.' : 'Client reactive avec succes.',
+          pendingClientAction.status === 'suspended' ? 'Client suspendu avec succès.' : 'Client réactivé avec succès.',
           'success',
           'updated',
-          pendingClientAction.status === 'suspended' ? 'Client suspendu' : 'Client reactive'
+          pendingClientAction.status === 'suspended' ? 'Client suspendu' : 'Client réactivé'
         );
       }
     } finally {
@@ -438,7 +462,7 @@ export function CenterManagerViews({
 
     if (editingClient) {
       if (editingClient.centerId !== centerId) {
-        triggerToast('Ce client ne peut pas etre modifie depuis ce centre.', 'error');
+        triggerToast('Ce client ne peut pas être modifié depuis ce centre.', 'error');
         return;
       }
 
@@ -460,7 +484,7 @@ export function CenterManagerViews({
       });
 
       closeClientModal();
-      triggerToast('Fiche de ' + updatedClient.firstName + ' ' + updatedClient.lastName + ' mise a jour.', 'success', 'updated', 'Client modifie');
+      triggerToast('Fiche de ' + updatedClient.firstName + ' ' + updatedClient.lastName + ' mise à jour.', 'success', 'updated', 'Client modifié');
       return;
     }
 
@@ -484,7 +508,7 @@ export function CenterManagerViews({
     });
 
     closeClientModal();
-    triggerToast('Adherent ' + newClient.firstName + ' ' + newClient.lastName + ' enregistre avec succes !');
+    triggerToast('Adhérent ' + newClient.firstName + ' ' + newClient.lastName + ' enregistré avec succès !');
   };
   // 2. Appointment booking actions
   const handleAptSubmit = async (aptData: {
@@ -547,7 +571,7 @@ export function CenterManagerViews({
       });
 
       setShowAptModal(false);
-      triggerToast('Rendez-vous planifie avec succes !');
+      triggerToast('Rendez-vous planifié avec succès !');
     } catch (error) {
       triggerToast(getErrorMessage(error, 'Erreur lors de la planification du RDV.'), 'error');
     }
@@ -564,10 +588,10 @@ export function CenterManagerViews({
     };
 
     const apt = appointments.find(a => a.id === aptId);
-    if (!apt) return fail('Reservation introuvable.');
+    if (!apt) return fail('Réservation introuvable.');
 
     if (apt.status !== 'booked') {
-      return fail("La reservation n'est pas dans l'etat planifiee.");
+      return fail("La réservation n'est pas dans l'état planifiée.");
     }
 
     const cl = clients.find(c => c.id === apt.clientId);
@@ -613,11 +637,11 @@ export function CenterManagerViews({
       });
 
       if (!options.silent) {
-        triggerToast('Seance validee et 1 credit deduit avec succes !');
+        triggerToast('Séance validée et 1 crédit déduit avec succès !');
       }
       return { ok: true };
     } catch (error) {
-      return fail(getErrorMessage(error, 'Erreur lors de la validation de la seance.'));
+      return fail(getErrorMessage(error, 'Erreur lors de la validation de la séance.'));
     }
   };
 
@@ -632,10 +656,10 @@ export function CenterManagerViews({
     };
 
     const apt = appointments.find(a => a.id === aptId);
-    if (!apt) return fail('Reservation introuvable.');
+    if (!apt) return fail('Réservation introuvable.');
 
     if (apt.centerId !== centerId) {
-      return fail("Cette reservation n'appartient pas a votre centre.");
+      return fail("Cette réservation n'appartient pas à votre centre.");
     }
 
     try {
@@ -661,11 +685,11 @@ export function CenterManagerViews({
       });
 
       if (!options.silent) {
-        triggerToast('Seance annulee avec succes.');
+        triggerToast('Séance annulée avec succès.');
       }
       return { ok: true };
     } catch (error) {
-      return fail(getErrorMessage(error, "Erreur lors de l'annulation de la seance."));
+      return fail(getErrorMessage(error, "Erreur lors de l'annulation de la séance."));
     }
   };
 
@@ -680,7 +704,7 @@ export function CenterManagerViews({
     };
 
     if (appointmentToSave.centerId !== centerId) {
-      return fail("Cette reservation n'appartient pas a votre centre.");
+      return fail("Cette réservation n'appartient pas à votre centre.");
     }
 
     if (appointmentToSave.status !== 'cancelled') {
@@ -700,7 +724,7 @@ export function CenterManagerViews({
       );
 
       if (!validation.valid) {
-        return fail(validation.error || 'Reservation invalide.');
+        return fail(validation.error || 'Réservation invalide.');
       }
     }
 
@@ -727,7 +751,7 @@ export function CenterManagerViews({
 
       return { ok: true };
     } catch (error) {
-      return fail(getErrorMessage(error, 'Erreur lors de la mise a jour de la reservation.'));
+      return fail(getErrorMessage(error, 'Erreur lors de la mise à jour de la réservation.'));
     }
   };
 
@@ -737,6 +761,11 @@ export function CenterManagerViews({
     try {
       const apt = appointments.find(a => a.id === appointmentId);
       const cl = apt ? clients.find(c => c.id === apt.clientId) : null;
+
+      await deleteAppointmentInTransaction(db, {
+        appointmentId,
+        centerId
+      });
       logCrmAction(userId, userName, 'center_manager', {
         action: 'DELETE_APPOINTMENT',
         details: `Suppression du rendez-vous du ${apt ? apt.dateTime.replace('T', ' ') : ''} pour le client : ${cl ? `${cl.firstName} ${cl.lastName}` : (apt?.clientId || '')}`,
@@ -746,13 +775,9 @@ export function CenterManagerViews({
         centerName: currentCenter?.name
       });
 
-      await deleteAppointmentInTransaction(db, {
-        appointmentId,
-        centerId
-      });
       return { ok: true };
     } catch (error) {
-      return fail(getErrorMessage(error, 'Erreur lors de la suppression de la reservation.'));
+      return fail(getErrorMessage(error, 'Erreur lors de la suppression de la réservation.'));
     }
   };
 
@@ -791,7 +816,7 @@ export function CenterManagerViews({
       });
 
       setShowPackageAssignModal(false);
-      triggerToast('Forfait affecte avec succes au client !');
+      triggerToast('Forfait affecté avec succès au client !');
     } catch (error) {
       triggerToast(getErrorMessage(error, "Erreur lors de l'affectation du forfait."), 'error');
     }
@@ -844,7 +869,7 @@ export function CenterManagerViews({
       });
 
       setShowPaymentModal(false);
-      triggerToast(`Paiement de ${payData.amount.toLocaleString()} DZD enregistre avec succes !`);
+      triggerToast(`Paiement de ${payData.amount.toLocaleString()} DZD enregistré avec succès !`);
     } catch (error) {
       triggerToast(getErrorMessage(error, "Erreur lors de l'enregistrement du paiement."), 'error');
     }
@@ -952,7 +977,7 @@ export function CenterManagerViews({
         open={Boolean(pendingClientAction)}
         title={pendingClientActionTitle}
         description={pendingClientActionDescription}
-        confirmLabel={pendingClientAction?.kind === 'delete' ? 'Supprimer' : pendingClientAction?.status === 'suspended' ? 'Suspendre' : 'Reactiver'}
+        confirmLabel={pendingClientAction?.kind === 'delete' ? 'Supprimer' : pendingClientAction?.status === 'suspended' ? 'Suspendre' : 'Réactiver'}
         cancelLabel="Annuler"
         tone={pendingClientAction?.kind === 'delete' ? 'danger' : 'warning'}
         loading={confirmingClientAction}

@@ -616,10 +616,16 @@ export const INITIAL_SETTINGS: GeneralSettings = {
 };
 
 // LocalStorage Persistence Wrapper
+function canUseLocalStorage(): boolean {
+  return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+}
+
 export class AQ8Database {
   static get<T>(key: string, defaultValue: T): T {
+    if (!canUseLocalStorage()) return defaultValue;
+
     try {
-      const data = localStorage.getItem(`aq8_${key}`);
+      const data = window.localStorage.getItem(`aq8_${key}`);
       return data ? JSON.parse(data) : defaultValue;
     } catch (e) {
       return defaultValue;
@@ -627,8 +633,10 @@ export class AQ8Database {
   }
 
   static save<T>(key: string, value: T): void {
+    if (!canUseLocalStorage()) return;
+
     try {
-      localStorage.setItem(`aq8_${key}`, JSON.stringify(value));
+      window.localStorage.setItem(`aq8_${key}`, JSON.stringify(value));
     } catch (e) {
       console.error(`Failed to save key ${key} to localStorage`, e);
     }
@@ -737,15 +745,17 @@ export class AQ8Database {
 
   // Helper reset routine
   static clearAndReset(): void {
-    localStorage.removeItem('aq8_centers');
-    localStorage.removeItem('aq8_managers');
-    localStorage.removeItem('aq8_services');
-    localStorage.removeItem('aq8_packages');
-    localStorage.removeItem('aq8_clients');
-    localStorage.removeItem('aq8_client_packages');
-    localStorage.removeItem('aq8_payments');
-    localStorage.removeItem('aq8_appointments');
-    localStorage.removeItem('aq8_measurements');
-    localStorage.removeItem('aq8_settings');
+    if (!canUseLocalStorage()) return;
+
+    window.localStorage.removeItem('aq8_centers');
+    window.localStorage.removeItem('aq8_managers');
+    window.localStorage.removeItem('aq8_services');
+    window.localStorage.removeItem('aq8_packages');
+    window.localStorage.removeItem('aq8_clients');
+    window.localStorage.removeItem('aq8_client_packages');
+    window.localStorage.removeItem('aq8_payments');
+    window.localStorage.removeItem('aq8_appointments');
+    window.localStorage.removeItem('aq8_measurements');
+    window.localStorage.removeItem('aq8_settings');
   }
 }

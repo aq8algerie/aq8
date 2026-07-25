@@ -151,13 +151,13 @@ export function ManagerScheduleView({
 
   const handleExportCSV = () => {
     const headers = [
-      'ID de Reservation',
-      'Client (Prenom)',
+      'ID de réservation',
+      'Client (Prénom)',
       'Client (Nom)',
-      'Telephone',
+      'Téléphone',
       'E-mail',
       'Date & Heure',
-      'Duree (min)',
+      'Durée (min)',
       'Prestation',
       'Technologie',
       'Statut',
@@ -168,7 +168,7 @@ export function ManagerScheduleView({
       const client = centerClients.find(c => c.id === apt.clientId);
       const service = services.find(s => s.id === apt.serviceId);
       const tech = getTechnologyForClient(apt.clientId);
-      const statusLabel = apt.status === 'booked' ? 'Planifie' : apt.status === 'completed' ? 'Valide' : 'Annule';
+      const statusLabel = apt.status === 'booked' ? 'Planifié' : apt.status === 'completed' ? 'Validé' : 'Annulé';
       
       return [
         apt.id,
@@ -206,7 +206,7 @@ export function ManagerScheduleView({
     link.click();
     document.body.removeChild(link);
     
-    showToast(`Planning exporte : ${filename}`, 'success');
+    showToast(`Planning exporté : ${filename}`, 'success');
   };
   // 3. Client and Package Metadata Helpers
   const { centerClients, centerAppointments } = getCenterScheduleData(centerId, clients, appointments);
@@ -221,20 +221,20 @@ export function ManagerScheduleView({
   const getAppointmentClientLabel = (appointmentId: string) => {
     const appointment = centerAppointments.find(candidate => candidate.id === appointmentId);
     const client = appointment ? centerClients.find(candidate => candidate.id === appointment.clientId) : null;
-    if (!client) return 'cette reservation';
-    return `${client.firstName} ${client.lastName}`.trim() || 'cette reservation';
+    if (!client) return 'cette réservation';
+    return `${client.firstName} ${client.lastName}`.trim() || 'cette réservation';
   };
 
   const confirmationCopy = pendingConfirmation
     ? pendingConfirmation.kind === 'delete-single'
       ? {
-          title: 'Supprimer cette reservation ?',
-          description: `${getAppointmentClientLabel(pendingConfirmation.appointmentId)} sera retire du planning. La capacite du creneau sera liberee immediatement.`,
+          title: 'Supprimer cette réservation ?',
+          description: `${getAppointmentClientLabel(pendingConfirmation.appointmentId)} sera retiré du planning. La capacité du créneau sera libérée immédiatement.`,
           confirmLabel: 'Supprimer',
         }
       : {
-          title: `Supprimer ${pendingConfirmation.appointmentIds.length} reservations ?`,
-          description: 'Les reservations selectionnees seront retirees du planning. Les places correspondantes seront liberees.',
+          title: `Supprimer ${pendingConfirmation.appointmentIds.length} réservations ?`,
+          description: 'Les réservations sélectionnées seront retirées du planning. Les places correspondantes seront libérées.',
           confirmLabel: `Supprimer ${pendingConfirmation.appointmentIds.length}`,
         }
     : null;
@@ -248,7 +248,7 @@ export function ManagerScheduleView({
         const result = await onDeleteAppointment(pendingConfirmation.appointmentId);
         if (result.ok) {
           setSelectedIds(prev => prev.filter(x => x !== pendingConfirmation.appointmentId));
-          showToast('Le rendez-vous a ete retire du planning et la capacite est liberee.', 'success', 'deleted');
+          showToast('Le rendez-vous a été retiré du planning et la capacité est libérée.', 'success', 'deleted');
         } else {
           showToast(result.error || 'Suppression impossible.', 'error');
         }
@@ -271,9 +271,9 @@ export function ManagerScheduleView({
 
       setSelectedIds(prev => prev.filter(id => !deletedIds.includes(id)));
       if (countFail > 0) {
-        showToast(`${countSuccess} supprimee(s), ${countFail} echouee(s).`, 'error');
+        showToast(`${countSuccess} supprimée(s), ${countFail} échouée(s).`, 'error');
       } else {
-        showToast(`${countSuccess} reservations supprimees du planning.`, 'success', 'deleted');
+        showToast(`${countSuccess} réservations supprimées du planning.`, 'success', 'deleted');
       }
     } finally {
       setConfirmingAction(false);
@@ -284,7 +284,7 @@ export function ManagerScheduleView({
   const handleSingleComplete = async (id: string) => {
     const result = await onCompleteAppointment(id, { silent: true });
     if (result.ok) {
-      showToast('Credit deduit et statut de la seance mis a jour.', 'success', 'completed');
+      showToast('Crédit déduit et statut de la séance mis à jour.', 'success', 'completed');
     } else {
       showToast(result.error || 'Validation impossible.', 'error');
     }
@@ -293,7 +293,7 @@ export function ManagerScheduleView({
   const handleSingleCancel = async (id: string) => {
     const result = await onCancelAppointment(id, { silent: true });
     if (result.ok) {
-      showToast('La place est liberee et le planning est mis a jour.', 'success', 'cancelled');
+      showToast('La place est libérée et le planning est mis à jour.', 'success', 'cancelled');
     } else {
       showToast(result.error || 'Annulation impossible.', 'error');
     }
@@ -315,9 +315,9 @@ export function ManagerScheduleView({
 
     if (result.ok) {
       setEditingApt(null);
-      showToast('Les changements ont ete enregistres dans le planning.', 'success', 'updated');
+      showToast('Les changements ont été enregistrés dans le planning.', 'success', 'updated');
     } else {
-      showToast(result.error || 'Mise a jour impossible.', 'error');
+      showToast(result.error || 'Mise à jour impossible.', 'error');
     }
   };
 
@@ -332,7 +332,7 @@ export function ManagerScheduleView({
     const eligibleBookings = appointments.filter(a => selectedIds.includes(a.id) && a.status === 'booked');
 
     if (eligibleBookings.length === 0) {
-      showToast('Aucun rendez-vous eligible (planifie) selectionne.', 'error');
+      showToast('Aucun rendez-vous éligible (planifié) sélectionné.', 'error');
       return;
     }
 
@@ -348,16 +348,16 @@ export function ManagerScheduleView({
     setSelectedIds([]);
 
     if (countFail > 0) {
-      showToast(`${countSuccess} valide(s), ${countFail} echoue(s) (absence de forfait/credits).`, 'error');
+      showToast(`${countSuccess} validée(s), ${countFail} échouée(s) (absence de forfait/crédits).`, 'error');
     } else {
-      showToast(`${countSuccess} seances validees avec deduction des credits.`, 'success', 'bulk');
+      showToast(`${countSuccess} séances validées avec déduction des crédits.`, 'success', 'bulk');
     }
   };
 
   const handleBulkCancel = async () => {
     const eligibleBookings = appointments.filter(a => selectedIds.includes(a.id) && a.status === 'booked');
     if (eligibleBookings.length === 0) {
-      showToast('Aucune seance planifiee eligible pour annulation.', 'error');
+      showToast('Aucune séance planifiée éligible pour annulation.', 'error');
       return;
     }
 
@@ -372,15 +372,15 @@ export function ManagerScheduleView({
 
     setSelectedIds([]);
     if (countFail > 0) {
-      showToast(`${countSuccess} annulee(s), ${countFail} echouee(s).`, 'error');
+      showToast(`${countSuccess} annulée(s), ${countFail} échouée(s).`, 'error');
     } else {
-      showToast(`${countSuccess} seances annulees et places liberees.`, 'success', 'bulk');
+      showToast(`${countSuccess} séances annulées et places libérées.`, 'success', 'bulk');
     }
   };
 
   const handleBulkDelete = () => {
     if (selectedIds.length === 0) {
-      showToast('Aucune reservation selectionnee.', 'error');
+      showToast('Aucune réservation sélectionnée.', 'error');
       return;
     }
     setPendingConfirmation({ kind: 'delete-bulk', appointmentIds: [...selectedIds] });
@@ -400,15 +400,15 @@ export function ManagerScheduleView({
     setProcessingId(req.id);
     try {
       if (req.centerId !== centerId) {
-        throw new Error("Cette demande n'appartient pas a votre centre.");
+        throw new Error("Cette demande n'appartient pas à votre centre.");
       }
       if (req.status !== 'pending') {
-        throw new Error("Cette demande a deja ete traitee.");
+        throw new Error("Cette demande a déjà été traitée.");
       }
 
       const matchedService = getServiceForBookingRequest(req);
       if (!matchedService) {
-        throw new Error('Aucune prestation CRM ne correspond a cette demande.');
+        throw new Error('Aucune prestation CRM ne correspond à cette demande.');
       }
 
       const existingClient = clients.find(
@@ -432,7 +432,7 @@ export function ManagerScheduleView({
       );
 
       if (!validation.valid) {
-        throw new Error(validation.error || 'Reservation invalide.');
+        throw new Error(validation.error || 'Réservation invalide.');
       }
 
       const appointmentId = `apt-${req.id}`;
@@ -463,7 +463,7 @@ export function ManagerScheduleView({
         appointmentId,
       });
 
-      showToast(`${req.firstName} ${req.lastName} est ajoute au planning.`, 'success', 'booking-request', 'Pre-reservation acceptee');
+      showToast(`${req.firstName} ${req.lastName} est ajouté au planning.`, 'success', 'booking-request', 'Pré-réservation acceptée');
     } catch (error) {
       console.error(error);
       showToast(getErrorMessage(error, 'Erreur lors du traitement.'), 'error');
@@ -495,7 +495,7 @@ export function ManagerScheduleView({
         requestId: req.id,
       });
 
-      showToast(`La demande de ${req.firstName} ${req.lastName} est refusee et la place est liberee.`, 'success', 'cancelled', 'Pre-reservation refusee');
+      showToast(`La demande de ${req.firstName} ${req.lastName} est refusée et la place est libérée.`, 'success', 'cancelled', 'Pré-réservation refusée');
     } catch (error) {
       showToast(getErrorMessage(error, 'Erreur lors du traitement.'), 'error');
     } finally {

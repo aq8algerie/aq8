@@ -138,9 +138,9 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
         <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
           <div>
             <h4 className="font-bold text-slate-800 text-sm font-display flex items-center gap-1.5">
-              <Sparkles className="h-4 w-4 text-[#ff5757]" /> {mode === 'edit' ? 'Modifier la fiche adherent' : 'Fiche nouvel adherent'}
+              <Sparkles className="h-4 w-4 text-[#ff5757]" /> {mode === 'edit' ? 'Modifier la fiche adhérent' : 'Fiche nouvel adhérent'}
             </h4>
-            <p className="text-[10px] text-slate-400 font-medium">{mode === 'edit' ? 'Mettez a jour les informations du membre.' : 'Configurez le profil complet du membre.'}</p>
+            <p className="text-[10px] text-slate-400 font-medium">{mode === 'edit' ? 'Mettez à jour les informations du membre.' : 'Configurez le profil complet du membre.'}</p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer transition-colors">✕</button>
         </div>
@@ -448,7 +448,7 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
                 onClick={handleSubmit}
                 className="px-6 py-2 bg-[#ff5757] hover:bg-[#e04646] text-white font-bold rounded-xl cursor-pointer transition-premium shadow-md shadow-red-100"
               >
-                {mode === 'edit' ? 'Enregistrer les modifications' : "Enregistrer l'Adherent"}
+                {mode === 'edit' ? 'Enregistrer les modifications' : "Enregistrer l'adhérent"}
               </button>
             )}
           </div>

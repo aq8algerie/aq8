@@ -35,19 +35,19 @@ const SETTINGS_TABS: Array<{
   {
     id: 'public',
     label: 'Informations publiques',
-    helper: 'Coordonnees, adresse, statut et presentation du centre.',
+    helper: 'Coordonnées, adresse, statut et présentation du centre.',
     icon: Building2,
   },
   {
     id: 'reservation',
-    label: 'Parametres de reservation',
-    helper: 'Horaires reservables et capacites AQ8 / Wonder par heure.',
+    label: 'Paramètres de réservation',
+    helper: 'Horaires réservables et capacités AQ8 / Wonder par heure.',
     icon: CalendarClock,
   },
   {
     id: 'personalization',
     label: 'Personnalisation',
-    helper: 'Notes, regles, equipement conseille et horaires par public.',
+    helper: 'Notes, règles, Équipement conseillé et horaires par public.',
     icon: FileText,
   },
 ];
@@ -178,7 +178,7 @@ export function ManagerSettingsView({
     setImageUploadProgress(0);
 
     if (!CENTER_IMAGE_MIME_TYPES.includes(file.type)) {
-      setImageUploadError('Formats acceptes: JPG, PNG ou WebP.');
+      setImageUploadError('Formats acceptés : JPG, PNG ou WebP.');
       input.value = '';
       return;
     }
@@ -436,7 +436,7 @@ export function ManagerSettingsView({
                       setImageUploadMessage('');
                     }}
                     aria-label="URL de l'image publique du centre"
-                    placeholder="URL generee apres upload Storage"
+                    placeholder="URL générée après upload Storage"
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-[#ff5757] focus:bg-white"
                   />
                   <div className="flex flex-col gap-2 text-[10px] font-semibold text-slate-400 sm:flex-row sm:items-center sm:justify-between">
@@ -478,7 +478,7 @@ export function ManagerSettingsView({
             </div>
 
             <label className="space-y-1.5 text-xs font-bold text-slate-600">
-              Statut affiche
+              Statut affiché
               <input
                 type="text"
                 value={profile.status}
@@ -489,7 +489,7 @@ export function ManagerSettingsView({
             </label>
 
             <label className="space-y-1.5 text-xs font-bold text-slate-600">
-              Horaires affiches sur la fiche
+              Horaires affichés sur la fiche
               <input
                 type="text"
                 value={profile.schedule}
@@ -521,7 +521,7 @@ export function ManagerSettingsView({
               <div>
                 <h4 className="font-display text-sm font-bold text-slate-800">Personnalisation de la fiche</h4>
                 <p className="text-[11px] font-medium leading-relaxed text-slate-500">
-                  Saisis une information par ligne pour les listes affichees au public.
+                  Saisis une information par ligne pour les listes affichées au public.
                 </p>
               </div>
             </div>
@@ -550,7 +550,7 @@ export function ManagerSettingsView({
             </label>
 
             <label className="space-y-1.5 text-xs font-bold text-slate-600">
-              Equipement conseille
+              Équipement conseillé
               <textarea
                 value={profile.equipmentText}
                 onChange={(event) => updateProfile('equipmentText', event.target.value)}
@@ -580,7 +580,7 @@ export function ManagerSettingsView({
             </label>
 
             <label className="space-y-1.5 text-xs font-bold text-slate-600 lg:col-span-2">
-              Regle d'annulation
+              Règle d'annulation
               <textarea
                 value={profile.cancellationRule}
                 onChange={(event) => updateProfile('cancellationRule', event.target.value)}

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { Appointment, Client, ClientPackage, Service } from '../types';
 import { isBeforePreviousDayCutoff, isFullHour, validateAppointment } from './appointmentRules';
+import { getBookingHoursForDate, getCenterBookingCapacity } from './bookingCapacityRules';
 import { deductSessionFromPackage, findActivePackageForClient, validateDeduction } from './packageRules';
 import { getBookingMinimumDate, validatePublicBookingRequest, validatePublicContactMessage } from './publicFormValidation';
 
@@ -136,6 +137,74 @@ test('appointment validation rejects slots once AQ8 capacity is reached', () => 
   assert.equal(result.valid, false);
 });
 
+test('appointment validation honors flexible center capacity and hours', () => {
+  const flexibleCenter = {
+    bookingCapacity: { aq8: 2, wonder: 1 },
+    bookingHours: {
+      '0': [{ start: '08:00', end: '10:00' }]
+    }
+  };
+
+  assert.deepEqual(getCenterBookingCapacity('center-flex', flexibleCenter), { aq8: 2, wonder: 1 });
+  assert.deepEqual(getBookingHoursForDate('center-flex', '2026-07-12', flexibleCenter), ['08:00', '09:00']);
+
+  const oneAq8Booking: Appointment[] = [
+    { ...existingAppointments[0], id: 'apt-flex-1', centerId: 'center-flex', dateTime: '2026-07-12T08:00' }
+  ];
+
+  const available = validateAppointment(
+    {
+      clientId: 'client-1',
+      serviceId: 'service-1',
+      centerId: 'center-flex',
+      dateTime: '2026-07-12T08:00',
+      duration: 20
+    },
+    oneAq8Booking,
+    'center-flex',
+    services,
+    undefined,
+    flexibleCenter
+  );
+  assert.equal(available.valid, true);
+
+  const fullAq8Slot: Appointment[] = [
+    ...oneAq8Booking,
+    { ...oneAq8Booking[0], id: 'apt-flex-2' }
+  ];
+
+  const saturated = validateAppointment(
+    {
+      clientId: 'client-1',
+      serviceId: 'service-1',
+      centerId: 'center-flex',
+      dateTime: '2026-07-12T08:00',
+      duration: 20
+    },
+    fullAq8Slot,
+    'center-flex',
+    services,
+    undefined,
+    flexibleCenter
+  );
+  assert.equal(saturated.valid, false);
+
+  const closed = validateAppointment(
+    {
+      clientId: 'client-1',
+      serviceId: 'service-1',
+      centerId: 'center-flex',
+      dateTime: '2026-07-12T10:00',
+      duration: 20
+    },
+    [],
+    'center-flex',
+    services,
+    undefined,
+    flexibleCenter
+  );
+  assert.equal(closed.valid, false);
+});
 test('appointment validation accepts valid full-hour open slots', () => {
   const result = validateAppointment(
     {

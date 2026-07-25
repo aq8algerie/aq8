@@ -203,9 +203,9 @@ export function ManagerBookingSettingsPanel({
             <CalendarClock className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-display text-sm font-bold text-slate-800">Parametres de reservation</h3>
+            <h3 className="font-display text-sm font-bold text-slate-800">Paramètres de réservation</h3>
             <p className="text-[11px] font-medium leading-relaxed text-slate-500">
-              Horaires publics, jours ouverts et capacite d'accueil par heure pour ce centre.
+              Horaires publics, jours ouverts et capacité d'accueil par heure pour ce centre.
             </p>
           </div>
         </div>
@@ -216,7 +216,7 @@ export function ManagerBookingSettingsPanel({
             className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-600 transition hover:bg-slate-50 cursor-pointer"
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            Defaults
+            Réinitialiser
           </button>
           <button
             type="button"

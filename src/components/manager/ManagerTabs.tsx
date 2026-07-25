@@ -30,12 +30,12 @@ export function ManagerTabs({
 }: ManagerTabsProps) {
   const tabs: TabItem[] = [
     { id: 'dashboard', label: 'Tableau de bord', icon: Activity },
-    { id: 'schedule', label: 'Planning du Jour', icon: Calendar },
-    { id: 'clients', label: 'Gestion Clients', icon: Users },
+    { id: 'schedule', label: 'Planning du jour', icon: Calendar },
+    { id: 'clients', label: 'Gestion clients', icon: Users },
     { id: 'bookings', label: 'Réservations', icon: Calendar },
     { id: 'payments', label: 'Paiements Encaissés', icon: DollarSign },
     { id: 'services', label: 'Prestations & Forfaits', icon: Layers },
-    { id: 'settings', label: 'Parametres', icon: Settings }
+    { id: 'settings', label: 'Paramètres', icon: Settings }
   ];
 
   return (

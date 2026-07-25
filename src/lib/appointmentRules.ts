@@ -66,7 +66,7 @@ export function validateAppointment(
   }
 
   if (clientCenterId !== centerId) {
-    return { valid: false, error: "L'adherent selectionne n'appartient pas a ce centre." };
+    return { valid: false, error: "L'adhérent sélectionné n'appartient pas à ce centre." };
   }
 
   const timePart = dateTime.split('T')[1];
@@ -75,11 +75,11 @@ export function validateAppointment(
   }
 
   if (!isFullHour(timePart)) {
-    return { valid: false, error: 'Les reservations doivent se faire uniquement par heure complete (ex: 10:00).' };
+    return { valid: false, error: 'Les réservations doivent se faire uniquement par heure complète (ex : 10:00).' };
   }
 
   if (!isCenterOpenForDateTime(centerId, dateTime, center)) {
-    return { valid: false, error: "Ce creneau est en dehors des horaires d'ouverture du centre." };
+    return { valid: false, error: "Ce créneau est en dehors des horaires d'ouverture du centre." };
   }
 
   const serviceType = getServiceTypeById(services, serviceId);
@@ -100,7 +100,7 @@ export function validateAppointment(
   if (!availability.isAvailable) {
     return {
       valid: false,
-      error: `Capacite ${getServiceTypeLabel(serviceType)} atteinte sur ce creneau (${availability.booked}/${availability.capacity}).`,
+      error: `Capacité ${getServiceTypeLabel(serviceType)} atteinte sur ce créneau (${availability.booked}/${availability.capacity}).`,
     };
   }
 

@@ -76,7 +76,7 @@ function getPresentation(toast: ProfessionalToastState): ToastPresentation {
 
   if (type === 'warning') {
     return {
-      title: toast.title || 'Verification requise',
+      title: toast.title || 'Vérification requise',
       toneClass: 'border-amber-200 bg-white text-amber-950 shadow-amber-950/10',
       iconWrapClass: 'bg-amber-50 text-amber-600 ring-1 ring-amber-100',
       progressClass: 'bg-amber-500',
@@ -102,7 +102,7 @@ function getPresentation(toast: ProfessionalToastState): ToastPresentation {
 
   if (action === 'deleted') {
     return {
-      title: toast.title || 'Suppression confirmee',
+      title: toast.title || 'Suppression confirmée',
       toneClass: 'border-rose-200 bg-white text-slate-950 shadow-slate-950/10',
       iconWrapClass: 'bg-rose-50 text-rose-600 ring-1 ring-rose-100',
       progressClass: 'bg-rose-500',
@@ -111,7 +111,7 @@ function getPresentation(toast: ProfessionalToastState): ToastPresentation {
   }
   if (action === 'cancelled') {
     return {
-      title: toast.title || 'Reservation annulee',
+      title: toast.title || 'Réservation annulée',
       toneClass: 'border-amber-200 bg-white text-slate-950 shadow-slate-950/10',
       iconWrapClass: 'bg-amber-50 text-amber-600 ring-1 ring-amber-100',
       progressClass: 'bg-amber-500',
@@ -120,63 +120,63 @@ function getPresentation(toast: ProfessionalToastState): ToastPresentation {
   }
   if (action === 'completed') {
     return {
-      title: toast.title || 'Seance validee',
+      title: toast.title || 'Séance validée',
       ...successBase,
       Icon: CalendarCheck,
     };
   }
   if (action === 'payment') {
     return {
-      title: toast.title || 'Encaissement enregistre',
+      title: toast.title || 'Encaissement enregistré',
       ...successBase,
       Icon: CreditCard,
     };
   }
   if (action === 'package') {
     return {
-      title: toast.title || 'Forfait active',
+      title: toast.title || 'Forfait activé',
       ...successBase,
       Icon: PackageCheck,
     };
   }
   if (action === 'measurement') {
     return {
-      title: toast.title || 'Mensurations enregistrees',
+      title: toast.title || 'Mensurations enregistrées',
       ...successBase,
       Icon: Ruler,
     };
   }
   if (action === 'booking-request') {
     return {
-      title: toast.title || 'Pre-reservation traitee',
+      title: toast.title || 'Pré-réservation traitée',
       ...successBase,
       Icon: FileCheck2,
     };
   }
   if (action === 'created') {
     return {
-      title: toast.title || 'Creation effectuee',
+      title: toast.title || 'Création effectuée',
       ...successBase,
       Icon: UserCheck,
     };
   }
   if (action === 'updated') {
     return {
-      title: toast.title || 'Modification enregistree',
+      title: toast.title || 'Modification enregistrée',
       ...successBase,
       Icon: CheckCircle2,
     };
   }
   if (action === 'bulk') {
     return {
-      title: toast.title || 'Traitement termine',
+      title: toast.title || 'Traitement terminé',
       ...successBase,
       Icon: FileCheck2,
     };
   }
 
   return {
-    title: toast.title || 'Operation reussie',
+    title: toast.title || 'Opération réussie',
     ...successBase,
     Icon: CheckCircle2,
   };

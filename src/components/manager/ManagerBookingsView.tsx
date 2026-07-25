@@ -199,20 +199,20 @@ export function ManagerBookingsView({
   const getAppointmentClientLabel = (appointmentId: string) => {
     const appointment = appointments.find(candidate => candidate.id === appointmentId);
     const client = appointment ? centerClients.find(candidate => candidate.id === appointment.clientId) : null;
-    if (!client) return 'cette reservation';
+    if (!client) return 'cette réservation';
     return getClientDisplayName(client);
   };
 
   const confirmationCopy = pendingConfirmation
     ? pendingConfirmation.kind === 'delete-single'
       ? {
-          title: 'Supprimer cette reservation ?',
-          description: `${getAppointmentClientLabel(pendingConfirmation.appointmentId)} sera retire du planning. La capacite du creneau sera liberee immediatement.`,
+          title: 'Supprimer cette réservation ?',
+          description: `${getAppointmentClientLabel(pendingConfirmation.appointmentId)} sera retiré du planning. La capacité du créneau sera libérée immédiatement.`,
           confirmLabel: 'Supprimer',
         }
       : {
-          title: `Supprimer ${pendingConfirmation.appointmentIds.length} reservations ?`,
-          description: 'Les reservations selectionnees seront retirees du planning. Les places correspondantes seront liberees.',
+          title: `Supprimer ${pendingConfirmation.appointmentIds.length} réservations ?`,
+          description: 'Les réservations sélectionnées seront retirées du planning. Les places correspondantes seront libérées.',
           confirmLabel: `Supprimer ${pendingConfirmation.appointmentIds.length}`,
         }
     : null;
@@ -226,7 +226,7 @@ export function ManagerBookingsView({
         const result = await onDeleteAppointment(pendingConfirmation.appointmentId);
         if (result.ok) {
           setSelectedIds(prev => prev.filter(x => x !== pendingConfirmation.appointmentId));
-          showToast('Le rendez-vous a ete retire du planning et la capacite est liberee.', 'success', 'deleted');
+          showToast('Le rendez-vous a été retiré du planning et la capacité est libérée.', 'success', 'deleted');
         } else {
           showToast(result.error || 'Suppression impossible.', 'error');
         }
@@ -249,9 +249,9 @@ export function ManagerBookingsView({
 
       setSelectedIds(prev => prev.filter(id => !deletedIds.includes(id)));
       if (countFail > 0) {
-        showToast(`${countSuccess} supprimee(s), ${countFail} echouee(s).`, 'error');
+        showToast(`${countSuccess} supprimée(s), ${countFail} échouée(s).`, 'error');
       } else {
-        showToast(`${countSuccess} reservations supprimees du planning.`, 'success', 'deleted');
+        showToast(`${countSuccess} réservations supprimées du planning.`, 'success', 'deleted');
       }
     } finally {
       setConfirmingAction(false);
@@ -295,7 +295,7 @@ export function ManagerBookingsView({
   const handleSingleComplete = async (id: string) => {
     const result = await onCompleteAppointment(id, { silent: true });
     if (result.ok) {
-      showToast('Credit deduit et statut de la seance mis a jour.', 'success', 'completed');
+      showToast('Crédit déduit et statut de la séance mis à jour.', 'success', 'completed');
     } else {
       showToast(result.error || 'Validation impossible.', 'error');
     }
@@ -304,7 +304,7 @@ export function ManagerBookingsView({
   const handleSingleCancel = async (id: string) => {
     const result = await onCancelAppointment(id, { silent: true });
     if (result.ok) {
-      showToast('La place est liberee et le planning est mis a jour.', 'success', 'cancelled');
+      showToast('La place est libérée et le planning est mis à jour.', 'success', 'cancelled');
     } else {
       showToast(result.error || 'Annulation impossible.', 'error');
     }
@@ -326,9 +326,9 @@ export function ManagerBookingsView({
 
     if (result.ok) {
       setEditingApt(null);
-      showToast('Les changements ont ete enregistres dans le planning.', 'success', 'updated');
+      showToast('Les changements ont été enregistrés dans le planning.', 'success', 'updated');
     } else {
-      showToast(result.error || 'Mise a jour impossible.', 'error');
+      showToast(result.error || 'Mise à jour impossible.', 'error');
     }
   };
 
@@ -337,7 +337,7 @@ export function ManagerBookingsView({
     const bookingsToComplete = appointments.filter(a => selectedIds.includes(a.id) && a.status === 'booked');
 
     if (bookingsToComplete.length === 0) {
-      showToast('Aucun rendez-vous planifie eligible parmi les selections.', 'error');
+      showToast('Aucun rendez-vous planifié éligible parmi les sélections.', 'error');
       return;
     }
 
@@ -353,9 +353,9 @@ export function ManagerBookingsView({
     setSelectedIds([]);
 
     if (failedCount > 0) {
-      showToast(`${succeededCount} valide(s), ${failedCount} echoue(s) (absence de forfait/credits).`, 'error');
+      showToast(`${succeededCount} validée(s), ${failedCount} échouée(s) (absence de forfait/crédits).`, 'error');
     } else {
-      showToast(`${succeededCount} reservations validees avec deduction des credits.`, 'success', 'bulk');
+      showToast(`${succeededCount} réservations validées avec déduction des crédits.`, 'success', 'bulk');
     }
   };
 
@@ -363,7 +363,7 @@ export function ManagerBookingsView({
     const bookingsToCancel = appointments.filter(a => selectedIds.includes(a.id) && a.status === 'booked');
 
     if (bookingsToCancel.length === 0) {
-      showToast("Aucun rendez-vous planifie eligible a l'annulation.", 'error');
+      showToast("Aucun rendez-vous planifié éligible à l'annulation.", 'error');
       return;
     }
 
@@ -378,15 +378,15 @@ export function ManagerBookingsView({
 
     setSelectedIds([]);
     if (failedCount > 0) {
-      showToast(`${succeededCount} annulee(s), ${failedCount} echouee(s).`, 'error');
+      showToast(`${succeededCount} annulée(s), ${failedCount} échouée(s).`, 'error');
     } else {
-      showToast(`${succeededCount} seances annulees et places liberees.`, 'success', 'bulk');
+      showToast(`${succeededCount} séances annulées et places libérées.`, 'success', 'bulk');
     }
   };
 
   const handleBulkDelete = () => {
     if (selectedIds.length === 0) {
-      showToast('Aucune reservation selectionnee.', 'error');
+      showToast('Aucune réservation sélectionnée.', 'error');
       return;
     }
     setPendingConfirmation({ kind: 'delete-bulk', appointmentIds: [...selectedIds] });

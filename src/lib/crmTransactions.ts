@@ -272,7 +272,7 @@ async function normalizeSlotFromSnapshot(
 
 function assertSlotCanAccept(slot: AppointmentSlot, serviceType: BookingServiceType, appointmentId: string, center?: CenterBookingConfig): void {
   if (!isCenterOpenForDateTime(slot.centerId, slot.dateTime, center)) {
-    throw new Error("Ce creneau est en dehors des horaires d'ouverture du centre.");
+    throw new Error("Ce créneau est en dehors des horaires d'ouverture du centre.");
   }
 
   const booked = Object.values(slot.appointments).filter(entry => (
@@ -281,7 +281,7 @@ function assertSlotCanAccept(slot: AppointmentSlot, serviceType: BookingServiceT
   const capacity = getSlotCapacity(slot.centerId, serviceType, center);
 
   if (booked >= capacity) {
-    throw new Error(`Capacite ${getServiceTypeLabel(serviceType)} atteinte sur ce creneau (${booked}/${capacity}).`);
+    throw new Error(`Capacité ${getServiceTypeLabel(serviceType)} atteinte sur ce créneau (${booked}/${capacity}).`);
   }
 }
 
@@ -352,12 +352,12 @@ export async function createAppointmentInTransaction(
   }
 ): Promise<void> {
   await runTransaction(db, async transaction => {
-    assertString(params.appointmentId, 'Identifiant de reservation invalide.');
+    assertString(params.appointmentId, 'Identifiant de réservation invalide.');
     assertString(params.centerId, 'Centre invalide.');
     assertString(params.clientId, 'Client invalide.');
     assertString(params.serviceId, 'Prestation invalide.');
-    assertString(params.dateTime, 'Date de reservation invalide.');
-    assertPositiveNumber(params.duration, 'Duree de reservation invalide.');
+    assertString(params.dateTime, 'Date de réservation invalide.');
+    assertPositiveNumber(params.duration, 'Durée de réservation invalide.');
 
     const clientRef = doc(db, 'clients', params.clientId);
     const appointmentRef = doc(db, 'appointments', params.appointmentId);
@@ -378,7 +378,7 @@ export async function createAppointmentInTransaction(
       throw new Error("Ce client n'appartient pas a votre centre.");
     }
     if (appointmentSnapshot.exists()) {
-      throw new Error('Identifiant de reservation deja utilise.');
+      throw new Error('Identifiant de réservation déjà utilisé.');
     }
 
     const appointment: Appointment = {
@@ -417,8 +417,8 @@ export async function updateAppointmentInTransaction(
     assertString(params.centerId, 'Centre invalide.');
     assertString(params.clientId, 'Client invalide.');
     assertString(params.serviceId, 'Prestation invalide.');
-    assertString(params.dateTime, 'Date de reservation invalide.');
-    assertPositiveNumber(params.duration, 'Duree de reservation invalide.');
+    assertString(params.dateTime, 'Date de réservation invalide.');
+    assertPositiveNumber(params.duration, 'Durée de réservation invalide.');
 
     const appointmentRef = doc(db, 'appointments', params.id);
     const clientRef = doc(db, 'clients', params.clientId);
@@ -430,7 +430,7 @@ export async function updateAppointmentInTransaction(
 
     const currentAppointment = appointmentSnapshot.data() as Appointment;
     if (currentAppointment.centerId !== params.centerId) {
-      throw new Error("Cette reservation n'appartient pas a votre centre.");
+      throw new Error("Cette réservation n'appartient pas à votre centre.");
     }
 
     const clientSnapshot = await transaction.get(clientRef);
@@ -517,7 +517,7 @@ export async function deleteAppointmentInTransaction(
 
     const appointment = appointmentSnapshot.data() as Appointment;
     if (appointment.centerId !== params.centerId) {
-      throw new Error("Cette reservation n'appartient pas a votre centre.");
+      throw new Error("Cette réservation n'appartient pas à votre centre.");
     }
 
     const centerConfig = await readCenterConfig(transaction, db, params.centerId);
@@ -550,31 +550,31 @@ export async function completeAppointmentWithSessionDeduction(
 
     const appointment = appointmentSnapshot.data() as Appointment;
     if (appointment.centerId !== params.centerId) {
-      throw new Error("Cette reservation n'appartient pas a votre centre.");
+      throw new Error("Cette réservation n'appartient pas à votre centre.");
     }
     if (appointment.status !== 'booked') {
-      throw new Error("La reservation n'est pas dans l'etat planifiee.");
+      throw new Error("La réservation n'est pas dans l'état planifiée.");
     }
 
     const clientRef = doc(db, 'clients', appointment.clientId);
     const clientSnapshot = await transaction.get(clientRef);
     if (!clientSnapshot.exists()) {
-      throw new Error("L'adherent associe est introuvable.");
+      throw new Error("L'adhérent associé est introuvable.");
     }
 
     const client = clientSnapshot.data() as Client;
     if (client.centerId !== params.centerId) {
-      throw new Error("L'adherent n'appartient pas a votre centre.");
+      throw new Error("L'adhérent n'appartient pas à votre centre.");
     }
 
     const clientPackageSnapshot = await transaction.get(clientPackageRef);
     if (!clientPackageSnapshot.exists()) {
-      throw new Error("Le forfait actif de l'adherent est introuvable.");
+      throw new Error("Le forfait actif de l'adhérent est introuvable.");
     }
 
     const clientPackage = clientPackageSnapshot.data() as ClientPackage;
     if (clientPackage.centerId !== params.centerId || clientPackage.clientId !== appointment.clientId) {
-      throw new Error('Le forfait actif ne correspond pas a cette reservation.');
+      throw new Error('Le forfait actif ne correspond pas ? cette réservation.');
     }
     if (clientPackage.status !== 'active' || clientPackage.sessionsRemaining <= 0 || isPackageExpired(clientPackage)) {
       throw new Error("Le forfait actif de cet adhérent est épuisé ou a expiré (limite de 1 mois et demi dépassée).");
@@ -609,10 +609,10 @@ export async function cancelAppointmentInTransaction(
 
     const appointment = appointmentSnapshot.data() as Appointment;
     if (appointment.centerId !== params.centerId) {
-      throw new Error("Cette reservation n'appartient pas a votre centre.");
+      throw new Error("Cette réservation n'appartient pas à votre centre.");
     }
     if (appointment.status !== 'booked') {
-      throw new Error('Seules les reservations planifiees peuvent etre annulees.');
+      throw new Error('Seules les réservations planifiées peuvent être annulées.');
     }
 
     const centerConfig = await readCenterConfig(transaction, db, params.centerId);
@@ -645,14 +645,14 @@ export async function acceptBookingRequestInTransaction(
     assertString(params.requestId, 'Demande invalide.');
     assertString(params.centerId, 'Centre invalide.');
     assertString(params.newClientId, 'Identifiant client invalide.');
-    assertString(params.appointmentId, 'Identifiant de reservation invalide.');
+    assertString(params.appointmentId, 'Identifiant de réservation invalide.');
     assertString(params.serviceId, 'Prestation invalide.');
-    assertPositiveNumber(params.duration, 'Duree de reservation invalide.');
+    assertPositiveNumber(params.duration, 'Durée de réservation invalide.');
 
     const requestRef = doc(db, 'booking_requests', params.requestId);
     const requestSnapshot = await transaction.get(requestRef);
     if (!requestSnapshot.exists()) {
-      throw new Error('Demande de reservation introuvable.');
+      throw new Error('Demande de réservation introuvable.');
     }
 
     const bookingRequest = requestSnapshot.data() as BookingRequest;
@@ -660,7 +660,7 @@ export async function acceptBookingRequestInTransaction(
       throw new Error("Cette demande n'appartient pas a votre centre.");
     }
     if (bookingRequest.status !== 'pending') {
-      throw new Error('Cette demande a deja ete traitee.');
+      throw new Error('Cette demande a déjà été traitée.');
     }
 
     const dateTime = `${bookingRequest.bookingDate}T${bookingRequest.bookingTime}`;
@@ -677,7 +677,7 @@ export async function acceptBookingRequestInTransaction(
           throw new Error("Le client existant n'appartient pas a votre centre.");
         }
         if (existingClient.phone !== bookingRequest.phone) {
-          throw new Error('Le client existant ne correspond pas au telephone de la demande.');
+          throw new Error('Le client existant ne correspond pas au téléphone de la demande.');
         }
         resolvedClientId = existingClient.id;
       }
@@ -690,7 +690,7 @@ export async function acceptBookingRequestInTransaction(
       newClientRef = doc(db, 'clients', params.newClientId);
       const newClientSnapshot = await transaction.get(newClientRef);
       if (newClientSnapshot.exists()) {
-        throw new Error('Identifiant client deja utilise.');
+        throw new Error('Identifiant client déjà utilisé.');
       }
 
       newClient = {
@@ -714,7 +714,7 @@ export async function acceptBookingRequestInTransaction(
     const slot = await normalizeSlotFromSnapshot(transaction, db, slotSnapshot, params.centerId, dateTime, params.createdAt, centerConfig);
 
     if (appointmentSnapshot.exists()) {
-      throw new Error('Une reservation existe deja pour cette demande.');
+      throw new Error('Une réservation existe déjà pour cette demande.');
     }
 
     const appointment: Appointment = {
@@ -768,7 +768,7 @@ export async function rejectBookingRequestInTransaction(
     const requestRef = doc(db, 'booking_requests', params.requestId);
     const requestSnapshot = await transaction.get(requestRef);
     if (!requestSnapshot.exists()) {
-      throw new Error('Demande de reservation introuvable.');
+      throw new Error('Demande de réservation introuvable.');
     }
 
     const bookingRequest = requestSnapshot.data() as BookingRequest;
@@ -776,7 +776,7 @@ export async function rejectBookingRequestInTransaction(
       throw new Error("Cette demande n'appartient pas a votre centre.");
     }
     if (bookingRequest.status !== 'pending') {
-      throw new Error('Cette demande a deja ete traitee.');
+      throw new Error('Cette demande a déjà été traitée.');
     }
 
     const dateTime = `${bookingRequest.bookingDate}T${bookingRequest.bookingTime}`;
