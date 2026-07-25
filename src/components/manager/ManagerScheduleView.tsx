@@ -4,7 +4,6 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { logCrmAction } from '../../lib/auditLogger';
 import { Center, Client, Appointment, Service, ClientPackage, Package, BookingRequest } from '../../types';
 import {
   acceptBookingRequestInTransaction,
@@ -14,10 +13,9 @@ import {
   rejectBookingRequestInTransaction
 } from '../../lib/crmTransactions';
 import { getTodayDateString } from '../../lib/centerManagerUtils';
-import { validateAppointment } from '../../lib/appointmentRules';
 import { getBookingHoursForDate } from '../../lib/bookingCapacityRules';
 import { db } from '../../lib/firebase';
-import { notifyCrmEmailBestEffort } from '../../lib/emailNotificationClient';
+import { notifyCrmEmail } from '../../lib/emailNotificationClient';
 import { ProfessionalConfirmDialog } from './ProfessionalConfirmDialog';
 import { ProfessionalToast, ProfessionalToastState, ToastAction, ToastType } from './ProfessionalToast';
 import { PendingBookingRequestsPanel } from './schedule/PendingBookingRequestsPanel';
@@ -396,6 +394,14 @@ export function ManagerScheduleView({
     );
   };
 
+  const getEmailWarningMessage = (result: { sent: boolean; skipped?: string; error?: string }) => {
+    if (result.sent) return '';
+    if (result.error) return ` Email client non envoyé : ${result.error}`;
+    if (result.skipped === 'missing_recipient') return " Aucun e-mail client n'est renseigné.";
+    if (result.skipped) return ` Email client non envoyé (${result.skipped}).`;
+    return " Email client non envoyé.";
+  };
+
   const handleAcceptBookingRequest = async (req: BookingRequest) => {
     setProcessingId(req.id);
     try {
@@ -414,29 +420,9 @@ export function ManagerScheduleView({
       const existingClient = clients.find(
         c => c.phone === req.phone && c.centerId === centerId
       );
-      const clientId = existingClient?.id || `cli-${req.id}`;
-      const dateTime = `${req.bookingDate}T${req.bookingTime}`;
-      const validation = validateAppointment(
-        {
-          clientId,
-          serviceId: matchedService.id,
-          centerId,
-          dateTime,
-          duration: matchedService.duration || 20
-        },
-        appointments,
-        existingClient?.centerId || centerId,
-        services,
-        undefined,
-        currentCenter
-      );
-
-      if (!validation.valid) {
-        throw new Error(validation.error || 'Réservation invalide.');
-      }
-
       const appointmentId = `apt-${req.id}`;
-      await acceptBookingRequestInTransaction(db, {
+      const processedAt = new Date().toISOString();
+      const transactionResult = await acceptBookingRequestInTransaction(db, {
         requestId: req.id,
         centerId,
         existingClientId: existingClient?.id,
@@ -444,26 +430,33 @@ export function ManagerScheduleView({
         appointmentId,
         serviceId: matchedService.id,
         duration: matchedService.duration || 20,
-        createdAt: getTodayDateString()
+        createdAt: getTodayDateString(),
+        processedAt,
+        audit: {
+          userId,
+          userName,
+          userRole: 'center_manager',
+          centerName: currentCenter?.name,
+        },
       });
 
-      logCrmAction(userId, userName, 'center_manager', {
-        action: 'ACCEPT_BOOKING_REQUEST',
-        details: `Approbation de la demande de réservation en ligne pour : ${req.firstName} ${req.lastName} (Date : ${req.bookingDate} à ${req.bookingTime})`,
-        targetId: req.id,
-        targetType: 'booking_request',
-        centerId,
-        centerName: currentCenter?.name
-      });
-
-      notifyCrmEmailBestEffort({
+      const emailResult = await notifyCrmEmail({
         type: 'booking_request_accepted',
         centerId,
         requestId: req.id,
-        appointmentId,
-      });
+        appointmentId: transactionResult.appointmentId,
+      }).catch(error => ({
+        sent: false,
+        error: getErrorMessage(error, 'Notification email impossible.'),
+      }));
 
-      showToast(`${req.firstName} ${req.lastName} est ajouté au planning.`, 'success', 'booking-request', 'Pré-réservation acceptée');
+      const warning = getEmailWarningMessage(emailResult);
+      showToast(
+        `${req.firstName} ${req.lastName} est ajouté au planning.${warning}`,
+        warning ? 'warning' : 'success',
+        'booking-request',
+        warning ? 'Pré-réservation acceptée, email à vérifier' : 'Pré-réservation acceptée'
+      );
     } catch (error) {
       console.error(error);
       showToast(getErrorMessage(error, 'Erreur lors du traitement.'), 'error');
@@ -475,34 +468,41 @@ export function ManagerScheduleView({
   const handleRejectBookingRequest = async (req: BookingRequest) => {
     setProcessingId(req.id);
     try {
+      const processedAt = new Date().toISOString();
       await rejectBookingRequestInTransaction(db, {
         requestId: req.id,
-        centerId
-      });
-
-      logCrmAction(userId, userName, 'center_manager', {
-        action: 'REJECT_BOOKING_REQUEST',
-        details: `Rejet de la demande de réservation en ligne pour : ${req.firstName} ${req.lastName} (Date : ${req.bookingDate} à ${req.bookingTime})`,
-        targetId: req.id,
-        targetType: 'booking_request',
         centerId,
-        centerName: currentCenter?.name
+        processedAt,
+        audit: {
+          userId,
+          userName,
+          userRole: 'center_manager',
+          centerName: currentCenter?.name,
+        },
       });
 
-      notifyCrmEmailBestEffort({
+      const emailResult = await notifyCrmEmail({
         type: 'booking_request_rejected',
         centerId,
         requestId: req.id,
-      });
+      }).catch(error => ({
+        sent: false,
+        error: getErrorMessage(error, 'Notification email impossible.'),
+      }));
 
-      showToast(`La demande de ${req.firstName} ${req.lastName} est refusée et la place est libérée.`, 'success', 'cancelled', 'Pré-réservation refusée');
+      const warning = getEmailWarningMessage(emailResult);
+      showToast(
+        `La demande de ${req.firstName} ${req.lastName} est refusée et la place est libérée.${warning}`,
+        warning ? 'warning' : 'success',
+        'cancelled',
+        warning ? 'Pré-réservation refusée, email à vérifier' : 'Pré-réservation refusée'
+      );
     } catch (error) {
       showToast(getErrorMessage(error, 'Erreur lors du traitement.'), 'error');
     } finally {
       setProcessingId(null);
     }
   };
-
   const pendingRequests = bookingRequests.filter(r => r.status === 'pending');
 
   return (

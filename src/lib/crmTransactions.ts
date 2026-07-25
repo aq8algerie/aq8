@@ -1,4 +1,5 @@
 import {
+  collection,
   doc,
   DocumentReference,
   Firestore,
@@ -52,6 +53,23 @@ export type AppointmentMutationOptions = {
   silent?: boolean;
 };
 
+type CrmTransactionAuditContext = {
+  userId: string;
+  userName: string;
+  userRole: 'super_admin' | 'center_manager';
+  centerName?: string | null;
+};
+
+type CrmTransactionAuditInput = {
+  action: string;
+  details: string;
+  targetId?: string | null;
+  targetType?: string | null;
+  centerId?: string | null;
+  centerName?: string | null;
+  timestamp: string;
+};
+
 function assertString(value: unknown, message: string): asserts value is string {
   if (typeof value !== 'string' || value.trim().length === 0) {
     throw new Error(message);
@@ -66,6 +84,44 @@ function assertPositiveNumber(value: unknown, message: string): asserts value is
 
 function shouldHoldAppointmentSlot(status: Appointment['status']): boolean {
   return status !== 'cancelled';
+}
+
+function assertFullHourDateTime(dateTime: string): void {
+  const [, time = ''] = dateTime.split('T');
+  if (!/^\d{2}:00$/.test(time)) {
+    throw new Error("Les réservations doivent être positionnées sur une heure pleine.");
+  }
+}
+
+function isBookingRequestServiceType(value: string): value is BookingServiceType {
+  return value === 'aq8' || value === 'wonder';
+}
+
+function writeCrmAuditLog(
+  transaction: Transaction,
+  db: Firestore,
+  context: CrmTransactionAuditContext,
+  input: CrmTransactionAuditInput,
+): void {
+  assertString(context.userId, 'Utilisateur CRM invalide pour le journal d\'audit.');
+  assertString(context.userRole, 'Rôle CRM invalide pour le journal d\'audit.');
+  assertString(input.action, 'Action CRM invalide pour le journal d\'audit.');
+  assertString(input.details, 'Détails CRM invalides pour le journal d\'audit.');
+  assertString(input.timestamp, 'Horodatage CRM invalide pour le journal d\'audit.');
+
+  const auditRef = doc(collection(db, 'audit_logs'));
+  transaction.set(auditRef, {
+    timestamp: input.timestamp,
+    userId: context.userId,
+    userName: context.userName || context.userId,
+    role: context.userRole,
+    action: input.action,
+    details: input.details,
+    targetId: input.targetId || null,
+    targetType: input.targetType || null,
+    centerId: input.centerId || null,
+    centerName: input.centerName || context.centerName || null,
+  });
 }
 
 export function getAppointmentSlotId(dateTime: string): string {
@@ -271,6 +327,8 @@ async function normalizeSlotFromSnapshot(
 }
 
 function assertSlotCanAccept(slot: AppointmentSlot, serviceType: BookingServiceType, appointmentId: string, center?: CenterBookingConfig): void {
+  assertFullHourDateTime(slot.dateTime);
+
   if (!isCenterOpenForDateTime(slot.centerId, slot.dateTime, center)) {
     throw new Error("Ce créneau est en dehors des horaires d'ouverture du centre.");
   }
@@ -639,6 +697,8 @@ export async function acceptBookingRequestInTransaction(
     serviceId: string;
     duration: number;
     createdAt: string;
+    processedAt: string;
+    audit: CrmTransactionAuditContext;
   }
 ): Promise<{ clientId: string; appointmentId: string }> {
   return runTransaction(db, async transaction => {
@@ -647,6 +707,7 @@ export async function acceptBookingRequestInTransaction(
     assertString(params.newClientId, 'Identifiant client invalide.');
     assertString(params.appointmentId, 'Identifiant de réservation invalide.');
     assertString(params.serviceId, 'Prestation invalide.');
+    assertString(params.processedAt, 'Date de validation invalide.');
     assertPositiveNumber(params.duration, 'Durée de réservation invalide.');
 
     const requestRef = doc(db, 'booking_requests', params.requestId);
@@ -657,14 +718,23 @@ export async function acceptBookingRequestInTransaction(
 
     const bookingRequest = requestSnapshot.data() as BookingRequest;
     if (bookingRequest.centerId !== params.centerId) {
-      throw new Error("Cette demande n'appartient pas a votre centre.");
+      throw new Error("Cette demande n'appartient pas à votre centre.");
     }
     if (bookingRequest.status !== 'pending') {
       throw new Error('Cette demande a déjà été traitée.');
     }
+    assertString(bookingRequest.bookingDate, 'Date de réservation invalide.');
+    assertString(bookingRequest.bookingTime, 'Heure de réservation invalide.');
 
     const dateTime = `${bookingRequest.bookingDate}T${bookingRequest.bookingTime}`;
+    assertFullHourDateTime(dateTime);
+
     const serviceType = await readServiceType(transaction, db, params.serviceId);
+    const requestedServiceType = String(bookingRequest.service || '').toLowerCase();
+    if (!isBookingRequestServiceType(requestedServiceType) || requestedServiceType !== serviceType) {
+      throw new Error('La prestation CRM ne correspond pas à la demande client.');
+    }
+
     const centerConfig = await readCenterConfig(transaction, db, params.centerId);
     let resolvedClientId = '';
 
@@ -674,7 +744,7 @@ export async function acceptBookingRequestInTransaction(
       if (existingClientSnapshot.exists()) {
         const existingClient = existingClientSnapshot.data() as Client;
         if (existingClient.centerId !== params.centerId) {
-          throw new Error("Le client existant n'appartient pas a votre centre.");
+          throw new Error("Le client existant n'appartient pas à votre centre.");
         }
         if (existingClient.phone !== bookingRequest.phone) {
           throw new Error('Le client existant ne correspond pas au téléphone de la demande.');
@@ -701,6 +771,7 @@ export async function acceptBookingRequestInTransaction(
         email: bookingRequest.email || '',
         centerId: params.centerId,
         createdAt: params.createdAt,
+        status: 'active',
         gender: 'H',
         sportGoals: []
       };
@@ -711,7 +782,7 @@ export async function acceptBookingRequestInTransaction(
     const slotRef = getAppointmentSlotRef(db, params.centerId, dateTime);
     const appointmentSnapshot = await transaction.get(appointmentRef);
     const slotSnapshot = await transaction.get(slotRef);
-    const slot = await normalizeSlotFromSnapshot(transaction, db, slotSnapshot, params.centerId, dateTime, params.createdAt, centerConfig);
+    const slot = await normalizeSlotFromSnapshot(transaction, db, slotSnapshot, params.centerId, dateTime, params.processedAt, centerConfig);
 
     if (appointmentSnapshot.exists()) {
       throw new Error('Une réservation existe déjà pour cette demande.');
@@ -733,10 +804,13 @@ export async function acceptBookingRequestInTransaction(
       appointmentId: params.appointmentId,
       serviceId: params.serviceId,
       serviceType,
-      createdAt: params.createdAt,
+      createdAt: params.processedAt,
       source: 'booking_request',
       requestId: params.requestId,
     }), centerConfig);
+
+    const processedByUserName = params.audit.userName || params.audit.userId;
+    const clientLabel = `${bookingRequest.firstName || ''} ${bookingRequest.lastName || ''}`.trim() || bookingRequest.phone || params.requestId;
 
     if (newClientRef && newClient) {
       transaction.set(newClientRef, newClient);
@@ -744,7 +818,22 @@ export async function acceptBookingRequestInTransaction(
     transaction.set(appointmentRef, appointment);
     writeSlotOrDelete(transaction, db, slotRef, nextSlot);
     transaction.update(requestRef, {
-      status: 'accepted'
+      status: 'accepted',
+      clientId: resolvedClientId,
+      appointmentId: params.appointmentId,
+      processedAt: params.processedAt,
+      processedByUserId: params.audit.userId,
+      processedByUserName,
+      acceptedAt: params.processedAt,
+    });
+    writeCrmAuditLog(transaction, db, params.audit, {
+      action: 'ACCEPT_BOOKING_REQUEST',
+      details: `Approbation de la demande de réservation en ligne pour : ${clientLabel} (Date : ${bookingRequest.bookingDate} à ${bookingRequest.bookingTime})`,
+      targetId: params.requestId,
+      targetType: 'booking_request',
+      centerId: params.centerId,
+      centerName: params.audit.centerName || centerConfig.name,
+      timestamp: params.processedAt,
     });
 
     return {
@@ -759,11 +848,14 @@ export async function rejectBookingRequestInTransaction(
   params: {
     requestId: string;
     centerId: string;
+    processedAt: string;
+    audit: CrmTransactionAuditContext;
   }
 ): Promise<void> {
   await runTransaction(db, async transaction => {
     assertString(params.requestId, 'Demande invalide.');
     assertString(params.centerId, 'Centre invalide.');
+    assertString(params.processedAt, 'Date de refus invalide.');
 
     const requestRef = doc(db, 'booking_requests', params.requestId);
     const requestSnapshot = await transaction.get(requestRef);
@@ -773,7 +865,7 @@ export async function rejectBookingRequestInTransaction(
 
     const bookingRequest = requestSnapshot.data() as BookingRequest;
     if (bookingRequest.centerId !== params.centerId) {
-      throw new Error("Cette demande n'appartient pas a votre centre.");
+      throw new Error("Cette demande n'appartient pas à votre centre.");
     }
     if (bookingRequest.status !== 'pending') {
       throw new Error('Cette demande a déjà été traitée.');
@@ -783,16 +875,30 @@ export async function rejectBookingRequestInTransaction(
     const centerConfig = await readCenterConfig(transaction, db, params.centerId);
     const slotRef = getAppointmentSlotRef(db, params.centerId, dateTime);
     const slotSnapshot = await transaction.get(slotRef);
-    const slot = await normalizeSlotFromSnapshot(transaction, db, slotSnapshot, params.centerId, dateTime, new Date().toISOString(), centerConfig);
+    const slot = await normalizeSlotFromSnapshot(transaction, db, slotSnapshot, params.centerId, dateTime, params.processedAt, centerConfig);
     const nextSlot = removeBookingRequestHold(slot, params.requestId, centerConfig);
+    const processedByUserName = params.audit.userName || params.audit.userId;
+    const clientLabel = `${bookingRequest.firstName || ''} ${bookingRequest.lastName || ''}`.trim() || bookingRequest.phone || params.requestId;
 
     writeSlotOrDelete(transaction, db, slotRef, nextSlot);
     transaction.update(requestRef, {
-      status: 'rejected'
+      status: 'rejected',
+      processedAt: params.processedAt,
+      processedByUserId: params.audit.userId,
+      processedByUserName,
+      rejectedAt: params.processedAt,
+    });
+    writeCrmAuditLog(transaction, db, params.audit, {
+      action: 'REJECT_BOOKING_REQUEST',
+      details: `Rejet de la demande de réservation en ligne pour : ${clientLabel} (Date : ${bookingRequest.bookingDate} à ${bookingRequest.bookingTime})`,
+      targetId: params.requestId,
+      targetType: 'booking_request',
+      centerId: params.centerId,
+      centerName: params.audit.centerName || centerConfig.name,
+      timestamp: params.processedAt,
     });
   });
 }
-
 export async function assignPackageToClient(
   db: Firestore,
   params: {

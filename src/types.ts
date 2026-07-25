@@ -154,4 +154,11 @@ export interface BookingRequest {
   bookingTime: string;
   status: BookingRequestStatus;
   createdAt: string;
+  clientId?: string;
+  appointmentId?: string;
+  processedAt?: string;
+  processedByUserId?: string;
+  processedByUserName?: string;
+  acceptedAt?: string;
+  rejectedAt?: string;
 }

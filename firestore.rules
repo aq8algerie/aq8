@@ -119,6 +119,41 @@ service cloud.firestore {
         && request.resource.data.createdAt.size() <= 40;
     }
 
+    function isNullableString(value, maxSize) {
+      return value == null || (value is string && value.size() <= maxSize);
+    }
+
+    function isAuditLogCreate() {
+      return isActiveCrmUser()
+        && request.resource.data.keys().hasOnly([
+          'timestamp', 'userId', 'userName', 'role', 'action', 'details',
+          'targetId', 'targetType', 'centerId', 'centerName'
+        ])
+        && request.resource.data.keys().hasAll([
+          'timestamp', 'userId', 'userName', 'role', 'action', 'details',
+          'targetId', 'targetType', 'centerId', 'centerName'
+        ])
+        && request.resource.data.timestamp is string
+        && request.resource.data.timestamp.size() <= 40
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.userName is string
+        && request.resource.data.userName.size() > 0
+        && request.resource.data.userName.size() <= 160
+        && request.resource.data.role == userProfile().role
+        && request.resource.data.role in ['super_admin', 'center_manager']
+        && request.resource.data.action is string
+        && request.resource.data.action.size() > 0
+        && request.resource.data.action.size() <= 80
+        && request.resource.data.details is string
+        && request.resource.data.details.size() > 0
+        && request.resource.data.details.size() <= 2000
+        && isNullableString(request.resource.data.targetId, 160)
+        && isNullableString(request.resource.data.targetType, 80)
+        && isNullableString(request.resource.data.centerId, 80)
+        && isNullableString(request.resource.data.centerName, 160)
+        && (userProfile().role == 'super_admin' || request.resource.data.centerId == userProfile().centerId);
+    }
+
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isSuperAdmin());
       allow create: if signedIn() && request.auth.uid == userId;
@@ -218,6 +253,12 @@ service cloud.firestore {
     match /contact_messages/{messageId} {
       allow create: if isPublicContactMessageCreate();
       allow read, update, delete: if isSuperAdmin();
+    }
+
+    match /audit_logs/{logId} {
+      allow read: if isSuperAdmin();
+      allow create: if isAuditLogCreate();
+      allow update, delete: if false;
     }
 
     match /{document=**} {

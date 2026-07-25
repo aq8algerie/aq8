@@ -1,11 +1,22 @@
 import { auth } from './firebase';
 import type { CrmEmailNotificationPayload } from './serverEmailNotifications';
 
-async function postCrmEmailNotification(payload: CrmEmailNotificationPayload): Promise<void> {
+export type CrmEmailNotificationResult = {
+  sent: boolean;
+  skipped?: string;
+  error?: string;
+};
+
+type CrmEmailNotificationResponse = {
+  ok: boolean;
+  result?: CrmEmailNotificationResult;
+  error?: string;
+};
+
+export async function notifyCrmEmail(payload: CrmEmailNotificationPayload): Promise<CrmEmailNotificationResult> {
   const user = auth.currentUser;
   if (!user) {
-    console.info('[email] Notification ignoree: utilisateur CRM non authentifie.');
-    return;
+    throw new Error('Utilisateur CRM non authentifié pour envoyer la notification email.');
   }
 
   const token = await user.getIdToken();
@@ -18,14 +29,16 @@ async function postCrmEmailNotification(payload: CrmEmailNotificationPayload): P
     body: JSON.stringify(payload),
   });
 
-  if (!response.ok) {
-    const details = await response.text().catch(() => '');
-    throw new Error(details || `Notification email refusee (${response.status}).`);
+  const body = await response.json().catch(() => null) as CrmEmailNotificationResponse | null;
+  if (!response.ok || body?.ok === false) {
+    throw new Error(body?.error || `Notification email refusée (${response.status}).`);
   }
+
+  return body?.result || { sent: true };
 }
 
 export function notifyCrmEmailBestEffort(payload: CrmEmailNotificationPayload): void {
-  void postCrmEmailNotification(payload).catch(error => {
-    console.warn('[email] Notification CRM non envoyee:', error);
+  void notifyCrmEmail(payload).catch(error => {
+    console.warn('[email] Notification CRM non envoyée:', error);
   });
 }
