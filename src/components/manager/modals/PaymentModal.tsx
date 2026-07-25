@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Client, Package } from '../../../types';
 
 interface PaymentModalProps {
@@ -11,13 +11,14 @@ interface PaymentModalProps {
   packages: Package[];
   onClose: () => void;
   onSubmit: (data: {
+    paymentId: string;
     clientId: string;
     packageId: string;
     amount: number;
     method: 'cash' | 'card' | 'ccp' | 'cheque';
     receiptNumber: string;
     autoActivatePackage: boolean;
-  }) => void;
+  }) => Promise<{ ok: boolean }>;
   initialClientId?: string;
 }
 
@@ -34,6 +35,9 @@ export function PaymentModal({
   const [method, setMethod] = useState<'cash' | 'card' | 'ccp' | 'cheque'>('cash');
   const [receiptNumber, setReceiptNumber] = useState('');
   const [autoActivatePackage, setAutoActivatePackage] = useState(true);
+  const paymentIdRef = useRef(`pay-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
+  const submittingRef = useRef(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Sync package price when packageId changes
   useEffect(() => {
@@ -43,26 +47,39 @@ export function PaymentModal({
     }
   }, [packageId, packages]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clientId || !packageId || amount <= 0) return;
-    
-    onSubmit({
-      clientId,
-      packageId,
-      amount,
-      method,
-      receiptNumber: receiptNumber.trim(),
-      autoActivatePackage
-    });
-  };
+    if (!clientId || !packageId || amount <= 0 || submittingRef.current) return;
 
+    submittingRef.current = true;
+    setIsSubmitting(true);
+
+    try {
+      const result = await onSubmit({
+        paymentId: paymentIdRef.current,
+        clientId,
+        packageId,
+        amount,
+        method,
+        receiptNumber: receiptNumber.trim(),
+        autoActivatePackage,
+      });
+
+      if (!result.ok) {
+        submittingRef.current = false;
+        setIsSubmitting(false);
+      }
+    } catch {
+      submittingRef.current = false;
+      setIsSubmitting(false);
+    }
+  };
   return (
     <div id="modal-payment" className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-slate-200">
         <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
           <h4 className="font-bold text-slate-800 text-sm font-display">Loguer un Encaissement Manuel</h4>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer">✕</button>
+          <button type="button" onClick={onClose} disabled={isSubmitting} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">✕</button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs">
           <div className="space-y-1">
@@ -150,15 +167,17 @@ export function PaymentModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-semibold cursor-pointer"
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-semibold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
             >
               Annuler
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl cursor-pointer"
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl cursor-pointer disabled:cursor-wait disabled:opacity-70"
             >
-              Enregistrer le paiement
+              {isSubmitting ? 'Enregistrement sécurisé...' : 'Enregistrer le paiement'}
             </button>
           </div>
         </form>

@@ -785,63 +785,75 @@ export function CenterManagerViews({
   };
 
   // 5. Package assignments
-  const handlePackageAssignSubmit = async (clientId: string, packageId: string) => {
-    const client = centerClients.find(c => c.id === clientId);
+  const handlePackageAssignSubmit = async (data: {
+    clientPackageId: string;
+    clientId: string;
+    packageId: string;
+  }): Promise<CrmActionResult> => {
+    const client = centerClients.find(candidate => candidate.id === data.clientId);
     if (!client) {
-      triggerToast('Client introuvable dans ce centre.', 'error');
-      return;
+      const message = 'Client introuvable dans ce centre.';
+      triggerToast(message, 'error');
+      return { ok: false, error: message };
     }
 
     try {
-      const clientPackageId = `clipkg-${Date.now()}`;
-      await assignPackageToClient(db, {
-        clientPackageId,
+      const result = await assignPackageToClient(db, {
+        clientPackageId: data.clientPackageId,
         centerId,
-        clientId,
-        packageId,
-        purchaseDate: getTodayDateString()
-      });
-
-      const pkg = packages.find(p => p.id === packageId);
-      logCrmAction(userId, userName, 'center_manager', {
-        action: 'ASSIGN_PACKAGE',
-        details: `Affectation du forfait ${pkg?.name || packageId} au client : ${client ? `${client.firstName} ${client.lastName}` : clientId}`,
-        targetId: clientPackageId,
-        targetType: 'client_package',
-        centerId,
-        centerName: currentCenter?.name
+        clientId: data.clientId,
+        packageId: data.packageId,
+        purchaseDate: getTodayDateString(),
+        audit: {
+          userId,
+          userName,
+          userRole: 'center_manager',
+          centerName: currentCenter?.name,
+        },
       });
 
       notifyCrmEmailBestEffort({
         type: 'package_assigned',
         centerId,
-        clientPackageId,
+        clientPackageId: result.clientPackageId,
       });
 
       setShowPackageAssignModal(false);
-      triggerToast('Forfait affecté avec succès au client !');
+      triggerToast(
+        result.created
+          ? 'Forfait activé et opération auditée avec succès.'
+          : 'Ce forfait était déjà activé : aucun doublon créé.',
+        result.created ? 'success' : 'warning',
+        'package',
+        result.created ? 'Forfait activé' : 'Activation déjà traitée'
+      );
+      return { ok: true };
     } catch (error) {
-      triggerToast(getErrorMessage(error, "Erreur lors de l'affectation du forfait."), 'error');
+      const message = getErrorMessage(error, "Erreur lors de l'affectation du forfait.");
+      triggerToast(message, 'error');
+      return { ok: false, error: message };
     }
   };
-
   // 6. Payment logging
   const handlePaymentSubmit = async (payData: {
+    paymentId: string;
     clientId: string;
     packageId: string;
     amount: number;
     method: 'cash' | 'card' | 'ccp' | 'cheque';
     receiptNumber: string;
     autoActivatePackage: boolean;
-  }) => {
-    const now = Date.now();
-    const paymentId = `pay-${now}`;
-    const clientPackageId = payData.autoActivatePackage ? `clipkg-${now}` : undefined;
-    const generatedReceipt = payData.receiptNumber || `REC-${now.toString().slice(-6)}`;
+  }): Promise<CrmActionResult> => {
+    const operationSuffix = payData.paymentId.replace(/^pay-/, '');
+    const clientPackageId = payData.autoActivatePackage
+      ? `clipkg-${operationSuffix}`
+      : undefined;
+    const receiptSuffix = operationSuffix.replace(/[^a-zA-Z0-9]/g, '').slice(-8).toUpperCase();
+    const generatedReceipt = payData.receiptNumber || `REC-${receiptSuffix}`;
 
     try {
-      await recordPaymentWithOptionalPackage(db, {
-        paymentId,
+      const result = await recordPaymentWithOptionalPackage(db, {
+        paymentId: payData.paymentId,
         clientPackageId,
         centerId,
         clientId: payData.clientId,
@@ -850,34 +862,38 @@ export function CenterManagerViews({
         method: payData.method,
         receiptNumber: generatedReceipt,
         date: getTodayDateString(),
-        autoActivatePackage: payData.autoActivatePackage
-      });
-
-      const cl = clients.find(c => c.id === payData.clientId);
-      const pkg = packages.find(p => p.id === payData.packageId);
-      logCrmAction(userId, userName, 'center_manager', {
-        action: 'RECORD_PAYMENT',
-        details: `Enregistrement d'un paiement de ${payData.amount} DZD par ${payData.method} pour le client : ${cl ? `${cl.firstName} ${cl.lastName}` : payData.clientId}${pkg ? ` (Achat forfait : ${pkg.name})` : ''}`,
-        targetId: paymentId,
-        targetType: 'payment',
-        centerId,
-        centerName: currentCenter?.name
+        autoActivatePackage: payData.autoActivatePackage,
+        audit: {
+          userId,
+          userName,
+          userRole: 'center_manager',
+          centerName: currentCenter?.name,
+        },
       });
 
       notifyCrmEmailBestEffort({
         type: 'payment_recorded',
         centerId,
-        paymentId,
-        ...(clientPackageId ? { clientPackageId } : {}),
+        paymentId: result.paymentId,
+        ...(result.clientPackageId ? { clientPackageId: result.clientPackageId } : {}),
       });
 
       setShowPaymentModal(false);
-      triggerToast(`Paiement de ${payData.amount.toLocaleString()} DZD enregistré avec succès !`);
+      triggerToast(
+        result.created
+          ? `Paiement de ${payData.amount.toLocaleString()} DZD enregistré${result.packageActivated ? ' et forfait activé' : ''}.`
+          : 'Ce paiement était déjà enregistré : aucune opération supplémentaire créée.',
+        result.created ? 'success' : 'warning',
+        result.packageActivated ? 'package' : 'payment',
+        result.created ? 'Encaissement sécurisé' : 'Paiement déjà traité'
+      );
+      return { ok: true };
     } catch (error) {
-      triggerToast(getErrorMessage(error, "Erreur lors de l'enregistrement du paiement."), 'error');
+      const message = getErrorMessage(error, "Erreur lors de l'enregistrement du paiement.");
+      triggerToast(message, 'error');
+      return { ok: false, error: message };
     }
   };
-
   // 7. Measurement logging
   const handleMeasurementSubmit = (measData: {
     clientId: string;

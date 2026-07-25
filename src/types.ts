@@ -110,6 +110,10 @@ export interface ClientPackage {
   updatedAt?: string;
   lastSessionAt?: string;
   lastCompletedAppointmentId?: string;
+  activatedAt?: string;
+  activatedByUserId?: string;
+  activatedByUserName?: string;
+  sourcePaymentId?: string;
 }
 
 export interface Payment {
@@ -121,6 +125,10 @@ export interface Payment {
   date: string;
   method: 'cash' | 'card' | 'ccp' | 'cheque';
   receiptNumber?: string;
+  clientPackageId?: string;
+  createdAt?: string;
+  recordedByUserId?: string;
+  recordedByUserName?: string;
 }
 
 export interface Measurement {

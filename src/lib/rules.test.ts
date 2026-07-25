@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { Appointment, Client, ClientPackage, Package, Service } from '../types';
+import { Appointment, Center, Client, ClientPackage, Package, Payment, Service } from '../types';
 import { isBeforePreviousDayCutoff, isFullHour, validateAppointment } from './appointmentRules';
 import { getBookingHoursForDate, getCenterBookingCapacity } from './bookingCapacityRules';
 import {
@@ -9,6 +9,12 @@ import {
   validateDeduction,
   validateSessionCompletion,
 } from './packageRules';
+import {
+  isSameClientPackageActivation,
+  isSamePaymentOperation,
+  validatePackageActivation,
+  validatePaymentRegistration,
+} from './paymentRules';
 import { getBookingMinimumDate, validatePublicBookingRequest, validatePublicContactMessage } from './publicFormValidation';
 
 function test(name: string, run: () => void) {
@@ -53,6 +59,21 @@ const packageDefinitions: Package[] = [
     description: 'Forfait Wonder',
   },
 ];
+
+const paymentCenter: Center = {
+  id: 'center-1',
+  name: 'AQ8 Test',
+  city: 'Alger',
+  address: 'Adresse test',
+  phone: '0550000000',
+  email: 'center@example.com',
+  imageUrl: '',
+  services: ['aq8', 'wonder'],
+  schedule: '08:00 - 18:00',
+  description: 'Centre de test',
+  status: 'active',
+  customActivePackages: ['pkg-1', 'pkg-wonder'],
+};
 
 const existingAppointments: Appointment[] = [
   {
@@ -366,6 +387,101 @@ test('session completion blocks expired packages and suspended clients', () => {
 
   assert.equal(expiredPackage.valid, false);
   assert.equal(suspendedClient.valid, false);
+});
+
+test('payment registration accepts a valid payment and package activation', () => {
+  const result = validatePaymentRegistration({
+    center: paymentCenter,
+    client,
+    packageDefinition: packageDefinitions[0],
+    centerId: 'center-1',
+    amount: 15000,
+    method: 'cash',
+    receiptNumber: 'REC-TEST-001',
+    autoActivatePackage: true,
+  });
+
+  assert.equal(result.valid, true);
+});
+
+test('payment registration blocks invalid amount, suspended clients and inactive packages', () => {
+  const invalidAmount = validatePaymentRegistration({
+    center: paymentCenter,
+    client,
+    packageDefinition: packageDefinitions[0],
+    centerId: 'center-1',
+    amount: 0,
+    method: 'cash',
+    receiptNumber: 'REC-TEST-002',
+    autoActivatePackage: true,
+  });
+  const suspendedClient = validatePaymentRegistration({
+    center: paymentCenter,
+    client: { ...client, status: 'suspended' },
+    packageDefinition: packageDefinitions[0],
+    centerId: 'center-1',
+    amount: 15000,
+    method: 'cash',
+    receiptNumber: 'REC-TEST-003',
+    autoActivatePackage: true,
+  });
+  const inactivePackage = validatePaymentRegistration({
+    center: { ...paymentCenter, customActivePackages: [] },
+    client,
+    packageDefinition: packageDefinitions[0],
+    centerId: 'center-1',
+    amount: 15000,
+    method: 'cash',
+    receiptNumber: 'REC-TEST-004',
+    autoActivatePackage: true,
+  });
+
+  assert.equal(invalidAmount.valid, false);
+  assert.equal(suspendedClient.valid, false);
+  assert.equal(inactivePackage.valid, false);
+});
+
+test('payment idempotency accepts only an identical repeated operation', () => {
+  const payment: Payment = {
+    id: 'pay-operation-1',
+    clientId: client.id,
+    packageId: packageDefinitions[0].id,
+    centerId: paymentCenter.id,
+    amount: 15000,
+    date: '2026-07-25',
+    method: 'cash',
+    receiptNumber: 'REC-TEST-005',
+    clientPackageId: 'clipkg-operation-1',
+  };
+
+  assert.equal(isSamePaymentOperation(payment, { ...payment }), true);
+  assert.equal(isSamePaymentOperation(payment, { ...payment, amount: 14000 }), false);
+  assert.equal(isSamePaymentOperation(payment, { ...payment, date: '2026-07-26' }), false);
+  assert.equal(isSamePaymentOperation(payment, { ...payment, clientPackageId: undefined }), false);
+});
+
+test('direct package activation validates scope and remains idempotent', () => {
+  const validation = validatePackageActivation({
+    center: paymentCenter,
+    client,
+    packageDefinition: packageDefinitions[0],
+    centerId: paymentCenter.id,
+  });
+  const activation: ClientPackage = {
+    id: 'clipkg-operation-2',
+    clientId: client.id,
+    packageId: packageDefinitions[0].id,
+    centerId: paymentCenter.id,
+    sessionsRemaining: 5,
+    totalSessions: 5,
+    purchaseDate: '2026-07-25',
+    status: 'active',
+  };
+
+  assert.equal(validation.valid, true);
+  assert.equal(isSameClientPackageActivation(activation, { ...activation }), true);
+  assert.equal(isSameClientPackageActivation(activation, { ...activation, clientId: 'client-2' }), false);
+  assert.equal(isSameClientPackageActivation(activation, { ...activation, sourcePaymentId: 'pay-other' }), false);
 });
 
 

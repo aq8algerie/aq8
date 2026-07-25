@@ -8,6 +8,7 @@ import {
 } from 'firebase/firestore';
 import { Appointment, BookingRequest, Center, Client, ClientPackage, Package, Payment, Service } from '../types';
 import { validateSessionCompletion } from './packageRules';
+import { isSameClientPackageActivation, isSamePaymentOperation, validatePackageActivation, validatePaymentRegistration } from './paymentRules';
 import {
   BookingServiceType,
   CenterBookingConfig,
@@ -954,32 +955,64 @@ export async function assignPackageToClient(
     clientId: string;
     packageId: string;
     purchaseDate: string;
+    audit: CrmTransactionAuditContext;
   }
-): Promise<void> {
-  await runTransaction(db, async transaction => {
+): Promise<{ clientPackageId: string; created: boolean }> {
+  const activatedAt = new Date().toISOString();
+
+  return runTransaction(db, async transaction => {
+    assertString(params.clientPackageId, 'Identifiant de forfait client invalide.');
+    assertString(params.centerId, 'Centre invalide.');
     assertString(params.clientId, 'Client invalide.');
     assertString(params.packageId, 'Forfait invalide.');
+    assertString(params.purchaseDate, "Date d'activation invalide.");
+
+    const clientPackageRef = doc(db, 'client_packages', params.clientPackageId);
+    const existingClientPackageSnapshot = await transaction.get(clientPackageRef);
+    if (existingClientPackageSnapshot.exists()) {
+      const existingClientPackage = {
+        ...existingClientPackageSnapshot.data(),
+        id: existingClientPackageSnapshot.id,
+      } as ClientPackage;
+      const expectedClientPackage = {
+        id: params.clientPackageId,
+        clientId: params.clientId,
+        packageId: params.packageId,
+        centerId: params.centerId,
+        purchaseDate: params.purchaseDate,
+        sessionsRemaining: existingClientPackage.sessionsRemaining,
+        totalSessions: existingClientPackage.totalSessions,
+        status: existingClientPackage.status,
+      } as ClientPackage;
+
+      if (!isSameClientPackageActivation(existingClientPackage, expectedClientPackage)) {
+        throw new Error('Cet identifiant correspond déjà à une autre activation de forfait.');
+      }
+
+      return { clientPackageId: params.clientPackageId, created: false };
+    }
 
     const clientRef = doc(db, 'clients', params.clientId);
     const packageRef = doc(db, 'packages', params.packageId);
-    const clientPackageRef = doc(db, 'client_packages', params.clientPackageId);
-
     const clientSnapshot = await transaction.get(clientRef);
-    if (!clientSnapshot.exists()) {
-      throw new Error('Client introuvable.');
-    }
-    const client = clientSnapshot.data() as Client;
-    if (client.centerId !== params.centerId) {
-      throw new Error("Ce client n'appartient pas a votre centre.");
-    }
-
     const packageSnapshot = await transaction.get(packageRef);
-    if (!packageSnapshot.exists()) {
-      throw new Error('Forfait introuvable.');
-    }
-    const packageData = packageSnapshot.data() as Package;
-    if (packageData.sessionsCount <= 0) {
-      throw new Error('Forfait sans sessions disponibles.');
+    const center = await readCenterConfig(transaction, db, params.centerId);
+
+    const client = clientSnapshot.exists()
+      ? { ...clientSnapshot.data(), id: clientSnapshot.id } as Client
+      : undefined;
+    const packageDefinition = packageSnapshot.exists()
+      ? { ...packageSnapshot.data(), id: packageSnapshot.id } as Package
+      : undefined;
+
+    const validation = validatePackageActivation({
+      center,
+      client,
+      packageDefinition,
+      centerId: params.centerId,
+    });
+    if (validation.valid === false) {
+      throw new Error(validation.error);
     }
 
     const clientPackage: ClientPackage = {
@@ -987,16 +1020,30 @@ export async function assignPackageToClient(
       clientId: params.clientId,
       packageId: params.packageId,
       centerId: params.centerId,
-      sessionsRemaining: packageData.sessionsCount,
-      totalSessions: packageData.sessionsCount,
+      sessionsRemaining: packageDefinition.sessionsCount,
+      totalSessions: packageDefinition.sessionsCount,
       purchaseDate: params.purchaseDate,
-      status: 'active'
+      status: 'active',
+      activatedAt,
+      activatedByUserId: params.audit.userId,
+      activatedByUserName: params.audit.userName || params.audit.userId,
     };
-
     transaction.set(clientPackageRef, clientPackage);
+
+    const clientName = `${client.firstName} ${client.lastName}`.trim() || params.clientId;
+    writeCrmAuditLog(transaction, db, params.audit, {
+      action: 'ASSIGN_PACKAGE',
+      details: `Activation du forfait ${packageDefinition.name} pour ${clientName}, avec ${packageDefinition.sessionsCount} séance(s).`,
+      targetId: params.clientPackageId,
+      targetType: 'client_package',
+      centerId: params.centerId,
+      centerName: params.audit.centerName,
+      timestamp: activatedAt,
+    });
+
+    return { clientPackageId: params.clientPackageId, created: true };
   });
 }
-
 export async function recordPaymentWithOptionalPackage(
   db: Firestore,
   params: {
@@ -1007,70 +1054,156 @@ export async function recordPaymentWithOptionalPackage(
     packageId: string;
     amount: number;
     method: PaymentMethod;
-    receiptNumber?: string;
+    receiptNumber: string;
     date: string;
     autoActivatePackage: boolean;
+    audit: CrmTransactionAuditContext;
   }
-): Promise<void> {
-  await runTransaction(db, async transaction => {
+): Promise<{
+  paymentId: string;
+  clientPackageId?: string;
+  packageActivated: boolean;
+  created: boolean;
+}> {
+  const recordedAt = new Date().toISOString();
+
+  return runTransaction(db, async transaction => {
+    assertString(params.paymentId, 'Identifiant de paiement invalide.');
+    assertString(params.centerId, 'Centre invalide.');
     assertString(params.clientId, 'Client invalide.');
     assertString(params.packageId, 'Forfait invalide.');
-    assertPositiveNumber(params.amount, 'Montant invalide.');
+    assertString(params.receiptNumber, 'Référence de reçu invalide.');
+    assertString(params.date, 'Date de paiement invalide.');
 
-    const clientRef = doc(db, 'clients', params.clientId);
-    const packageRef = doc(db, 'packages', params.packageId);
+    if (params.autoActivatePackage) {
+      assertString(params.clientPackageId, 'Identifiant de forfait client invalide.');
+    } else if (params.clientPackageId) {
+      throw new Error("Un forfait client ne peut pas être lié sans activation.");
+    }
+
     const paymentRef = doc(db, 'payments', params.paymentId);
-
-    const clientSnapshot = await transaction.get(clientRef);
-    if (!clientSnapshot.exists()) {
-      throw new Error('Client introuvable.');
-    }
-    const client = clientSnapshot.data() as Client;
-    if (client.centerId !== params.centerId) {
-      throw new Error("Ce client n'appartient pas a votre centre.");
-    }
-
-    const packageSnapshot = await transaction.get(packageRef);
-    if (!packageSnapshot.exists()) {
-      throw new Error('Forfait introuvable.');
-    }
-    const packageData = packageSnapshot.data() as Package;
-
-    const payment: Payment = {
+    const paymentSnapshot = await transaction.get(paymentRef);
+    const expectedPayment: Payment = {
       id: params.paymentId,
       clientId: params.clientId,
       packageId: params.packageId,
       centerId: params.centerId,
       amount: params.amount,
       date: params.date,
-      method: params.method
+      method: params.method,
+      receiptNumber: params.receiptNumber,
+      ...(params.clientPackageId ? { clientPackageId: params.clientPackageId } : {}),
     };
 
-    if (params.receiptNumber) {
-      payment.receiptNumber = params.receiptNumber;
-    }
-
-    transaction.set(paymentRef, payment);
-
-    if (params.autoActivatePackage) {
-      assertString(params.clientPackageId, 'Identifiant de forfait client invalide.');
-      if (packageData.sessionsCount <= 0) {
-        throw new Error('Forfait sans sessions disponibles.');
+    if (paymentSnapshot.exists()) {
+      const existingPayment = {
+        ...paymentSnapshot.data(),
+        id: paymentSnapshot.id,
+      } as Payment;
+      if (!isSamePaymentOperation(existingPayment, expectedPayment)) {
+        throw new Error('Cet identifiant correspond déjà à un autre paiement.');
       }
 
-      const clientPackageRef = doc(db, 'client_packages', params.clientPackageId);
+      if (params.autoActivatePackage && params.clientPackageId) {
+        const existingClientPackageSnapshot = await transaction.get(
+          doc(db, 'client_packages', params.clientPackageId)
+        );
+        if (
+          !existingClientPackageSnapshot.exists() ||
+          existingClientPackageSnapshot.data().sourcePaymentId !== params.paymentId
+        ) {
+          throw new Error("Le paiement existe mais l'activation du forfait est incohérente.");
+        }
+      }
+
+      return {
+        paymentId: params.paymentId,
+        ...(params.clientPackageId ? { clientPackageId: params.clientPackageId } : {}),
+        packageActivated: params.autoActivatePackage,
+        created: false,
+      };
+    }
+
+    const clientRef = doc(db, 'clients', params.clientId);
+    const packageRef = doc(db, 'packages', params.packageId);
+    const clientSnapshot = await transaction.get(clientRef);
+    const packageSnapshot = await transaction.get(packageRef);
+    const center = await readCenterConfig(transaction, db, params.centerId);
+
+    const client = clientSnapshot.exists()
+      ? { ...clientSnapshot.data(), id: clientSnapshot.id } as Client
+      : undefined;
+    const packageDefinition = packageSnapshot.exists()
+      ? { ...packageSnapshot.data(), id: packageSnapshot.id } as Package
+      : undefined;
+
+    const validation = validatePaymentRegistration({
+      center,
+      client,
+      packageDefinition,
+      centerId: params.centerId,
+      amount: params.amount,
+      method: params.method,
+      receiptNumber: params.receiptNumber,
+      autoActivatePackage: params.autoActivatePackage,
+    });
+    if (validation.valid === false) {
+      throw new Error(validation.error);
+    }
+
+    let clientPackageRef: DocumentReference | null = null;
+    if (params.autoActivatePackage && params.clientPackageId) {
+      clientPackageRef = doc(db, 'client_packages', params.clientPackageId);
+      const clientPackageSnapshot = await transaction.get(clientPackageRef);
+      if (clientPackageSnapshot.exists()) {
+        throw new Error('Cet identifiant de forfait client est déjà utilisé.');
+      }
+    }
+
+    const payment: Payment = {
+      ...expectedPayment,
+      createdAt: recordedAt,
+      recordedByUserId: params.audit.userId,
+      recordedByUserName: params.audit.userName || params.audit.userId,
+    };
+    transaction.set(paymentRef, payment);
+
+    if (clientPackageRef && params.clientPackageId) {
       const clientPackage: ClientPackage = {
         id: params.clientPackageId,
         clientId: params.clientId,
         packageId: params.packageId,
         centerId: params.centerId,
-        sessionsRemaining: packageData.sessionsCount,
-        totalSessions: packageData.sessionsCount,
+        sessionsRemaining: packageDefinition.sessionsCount,
+        totalSessions: packageDefinition.sessionsCount,
         purchaseDate: params.date,
-        status: 'active'
+        status: 'active',
+        activatedAt: recordedAt,
+        activatedByUserId: params.audit.userId,
+        activatedByUserName: params.audit.userName || params.audit.userId,
+        sourcePaymentId: params.paymentId,
       };
-
       transaction.set(clientPackageRef, clientPackage);
     }
+
+    const clientName = `${client.firstName} ${client.lastName}`.trim() || params.clientId;
+    writeCrmAuditLog(transaction, db, params.audit, {
+      action: params.autoActivatePackage
+        ? 'RECORD_PAYMENT_AND_ACTIVATE_PACKAGE'
+        : 'RECORD_PAYMENT',
+      details: `Paiement de ${params.amount} DZD enregistré pour ${clientName}, forfait ${packageDefinition.name}, référence ${params.receiptNumber}.${params.autoActivatePackage ? ' Forfait activé dans la même opération.' : ''}`,
+      targetId: params.paymentId,
+      targetType: 'payment',
+      centerId: params.centerId,
+      centerName: params.audit.centerName,
+      timestamp: recordedAt,
+    });
+
+    return {
+      paymentId: params.paymentId,
+      ...(params.clientPackageId ? { clientPackageId: params.clientPackageId } : {}),
+      packageActivated: params.autoActivatePackage,
+      created: true,
+    };
   });
 }
