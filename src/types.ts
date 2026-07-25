@@ -82,6 +82,11 @@ export interface Appointment {
   duration: number; // in minutes
   status: AppointmentStatus;
   notes?: string;
+  completedAt?: string;
+  completedByUserId?: string;
+  completedByUserName?: string;
+  completedWithClientPackageId?: string;
+  deductedCredits?: number;
 }
 
 export interface Package {
@@ -102,6 +107,9 @@ export interface ClientPackage {
   totalSessions: number;
   purchaseDate: string;
   status: 'active' | 'completed' | 'expired';
+  updatedAt?: string;
+  lastSessionAt?: string;
+  lastCompletedAppointmentId?: string;
 }
 
 export interface Payment {

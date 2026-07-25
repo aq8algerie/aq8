@@ -1,8 +1,14 @@
 import assert from 'node:assert/strict';
-import { Appointment, Client, ClientPackage, Service } from '../types';
+import { Appointment, Client, ClientPackage, Package, Service } from '../types';
 import { isBeforePreviousDayCutoff, isFullHour, validateAppointment } from './appointmentRules';
 import { getBookingHoursForDate, getCenterBookingCapacity } from './bookingCapacityRules';
-import { deductSessionFromPackage, findActivePackageForClient, validateDeduction } from './packageRules';
+import {
+  deductSessionFromPackage,
+  findActivePackageForClient,
+  findActivePackageForClientAndService,
+  validateDeduction,
+  validateSessionCompletion,
+} from './packageRules';
 import { getBookingMinimumDate, validatePublicBookingRequest, validatePublicContactMessage } from './publicFormValidation';
 
 function test(name: string, run: () => void) {
@@ -27,6 +33,25 @@ const services: Service[] = [
     price: 4500,
     description: 'Wonder'
   }
+];
+
+const packageDefinitions: Package[] = [
+  {
+    id: 'pkg-1',
+    name: 'AQ8 Vitalité',
+    type: 'aq8',
+    sessionsCount: 5,
+    price: 15000,
+    description: 'Forfait AQ8',
+  },
+  {
+    id: 'pkg-wonder',
+    name: 'Wonder Intensity',
+    type: 'wonder',
+    sessionsCount: 5,
+    price: 18000,
+    description: 'Forfait Wonder',
+  },
 ];
 
 const existingAppointments: Appointment[] = [
@@ -240,6 +265,107 @@ test('package deduction decrements sessions and completes at zero', () => {
     status: 'active'
   });
   assert.equal(deductSessionFromPackage({ ...activePackage, sessionsRemaining: 1 }).status, 'completed');
+});
+
+test('session completion selects a package compatible with the booked technology', () => {
+  const wonderClientPackage: ClientPackage = {
+    ...activePackage,
+    id: 'pkg-client-wonder',
+    packageId: 'pkg-wonder',
+    purchaseDate: '2026-07-02',
+  };
+
+  const selected = findActivePackageForClientAndService(
+    client.id,
+    services[1],
+    [activePackage, wonderClientPackage],
+    packageDefinitions
+  );
+
+  assert.equal(selected?.id, wonderClientPackage.id);
+});
+
+test('session completion accepts a valid center, client, service and package', () => {
+  const result = validateSessionCompletion({
+    appointment,
+    client,
+    clientPackage: activePackage,
+    service: services[0],
+    packageDefinition: packageDefinitions[0],
+    managerCenterId: 'center-1',
+  });
+
+  assert.equal(result.valid, true);
+});
+
+test('session completion blocks a second validation of the same appointment', () => {
+  const result = validateSessionCompletion({
+    appointment: { ...appointment, status: 'completed' },
+    client,
+    clientPackage: activePackage,
+    service: services[0],
+    packageDefinition: packageDefinitions[0],
+    managerCenterId: 'center-1',
+  });
+
+  assert.equal(result.valid, false);
+});
+
+test('session completion blocks insufficient credit and cross-center use', () => {
+  const noCredit = validateSessionCompletion({
+    appointment,
+    client,
+    clientPackage: { ...activePackage, sessionsRemaining: 0 },
+    service: services[0],
+    packageDefinition: packageDefinitions[0],
+    managerCenterId: 'center-1',
+  });
+  const wrongCenter = validateSessionCompletion({
+    appointment,
+    client,
+    clientPackage: activePackage,
+    service: services[0],
+    packageDefinition: packageDefinitions[0],
+    managerCenterId: 'center-2',
+  });
+
+  assert.equal(noCredit.valid, false);
+  assert.equal(wrongCenter.valid, false);
+});
+
+test('session completion blocks a package from another technology', () => {
+  const result = validateSessionCompletion({
+    appointment: { ...appointment, serviceId: services[1].id },
+    client,
+    clientPackage: activePackage,
+    service: services[1],
+    packageDefinition: packageDefinitions[0],
+    managerCenterId: 'center-1',
+  });
+
+  assert.equal(result.valid, false);
+});
+
+test('session completion blocks expired packages and suspended clients', () => {
+  const expiredPackage = validateSessionCompletion({
+    appointment,
+    client,
+    clientPackage: { ...activePackage, purchaseDate: '2020-01-01' },
+    service: services[0],
+    packageDefinition: packageDefinitions[0],
+    managerCenterId: 'center-1',
+  });
+  const suspendedClient = validateSessionCompletion({
+    appointment,
+    client: { ...client, status: 'suspended' },
+    clientPackage: activePackage,
+    service: services[0],
+    packageDefinition: packageDefinitions[0],
+    managerCenterId: 'center-1',
+  });
+
+  assert.equal(expiredPackage.valid, false);
+  assert.equal(suspendedClient.valid, false);
 });
 
 

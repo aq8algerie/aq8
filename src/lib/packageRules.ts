@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Client, ClientPackage, Appointment } from '../types';
+import { Appointment, Client, ClientPackage, Package, Service } from '../types';
 
 /**
  * Check if a client package is expired (more than 45 days since purchase)
@@ -36,6 +36,116 @@ export function findActivePackageForClient(
           cp.sessionsRemaining > 0 &&
           !isPackageExpired(cp)
   );
+}
+
+export function isPackageCompatibleWithService(
+  clientPackage: ClientPackage,
+  service: Service,
+  packages: Package[]
+): boolean {
+  const packageDefinition = packages.find(pkg => pkg.id === clientPackage.packageId);
+  return Boolean(packageDefinition && (
+    packageDefinition.type === 'mix' ||
+    packageDefinition.type === service.type
+  ));
+}
+
+/**
+ * Select the oldest valid compatible package so credits that expire first are
+ * consumed before newer purchases.
+ */
+export function findActivePackageForClientAndService(
+  clientId: string,
+  service: Service,
+  clientPackages: ClientPackage[],
+  packages: Package[]
+): ClientPackage | undefined {
+  return clientPackages
+    .filter(clientPackage =>
+      clientPackage.clientId === clientId &&
+      clientPackage.status === 'active' &&
+      clientPackage.sessionsRemaining > 0 &&
+      !isPackageExpired(clientPackage) &&
+      isPackageCompatibleWithService(clientPackage, service, packages)
+    )
+    .sort((left, right) => left.purchaseDate.localeCompare(right.purchaseDate))[0];
+}
+
+export type SessionCompletionValidationInput = {
+  appointment: Appointment;
+  client: Client | undefined;
+  clientPackage: ClientPackage | undefined;
+  service: Service | undefined;
+  packageDefinition: Package | undefined;
+  managerCenterId: string;
+};
+
+/**
+ * Validate every invariant required by the completion transaction.
+ */
+export function validateSessionCompletion({
+  appointment,
+  client,
+  clientPackage,
+  service,
+  packageDefinition,
+  managerCenterId,
+}: SessionCompletionValidationInput): { valid: true } | { valid: false; error: string } {
+  if (appointment.centerId !== managerCenterId) {
+    return { valid: false, error: "Cette réservation n'appartient pas à votre centre." };
+  }
+
+  if (appointment.status !== 'booked') {
+    return { valid: false, error: 'Cette séance a déjà été validée ou annulée.' };
+  }
+
+  if (!client || client.centerId !== managerCenterId || client.id !== appointment.clientId) {
+    return { valid: false, error: "L'adhérent est introuvable ou n'appartient pas à votre centre." };
+  }
+
+  if (client.status === 'suspended') {
+    return { valid: false, error: "Le compte de cet adhérent est suspendu." };
+  }
+
+  if (!service || service.id !== appointment.serviceId) {
+    return { valid: false, error: 'La prestation associée à cette séance est introuvable.' };
+  }
+
+  if (!clientPackage) {
+    return { valid: false, error: "L'adhérent ne possède aucun forfait compatible actif." };
+  }
+
+  if (
+    clientPackage.centerId !== managerCenterId ||
+    clientPackage.clientId !== appointment.clientId
+  ) {
+    return { valid: false, error: 'Le forfait sélectionné ne correspond pas à cette séance.' };
+  }
+
+  if (!packageDefinition || packageDefinition.id !== clientPackage.packageId) {
+    return { valid: false, error: 'La définition du forfait est introuvable.' };
+  }
+
+  if (
+    clientPackage.status !== 'active' ||
+    !Number.isInteger(clientPackage.sessionsRemaining) ||
+    clientPackage.sessionsRemaining <= 0
+  ) {
+    return { valid: false, error: "Le forfait actif de cet adhérent ne contient plus de crédit." };
+  }
+
+  if (isPackageExpired(clientPackage)) {
+    return { valid: false, error: "Le forfait actif de cet adhérent a expiré." };
+  }
+
+  if (packageDefinition.type !== 'mix' && packageDefinition.type !== service.type) {
+    return {
+      valid: false,
+      error: `Ce forfait ne permet pas de valider une séance ${service.type === 'aq8' ? 'AQ8' : 'Wonder'}.`,
+    };
+  }
+
+  return { valid: true };
 }
 
 /**

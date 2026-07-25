@@ -7,7 +7,7 @@ import {
   Transaction,
 } from 'firebase/firestore';
 import { Appointment, BookingRequest, Center, Client, ClientPackage, Package, Payment, Service } from '../types';
-import { isPackageExpired } from './packageRules';
+import { validateSessionCompletion } from './packageRules';
 import {
   BookingServiceType,
   CenterBookingConfig,
@@ -595,62 +595,109 @@ export async function completeAppointmentWithSessionDeduction(
     appointmentId: string;
     centerId: string;
     clientPackageId: string;
+    audit: CrmTransactionAuditContext;
   }
-): Promise<{ sessionsRemaining: number }> {
+): Promise<{
+  sessionsRemaining: number;
+  clientPackageId: string;
+  packageStatus: ClientPackage['status'];
+}> {
+  const completedAt = new Date().toISOString();
+
   return runTransaction(db, async transaction => {
+    assertString(params.appointmentId, 'Réservation invalide.');
+    assertString(params.centerId, 'Centre invalide.');
+    assertString(params.clientPackageId, 'Forfait client invalide.');
+
     const appointmentRef = doc(db, 'appointments', params.appointmentId);
     const clientPackageRef = doc(db, 'client_packages', params.clientPackageId);
 
     const appointmentSnapshot = await transaction.get(appointmentRef);
     if (!appointmentSnapshot.exists()) {
-      throw new Error('Reservation introuvable.');
+      throw new Error('Réservation introuvable.');
     }
 
-    const appointment = appointmentSnapshot.data() as Appointment;
-    if (appointment.centerId !== params.centerId) {
-      throw new Error("Cette réservation n'appartient pas à votre centre.");
-    }
-    if (appointment.status !== 'booked') {
-      throw new Error("La réservation n'est pas dans l'état planifiée.");
-    }
-
+    const appointment = {
+      ...appointmentSnapshot.data(),
+      id: appointmentSnapshot.id,
+    } as Appointment;
     const clientRef = doc(db, 'clients', appointment.clientId);
+    const serviceRef = doc(db, 'services', appointment.serviceId);
+
     const clientSnapshot = await transaction.get(clientRef);
-    if (!clientSnapshot.exists()) {
-      throw new Error("L'adhérent associé est introuvable.");
-    }
-
-    const client = clientSnapshot.data() as Client;
-    if (client.centerId !== params.centerId) {
-      throw new Error("L'adhérent n'appartient pas à votre centre.");
-    }
-
     const clientPackageSnapshot = await transaction.get(clientPackageRef);
-    if (!clientPackageSnapshot.exists()) {
-      throw new Error("Le forfait actif de l'adhérent est introuvable.");
-    }
+    const serviceSnapshot = await transaction.get(serviceRef);
 
-    const clientPackage = clientPackageSnapshot.data() as ClientPackage;
-    if (clientPackage.centerId !== params.centerId || clientPackage.clientId !== appointment.clientId) {
-      throw new Error('Le forfait actif ne correspond pas ? cette réservation.');
-    }
-    if (clientPackage.status !== 'active' || clientPackage.sessionsRemaining <= 0 || isPackageExpired(clientPackage)) {
-      throw new Error("Le forfait actif de cet adhérent est épuisé ou a expiré (limite de 1 mois et demi dépassée).");
+    const client = clientSnapshot.exists()
+      ? { ...clientSnapshot.data(), id: clientSnapshot.id } as Client
+      : undefined;
+    const clientPackage = clientPackageSnapshot.exists()
+      ? { ...clientPackageSnapshot.data(), id: clientPackageSnapshot.id } as ClientPackage
+      : undefined;
+    const service = serviceSnapshot.exists()
+      ? { ...serviceSnapshot.data(), id: serviceSnapshot.id } as Service
+      : undefined;
+
+    const packageRef = clientPackage
+      ? doc(db, 'packages', clientPackage.packageId)
+      : null;
+    const packageSnapshot = packageRef
+      ? await transaction.get(packageRef)
+      : null;
+    const packageDefinition = packageSnapshot?.exists()
+      ? { ...packageSnapshot.data(), id: packageSnapshot.id } as Package
+      : undefined;
+
+    const validation = validateSessionCompletion({
+      appointment,
+      client,
+      clientPackage,
+      service,
+      packageDefinition,
+      managerCenterId: params.centerId,
+    });
+    if (validation.valid === false) {
+      throw new Error(validation.error);
     }
 
     const sessionsRemaining = clientPackage.sessionsRemaining - 1;
+    const packageStatus: ClientPackage['status'] = sessionsRemaining === 0 ? 'completed' : 'active';
+    const clientName = `${client.firstName} ${client.lastName}`.trim() || appointment.clientId;
+    const serviceName = service.name || (service.type === 'aq8' ? 'AQ8' : 'Wonder');
+
     transaction.update(clientPackageRef, {
       sessionsRemaining,
-      status: sessionsRemaining === 0 ? 'completed' : 'active'
+      status: packageStatus,
+      updatedAt: completedAt,
+      lastSessionAt: completedAt,
+      lastCompletedAppointmentId: appointment.id,
     });
     transaction.update(appointmentRef, {
-      status: 'completed'
+      status: 'completed',
+      completedAt,
+      completedByUserId: params.audit.userId,
+      completedByUserName: params.audit.userName || params.audit.userId,
+      completedWithClientPackageId: clientPackage.id,
+      deductedCredits: 1,
     });
 
-    return { sessionsRemaining };
+    writeCrmAuditLog(transaction, db, params.audit, {
+      action: 'COMPLETE_APPOINTMENT',
+      details: `Validation de la séance du ${appointment.dateTime.replace('T', ' ')} pour ${clientName}. 1 crédit ${serviceName} déduit du forfait ${packageDefinition.name}. Solde restant : ${sessionsRemaining} séance(s).`,
+      targetId: appointment.id,
+      targetType: 'appointment',
+      centerId: params.centerId,
+      centerName: params.audit.centerName,
+      timestamp: completedAt,
+    });
+
+    return {
+      sessionsRemaining,
+      clientPackageId: clientPackage.id,
+      packageStatus,
+    };
   });
 }
-
 export async function cancelAppointmentInTransaction(
   db: Firestore,
   params: {

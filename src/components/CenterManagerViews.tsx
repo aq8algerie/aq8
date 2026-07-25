@@ -42,7 +42,7 @@ import { MeasurementModal } from './manager/modals/MeasurementModal';
 // Utilities & Business rules
 import { getTodayDateString } from '../lib/centerManagerUtils';
 import { validateAppointment } from '../lib/appointmentRules';
-import { findActivePackageForClient, validateDeduction, isPackageExpired } from '../lib/packageRules';
+import { findActivePackageForClientAndService, isPackageCompatibleWithService, isPackageExpired } from '../lib/packageRules';
 import { AlertTriangle } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { notifyCrmEmailBestEffort } from '../lib/emailNotificationClient';
@@ -591,42 +591,46 @@ export function CenterManagerViews({
     if (!apt) return fail('Réservation introuvable.');
 
     if (apt.status !== 'booked') {
-      return fail("La réservation n'est pas dans l'état planifiée.");
+      return fail('Cette séance a déjà été validée ou annulée.');
     }
 
-    const cl = clients.find(c => c.id === apt.clientId);
-    const activePkg = findActivePackageForClient(apt.clientId, clientPackages);
-    const validation = validateDeduction(apt, cl, activePkg, centerId);
+    const service = services.find(candidate => candidate.id === apt.serviceId);
+    if (!service) {
+      return fail('La prestation associée à cette séance est introuvable.');
+    }
 
-    if (validation.valid === false || !activePkg) {
-      // Enhanced error message for expired packages
-      const errorMsg = validation.error || 'Erreur lors du traitement du forfait.';
-      const isExpiredPkg = validation.error?.toLowerCase().includes('expir') ||
-        (activePkg === undefined && clientPackages.some(cp =>
-          cp.clientId === apt.clientId && isPackageExpired(cp) && cp.status === 'active'
-        ));
+    const activePkg = findActivePackageForClientAndService(
+      apt.clientId,
+      service,
+      clientPackages,
+      packages
+    );
 
-      const enrichedMsg = isExpiredPkg
-        ? `⏳ Forfait expiré — La limite de 45 jours a été dépassée pour cet adhérent. Veuillez renouveler son abonnement avant de valider cette séance.`
-        : errorMsg;
-
-      return fail(enrichedMsg);
+    if (!activePkg) {
+      const expiredCompatiblePackage = clientPackages.some(clientPackage =>
+        clientPackage.clientId === apt.clientId &&
+        clientPackage.status === 'active' &&
+        isPackageExpired(clientPackage) &&
+        isPackageCompatibleWithService(clientPackage, service, packages)
+      );
+      const serviceLabel = service.type === 'aq8' ? 'AQ8' : 'Wonder';
+      return fail(expiredCompatiblePackage
+        ? `Forfait ${serviceLabel} expiré : renouvelez-le avant de valider cette séance.`
+        : `Aucun forfait ${serviceLabel} actif avec un crédit disponible.`
+      );
     }
 
     try {
       const completion = await completeAppointmentWithSessionDeduction(db, {
         appointmentId: apt.id,
         centerId,
-        clientPackageId: activePkg.id
-      });
-
-      logCrmAction(userId, userName, 'center_manager', {
-        action: 'COMPLETE_APPOINTMENT',
-        details: `Validation de la séance du ${apt.dateTime.replace('T', ' ')} pour le client : ${cl ? `${cl.firstName} ${cl.lastName}` : apt.clientId} (Forfait restant : ${completion.sessionsRemaining} séances)`,
-        targetId: apt.id,
-        targetType: 'appointment',
-        centerId,
-        centerName: currentCenter?.name
+        clientPackageId: activePkg.id,
+        audit: {
+          userId,
+          userName,
+          userRole: 'center_manager',
+          centerName: currentCenter?.name,
+        },
       });
 
       notifyCrmEmailBestEffort({
@@ -637,14 +641,13 @@ export function CenterManagerViews({
       });
 
       if (!options.silent) {
-        triggerToast('Séance validée et 1 crédit déduit avec succès !');
+        triggerToast('Séance validée, crédit déduit et opération auditée.', 'success', 'completed');
       }
       return { ok: true };
     } catch (error) {
       return fail(getErrorMessage(error, 'Erreur lors de la validation de la séance.'));
     }
   };
-
   // 4. Cancel appointment safely
   const handleCancelAppointment = async (
     aptId: string,
