@@ -25,7 +25,6 @@ import {
   CheckCircle,
   ChevronDown,
   HelpCircle,
-  RefreshCw,
   Sparkles,
   BarChart3,
   Scale,
@@ -503,15 +502,6 @@ export default function App() {
     });
   };
 
-  const handleResetDatabase = async () => {
-    try {
-      const { resetDatabase } = await import('./lib/devTools');
-      await resetDatabase(db, isDevToolsEnabled);
-    } catch (error) {
-      console.error("Failed to reset database via devTools:", error);
-    }
-  };
-
   // 5. AUTHENTICATION PORTAL ACTIONS
   const handleLoginSuccess = (role: CrmRole, centerId: string | null, managerName: string) => {
     setCrmRole(role);
@@ -863,18 +853,24 @@ export default function App() {
             <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-[#111115] text-white border-r border-slate-800/80 p-5 pt-16 flex flex-col justify-between shrink-0 transform md:transform-none transition-transform duration-300 md:fixed md:top-12 md:bottom-0 md:left-0 shadow-xl ${crmSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
               <div className="space-y-6 text-xs">
                 {/* Brand / Role display */}
-                <div className="space-y-1 py-2 border-b border-white/5">
-                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">AQ8 WORKSPACE</span>
-                  <span className="text-sm font-bold text-white font-display block">
-                    {crmRole === 'super_admin' ? 'Super Admin' : 'Manager de Centre'}
-                  </span>
-                  {crmRole === 'center_manager' && (
-                    <span className="inline-block bg-[#ff5757]/15 text-[#ff5757] px-2 py-0.5 mt-1 rounded-sm font-bold uppercase text-[9px]">
-                      {centers.find(c => c.id === crmCenterId)?.name || 'AQ8 Centre'}
+                <div className="border-b border-white/5 pb-5">
+                  <img
+                    src="/images/logo.png"
+                    alt="AQ8 Algérie"
+                    className="h-11 w-auto max-w-[168px] object-contain brightness-0 invert opacity-95"
+                  />
+                  <div className="mt-4 space-y-1">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Espace CRM</span>
+                    <span className="text-sm font-bold text-white font-display block">
+                      {crmRole === 'super_admin' ? 'Super Admin' : 'Manager de Centre'}
                     </span>
-                  )}
+                    {crmRole === 'center_manager' && (
+                      <span className="inline-block bg-[#ff5757]/15 text-[#ff5757] px-2 py-0.5 mt-1 rounded-sm font-bold uppercase text-[9px]">
+                        {centers.find(c => c.id === crmCenterId)?.name || 'AQ8 Centre'}
+                      </span>
+                    )}
+                  </div>
                 </div>
-
                 {/* Direct Navigation Controls */}
                 <div className="space-y-2">
                   <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-2 pb-1">Menu Principal</p>
@@ -945,20 +941,17 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Reset simulator & Logout */}
-              <div className="space-y-2 pt-6 border-t border-white/5 text-xs font-semibold">
-                <button
-                  onClick={() => handleResetDatabase()}
-                  className="w-full py-2 px-3 border border-white/10 hover:bg-white/5 text-slate-300 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <RefreshCw className="h-3.5 w-3.5" /> Réinitialiser Démo
-                </button>
+              <div className="space-y-4 pt-5 border-t border-white/5 text-xs font-semibold">
                 <button
                   onClick={handleLogout}
                   className="w-full py-2 px-3 bg-[#ff5757] hover:bg-[#ff4444] text-white rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-[#ff5757]/10"
                 >
                   <LogOut className="h-3.5 w-3.5" /> Quitter le CRM
                 </button>
+                <div className="text-[10px] font-medium leading-relaxed text-slate-500">
+                  <p>&copy; {new Date().getFullYear()} AQ8 Algérie</p>
+                  <p>Tous droits réservés.</p>
+                </div>
               </div>
             </aside>
 

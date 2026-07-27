@@ -283,15 +283,6 @@ export default function CrmPage() {
     setLoggedManagerName("");
   };
 
-  const handleResetDatabase = async () => {
-    try {
-      const { resetDatabase } = await import("@/src/lib/devTools");
-      await resetDatabase(db, isDevToolsEnabled);
-    } catch (error) {
-      console.error("Failed to reset database:", error);
-    }
-  };
-
   const updateCenters = (newCenters: Center[]) => {
     syncCollection("centers", newCenters, centers);
   };
@@ -341,7 +332,7 @@ export default function CrmPage() {
 
   return (
     <div className={`min-h-screen flex flex-col md:flex-row transition-colors duration-200 ${isDarkMode ? "dark bg-[#0b0b0f] text-slate-100" : "bg-[#f8f9fa] text-slate-800"}`}>
-      {/* Simulation Bar at the top */}
+      {/* CRM status bar */}
       <div className="w-full bg-[#1e1e24] text-white py-2.5 px-4 flex items-center justify-between gap-2 border-b border-slate-800 text-xs md:fixed md:top-0 md:left-0 md:right-0 md:z-50 h-12">
         <div className="flex items-center gap-2">
           <button
@@ -428,18 +419,24 @@ export default function CrmPage() {
       {/* Sidebar Layout */}
       <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-[#111115] text-white border-r border-slate-800/80 p-5 pt-16 flex flex-col justify-between shrink-0 transform md:transform-none transition-transform duration-300 md:fixed md:top-12 md:bottom-0 md:left-0 shadow-xl ${crmSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
         <div className="space-y-6 text-xs">
-          <div className="space-y-1 py-2 border-b border-white/5">
-            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">AQ8 WORKSPACE</span>
-            <span className="text-sm font-bold text-white block">
-              {crmRole === "super_admin" ? "Super Admin" : "Manager de Centre"}
-            </span>
-            {crmRole === "center_manager" && (
-              <span className="inline-block bg-[#ff5757]/15 text-[#ff5757] px-2 py-0.5 mt-1 rounded-sm font-bold uppercase text-[9px]">
-                {centers.find(c => c.id === crmCenterId)?.name || "AQ8 Centre"}
+          <div className="border-b border-white/5 pb-5">
+            <img
+              src="/images/logo.png"
+              alt="AQ8 Algérie"
+              className="h-11 w-auto max-w-[168px] object-contain brightness-0 invert opacity-95"
+            />
+            <div className="mt-4 space-y-1">
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Espace CRM</span>
+              <span className="text-sm font-bold text-white block">
+                {crmRole === "super_admin" ? "Super Admin" : "Manager de Centre"}
               </span>
-            )}
+              {crmRole === "center_manager" && (
+                <span className="inline-block bg-[#ff5757]/15 text-[#ff5757] px-2 py-0.5 mt-1 rounded-sm font-bold uppercase text-[9px]">
+                  {centers.find(c => c.id === crmCenterId)?.name || "AQ8 Centre"}
+                </span>
+              )}
+            </div>
           </div>
-
           <div className="space-y-2">
             <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-2 pb-1">Menu Principal</p>
 
@@ -511,14 +508,9 @@ export default function CrmPage() {
           </div>
         </div>
 
-        <div className="space-y-2 pt-6 border-t border-white/5 text-xs font-semibold">
-          <button
-            onClick={() => handleResetDatabase()}
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 transition cursor-pointer text-left"
-          >
-            <ShieldCheck className="h-4 w-4" />
-            <span>Réinitialiser démo</span>
-          </button>
+        <div className="border-t border-white/5 pt-5 text-[10px] leading-relaxed text-slate-500">
+          <p>&copy; {new Date().getFullYear()} AQ8 Algérie</p>
+          <p>Tous droits réservés.</p>
         </div>
       </aside>
 
