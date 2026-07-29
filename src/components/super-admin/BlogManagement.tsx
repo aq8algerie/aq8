@@ -4,7 +4,6 @@ import {
   Archive,
   ArrowDown,
   ArrowUp,
-  Bold,
   BookOpen,
   Check,
   Clock3,
@@ -20,6 +19,8 @@ import {
   MessageSquareQuote,
   Plus,
   Search,
+  Save,
+  Settings2,
   Sparkles,
   Trash2,
   UploadCloud,
@@ -48,6 +49,7 @@ import {
 } from '../../lib/blogClient';
 import { ProfessionalToast, type ProfessionalToastState } from '../manager/ProfessionalToast';
 import { ProfessionalConfirmDialog } from '../manager/ProfessionalConfirmDialog';
+import { SimpleBlogEditor } from './SimpleBlogEditor';
 
 type EditorTab = 'content' | 'seo' | 'publication' | 'preview';
 type StatusFilter = 'all' | BlogPostStatus;
@@ -114,6 +116,7 @@ export function BlogManagement() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorTab, setEditorTab] = useState<EditorTab>('content');
+  const [simpleEditor, setSimpleEditor] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<BlogPostDraft>(createEmptyBlogDraft());
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
@@ -184,6 +187,7 @@ export function BlogManagement() {
     setDraft(createEmptyBlogDraft());
     setSlugManuallyEdited(false);
     setEditorTab('content');
+    setSimpleEditor(true);
     setEditorOpen(true);
   };
 
@@ -192,6 +196,7 @@ export function BlogManagement() {
     setDraft(toDraft(post));
     setSlugManuallyEdited(true);
     setEditorTab('content');
+    setSimpleEditor(true);
     setEditorOpen(true);
   };
 
@@ -204,7 +209,7 @@ export function BlogManagement() {
       ...current,
       title,
       slug: slugManuallyEdited ? current.slug : slugifyBlogTitle(title),
-      seoTitle: current.seoTitle || title.slice(0, 70),
+      seoTitle: editingId ? current.seoTitle : title.slice(0, 70),
     }));
   };
 
@@ -263,7 +268,12 @@ export function BlogManagement() {
     if (busy) return;
     setBusy(true);
     try {
-      const payload = { ...draft, status };
+      const payload = {
+        ...draft,
+        status,
+        seoTitle: draft.seoTitle || draft.title.slice(0, 70),
+        seoDescription: draft.seoDescription || draft.excerpt.slice(0, 170),
+      };
       const saved = editingId
         ? await updateBlogPost(editingId, payload)
         : await createBlogPost(payload);
@@ -529,11 +539,26 @@ export function BlogManagement() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
+                onClick={() => {
+                  setSimpleEditor(current => !current);
+                  setEditorTab('content');
+                }}
+                className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white p-2 text-xs font-bold text-slate-600 transition hover:border-slate-300 hover:text-[#242424] sm:px-3"
+                title={simpleEditor ? 'Afficher les options avancées' : 'Revenir à la rédaction simple'}
+              >
+                <Settings2 className="h-4 w-4" />
+                <span className="hidden lg:inline">{simpleEditor ? 'Options avancées' : 'Rédaction simple'}</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => void saveArticle('draft')}
                 disabled={busy}
-                className="hidden rounded-md border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 transition hover:border-slate-400 disabled:opacity-50 sm:inline-flex"
+                aria-label="Enregistrer le brouillon"
+                title="Enregistrer le brouillon"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 bg-white text-xs font-bold text-slate-700 transition hover:border-slate-400 disabled:opacity-50 sm:h-auto sm:w-auto sm:gap-2 sm:px-4 sm:py-2"
               >
-                Enregistrer
+                <Save className="h-4 w-4" />
+                <span className="hidden sm:inline">Enregistrer</span>
               </button>
               <button
                 type="button"
@@ -548,34 +573,51 @@ export function BlogManagement() {
             </div>
           </header>
 
-          <div className="shrink-0 overflow-x-auto border-b border-slate-200 bg-white px-4 sm:px-6">
-            <div role="tablist" className="flex gap-5">
-              {[
-                { id: 'content' as const, label: 'Contenu' },
-                { id: 'seo' as const, label: 'Référencement' },
-                { id: 'publication' as const, label: 'Publication' },
-                { id: 'preview' as const, label: 'Aperçu' },
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={editorTab === tab.id}
-                  onClick={() => setEditorTab(tab.id)}
-                  className={`border-b-2 py-3 text-xs font-bold transition ${
-                    editorTab === tab.id
-                      ? 'border-[#ff5757] text-[#ff5757]'
-                      : 'border-transparent text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+          {!simpleEditor && (
+            <div className="shrink-0 overflow-x-auto border-b border-slate-200 bg-white px-4 sm:px-6">
+              <div role="tablist" className="flex gap-5">
+                {[
+                  { id: 'content' as const, label: 'Contenu' },
+                  { id: 'seo' as const, label: 'Référencement' },
+                  { id: 'publication' as const, label: 'Publication' },
+                  { id: 'preview' as const, label: 'Aperçu' },
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={editorTab === tab.id}
+                    onClick={() => setEditorTab(tab.id)}
+                    className={`border-b-2 py-3 text-xs font-bold transition ${
+                      editorTab === tab.id
+                        ? 'border-[#ff5757] text-[#ff5757]'
+                        : 'border-transparent text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <main className="flex-1 overflow-y-auto">
-            {editorTab === 'content' && (
+            {simpleEditor && (
+              <SimpleBlogEditor
+                draft={draft}
+                uploading={uploading}
+                publicationChecks={publicationChecks}
+                onTitleChange={handleTitleChange}
+                onDraftChange={updateDraft}
+                onUpdateBlock={updateBlock}
+                onMoveBlock={moveBlock}
+                onRemoveBlock={removeBlock}
+                onAddBlock={addBlock}
+                onCoverUpload={handleCoverUpload}
+                onBlockImageUpload={handleBlockImageUpload}
+              />
+            )}
+            {!simpleEditor && editorTab === 'content' && (
               <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:px-6">
                 <div className="space-y-5">
                   <section className="space-y-4 border border-slate-200 bg-white p-5 sm:p-6">
@@ -736,7 +778,7 @@ export function BlogManagement() {
               </div>
             )}
 
-            {editorTab === 'seo' && (
+            {!simpleEditor && editorTab === 'seo' && (
               <div className="mx-auto grid max-w-5xl gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:px-6">
                 <section className="space-y-5 border border-slate-200 bg-white p-5 sm:p-6">
                   <div>
@@ -780,7 +822,7 @@ export function BlogManagement() {
               </div>
             )}
 
-            {editorTab === 'publication' && (
+            {!simpleEditor && editorTab === 'publication' && (
               <div className="mx-auto grid max-w-5xl gap-6 px-4 py-6 lg:grid-cols-2 lg:px-6">
                 <section className="space-y-5 border border-slate-200 bg-white p-5 sm:p-6">
                   <div>
@@ -840,7 +882,7 @@ export function BlogManagement() {
               </div>
             )}
 
-            {editorTab === 'preview' && (
+            {!simpleEditor && editorTab === 'preview' && (
               <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
                 <article className="overflow-hidden border border-slate-200 bg-white">
                   {draft.coverImageUrl ? (

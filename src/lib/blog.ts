@@ -98,7 +98,7 @@ export function createEmptyBlogDraft(): BlogPostDraft {
     authorName: 'Équipe AQ8 Algérie',
     authorRole: 'Rédaction AQ8 Algérie',
     reviewerName: '',
-    content: [createBlogBlock('paragraph')],
+    content: [createBlogBlock('heading'), createBlogBlock('paragraph')],
     seoTitle: '',
     seoDescription: '',
     status: 'draft',
