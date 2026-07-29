@@ -17,7 +17,8 @@ import {
   Sun,
   Moon,
   Layers,
-  BarChart3
+  BarChart3,
+  BookOpen
 } from "lucide-react";
 
 import {
@@ -349,7 +350,7 @@ export default function CrmPage() {
                   setCrmCenterId(null);
                   setLoggedManagerName("Karim Benchikh (Super Admin)");
                 }}
-                className={`px-2.5 py-1 rounded-md text-[10px] transition ${crmRole === "super_admin" ? "bg-[#ff5757] text-white font-bold shadow-sm" : "bg-white/10 text-slate-300 hover:bg-white/15"}`}
+                className={`hidden md:inline-flex px-2.5 py-1 rounded-md text-[10px] transition ${crmRole === "super_admin" ? "bg-[#ff5757] text-white font-bold shadow-sm" : "bg-white/10 text-slate-300 hover:bg-white/15"}`}
               >
                 Super Admin
               </button>
@@ -364,7 +365,7 @@ export default function CrmPage() {
                   setCrmCenterId(centerId);
                   setLoggedManagerName(`${matchedMgr?.name || "Manager"} (${c?.name || "Centre"})`);
                 }}
-                className="bg-white/10 text-white rounded-md text-[10px] px-2 py-1 focus:outline-none border border-white/10"
+                className="hidden md:block bg-white/10 text-white rounded-md text-[10px] px-2 py-1 focus:outline-none border border-white/10"
               >
                 <option value="" disabled className="text-slate-800">-- Choisir un centre --</option>
                 {publicCenters.map(c => (
@@ -437,6 +438,7 @@ export default function CrmPage() {
                   { id: "dashboard" as const, label: "Tableau de bord", icon: Activity },
                   { id: "centers" as const, label: "Gestion Centres", icon: Building },
                   { id: "managers" as const, label: "Managers & Accès", icon: Users },
+                  { id: "blog" as const, label: "Conseils & Actualités", icon: BookOpen },
                   { id: "stats" as const, label: "Analyses Réseau", icon: BarChart3 },
                   { id: "payments" as const, label: "Paiements Réseau", icon: DollarSign },
                   { id: "settings" as const, label: "Paramètres Généraux", icon: Settings },

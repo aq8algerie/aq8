@@ -9,6 +9,11 @@ service firebase.storage {
       allow write: if false;
     }
 
+    // Les medias editoriaux sont televerses exclusivement par l API Super Admin.
+    match /blog/{postId}/{usage}/{fileName} {
+      allow read: if true;
+      allow write: if false;
+    }
     match /{allPaths=**} {
       allow read, write: if false;
     }

@@ -45,6 +45,8 @@ async function startServer() {
     "Trop d'operations sensibles. Reessayez plus tard.",
   );
   app.use('/api/upload-center-image', protectedMutationLimiter);
+  app.use('/api/upload-blog-image', protectedMutationLimiter);
+  app.use('/api/blog-posts', protectedMutationLimiter);
   app.use('/api/crm-managers', protectedMutationLimiter);
   app.use('/api/crm-operations', protectedMutationLimiter);
   app.use('/api/crm-clients', protectedMutationLimiter);

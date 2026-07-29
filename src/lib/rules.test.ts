@@ -17,6 +17,7 @@ import {
 } from './paymentRules';
 import { getBookingMinimumDate, validatePublicBookingRequest, validatePublicContactMessage } from './publicFormValidation';
 import { validatePaymentReversal } from './financialLedgerRules';
+import { createBlogBlock, estimateBlogReadingTime, slugifyBlogTitle, validateBlogPostDraft } from './blog';
 
 function test(name: string, run: () => void) {
   run();
@@ -648,4 +649,62 @@ test('payment reversal rejects cross-center and reversal entries', () => {
   }).valid, false);
 });
 
+test('blog slugs are stable and accent-free', () => {
+  assert.equal(slugifyBlogTitle('Préparer sa première séance AQ8 EMS !'), 'preparer-sa-premiere-seance-aq8-ems');
+});
+
+test('blog publication requires editorial quality fields', () => {
+  const invalid = validateBlogPostDraft({
+    title: 'Premier guide AQ8',
+    slug: 'premier-guide-aq8',
+    excerpt: 'Résumé trop court.',
+    category: 'aq8-ems',
+    tags: [],
+    coverImageUrl: '',
+    coverImageAlt: '',
+    authorName: 'Équipe AQ8',
+    authorRole: 'Rédaction',
+    reviewerName: '',
+    content: [createBlogBlock('paragraph')],
+    seoTitle: '',
+    seoDescription: '',
+    status: 'published',
+    featured: false,
+  });
+
+  assert.equal(invalid.valid, false);
+});
+
+test('blog validation accepts a complete structured article', () => {
+  const valid = validateBlogPostDraft({
+    title: 'Comment préparer sa première séance AQ8 EMS',
+    slug: '',
+    excerpt: 'Découvrez les étapes utiles pour préparer votre première séance AQ8 EMS dans de bonnes conditions et échanger avec votre centre.',
+    category: 'aq8-ems',
+    tags: ['EMS', 'première séance'],
+    coverImageUrl: 'https://example.com/aq8.webp',
+    coverImageAlt: 'Cliente préparant une séance AQ8 EMS avec son coach',
+    authorName: 'Équipe AQ8 Algérie',
+    authorRole: 'Rédaction AQ8 Algérie',
+    reviewerName: 'Responsable réseau',
+    content: [
+      { id: 'heading-1', type: 'heading', text: 'Avant votre rendez-vous' },
+      { id: 'paragraph-1', type: 'paragraph', text: 'Hydratez-vous normalement et communiquez toute information utile à votre coach avant le début de la séance.' },
+    ],
+    seoTitle: 'Préparer sa première séance AQ8 EMS',
+    seoDescription: 'Les conseils essentiels pour préparer une première séance AQ8 EMS, échanger avec son centre et profiter d’un accompagnement adapté.',
+    status: 'published',
+    featured: true,
+  });
+
+  assert.equal(valid.valid, true);
+  if (valid.valid) {
+    assert.equal(valid.data.slug, 'comment-preparer-sa-premiere-seance-aq8-ems');
+    assert.equal(valid.data.readingTimeMinutes, 1);
+  }
+});
+
+test('blog reading time has a one-minute minimum', () => {
+  assert.equal(estimateBlogReadingTime([]), 1);
+});
 console.log('All business-rule tests passed.');

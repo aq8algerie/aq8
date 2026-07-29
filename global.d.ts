@@ -19,6 +19,8 @@ declare module 'next' {
     title?: string;
     description?: string;
     keywords?: string[];
+    authors?: Array<{ name: string; url?: string }>;
+    robots?: { index?: boolean; follow?: boolean };
     alternates?: {
       canonical?: string;
     };
@@ -35,6 +37,9 @@ declare module 'next' {
       }>;
       locale?: string;
       type?: string;
+      publishedTime?: string;
+      modifiedTime?: string;
+      authors?: string[];
     };
   };
 }

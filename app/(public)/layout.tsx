@@ -10,7 +10,8 @@ import {
   Phone,
   MapPin,
   ShieldCheck,
-  ChevronDown
+  ChevronDown,
+  BookOpen
 } from "lucide-react";
 import { useData } from "@/components/context/DataProvider";
 import { getPublicCenters } from "@/src/lib/centerVisibility";
@@ -58,7 +59,7 @@ export default function PublicLayout({
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-1.5 text-xs font-bold text-slate-600">
+            <nav className="hidden lg:flex items-center gap-1.5 text-xs font-bold text-slate-600">
               {/* Dropdown Technologies */}
               <div
                 className="relative group py-2"
@@ -120,6 +121,12 @@ export default function PublicLayout({
                 Nos Centres
               </Link>
               <Link
+                href="/conseils"
+                className={`rounded-md px-3 py-2 transition-premium ${isActive("/conseils") ? "text-[#ff5757]" : "hover:bg-slate-50 hover:text-[#242424]"}`}
+              >
+                Conseils
+              </Link>
+              <Link
                 href="/contact"
                 className={`rounded-md px-3 py-2 transition-premium ${isActive("/contact") ? "text-[#ff5757]" : "hover:bg-slate-50 hover:text-[#242424]"}`}
               >
@@ -128,7 +135,7 @@ export default function PublicLayout({
             </nav>
 
             {/* Primary actions */}
-            <div className="hidden md:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2">
               <Link
                 href="/reservation"
                 className="inline-flex items-center gap-2 rounded-md bg-[#ff5757] px-4 py-2.5 text-xs font-bold text-white transition-premium hover:bg-[#e94949] cursor-pointer"
@@ -145,7 +152,7 @@ export default function PublicLayout({
             </div>
 
             {/* Mobile menu toggle */}
-            <div className="flex md:hidden items-center gap-2">
+            <div className="flex lg:hidden items-center gap-2">
               <button
                 type="button"
                 aria-label={mobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
@@ -162,7 +169,7 @@ export default function PublicLayout({
 
         {/* Mobile responsive drawer */}
         {mobileMenuOpen && (
-          <div id="public-mobile-menu" className="md:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-4 space-y-2 text-xs font-bold">
+          <div id="public-mobile-menu" className="lg:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-4 space-y-2 text-xs font-bold">
             <Link
               href="/reservation"
               onClick={() => setMobileMenuOpen(false)}
@@ -175,6 +182,7 @@ export default function PublicLayout({
               { id: "/", label: "Accueil" },
               { id: "/a-propos", label: "À propos" },
               { id: "/centres", label: "Nos Centres" },
+              { id: "/conseils", label: "Conseils & actualités" },
               { id: "/contact", label: "Contact" },
               { id: "/login", label: "Accéder au CRM AQ8" }
             ].map(link => (
@@ -185,6 +193,7 @@ export default function PublicLayout({
                 className={`w-full text-left px-3 py-2.5 rounded-lg flex items-center gap-2 ${isActive(link.id) ? "bg-rose-50 text-[#ff5757]" : "text-slate-600 hover:bg-slate-50"}`}
               >
                 {link.id === "/login" && <ShieldCheck className="h-4 w-4 text-[#ff5757]" />}
+                {link.id === "/conseils" && <BookOpen className="h-4 w-4 text-[#ff5757]" />}
                 {link.label}
               </Link>
             ))}
@@ -237,6 +246,7 @@ export default function PublicLayout({
             <ul className="space-y-2 text-slate-400">
               <li><Link href="/aq8" className="hover:text-white transition">AQ8 EMS</Link></li>
               <li><Link href="/wonder" className="hover:text-white transition">Wonder Sculpt</Link></li>
+              <li><Link href="/conseils" className="hover:text-white transition">Conseils & actualités</Link></li>
               <li><Link href="/a-propos#faq" className="hover:text-white transition text-[#ff5757]">Foire aux questions (FAQ)</Link></li>
               <li><Link href="/a-propos" className="hover:text-white transition">À propos d'AQ8</Link></li>
             </ul>

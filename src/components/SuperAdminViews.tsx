@@ -46,6 +46,7 @@ import { SuperAdminDashboard } from './super-admin/SuperAdminDashboard';
 import { SuperAdminTabs, SuperAdminTabId } from './super-admin/SuperAdminTabs';
 import { AuditLogPanel } from './super-admin/AuditLogPanel';
 import { PaymentsPanel } from './super-admin/PaymentsPanel';
+import { BlogManagement } from './super-admin/BlogManagement';
 import { mutateManagerAccess } from '../lib/managerAccessClient';
 import { ProfessionalToast, ProfessionalToastState } from './manager/ProfessionalToast';
 import { ProfessionalConfirmDialog } from './manager/ProfessionalConfirmDialog';
@@ -703,6 +704,10 @@ export function SuperAdminViews({
           onDeleteManager={handleDeleteManager}
           onToggleManagerActive={toggleManagerActive}
         />
+      )}
+      {/* D. Pôle éditorial */}
+      {activeSubTab === 'blog' && (
+        <BlogManagement />
       )}
       {/* E. Analyses / Stats */}
       {/* E. Analyses / Stats */}

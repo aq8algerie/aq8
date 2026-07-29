@@ -30,7 +30,8 @@ import {
   Scale,
   Sun,
   Moon,
-  Layers
+  Layers,
+  BookOpen
 } from 'lucide-react';
 
 import {
@@ -881,6 +882,7 @@ export default function App() {
                         { id: 'dashboard' as const, label: 'Tableau de bord', icon: Activity },
                         { id: 'centers' as const, label: 'Gestion Centres', icon: Building },
                         { id: 'managers' as const, label: 'Managers & Accès', icon: Users },
+                        { id: 'blog' as const, label: 'Conseils & Actualités', icon: BookOpen },
                         { id: 'stats' as const, label: 'Analyses Réseau', icon: BarChart3 },
                         { id: 'settings' as const, label: 'Paramètres Généraux', icon: Settings }
                       ].map(tab => {

@@ -347,6 +347,12 @@ service cloud.firestore {
       allow read, update, delete: if isSuperAdmin();
     }
 
+    match /blog_posts/{postId} {
+      allow read: if isSuperAdmin() || resource.data.status == 'published';
+      // Le cycle editorial passe par l API serveur afin de valider le contenu,
+      // l unicite du slug et la tracabilite des publications.
+      allow create, update, delete: if false;
+    }
     match /audit_logs/{logId} {
       allow read: if isSuperAdmin();
       allow create: if isAuditLogCreate();
