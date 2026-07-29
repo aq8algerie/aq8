@@ -428,8 +428,8 @@ export default async function CenterDetailPage({ params }: PageProps) {
 
               <div className="space-y-3 text-sm font-medium leading-relaxed text-slate-700">
                 <p>
-                  Si vous ne pouvez pas assister à votre séance, merci d’annuler
-                  votre rendez-vous au moins 1 heure à l’avance.
+                  {center.cancellationRule ||
+                    "Si vous ne pouvez pas assister à votre séance, merci d’annuler votre rendez-vous au moins 1 heure à l’avance."}
                 </p>
 
                 <p className="rounded-md border border-[#ff5757]/10 bg-[#ff5757]/5 p-4 font-semibold text-[#ff5757]">

@@ -729,6 +729,11 @@ export function CenterBookingForm({
 
             <p className="text-xs font-medium leading-relaxed text-slate-500 text-center">
               La réservation bloque une place disponible, puis l'équipe du centre confirme définitivement le rendez-vous.
+              En envoyant cette demande, vous reconnaissez avoir pris connaissance des{" "}
+              <a href="/conditions-generales-de-vente" className="font-bold text-slate-700 underline underline-offset-2 hover:text-[#ff5757]">CGV</a>
+              {" "}et de la{" "}
+              <a href="/politique-de-confidentialite" className="font-bold text-slate-700 underline underline-offset-2 hover:text-[#ff5757]">politique de confidentialité</a>.
+              Aucun paiement n'est déclenché en ligne.
             </p>
           </form>
         </>

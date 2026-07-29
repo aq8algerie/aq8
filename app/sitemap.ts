@@ -23,6 +23,8 @@ export default async function sitemap(): Promise<SitemapEntry[]> {
     { url: `${BASE_URL}/a-propos`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/mentions-legales`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${BASE_URL}/politique-de-confidentialite`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${BASE_URL}/conditions-generales-de-vente`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
   ];
   const centers = await getServerPublicCenters();
   const centerRoutes: SitemapEntry[] = centers

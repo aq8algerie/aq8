@@ -238,6 +238,13 @@ export function ContactForm({ centers }: ContactFormProps) {
           />
         </div>
 
+        <p className="text-center text-xs font-medium leading-relaxed text-slate-500">
+          Les informations envoyées servent uniquement à traiter votre demande. Consultez notre{" "}
+          <a href="/politique-de-confidentialite" className="font-bold text-slate-700 underline underline-offset-2 hover:text-[#ff5757]">
+            politique de confidentialité
+          </a>.
+        </p>
+
         <button
           type="submit"
           disabled={isLoading}

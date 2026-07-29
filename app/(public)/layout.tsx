@@ -276,8 +276,11 @@ export default function PublicLayout({
             <Link href="/mentions-legales" className="transition hover:text-white">
               Mentions légales
             </Link>
-            <Link href="/mentions-legales#donnees-personnelles" className="transition hover:text-white">
-              Données personnelles
+            <Link href="/politique-de-confidentialite" className="transition hover:text-white">
+              Confidentialité
+            </Link>
+            <Link href="/conditions-generales-de-vente" className="transition hover:text-white">
+              CGV
             </Link>
           </nav>
         </div>
