@@ -8,6 +8,7 @@ import { Building2, CalendarClock, ExternalLink, FileText, Image as ImageIcon, L
 import { Center } from '../../types';
 import { CrmActionResult } from '../../lib/crmTransactions';
 import { ManagerBookingSettingsPanel } from './ManagerBookingSettingsPanel';
+import { uploadCenterImage } from '../../lib/centerImageUploadClient';
 
 type CenterProfileSettings = Pick<Center,
   | 'phone'
@@ -16,7 +17,6 @@ type CenterProfileSettings = Pick<Center,
   | 'imageUrl'
   | 'schedule'
   | 'description'
-  | 'status'
   | 'importantNotes'
   | 'menHours'
   | 'womenHours'
@@ -52,9 +52,7 @@ const SETTINGS_TABS: Array<{
   },
 ];
 
-const MAX_CENTER_IMAGE_BYTES = 6 * 1024 * 1024;
-const CENTER_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const CENTER_IMAGE_ACCEPT = CENTER_IMAGE_MIME_TYPES.join(',');
+const CENTER_IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp';
 
 interface ManagerSettingsViewProps {
   currentCenter: Center;
@@ -73,21 +71,6 @@ function splitLines(value: string): string[] {
     .filter(Boolean);
 }
 
-function sanitizeStorageFileName(name: string): string {
-  const cleaned = name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9._-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-
-  return (cleaned || 'center-image').slice(0, 80);
-}
-
-function buildCenterImageStoragePath(centerId: string, fileName: string): string {
-  return `centers/${centerId}/public/${Date.now()}-${sanitizeStorageFileName(fileName)}`;
-}
-
 function normalizeProfile(center: Center) {
   return {
     phone: center.phone || '',
@@ -96,7 +79,6 @@ function normalizeProfile(center: Center) {
     imageUrl: center.imageUrl || '',
     schedule: center.schedule || '',
     description: center.description || '',
-    status: center.status || '',
     cancellationRule: center.cancellationRule || '',
     importantNotesText: joinLines(center.importantNotes),
     menHoursText: joinLines(center.menHours),
@@ -138,7 +120,6 @@ export function ManagerSettingsView({
     imageUrl: source.imageUrl.trim(),
     schedule: source.schedule.trim(),
     description: source.description.trim(),
-    status: source.status.trim(),
     cancellationRule: source.cancellationRule.trim(),
     importantNotes: splitLines(source.importantNotesText),
     menHours: splitLines(source.menHoursText),
@@ -169,76 +150,31 @@ export function ManagerSettingsView({
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const input = event.currentTarget;
     const file = input.files?.[0];
-
     if (!file) return;
 
     setProfileError('');
     setImageUploadError('');
     setImageUploadMessage('');
-    setImageUploadProgress(0);
-
-    if (!CENTER_IMAGE_MIME_TYPES.includes(file.type)) {
-      setImageUploadError('Formats acceptés : JPG, PNG ou WebP.');
-      input.value = '';
-      return;
-    }
-
-    if (file.size > MAX_CENTER_IMAGE_BYTES) {
-      setImageUploadError('Image trop lourde. Taille maximale: 6 Mo.');
-      input.value = '';
-      return;
-    }
-
+    setImageUploadProgress(10);
     setUploadingImage(true);
 
     try {
-      // 1. Convert file to base64 Data URL locally
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
-      setImageUploadProgress(50);
-      let downloadUrl = dataUrl;
-
-      // 2. Call API server upload endpoint (bypasses Firebase client Storage authorization rules)
-      try {
-        const response = await fetch('/api/upload-center-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            centerId: currentCenter.id,
-            imageBase64: dataUrl,
-            fileName: file.name,
-            mimeType: file.type,
-          }),
-        });
-
-        const data = await response.json().catch(() => null);
-        if (response.ok && data?.ok && data?.imageUrl) {
-          downloadUrl = data.imageUrl;
-        }
-      } catch (serverErr) {
-        console.warn('Server upload endpoint unreachable, using Data URL directly:', serverErr);
-      }
-
-      setImageUploadProgress(85);
+      const downloadUrl = await uploadCenterImage(currentCenter.id, file);
+      setImageUploadProgress(80);
       const nextProfile = { ...profile, imageUrl: downloadUrl };
       setProfile(nextProfile);
       setSavingProfile(true);
       const result = await saveProfileSettings(nextProfile);
 
-      if (result.ok) {
-        setImageUploadProgress(100);
-        setImageUploadMessage('Image téléversée et enregistrée avec succès.');
-      } else {
-        setImageUploadError("Image téléversée, mais l'enregistrement du centre a échoué. Réessayez avec Enregistrer les infos.");
+      if (!result.ok) {
+        throw new Error(result.error || "L’image a été téléversée, mais le centre n’a pas pu être mis à jour.");
       }
+      setImageUploadProgress(100);
+      setImageUploadMessage('Image téléversée et enregistrée avec succès.');
     } catch (error) {
       console.error('Center public image upload failed:', error);
-      setImageUploadError("Upload impossible. Vérifiez le fichier et réessayez.");
+      setImageUploadProgress(0);
+      setImageUploadError(error instanceof Error ? error.message : 'Téléversement impossible.');
     } finally {
       setSavingProfile(false);
       setUploadingImage(false);
@@ -476,17 +412,6 @@ export function ManagerSettingsView({
                 </div>
               </div>
             </div>
-
-            <label className="space-y-1.5 text-xs font-bold text-slate-600">
-              Statut affiché
-              <input
-                type="text"
-                value={profile.status}
-                onChange={(event) => updateProfile('status', event.target.value)}
-                placeholder="Ouvert, Femmes uniquement, Horaires temporaires..."
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-[#ff5757] focus:bg-white"
-              />
-            </label>
 
             <label className="space-y-1.5 text-xs font-bold text-slate-600">
               Horaires affichés sur la fiche

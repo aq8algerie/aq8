@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { Center, Service, Package, GeneralSettings } from "@/src/types";
 import { db } from "@/src/lib/firebase";
 import { collection, onSnapshot } from "firebase/firestore";
-import { INITIAL_CENTERS, INITIAL_SERVICES, INITIAL_PACKAGES, INITIAL_SETTINGS } from "@/src/mockData";
+import { INITIAL_SERVICES, INITIAL_PACKAGES, INITIAL_SETTINGS } from "@/src/mockData";
 
 interface DataContextType {
   centers: Center[];
@@ -15,7 +15,7 @@ interface DataContextType {
 }
 
 const DataContext = createContext<DataContextType>({
-  centers: INITIAL_CENTERS,
+  centers: [],
   services: INITIAL_SERVICES,
   packages: INITIAL_PACKAGES,
   settings: INITIAL_SETTINGS,
@@ -23,7 +23,7 @@ const DataContext = createContext<DataContextType>({
 });
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
-  const [centers, setCenters] = useState<Center[]>(INITIAL_CENTERS);
+  const [centers, setCenters] = useState<Center[]>([]);
   const [services, setServices] = useState<Service[]>(INITIAL_SERVICES);
   const [packages, setPackages] = useState<Package[]>(INITIAL_PACKAGES);
   const [settings, setSettings] = useState<GeneralSettings | null>(INITIAL_SETTINGS);
@@ -33,7 +33,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const unsubCenters = onSnapshot(collection(db, "centers"), (snapshot) => {
       const list: Center[] = [];
       snapshot.forEach(doc => list.push(doc.data() as Center));
-      setCenters(list.length > 0 ? list : INITIAL_CENTERS);
+      setCenters(list);
     }, (error) => {
       console.error("Error loading centers:", error);
     });

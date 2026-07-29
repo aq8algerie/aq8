@@ -103,6 +103,27 @@ export function ManagerDashboard({
   const filteredRevenue = filteredPayments.reduce((acc, curr) => acc + curr.amount, 0);
   const filteredAppointmentsCount = filteredAppointments.length;
   const filteredMeasurementsCount = filteredMeasurements.length;
+  const now = new Date();
+  const isInMonth = (value: string | undefined, monthOffset = 0) => {
+    if (!value) return false;
+    const date = new Date(value);
+    const target = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+    return !Number.isNaN(date.getTime())
+      && date.getFullYear() === target.getFullYear()
+      && date.getMonth() === target.getMonth();
+  };
+  const newClientsThisMonth = filteredClients.filter(client => isInMonth(client.createdAt)).length;
+  const revenueThisMonth = filteredPayments
+    .filter(payment => isInMonth(payment.date))
+    .reduce((sum, payment) => sum + payment.amount, 0);
+  const revenuePreviousMonth = filteredPayments
+    .filter(payment => isInMonth(payment.date, -1))
+    .reduce((sum, payment) => sum + payment.amount, 0);
+  const revenueDelta = revenuePreviousMonth === 0
+    ? null
+    : Math.round(((revenueThisMonth - revenuePreviousMonth) / Math.abs(revenuePreviousMonth)) * 100);
+  const bookingsThisMonth = filteredAppointments.filter(appointment => isInMonth(appointment.dateTime)).length;
+  const measurementsThisMonth = filteredMeasurements.filter(measurement => isInMonth(measurement.date)).length;
 
   // --- ALERTES METIER ---
 
@@ -292,7 +313,7 @@ export function ManagerDashboard({
           icon={Users}
           iconBgClass={genderFilter === 'F' ? 'bg-rose-50' : genderFilter === 'H' ? 'bg-blue-50' : 'bg-slate-100'}
           iconColorClass={genderFilter === 'F' ? 'text-rose-600' : genderFilter === 'H' ? 'text-blue-600' : 'text-slate-700'}
-          trend={{ text: "↑ 4 nouveaux ce mois", isPositive: true }}
+          trend={{ text: `${newClientsThisMonth} nouveau(x) ce mois`, isPositive: true }}
           borderLeftClass={genderFilter === 'F' ? 'border-l-4 border-l-rose-500' : genderFilter === 'H' ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-blue-500'}
         />
         <StatCard
@@ -302,7 +323,12 @@ export function ManagerDashboard({
           icon={DollarSign}
           iconBgClass="bg-emerald-50"
           iconColorClass="text-emerald-600"
-          trend={{ text: "↑ 14.5% vs mois dernier", isPositive: true }}
+          trend={{
+            text: revenueDelta === null
+              ? `${formatDZD(revenueThisMonth)} ce mois`
+              : `${revenueDelta >= 0 ? "+" : ""}${revenueDelta}% vs mois précédent`,
+            isPositive: revenueDelta === null || revenueDelta >= 0,
+          }}
           borderLeftClass="border-l-4 border-l-emerald-500"
         />
         <StatCard
@@ -312,7 +338,7 @@ export function ManagerDashboard({
           icon={Calendar}
           iconBgClass="bg-amber-50"
           iconColorClass="text-amber-600"
-          trend={{ text: "↑ 9.2% taux d'occupation", isPositive: true }}
+          trend={{ text: `${bookingsThisMonth} ce mois`, isPositive: true }}
           borderLeftClass="border-l-4 border-l-amber-500"
         />
         <StatCard
@@ -322,7 +348,7 @@ export function ManagerDashboard({
           icon={Scale}
           iconBgClass="bg-rose-50 text-rose-500"
           iconColorClass="text-[#ff5757]"
-          trend={{ text: "↑ 3 nouveaux bilans", isPositive: true }}
+          trend={{ text: `${measurementsThisMonth} nouveau(x) ce mois`, isPositive: true }}
           borderLeftClass="border-l-4 border-l-rose-500"
         />
       </div>

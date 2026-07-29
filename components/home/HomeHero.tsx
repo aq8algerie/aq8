@@ -53,7 +53,7 @@ export function HomeHero() {
           <img
             src="/images/aq8algerie.webp"
             alt="Séance AQ8 dans un centre premium en Algérie"
-            className="absolute bottom-[-10px] right-[-12px] h-[118%] w-[118%] max-w-none object-contain object-right-bottom mix-blend-multiply drop-shadow-[0_26px_45px_rgba(36,36,36,0.18)] sm:bottom-[-22px] sm:right-[-28px] sm:h-[124%] sm:w-[124%] lg:bottom-[-46px] lg:right-[-72px] lg:h-[132%] lg:w-[132%]"
+            className="absolute bottom-[-10px] left-1/2 h-[118%] w-[118%] max-w-none -translate-x-1/2 object-contain object-center mix-blend-multiply drop-shadow-[0_26px_45px_rgba(36,36,36,0.18)] sm:bottom-[-22px] sm:left-auto sm:right-[-28px] sm:h-[124%] sm:w-[124%] sm:translate-x-0 sm:object-right-bottom lg:bottom-[-46px] lg:right-[-72px] lg:h-[132%] lg:w-[132%]"
             referrerPolicy="no-referrer"
           />
         </div>

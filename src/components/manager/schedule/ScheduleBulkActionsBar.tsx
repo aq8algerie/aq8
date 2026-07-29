@@ -4,14 +4,13 @@
  */
 
 import React from 'react';
-import { CheckCircle2, Sparkles, Trash2, XCircle } from 'lucide-react';
+import { CheckCircle2, Sparkles, XCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface ScheduleBulkActionsBarProps {
   selectedCount: number;
   onComplete: () => void;
   onCancel: () => void;
-  onDelete: () => void;
   onClearSelection: () => void;
 }
 
@@ -19,7 +18,6 @@ export function ScheduleBulkActionsBar({
   selectedCount,
   onComplete,
   onCancel,
-  onDelete,
   onClearSelection,
 }: ScheduleBulkActionsBarProps) {
   if (selectedCount === 0) {
@@ -55,12 +53,7 @@ export function ScheduleBulkActionsBar({
         >
           <XCircle className="h-3.5 w-3.5" /> Annuler séances
         </button>
-        <button
-          onClick={onDelete}
-          className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 font-bold text-[10px] rounded-lg transition flex items-center gap-1 cursor-pointer"
-        >
-          <Trash2 className="h-3.5 w-3.5" /> Supprimer
-        </button>
+
         <div className="h-4 w-px bg-white/20 hidden sm:block"></div>
         <button
           onClick={onClearSelection}

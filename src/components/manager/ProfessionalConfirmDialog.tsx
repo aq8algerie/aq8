@@ -63,17 +63,52 @@ export function ProfessionalConfirmDialog({
   const Icon = config.Icon;
 
   useEffect(() => {
-    if (!open || loading) return undefined;
+    if (!open) return undefined;
+
+    const dialog = document.getElementById(id);
+    const previouslyFocused = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    const focusableSelector = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+    const focusFirstControl = window.requestAnimationFrame(() => {
+      (dialog?.querySelector<HTMLElement>('[data-autofocus]') ||
+        dialog?.querySelector<HTMLElement>(focusableSelector))?.focus();
+    });
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && !loading) {
+        event.preventDefault();
         onCancel();
+        return;
+      }
+
+      if (event.key !== 'Tab' || !dialog) return;
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector));
+      if (focusable.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [loading, onCancel, open]);
+    return () => {
+      window.cancelAnimationFrame(focusFirstControl);
+      window.removeEventListener('keydown', handleKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [id, loading, onCancel, open]);
 
   return (
     <AnimatePresence>
@@ -93,6 +128,7 @@ export function ProfessionalConfirmDialog({
           <motion.div
             id={id}
             role="dialog"
+            tabIndex={-1}
             aria-modal="true"
             aria-labelledby={`${id}-title`}
             aria-describedby={`${id}-description`}
@@ -107,7 +143,7 @@ export function ProfessionalConfirmDialog({
                 <Icon className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${config.eyebrowClass}`}>
+                <p className={`text-[10px] font-extrabold uppercase tracking-normal ${config.eyebrowClass}`}>
                   {config.eyebrow}
                 </p>
                 <h3 id={`${id}-title`} className="mt-1 text-base font-extrabold leading-6 tracking-normal text-slate-950">
@@ -134,6 +170,7 @@ export function ProfessionalConfirmDialog({
             <div className="flex flex-col-reverse gap-2 border-t border-slate-100 bg-white px-4 py-4 sm:flex-row sm:justify-end sm:px-5">
               <button
                 type="button"
+                data-autofocus
                 onClick={onCancel}
                 disabled={loading}
                 className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-extrabold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"

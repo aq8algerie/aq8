@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Plus, Printer, Trash2, FileText, CheckCircle2, Search, Filter, CreditCard, Layers, List } from 'lucide-react';
+import { Plus, Printer, Undo2, FileText, CheckCircle2, Search, Filter, CreditCard, Layers, List } from 'lucide-react';
 import { Client, Payment, Package, Center } from '../../types';
 
 interface ManagerPaymentsViewProps {
@@ -14,7 +14,7 @@ interface ManagerPaymentsViewProps {
   packages: Package[];
   currentCenter: Center;
   onLogPaymentClick: () => void;
-  onDeletePayment: (paymentId: string) => void;
+  onReversePayment: (paymentId: string) => void;
 }
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100, 200] as const;
@@ -71,7 +71,7 @@ export function ManagerPaymentsView({
   packages,
   currentCenter,
   onLogPaymentClick,
-  onDeletePayment
+  onReversePayment
 }: ManagerPaymentsViewProps) {
   const [listPage, setListPage] = useState(1);
   const [listPageSize, setListPageSize] = useState<PaymentPageSize>(20);
@@ -288,11 +288,12 @@ export function ManagerPaymentsView({
                         </button>
                         <button
                           type="button"
-                          onClick={() => onDeletePayment(pay.id)}
-                          className="p-1.5 hover:bg-red-50 text-red-600 rounded-lg border border-red-50 transition cursor-pointer"
-                          title="Supprimer la transaction"
+                          onClick={() => onReversePayment(pay.id)}
+                          disabled={pay.kind === 'reversal' || pay.status === 'reversed' || amount <= 0}
+                          className="p-1.5 hover:bg-amber-50 text-amber-700 rounded-lg border border-amber-100 transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-35"
+                          title={pay.status === 'reversed' ? 'Encaissement déjà annulé' : 'Annuler comptablement l’encaissement'}
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Undo2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     </td>
@@ -351,11 +352,12 @@ export function ManagerPaymentsView({
                   </button>
                   <button
                     type="button"
-                    onClick={() => onDeletePayment(pay.id)}
-                    className="p-1.5 hover:bg-red-50 text-red-600 rounded-lg border border-red-50 transition cursor-pointer"
-                    title="Supprimer la transaction"
+                    onClick={() => onReversePayment(pay.id)}
+                    disabled={pay.kind === 'reversal' || pay.status === 'reversed' || amount <= 0}
+                    className="p-1.5 hover:bg-amber-50 text-amber-700 rounded-lg border border-amber-100 transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-35"
+                    title={pay.status === 'reversed' ? 'Encaissement déjà annulé' : 'Annuler comptablement l’encaissement'}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Undo2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>

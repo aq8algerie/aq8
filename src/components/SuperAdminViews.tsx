@@ -46,6 +46,15 @@ import { SuperAdminDashboard } from './super-admin/SuperAdminDashboard';
 import { SuperAdminTabs, SuperAdminTabId } from './super-admin/SuperAdminTabs';
 import { AuditLogPanel } from './super-admin/AuditLogPanel';
 import { PaymentsPanel } from './super-admin/PaymentsPanel';
+import { mutateManagerAccess } from '../lib/managerAccessClient';
+import { ProfessionalToast, ProfessionalToastState } from './manager/ProfessionalToast';
+import { ProfessionalConfirmDialog } from './manager/ProfessionalConfirmDialog';
+import { uploadCenterImage } from '../lib/centerImageUploadClient';
+
+type PendingSuperAdminAction =
+  | { kind: 'center'; id: string; label: string }
+  | { kind: 'manager'; id: string; label: string }
+  | { kind: 'service'; id: string; label: string };
 
 export function SuperAdminViews({
   centers,
@@ -61,7 +70,6 @@ export function SuperAdminViews({
   payments = [],
   appointments = [],
   onUpdateCenters,
-  onUpdateManagers,
   onUpdateServices,
   onUpdatePackages,
   onUpdateSettings,
@@ -82,8 +90,7 @@ export function SuperAdminViews({
   clientPackages?: ClientPackage[];
   payments?: Payment[];
   appointments?: Appointment[];
-  onUpdateCenters: (centers: Center[]) => void;
-  onUpdateManagers: (managers: CenterManager[]) => void;
+  onUpdateCenters: (centers: Center[]) => void | Promise<void>;
   onUpdateServices: (services: Service[]) => void;
   onUpdatePackages: (packages: Package[]) => void;
   onUpdateSettings: (settings: GeneralSettings) => void;
@@ -98,6 +105,16 @@ export function SuperAdminViews({
 
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(true);
+  const [feedback, setFeedback] = useState<ProfessionalToastState | null>(null);
+  const [managerAccessBusy, setManagerAccessBusy] = useState(false);
+  const [managerAccessError, setManagerAccessError] = useState('');
+  const [pendingAdminAction, setPendingAdminAction] = useState<PendingSuperAdminAction | null>(null);
+  const [confirmingAdminAction, setConfirmingAdminAction] = useState(false);
+
+  const triggerToast = (message: string, type: ProfessionalToastState['type'] = 'success', title?: string) => {
+    setFeedback({ message, type, title });
+    window.setTimeout(() => setFeedback(null), 4200);
+  };
 
   useEffect(() => {
     if (activeSubTab === 'audit') {
@@ -125,6 +142,7 @@ export function SuperAdminViews({
   // Modal States
   const [showCenterModal, setShowCenterModal] = useState(false);
   const [editingCenter, setEditingCenter] = useState<Center | null>(null);
+  const [centerDraftId, setCenterDraftId] = useState('');
 
   const [showManagerModal, setShowManagerModal] = useState(false);
   const [editingManager, setEditingManager] = useState<CenterManager | null>(null);
@@ -147,49 +165,28 @@ export function SuperAdminViews({
   const [centerImgUploadError, setCenterImgUploadError] = useState('');
 
   const handleCenterImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.currentTarget.files?.[0];
+    const input = event.currentTarget;
+    const file = input.files?.[0];
     if (!file) return;
 
     setCenterImgUploadError('');
     setUploadingCenterImg(true);
-
     try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
-      let uploadedUrl = dataUrl;
-
-      try {
-        const response = await fetch('/api/upload-center-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            centerId: editingCenter?.id || 'new-center',
-            imageBase64: dataUrl,
-            fileName: file.name,
-            mimeType: file.type,
-          }),
-        });
-
-        const data = await response.json().catch(() => null);
-        if (response.ok && data?.ok && data?.imageUrl) {
-          uploadedUrl = data.imageUrl;
-        }
-      } catch (err) {
-        console.warn('Server upload endpoint unreachable, using Data URL:', err);
+      const targetCenterId = centerDraftId || editingCenter?.id;
+      if (!targetCenterId) {
+        throw new Error('Identifiant temporaire du centre introuvable. Fermez puis rouvrez le formulaire.');
       }
-
+      const uploadedUrl = await uploadCenterImage(targetCenterId, file);
       setCenterImg(uploadedUrl);
-    } catch (err) {
-      console.error('Center image upload failed:', err);
-      setCenterImgUploadError('Erreur lors du téléversement de l\'image.');
+      triggerToast('L’image du centre a été téléversée de manière sécurisée.', 'success', 'Image enregistrée');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erreur lors du téléversement de l’image.';
+      console.error('Center image upload failed:', error);
+      setCenterImgUploadError(message);
+      triggerToast(message, 'error', 'Téléversement impossible');
     } finally {
       setUploadingCenterImg(false);
-      event.currentTarget.value = '';
+      input.value = '';
     }
   };
 
@@ -229,6 +226,7 @@ export function SuperAdminViews({
 
   // Open Center Modal
   const openCenterModal = (center: Center | null) => {
+    setCenterDraftId(center?.id || `center-${Date.now()}`);
     setCenterModalTab('general');
     setNewMenHour('');
     setNewWomenHour('');
@@ -309,121 +307,87 @@ export function SuperAdminViews({
     setShowCenterModal(true);
   };
 
-  const handleCenterSubmit = (e: React.FormEvent) => {
+  const handleCenterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setManagerAccessError('');
+
     const servicesList: ('aq8' | 'wonder')[] = [];
     if (centerHasAq8) servicesList.push('aq8');
     if (centerHasWonder) servicesList.push('wonder');
 
-    const calculatedSlug = centerName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-    const centerIdToUse = editingCenter ? editingCenter.id : `center-${Date.now()}`;
+    const calculatedSlug = centerName
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+    const centerIdToUse = editingCenter ? editingCenter.id : centerDraftId;
+    const centerRecord: Center = {
+      ...(editingCenter || {}),
+      id: centerIdToUse,
+      name: centerName.trim(),
+      city: centerCity.trim(),
+      address: centerAddress.trim(),
+      phone: centerPhone.trim(),
+      email: centerEmail.trim().toLowerCase(),
+      schedule: centerSchedule.trim(),
+      description: centerDesc.trim(),
+      services: servicesList,
+      imageUrl: centerImg,
+      status: centerStatus,
+      slug: calculatedSlug,
+      menHours: centerMenHours,
+      womenHours: centerWomenHours,
+      equipment: centerEquipment,
+      cancellationRule: centerCancellationRule,
+      importantNotes: centerImportantNotes,
+      customServicePrices: centerCustomServicePrices,
+      customPackagePrices: centerCustomPackagePrices,
+      customActiveServices: centerCustomActiveServices,
+      customActivePackages: centerCustomActivePackages,
+    };
 
-    // 1. Create or update center
-    if (editingCenter) {
-      logCrmAction(userId, userName, 'super_admin', {
-        action: 'UPDATE_CENTER',
-        details: `Modification des paramètres du centre : ${centerName} (${centerCity})`,
-        targetId: editingCenter.id,
-        targetType: 'center'
-      });
-
-      const updated = centers.map(c => c.id === editingCenter.id ? {
-        ...c,
-        name: centerName,
-        city: centerCity,
-        address: centerAddress,
-        phone: centerPhone,
-        email: centerEmail,
-        schedule: centerSchedule,
-        description: centerDesc,
-        services: servicesList,
-        imageUrl: centerImg,
-        status: centerStatus,
-        slug: calculatedSlug,
-        menHours: centerMenHours,
-        womenHours: centerWomenHours,
-        equipment: centerEquipment,
-        cancellationRule: centerCancellationRule,
-        importantNotes: centerImportantNotes,
-        customServicePrices: centerCustomServicePrices,
-        customPackagePrices: centerCustomPackagePrices,
-        customActiveServices: centerCustomActiveServices,
-        customActivePackages: centerCustomActivePackages
-      } : c);
-      onUpdateCenters(updated);
-    } else {
-      logCrmAction(userId, userName, 'super_admin', {
-        action: 'CREATE_CENTER',
-        details: `Création du nouveau centre : ${centerName} (${centerCity})`,
+    try {
+      const nextCenters = editingCenter
+        ? centers.map(center => center.id === centerIdToUse ? centerRecord : center)
+        : [...centers, centerRecord];
+      await onUpdateCenters(nextCenters);
+      await logCrmAction(userId, userName, 'super_admin', {
+        action: editingCenter ? 'UPDATE_CENTER' : 'CREATE_CENTER',
+        details: `${editingCenter ? 'Modification' : 'Création'} du centre : ${centerRecord.name} (${centerRecord.city})`,
         targetId: centerIdToUse,
-        targetType: 'center'
+        targetType: 'center',
       });
 
-      const newCenter: Center = {
-        id: centerIdToUse,
-        name: centerName,
-        city: centerCity,
-        address: centerAddress,
-        phone: centerPhone,
-        email: centerEmail,
-        schedule: centerSchedule,
-        description: centerDesc,
-        services: servicesList,
-        imageUrl: centerImg,
-        status: centerStatus,
-        slug: calculatedSlug,
-        menHours: centerMenHours,
-        womenHours: centerWomenHours,
-        equipment: centerEquipment,
-        cancellationRule: centerCancellationRule,
-        importantNotes: centerImportantNotes,
-        customServicePrices: centerCustomServicePrices,
-        customPackagePrices: centerCustomPackagePrices,
-        customActiveServices: centerCustomActiveServices,
-        customActivePackages: centerCustomActivePackages
-      };
-      onUpdateCenters([...centers, newCenter]);
-    }
-
-    // 2. Create or update associated manager
-    if (mgrName.trim() && mgrEmail.trim()) {
-      const associatedMgr = managers.find(m => m.centerId === centerIdToUse);
-      if (associatedMgr) {
-        // Update manager
-        const updatedManagers = managers.map(m => m.id === associatedMgr.id ? {
-          ...m,
-          name: mgrName.trim(),
-          email: mgrEmail.trim(),
-          active: mgrActive
-        } : m);
-        onUpdateManagers(updatedManagers);
-      } else {
-        // Create manager
-        const newMgr: CenterManager = {
-          id: `mgr-${Date.now()}`,
+      if (mgrName.trim() && mgrEmail.trim()) {
+        const associatedManager = managers.find(manager => manager.centerId === centerIdToUse);
+        await mutateManagerAccess({
+          action: 'upsert',
+          managerId: associatedManager?.id,
           name: mgrName.trim(),
           email: mgrEmail.trim(),
           centerId: centerIdToUse,
-          active: mgrActive
-        };
-        onUpdateManagers([...managers, newMgr]);
+          active: mgrActive,
+        });
       }
-    }
 
-    setShowCenterModal(false);
+      setShowCenterModal(false);
+      triggerToast(
+        editingCenter ? 'Le centre et ses accès associés ont été mis à jour.' : 'Le centre a été créé avec sa configuration sécurisée.',
+        'success',
+        editingCenter ? 'Centre mis à jour' : 'Centre créé',
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Impossible d’enregistrer le centre.';
+      setManagerAccessError(message);
+      triggerToast(message, 'error', 'Centre non enregistré');
+    }
   };
 
   const handleDeleteCenter = (id: string) => {
-    const c = centers.find(center => center.id === id);
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce centre ? Tous les clients et réservations associés seront orphelins.')) {
-      logCrmAction(userId, userName, 'super_admin', {
-        action: 'DELETE_CENTER',
-        details: `Suppression du centre : ${c?.name || id}`,
-        targetId: id,
-        targetType: 'center'
-      });
-      onUpdateCenters(centers.filter(c => c.id !== id));
-    }
+    const center = centers.find(candidate => candidate.id === id);
+    if (!center) return;
+    setPendingAdminAction({ kind: 'center', id, label: center.name });
   };
 
   const handleToggleCenterStatus = (id: string) => {
@@ -468,79 +432,70 @@ export function SuperAdminViews({
       setMgrCenterId(centers[0]?.id || '');
       setMgrActive(true);
     }
+    setManagerAccessError('');
     setShowManagerModal(true);
   };
 
-  const handleManagerSubmit = (e: React.FormEvent) => {
+  const handleManagerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingManager) {
-      logCrmAction(userId, userName, 'super_admin', {
-        action: 'UPDATE_MANAGER',
-        details: `Mise à jour du manager : ${mgrName} (${mgrEmail})`,
-        targetId: editingManager.id,
-        targetType: 'manager'
-      });
+    if (managerAccessBusy) return;
+    setManagerAccessBusy(true);
+    setManagerAccessError('');
 
-      const targetEmail = editingManager.email.toLowerCase().trim();
-      const updated = managers.map(m => m.email.toLowerCase().trim() === targetEmail ? {
-        ...m,
-        name: mgrName.trim(),
-        email: mgrEmail.trim(),
-        active: mgrActive
-      } : m);
-      onUpdateManagers(updated);
-    } else {
-      const newMgrId = `mgr-${Date.now()}`;
-      logCrmAction(userId, userName, 'super_admin', {
-        action: 'CREATE_MANAGER',
-        details: `Création du nouveau manager : ${mgrName} (${mgrEmail})`,
-        targetId: newMgrId,
-        targetType: 'manager'
-      });
-
-      const newMgr: CenterManager = {
-        id: newMgrId,
+    try {
+      await mutateManagerAccess({
+        action: 'upsert',
+        managerId: editingManager?.id,
         name: mgrName.trim(),
         email: mgrEmail.trim(),
         centerId: mgrCenterId,
-        active: mgrActive
-      };
-      onUpdateManagers([...managers, newMgr]);
-    }
-    setShowManagerModal(false);
-  };
-
-  const handleDeleteManager = (email: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce gérant ainsi que tous ses accès ?')) {
-      const targetEmail = email.toLowerCase().trim();
-      const m = managers.find(mgr => mgr.email.toLowerCase().trim() === targetEmail);
-      logCrmAction(userId, userName, 'super_admin', {
-        action: 'DELETE_MANAGER',
-        details: `Suppression définitive du gérant : ${m?.name || email}`,
-        targetId: m?.id || null,
-        targetType: 'manager'
+        active: mgrActive,
       });
-      onUpdateManagers(managers.filter(m => m.email.toLowerCase().trim() !== targetEmail));
+      setShowManagerModal(false);
+      setEditingManager(null);
+      triggerToast(
+        editingManager ? 'Les informations et les droits du manager ont été mis à jour.' : 'Le compte manager a été créé et sécurisé.',
+        'success',
+        editingManager ? 'Manager mis à jour' : 'Manager créé',
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Impossible de gérer cet accès manager.';
+      setManagerAccessError(message);
+      triggerToast(message, 'error', 'Accès manager non modifié');
+    } finally {
+      setManagerAccessBusy(false);
     }
   };
 
-  const toggleManagerActive = (email: string, currentActive: boolean) => {
+  const handleDeleteManager = async (email: string) => {
     const targetEmail = email.toLowerCase().trim();
-    const m = managers.find(mgr => mgr.email.toLowerCase().trim() === targetEmail);
-    const action = currentActive ? 'DEACTIVATE_MANAGER' : 'ACTIVATE_MANAGER';
-    const details = currentActive 
-      ? `Désactivation de l'accès du gérant : ${m?.name || email}` 
-      : `Réactivation de l'accès du gérant : ${m?.name || email}`;
+    const manager = managers.find(item => item.email.toLowerCase().trim() === targetEmail);
+    if (!manager || managerAccessBusy) return;
+    setPendingAdminAction({ kind: 'manager', id: manager.id, label: manager.name });
+  };
 
-    logCrmAction(userId, userName, 'super_admin', {
-      action,
-      details,
-      targetId: m?.id || null,
-      targetType: 'manager'
-    });
+  const toggleManagerActive = async (email: string, currentActive: boolean) => {
+    const targetEmail = email.toLowerCase().trim();
+    const manager = managers.find(item => item.email.toLowerCase().trim() === targetEmail);
+    if (!manager || managerAccessBusy) return;
 
-    const updated = managers.map(m => m.email.toLowerCase().trim() === targetEmail ? { ...m, active: !currentActive } : m);
-    onUpdateManagers(updated);
+    setManagerAccessBusy(true);
+    try {
+      await mutateManagerAccess({
+        action: 'set_active',
+        managerId: manager.id,
+        active: !currentActive,
+      });
+      triggerToast(
+        currentActive ? 'Le compte manager est bloqué et ses sessions ont été révoquées.' : 'Le compte manager est de nouveau actif.',
+        'success',
+        currentActive ? 'Manager suspendu' : 'Manager réactivé',
+      );
+    } catch (error) {
+      triggerToast(error instanceof Error ? error.message : 'Modification de l’accès impossible.', 'error', 'Accès non modifié');
+    } finally {
+      setManagerAccessBusy(false);
+    }
   };
 
   // Open Service Modal
@@ -605,15 +560,52 @@ export function SuperAdminViews({
   };
 
   const handleDeleteService = (id: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette prestation ?')) {
-      const s = services.find(srv => srv.id === id);
-      logCrmAction(userId, userName, 'super_admin', {
-        action: 'DELETE_SERVICE',
-        details: `Suppression de la prestation : ${s?.name || id}`,
-        targetId: id,
-        targetType: 'service'
-      });
-      onUpdateServices(services.filter(s => s.id !== id));
+    const service = services.find(candidate => candidate.id === id);
+    if (!service) return;
+    setPendingAdminAction({ kind: 'service', id, label: service.name });
+  };
+
+  const confirmAdminAction = async () => {
+    if (!pendingAdminAction || confirmingAdminAction) return;
+    setConfirmingAdminAction(true);
+    try {
+      if (pendingAdminAction.kind === 'manager') {
+        await mutateManagerAccess({ action: 'archive', managerId: pendingAdminAction.id });
+        triggerToast('Le manager a été archivé et toutes ses sessions ont été révoquées.', 'success', 'Accès révoqué');
+      } else if (pendingAdminAction.kind === 'center') {
+        const hasDependencies = clients.some(client => client.centerId === pendingAdminAction.id)
+          || appointments.some(appointment => appointment.centerId === pendingAdminAction.id)
+          || payments.some(payment => payment.centerId === pendingAdminAction.id)
+          || clientPackages.some(clientPackage => clientPackage.centerId === pendingAdminAction.id);
+        if (hasDependencies) {
+          throw new Error('Ce centre possède un historique CRM. Suspendez-le pour le masquer sans perdre ses données.');
+        }
+        await onUpdateCenters(centers.filter(center => center.id !== pendingAdminAction.id));
+        await logCrmAction(userId, userName, 'super_admin', {
+          action: 'DELETE_EMPTY_CENTER',
+          details: `Suppression du centre vide : ${pendingAdminAction.label}`,
+          targetId: pendingAdminAction.id,
+          targetType: 'center',
+        });
+        triggerToast('Le centre vide a été supprimé.', 'success', 'Centre supprimé');
+      } else {
+        if (appointments.some(appointment => appointment.serviceId === pendingAdminAction.id)) {
+          throw new Error('Cette prestation est utilisée dans l’historique des réservations et ne peut pas être supprimée.');
+        }
+        onUpdateServices(services.filter(service => service.id !== pendingAdminAction.id));
+        await logCrmAction(userId, userName, 'super_admin', {
+          action: 'DELETE_UNUSED_SERVICE',
+          details: `Suppression de la prestation inutilisée : ${pendingAdminAction.label}`,
+          targetId: pendingAdminAction.id,
+          targetType: 'service',
+        });
+        triggerToast('La prestation inutilisée a été supprimée.', 'success', 'Prestation supprimée');
+      }
+    } catch (error) {
+      triggerToast(error instanceof Error ? error.message : 'Action impossible.', 'error', 'Action non effectuée');
+    } finally {
+      setConfirmingAdminAction(false);
+      setPendingAdminAction(null);
     }
   };
 
@@ -638,6 +630,33 @@ export function SuperAdminViews({
 
   return (
     <div className="space-y-6">
+      <ProfessionalToast
+        toast={feedback}
+        onDismiss={() => setFeedback(null)}
+        id="super-admin-toast"
+      />
+      <ProfessionalConfirmDialog
+        open={Boolean(pendingAdminAction)}
+        title={pendingAdminAction?.kind === 'manager'
+          ? 'Archiver ce manager ?'
+          : pendingAdminAction?.kind === 'center'
+            ? 'Supprimer ce centre vide ?'
+            : 'Supprimer cette prestation ?'}
+        description={pendingAdminAction?.kind === 'manager'
+          ? `L’accès de ${pendingAdminAction.label} sera révoqué immédiatement et ses sessions seront fermées.`
+          : pendingAdminAction?.kind === 'center'
+            ? `${pendingAdminAction.label} sera supprimé uniquement si aucun historique CRM ne lui est rattaché.`
+            : `${pendingAdminAction?.label || 'Cette prestation'} sera supprimée uniquement si elle n’apparaît dans aucune réservation.`}
+        confirmLabel={pendingAdminAction?.kind === 'manager' ? 'Archiver et révoquer' : 'Supprimer'}
+        cancelLabel="Conserver"
+        tone="danger"
+        loading={confirmingAdminAction}
+        id="super-admin-confirm-dialog"
+        onCancel={() => {
+          if (!confirmingAdminAction) setPendingAdminAction(null);
+        }}
+        onConfirm={confirmAdminAction}
+      />
       {/* Superadmin Internal Sub-Navigation bar */}
       {!activeTab && (
         <SuperAdminTabs
@@ -1325,19 +1344,13 @@ export function SuperAdminViews({
               <div className="space-y-1">
                 <label className="font-semibold text-slate-600 block">Affectation à un Centre *</label>
                 <select
-                  disabled={!!editingManager}
                   value={mgrCenterId} onChange={(e) => setMgrCenterId(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none disabled:opacity-60"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none"
                 >
                   {centers.map(c => (
                     <option key={c.id} value={c.id}>{c.name} - {c.city}</option>
                   ))}
                 </select>
-                {editingManager && (
-                  <span className="text-[9px] text-slate-400 block pt-0.5">
-                    L'affectation aux centres est gérée directement au niveau de la configuration des centres.
-                  </span>
-                )}
               </div>
 
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
@@ -1351,9 +1364,18 @@ export function SuperAdminViews({
                 />
               </div>
 
+              {managerAccessError && (
+                <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-[11px] font-semibold text-rose-700">
+                  {managerAccessError}
+                </div>
+              )}
+
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                <button type="button" onClick={() => setShowManagerModal(false)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-semibold">Annuler</button>
-                <button type="submit" className="px-4 py-2 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl">Enregistrer</button>
+                <button type="button" disabled={managerAccessBusy} onClick={() => setShowManagerModal(false)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-semibold disabled:opacity-50">Annuler</button>
+                <button type="submit" disabled={managerAccessBusy} className="inline-flex min-w-28 items-center justify-center gap-2 px-4 py-2 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl disabled:cursor-wait disabled:opacity-60">
+                  {managerAccessBusy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                  {managerAccessBusy ? 'Sécurisation...' : 'Enregistrer'}
+                </button>
               </div>
             </form>
           </div>

@@ -51,6 +51,10 @@ export function SuperAdminDashboard({
     });
   };
 
+  const activeCentersCount = centers.filter(center => {
+    const status = String(center.status || 'active').trim().toLowerCase();
+    return status !== 'suspended' && status !== 'showcase';
+  }).length;
   const centerClientCounts = centers.map(c => clients.filter(cli => cli.centerId === c.id).length);
   const maxCenterClients = Math.max(...centerClientCounts, 1);
 
@@ -61,14 +65,11 @@ export function SuperAdminDashboard({
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Centres Actifs</span>
                 <div className="flex items-center justify-between mt-1">
-                  <span className="text-2xl font-bold font-display text-slate-800">{centers.length}</span>
+                  <span className="text-2xl font-bold font-display text-slate-800">{activeCentersCount}</span>
                   <div className="p-2 bg-blue-50 dark:bg-blue-500/10 text-blue-600 rounded-lg"><Building className="h-4 w-4" /></div>
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 mt-2">
-                <span>+1</span>
-                <span className="text-slate-400 font-medium">ce mois-ci</span>
-              </div>
+              <div className="mt-2 text-[10px] font-semibold text-slate-400">{centers.length} centre(s) configuré(s)</div>
             </div>
 
             {/* KPI 2 */}
@@ -80,10 +81,7 @@ export function SuperAdminDashboard({
                   <div className="p-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 rounded-lg"><Users className="h-4 w-4" /></div>
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 mt-2">
-                <span>↑ 8.2%</span>
-                <span className="text-slate-400 font-medium">vs mai</span>
-              </div>
+              <div className="mt-2 text-[10px] font-semibold text-slate-400">Calculée sur les données actuelles</div>
             </div>
 
             {/* KPI 3 */}
@@ -95,10 +93,7 @@ export function SuperAdminDashboard({
                   <div className="p-2 bg-rose-50 dark:bg-rose-500/10 text-[#ff5757] rounded-lg"><Award className="h-4 w-4" /></div>
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 mt-2">
-                <span>↑ 15.3%</span>
-                <span className="text-slate-400 font-medium">ce mois</span>
-              </div>
+              <div className="mt-2 text-[10px] font-semibold text-slate-400">Adhérents avec forfait AQ8 ou mixte</div>
             </div>
 
             {/* KPI 4 */}
@@ -110,10 +105,7 @@ export function SuperAdminDashboard({
                   <div className="p-2 bg-amber-50 dark:bg-amber-500/10 text-amber-600 rounded-lg"><CheckCircle className="h-4 w-4" /></div>
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 mt-2">
-                <span>↑ 12.0%</span>
-                <span className="text-slate-400 font-medium">ce mois</span>
-              </div>
+              <div className="mt-2 text-[10px] font-semibold text-slate-400">Adhérents avec forfait Wonder ou mixte</div>
             </div>
           </div>
 

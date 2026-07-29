@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -23,8 +23,14 @@ export default function PublicLayout({
   const pathname = usePathname();
   const { centers, settings } = useData();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [technologyMenuOpen, setTechnologyMenuOpen] = useState(false);
 
   const publicCenters = useMemo(() => getPublicCenters(centers), [centers]);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setTechnologyMenuOpen(false);
+  }, [pathname]);
 
   const isActive = (path: string) => {
     if (path === "/" && pathname === "/") return true;
@@ -54,23 +60,46 @@ export default function PublicLayout({
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-1.5 text-xs font-bold text-slate-600">
               {/* Dropdown Technologies */}
-              <div className="relative group py-2">
+              <div
+                className="relative group py-2"
+                onMouseEnter={() => setTechnologyMenuOpen(true)}
+                onMouseLeave={() => setTechnologyMenuOpen(false)}
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                    setTechnologyMenuOpen(false);
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    setTechnologyMenuOpen(false);
+                    event.currentTarget.querySelector<HTMLButtonElement>("button")?.focus();
+                  }
+                }}
+              >
                 <button
+                  type="button"
                   className="flex items-center gap-1 px-3 py-2 rounded-md hover:bg-slate-50 hover:text-[#242424] cursor-pointer"
-                  aria-expanded="false"
+                  aria-haspopup="menu"
+                  aria-controls="technology-menu"
+                  aria-expanded={technologyMenuOpen}
+                  onClick={() => setTechnologyMenuOpen(open => !open)}
                 >
                   Nos Technologies
                   <ChevronDown className="h-3.5 w-3.5 transition-transform group-hover:rotate-180" />
                 </button>
-                <div className="absolute left-0 mt-1 hidden w-48 rounded-xl border border-slate-100 bg-white p-2 shadow-lg group-hover:block z-50">
+                <div id="technology-menu" role="menu" className={`absolute left-0 mt-1 w-48 rounded-lg border border-slate-100 bg-white p-2 shadow-lg z-50 ${technologyMenuOpen ? "block" : "hidden"}`}>
                   <Link
                     href="/aq8"
+                    role="menuitem"
+                    onClick={() => setTechnologyMenuOpen(false)}
                     className={`block rounded-lg px-3 py-2.5 hover:bg-slate-50 hover:text-[#ff5757] ${isActive("/aq8") ? "text-[#ff5757] bg-rose-50/40" : ""}`}
                   >
                     AQ8 EMS
                   </Link>
                   <Link
                     href="/wonder"
+                    role="menuitem"
+                    onClick={() => setTechnologyMenuOpen(false)}
                     className={`block rounded-lg px-3 py-2.5 hover:bg-slate-50 hover:text-[#ff5757] ${isActive("/wonder") ? "text-[#ff5757] bg-rose-50/40" : ""}`}
                   >
                     Wonder Sculpt
@@ -89,12 +118,6 @@ export default function PublicLayout({
                 className={`rounded-md px-3 py-2 transition-premium ${isActive("/centres") ? "text-[#ff5757]" : "hover:bg-slate-50 hover:text-[#242424]"}`}
               >
                 Nos Centres
-              </Link>
-              <Link
-                href="/faq"
-                className={`rounded-md px-3 py-2 transition-premium ${isActive("/faq") ? "text-[#ff5757]" : "hover:bg-slate-50 hover:text-[#242424]"}`}
-              >
-                FAQ
               </Link>
               <Link
                 href="/contact"
@@ -124,6 +147,10 @@ export default function PublicLayout({
             {/* Mobile menu toggle */}
             <div className="flex md:hidden items-center gap-2">
               <button
+                type="button"
+                aria-label={mobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+                aria-expanded={mobileMenuOpen}
+                aria-controls="public-mobile-menu"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="p-2 text-slate-600 hover:text-slate-900 rounded-lg focus:outline-none"
               >
@@ -135,7 +162,7 @@ export default function PublicLayout({
 
         {/* Mobile responsive drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-4 space-y-2 text-xs font-bold">
+          <div id="public-mobile-menu" className="md:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-4 space-y-2 text-xs font-bold">
             <Link
               href="/reservation"
               onClick={() => setMobileMenuOpen(false)}
@@ -148,7 +175,6 @@ export default function PublicLayout({
               { id: "/", label: "Accueil" },
               { id: "/a-propos", label: "À propos" },
               { id: "/centres", label: "Nos Centres" },
-              { id: "/faq", label: "FAQ & Questions" },
               { id: "/contact", label: "Contact" },
               { id: "/login", label: "Accéder au CRM AQ8" }
             ].map(link => (
@@ -164,7 +190,7 @@ export default function PublicLayout({
             ))}
 
             <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-2">
-              <div className="px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Technologie</div>
+              <div className="px-3 py-2 text-[10px] font-extrabold uppercase tracking-normal text-slate-400">Technologie</div>
               {[
                 { id: "/aq8", label: "AQ8 EMS" },
                 { id: "/wonder", label: "Wonder Sculpt" }
@@ -184,7 +210,7 @@ export default function PublicLayout({
       </header>
 
       {/* --- MAIN PAGE CONTENT --- */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8 w-full">
+      <main className="flex-1 overflow-x-clip max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8 w-full">
         {children}
       </main>
 
@@ -211,7 +237,7 @@ export default function PublicLayout({
             <ul className="space-y-2 text-slate-400">
               <li><Link href="/aq8" className="hover:text-white transition">AQ8 EMS</Link></li>
               <li><Link href="/wonder" className="hover:text-white transition">Wonder Sculpt</Link></li>
-              <li><Link href="/faq" className="hover:text-white transition text-[#ff5757]">Foire aux questions (FAQ)</Link></li>
+              <li><Link href="/a-propos#faq" className="hover:text-white transition text-[#ff5757]">Foire aux questions (FAQ)</Link></li>
               <li><Link href="/a-propos" className="hover:text-white transition">À propos d'AQ8</Link></li>
             </ul>
           </div>
@@ -244,8 +270,16 @@ export default function PublicLayout({
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto mt-10 border-t border-white/10 px-4 pt-6 text-center text-xs text-slate-500 sm:px-6 lg:px-8">
+        <div className="mx-auto mt-10 flex max-w-7xl flex-col items-center justify-between gap-3 border-t border-white/10 px-4 pt-6 text-center text-xs text-slate-500 sm:flex-row sm:px-6 sm:text-left lg:px-8">
           <p>© 2026 AQ8 Algérie. Tous droits réservés.</p>
+          <nav aria-label="Informations légales" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 sm:justify-end">
+            <Link href="/mentions-legales" className="transition hover:text-white">
+              Mentions légales
+            </Link>
+            <Link href="/mentions-legales#donnees-personnelles" className="transition hover:text-white">
+              Données personnelles
+            </Link>
+          </nav>
         </div>
       </footer>
     </div>

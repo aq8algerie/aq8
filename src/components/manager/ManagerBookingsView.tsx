@@ -14,7 +14,6 @@ import {
   Eye,
   Edit2,
   XCircle,
-  Trash2,
   CheckCircle2,
   CheckSquare,
   Square,
@@ -34,7 +33,6 @@ import { Client, Appointment, Service, ClientPackage, Package } from '../../type
 import { formatDateTime, getTodayDateString } from '../../lib/centerManagerUtils';
 import { findActivePackageForClient } from '../../lib/packageRules';
 import { AppointmentMutationOptions, CrmActionResult } from '../../lib/crmTransactions';
-import { ProfessionalConfirmDialog } from './ProfessionalConfirmDialog';
 import { ProfessionalToast, ProfessionalToastState, ToastAction, ToastType } from './ProfessionalToast';
 
 interface ManagerBookingsViewProps {
@@ -47,13 +45,8 @@ interface ManagerBookingsViewProps {
   onCompleteAppointment: (id: string, options?: AppointmentMutationOptions) => Promise<CrmActionResult>;
   onCancelAppointment: (id: string, options?: AppointmentMutationOptions) => Promise<CrmActionResult>;
   onUpdateAppointment: (appointment: Appointment) => Promise<CrmActionResult>;
-  onDeleteAppointment: (id: string) => Promise<CrmActionResult>;
   onBookAppointmentClick: () => void;
 }
-
-type BookingsConfirmation =
-  | { kind: 'delete-single'; appointmentId: string }
-  | { kind: 'delete-bulk'; appointmentIds: string[] };
 
 export function ManagerBookingsView({
   centerId,
@@ -65,7 +58,6 @@ export function ManagerBookingsView({
   onCompleteAppointment,
   onCancelAppointment,
   onUpdateAppointment,
-  onDeleteAppointment,
   onBookAppointmentClick
 }: ManagerBookingsViewProps) {
   // 1. Core State
@@ -93,8 +85,6 @@ export function ManagerBookingsView({
 
   // Toast / internal action feedback
   const [toast, setToast] = useState<ProfessionalToastState | null>(null);
-  const [pendingConfirmation, setPendingConfirmation] = useState<BookingsConfirmation | null>(null);
-  const [confirmingAction, setConfirmingAction] = useState(false);
   const showToast = (message: string, type: ToastType = 'success', action?: ToastAction, title?: string) => {
     setToast({ message, type, action, title });
     setTimeout(() => setToast(null), 4200);
@@ -196,69 +186,6 @@ export function ManagerBookingsView({
   const gridAppointments = filteredAppointments.slice(0, gridLimit);
   const hasMoreGrid = filteredAppointments.length > gridLimit;
 
-  const getAppointmentClientLabel = (appointmentId: string) => {
-    const appointment = appointments.find(candidate => candidate.id === appointmentId);
-    const client = appointment ? centerClients.find(candidate => candidate.id === appointment.clientId) : null;
-    if (!client) return 'cette réservation';
-    return getClientDisplayName(client);
-  };
-
-  const confirmationCopy = pendingConfirmation
-    ? pendingConfirmation.kind === 'delete-single'
-      ? {
-          title: 'Supprimer cette réservation ?',
-          description: `${getAppointmentClientLabel(pendingConfirmation.appointmentId)} sera retiré du planning. La capacité du créneau sera libérée immédiatement.`,
-          confirmLabel: 'Supprimer',
-        }
-      : {
-          title: `Supprimer ${pendingConfirmation.appointmentIds.length} réservations ?`,
-          description: 'Les réservations sélectionnées seront retirées du planning. Les places correspondantes seront libérées.',
-          confirmLabel: `Supprimer ${pendingConfirmation.appointmentIds.length}`,
-        }
-    : null;
-
-  const executePendingConfirmation = async () => {
-    if (!pendingConfirmation || confirmingAction) return;
-    setConfirmingAction(true);
-
-    try {
-      if (pendingConfirmation.kind === 'delete-single') {
-        const result = await onDeleteAppointment(pendingConfirmation.appointmentId);
-        if (result.ok) {
-          setSelectedIds(prev => prev.filter(x => x !== pendingConfirmation.appointmentId));
-          showToast('Le rendez-vous a été retiré du planning et la capacité est libérée.', 'success', 'deleted');
-        } else {
-          showToast(result.error || 'Suppression impossible.', 'error');
-        }
-        return;
-      }
-
-      let countSuccess = 0;
-      let countFail = 0;
-      const deletedIds: string[] = [];
-
-      for (const appointmentId of pendingConfirmation.appointmentIds) {
-        const result = await onDeleteAppointment(appointmentId);
-        if (result.ok) {
-          countSuccess++;
-          deletedIds.push(appointmentId);
-        } else {
-          countFail++;
-        }
-      }
-
-      setSelectedIds(prev => prev.filter(id => !deletedIds.includes(id)));
-      if (countFail > 0) {
-        showToast(`${countSuccess} supprimée(s), ${countFail} échouée(s).`, 'error');
-      } else {
-        showToast(`${countSuccess} réservations supprimées du planning.`, 'success', 'deleted');
-      }
-    } finally {
-      setConfirmingAction(false);
-      setPendingConfirmation(null);
-    }
-  };
-
   // Reset page or limit on filter change
   React.useEffect(() => {
     setCurrentPage(1);
@@ -308,10 +235,6 @@ export function ManagerBookingsView({
     } else {
       showToast(result.error || 'Annulation impossible.', 'error');
     }
-  };
-
-  const handleSingleDelete = (id: string) => {
-    setPendingConfirmation({ kind: 'delete-single', appointmentId: id });
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -384,13 +307,7 @@ export function ManagerBookingsView({
     }
   };
 
-  const handleBulkDelete = () => {
-    if (selectedIds.length === 0) {
-      showToast('Aucune réservation sélectionnée.', 'error');
-      return;
-    }
-    setPendingConfirmation({ kind: 'delete-bulk', appointmentIds: [...selectedIds] });
-  };
+
 
   return (
     <div id="manager-bookings-container" className="space-y-6">
@@ -399,25 +316,6 @@ export function ManagerBookingsView({
         onDismiss={() => setToast(null)}
         id="manager-bookings-toast"
       />
-      {confirmationCopy && (
-        <ProfessionalConfirmDialog
-          open={Boolean(pendingConfirmation)}
-          title={confirmationCopy.title}
-          description={confirmationCopy.description}
-          confirmLabel={confirmationCopy.confirmLabel}
-          cancelLabel="Garder"
-          tone="danger"
-          loading={confirmingAction}
-          id="manager-bookings-confirm-dialog"
-          onCancel={() => {
-            if (!confirmingAction) {
-              setPendingConfirmation(null);
-            }
-          }}
-          onConfirm={executePendingConfirmation}
-        />
-      )}
-
       {/* View Header with Filters and Layout Switching */}
       <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -610,13 +508,7 @@ export function ManagerBookingsView({
             >
               <XCircle className="h-3.5 w-3.5" /> Annuler RDV
             </button>
-            <button
-              onClick={handleBulkDelete}
-              className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 font-bold text-[10px] rounded-lg transition flex items-center gap-1 cursor-pointer"
-            >
-              <Trash2 className="h-3.5 w-3.5" /> Supprimer
-            </button>
-            <div className="h-4 w-px bg-white/20 hidden sm:block"></div>
+                        <div className="h-4 w-px bg-white/20 hidden sm:block"></div>
             <button
               onClick={() => setSelectedIds([])}
               className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-slate-300 font-medium text-[10px] rounded-lg transition cursor-pointer"
@@ -766,14 +658,7 @@ export function ManagerBookingsView({
                                 </button>
                               </>
                             )}
-                            <button
-                              onClick={() => handleSingleDelete(apt.id)}
-                              className="p-1 text-rose-500 hover:text-rose-700 rounded-md hover:bg-rose-50 transition cursor-pointer"
-                              title="Supprimer définitivement"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
+                                                      </div>
                         </td>
                       </tr>
                     );
@@ -974,14 +859,7 @@ export function ManagerBookingsView({
                               </button>
                             </>
                           )}
-                          <button
-                            onClick={() => handleSingleDelete(apt.id)}
-                            className="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
-                            title="Supprimer"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
+                                                  </div>
                       </div>
                     </div>
                   </div>
@@ -1230,21 +1108,6 @@ export function ManagerBookingsView({
                     required
                   />
                 </div>
-              </div>
-
-              {/* Status Field */}
-              <div className="space-y-1">
-                <label className="font-semibold text-slate-600 block">Statut de Réservation *</label>
-                <select
-                  value={editingApt.status}
-                  onChange={(e) => setEditingApt({ ...editingApt, status: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none"
-                  required
-                >
-                  <option value="booked">Séance Planifiée (En attente)</option>
-                  <option value="completed">Séance Effectuée (Validée)</option>
-                  <option value="cancelled">Séance Annulée</option>
-                </select>
               </div>
 
               {/* Special instructions */}

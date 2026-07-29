@@ -35,6 +35,9 @@ export interface CenterManager {
   email: string;
   centerId: string;
   active: boolean;
+  authUid?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Service {
@@ -46,7 +49,7 @@ export interface Service {
   description: string;
 }
 
-export type ClientStatus = 'active' | 'suspended';
+export type ClientStatus = 'active' | 'suspended' | 'archived';
 
 export interface Client {
   id: string;
@@ -59,6 +62,10 @@ export interface Client {
   status?: ClientStatus;
   updatedAt?: string;
   suspendedAt?: string;
+  reactivatedAt?: string;
+  archivedAt?: string;
+  archivedByUserId?: string;
+  archivedByUserName?: string;
   notes?: string;
   gender?: 'H' | 'F';
   dob?: string;
@@ -87,6 +94,11 @@ export interface Appointment {
   completedByUserName?: string;
   completedWithClientPackageId?: string;
   deductedCredits?: number;
+  updatedAt?: string;
+  cancelledAt?: string;
+  cancelledByUserId?: string;
+  cancelledByUserName?: string;
+  cancellationReason?: string;
 }
 
 export interface Package {
@@ -114,6 +126,8 @@ export interface ClientPackage {
   activatedByUserId?: string;
   activatedByUserName?: string;
   sourcePaymentId?: string;
+  reversedAt?: string;
+  reversedByPaymentId?: string;
 }
 
 export interface Payment {
@@ -126,6 +140,13 @@ export interface Payment {
   method: 'cash' | 'card' | 'ccp' | 'cheque';
   receiptNumber?: string;
   clientPackageId?: string;
+  kind?: 'payment' | 'reversal';
+  status?: 'posted' | 'reversed';
+  reversalOfPaymentId?: string;
+  reversedByPaymentId?: string;
+  reversedAt?: string;
+  reversalReason?: string;
+  reason?: string;
   createdAt?: string;
   recordedByUserId?: string;
   recordedByUserName?: string;

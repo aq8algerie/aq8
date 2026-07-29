@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { AlertCircle, CheckCircle2, CheckSquare, Clock, Edit2, Eye, Square, Trash2, XCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle2, CheckSquare, Clock, Edit2, Eye, Square, XCircle } from 'lucide-react';
 import { Appointment, Center, Client, Package, Service } from '../../../types';
 import { getSlotAvailability } from '../../../lib/bookingCapacityRules';
 
@@ -26,7 +26,6 @@ interface DayScheduleViewProps {
   onEditAppointment: (appointment: Appointment) => void;
   onCompleteAppointment: (id: string) => void | Promise<void>;
   onCancelAppointment: (id: string) => void | Promise<void>;
-  onDeleteAppointment: (id: string) => void;
   currentCenter: Center;
 }
 
@@ -46,7 +45,6 @@ export function DayScheduleView({
   onEditAppointment,
   onCompleteAppointment,
   onCancelAppointment,
-  onDeleteAppointment,
   currentCenter,
 }: DayScheduleViewProps) {
   const dateStr = formatDateToYYYYMMDD(focusedDate);
@@ -183,13 +181,7 @@ export function DayScheduleView({
                               </button>
                             </>
                           )}
-                          <button
-                            onClick={() => onDeleteAppointment(apt.id)}
-                            className="p-1 text-rose-500 hover:text-rose-700 rounded hover:bg-rose-50 transition cursor-pointer"
-                            title="Supprimer"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+
                         </div>
                       </div>
                     </div>

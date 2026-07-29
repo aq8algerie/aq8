@@ -608,7 +608,7 @@ export const INITIAL_MEASUREMENTS: Measurement[] = [
 
 export const INITIAL_SETTINGS: GeneralSettings = {
   appName: 'AQ8 Algérie',
-  contactEmail: 'contact@aq8algerie.com',
+  contactEmail: 'notifications@aq8algerie-dz.com',
   contactPhone: '+213 (0) 23 48 50 60',
   addressAlgérie: '12 Rue des Glycines, Hydra, Alger',
   currency: 'DZD',

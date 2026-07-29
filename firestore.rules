@@ -67,8 +67,29 @@ service cloud.firestore {
         && (!('6' in value) || isBookingDayRanges(value['6']));
     }
 
-    function isPublicTextList(value, maxItems) {
-      return value is list && value.size() <= maxItems;
+    function isPublicTextList(value, maxItems, maxSize) {
+      return value is list
+        && value.size() <= maxItems
+        && (value.size() == 0 || (value[0] is string && value[0].size() <= maxSize))
+        && (value.size() <= 1 || (value[1] is string && value[1].size() <= maxSize))
+        && (value.size() <= 2 || (value[2] is string && value[2].size() <= maxSize))
+        && (value.size() <= 3 || (value[3] is string && value[3].size() <= maxSize))
+        && (value.size() <= 4 || (value[4] is string && value[4].size() <= maxSize))
+        && (value.size() <= 5 || (value[5] is string && value[5].size() <= maxSize))
+        && (value.size() <= 6 || (value[6] is string && value[6].size() <= maxSize))
+        && (value.size() <= 7 || (value[7] is string && value[7].size() <= maxSize))
+        && (value.size() <= 8 || (value[8] is string && value[8].size() <= maxSize))
+        && (value.size() <= 9 || (value[9] is string && value[9].size() <= maxSize))
+        && (value.size() <= 10 || (value[10] is string && value[10].size() <= maxSize))
+        && (value.size() <= 11 || (value[11] is string && value[11].size() <= maxSize))
+        && (value.size() <= 12 || (value[12] is string && value[12].size() <= maxSize))
+        && (value.size() <= 13 || (value[13] is string && value[13].size() <= maxSize))
+        && (value.size() <= 14 || (value[14] is string && value[14].size() <= maxSize))
+        && (value.size() <= 15 || (value[15] is string && value[15].size() <= maxSize))
+        && (value.size() <= 16 || (value[16] is string && value[16].size() <= maxSize))
+        && (value.size() <= 17 || (value[17] is string && value[17].size() <= maxSize))
+        && (value.size() <= 18 || (value[18] is string && value[18].size() <= maxSize))
+        && (value.size() <= 19 || (value[19] is string && value[19].size() <= maxSize));
     }
 
     function isCenterManagerSettingsUpdate(centerId) {
@@ -76,7 +97,7 @@ service cloud.firestore {
         && request.resource.data.id == resource.data.id
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'bookingCapacity', 'bookingHours', 'phone', 'email', 'address', 'imageUrl', 'schedule',
-          'description', 'status', 'importantNotes', 'menHours', 'womenHours', 'equipment',
+          'description', 'importantNotes', 'menHours', 'womenHours', 'equipment',
           'cancellationRule', 'updatedAt'
         ])
         && (!('bookingCapacity' in request.resource.data) || isBookingCapacityMap(request.resource.data.bookingCapacity))
@@ -87,36 +108,12 @@ service cloud.firestore {
         && (!('imageUrl' in request.resource.data) || (request.resource.data.imageUrl is string && request.resource.data.imageUrl.size() <= 500))
         && (!('schedule' in request.resource.data) || (request.resource.data.schedule is string && request.resource.data.schedule.size() <= 300))
         && (!('description' in request.resource.data) || (request.resource.data.description is string && request.resource.data.description.size() <= 2000))
-        && (!('status' in request.resource.data) || (request.resource.data.status is string && request.resource.data.status.size() <= 80))
-        && (!('importantNotes' in request.resource.data) || isPublicTextList(request.resource.data.importantNotes, 20))
-        && (!('menHours' in request.resource.data) || isPublicTextList(request.resource.data.menHours, 20))
-        && (!('womenHours' in request.resource.data) || isPublicTextList(request.resource.data.womenHours, 20))
-        && (!('equipment' in request.resource.data) || isPublicTextList(request.resource.data.equipment, 20))
+        && (!('importantNotes' in request.resource.data) || isPublicTextList(request.resource.data.importantNotes, 20, 500))
+        && (!('menHours' in request.resource.data) || isPublicTextList(request.resource.data.menHours, 20, 200))
+        && (!('womenHours' in request.resource.data) || isPublicTextList(request.resource.data.womenHours, 20, 200))
+        && (!('equipment' in request.resource.data) || isPublicTextList(request.resource.data.equipment, 20, 200))
         && (!('cancellationRule' in request.resource.data) || (request.resource.data.cancellationRule is string && request.resource.data.cancellationRule.size() <= 1200))
         && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is string);
-    }
-
-    function isPublicContactMessageCreate() {
-      return request.resource.data.keys().hasOnly([
-          'name', 'phone', 'email', 'requestType', 'centerId', 'message', 'status', 'createdAt'
-        ])
-        && request.resource.data.name is string
-        && request.resource.data.name.size() > 0
-        && request.resource.data.name.size() <= 120
-        && request.resource.data.phone is string
-        && request.resource.data.phone.size() > 0
-        && request.resource.data.phone.size() <= 40
-        && request.resource.data.email is string
-        && request.resource.data.email.size() <= 160
-        && request.resource.data.requestType in ['general', 'reservation', 'partnership', 'recruitment']
-        && request.resource.data.centerId is string
-        && request.resource.data.centerId.size() > 0
-        && request.resource.data.centerId.size() <= 80
-        && request.resource.data.message is string
-        && request.resource.data.message.size() <= 2000
-        && request.resource.data.status == 'new'
-        && request.resource.data.createdAt is string
-        && request.resource.data.createdAt.size() <= 40;
     }
 
     function isNullableString(value, maxSize) {
@@ -154,10 +151,99 @@ service cloud.firestore {
         && (userProfile().role == 'super_admin' || request.resource.data.centerId == userProfile().centerId);
     }
 
+    function isBookingRequestDecision() {
+      return resource.data.status == 'pending'
+        && request.resource.data.centerId == resource.data.centerId
+        && request.resource.data.processedByUserId == request.auth.uid
+        && request.resource.data.processedAt is string
+        && (
+          (
+            request.resource.data.status == 'accepted'
+            && request.resource.data.clientId is string
+            && request.resource.data.appointmentId is string
+            && request.resource.data.acceptedAt == request.resource.data.processedAt
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'status', 'clientId', 'appointmentId', 'processedAt',
+              'processedByUserId', 'processedByUserName', 'acceptedAt'
+            ])
+          )
+          ||
+          (
+            request.resource.data.status == 'rejected'
+            && request.resource.data.rejectedAt == request.resource.data.processedAt
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'status', 'processedAt', 'processedByUserId',
+              'processedByUserName', 'rejectedAt'
+            ])
+          )
+        );
+    }
+
+    function isClientCreate() {
+      return request.resource.data.status == 'active'
+        && request.resource.data.id is string
+        && request.resource.data.id.size() > 0
+        && request.resource.data.id.size() <= 160
+        && request.resource.data.centerId is string
+        && request.resource.data.firstName is string
+        && request.resource.data.lastName is string
+        && request.resource.data.phone is string
+        && !request.resource.data.keys().hasAny([
+          'archivedAt', 'archivedByUserId', 'archivedByUserName',
+          'suspendedAt', 'reactivatedAt'
+        ]);
+    }
+
+    function isBookedAppointmentCreate() {
+      return request.resource.data.status == 'booked'
+        && request.resource.data.id is string
+        && request.resource.data.id.size() > 0
+        && request.resource.data.id.size() <= 160
+        && request.resource.data.centerId is string
+        && request.resource.data.clientId is string
+        && request.resource.data.serviceId is string
+        && request.resource.data.dateTime is string
+        && request.resource.data.duration is number
+        && request.resource.data.duration > 0
+        && !request.resource.data.keys().hasAny([
+          'completedAt', 'completedByUserId', 'completedByUserName',
+          'completedWithClientPackageId', 'deductedCredits',
+          'cancelledAt', 'cancelledByUserId', 'cancelledByUserName'
+        ]);
+    }
+
+    function isAppointmentReschedule() {
+      return resource.data.status == 'booked'
+        && request.resource.data.status == 'booked'
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.centerId == resource.data.centerId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'clientId', 'serviceId', 'dateTime', 'duration', 'notes', 'updatedAt'
+        ]);
+    }
+
+    function isAppointmentCancellation() {
+      return resource.data.status == 'booked'
+        && request.resource.data.status == 'cancelled'
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.centerId == resource.data.centerId
+        && request.resource.data.clientId == resource.data.clientId
+        && request.resource.data.serviceId == resource.data.serviceId
+        && request.resource.data.dateTime == resource.data.dateTime
+        && request.resource.data.duration == resource.data.duration
+        && request.resource.data.cancelledByUserId == request.auth.uid
+        && request.resource.data.cancelledAt is string
+        && request.resource.data.cancellationReason is string
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'cancelledAt', 'cancelledByUserId', 'cancelledByUserName',
+          'cancellationReason', 'updatedAt'
+        ]);
+    }
+
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isSuperAdmin());
-      allow create: if signedIn() && request.auth.uid == userId;
-      allow update, delete: if isSuperAdmin();
+      // Les roles et revocations sont administres uniquement par Firebase Admin.
+      allow create, update, delete: if false;
     }
 
     match /centers/{centerId} {
@@ -183,39 +269,42 @@ service cloud.firestore {
 
     match /managers/{managerId} {
       allow read: if isSuperAdmin() || isCenterManager(resource.data.centerId);
-      allow create, update, delete: if isSuperAdmin();
+      // Le cycle de vie Auth + profil + manager passe par /api/crm-managers.
+      allow create, update, delete: if false;
     }
 
     match /clients/{clientId} {
       allow get: if (isActiveCrmUser() && !exists(/databases/$(database)/documents/clients/$(clientId)))
         || canAccessCenter(resource.data.centerId);
       allow list: if canAccessCenter(resource.data.centerId);
-      allow create: if canAccessCenter(request.resource.data.centerId);
-      allow update: if canAccessCenter(resource.data.centerId) && canAccessCenter(request.resource.data.centerId);
-      allow delete: if canAccessCenter(resource.data.centerId);
+      allow create: if canAccessCenter(request.resource.data.centerId)
+        && isClientCreate();
+      // Profile edits, suspension and archival are handled by /api/crm-clients.
+      allow update, delete: if false;
     }
 
     match /appointments/{appointmentId} {
       allow get: if (isActiveCrmUser() && !exists(/databases/$(database)/documents/appointments/$(appointmentId)))
         || canAccessCenter(resource.data.centerId);
       allow list: if canAccessCenter(resource.data.centerId);
-      allow create: if canAccessCenter(request.resource.data.centerId);
-      allow update: if canAccessCenter(resource.data.centerId) && canAccessCenter(request.resource.data.centerId);
-      allow delete: if canAccessCenter(resource.data.centerId);
+      allow create: if canAccessCenter(request.resource.data.centerId)
+        && isBookedAppointmentCreate();
+      // Session completion and credit mutations are handled by the authenticated
+      // /api/crm-operations route through Firebase Admin.
+      allow update: if canAccessCenter(resource.data.centerId)
+        && canAccessCenter(request.resource.data.centerId)
+        && (isAppointmentReschedule() || isAppointmentCancellation());
+      allow delete: if false;
     }
 
     match /client_packages/{clientPackageId} {
       allow read: if canAccessCenter(resource.data.centerId);
-      allow create: if canAccessCenter(request.resource.data.centerId);
-      allow update: if canAccessCenter(resource.data.centerId) && canAccessCenter(request.resource.data.centerId);
-      allow delete: if canAccessCenter(resource.data.centerId);
+      allow create, update, delete: if false;
     }
 
     match /payments/{paymentId} {
       allow read: if canAccessCenter(resource.data.centerId);
-      allow create: if canAccessCenter(request.resource.data.centerId);
-      allow update: if canAccessCenter(resource.data.centerId) && canAccessCenter(request.resource.data.centerId);
-      allow delete: if canAccessCenter(resource.data.centerId);
+      allow create, update, delete: if false;
     }
 
     match /measurements/{measurementId} {
@@ -246,12 +335,15 @@ service cloud.firestore {
     match /booking_requests/{requestId} {
       allow create: if false;
       allow read: if canAccessCenter(resource.data.centerId);
-      allow update: if canAccessCenter(resource.data.centerId) && canAccessCenter(request.resource.data.centerId);
-      allow delete: if isSuperAdmin();
+      allow update: if canAccessCenter(resource.data.centerId)
+        && canAccessCenter(request.resource.data.centerId)
+        && isBookingRequestDecision();
+      allow delete: if false;
     }
 
     match /contact_messages/{messageId} {
-      allow create: if isPublicContactMessageCreate();
+      // Public submissions pass through the rate-limited server API.
+      allow create: if false;
       allow read, update, delete: if isSuperAdmin();
     }
 

@@ -19,9 +19,9 @@ import {
   ShieldAlert,
   Sparkles,
 } from "lucide-react";
-import { getCenterBySlug, getCenters } from "../../../../lib/centers";
+import { getServerPublicCenterBySlug } from "../../../../src/lib/serverPublicData";
 import { Center } from "../../../../src/types";
-import { getPublicCenterBadgeLabel, isCenterPubliclyVisible } from "../../../../src/lib/centerVisibility";
+import { getPublicCenterBadgeLabel } from "../../../../src/lib/centerVisibility";
 import { generateCenterSeo } from "../../../../lib/seo";
 import { SeoJsonLd } from "../../../../components/seo/SeoJsonLd";
 import { CenterBookingForm } from "../../../../components/centres/CenterBookingForm";
@@ -58,19 +58,13 @@ function getWhatsAppUrl(phone?: string) {
   return `https://wa.me/${digits}`;
 }
 
-export async function generateStaticParams() {
-  const centers = getCenters().filter(isCenterPubliclyVisible);
-
-  return centers.map((center) => ({
-    slug: center.slug,
-  }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const center = slug ? getCenterBySlug(slug) : undefined;
+  const center = slug ? await getServerPublicCenterBySlug(slug) : undefined;
 
   if (!center) {
     return {
@@ -95,7 +89,7 @@ export async function generateMetadata({
 
 export default async function CenterDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const center = slug ? getCenterBySlug(slug) : undefined;
+  const center = slug ? await getServerPublicCenterBySlug(slug) : undefined;
   const publicBadgeLabel = center ? getPublicCenterBadgeLabel(center) : "";
 
   if (!center) {

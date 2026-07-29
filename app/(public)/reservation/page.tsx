@@ -14,7 +14,7 @@ import {
   Zap,
 } from "lucide-react";
 import { getSeoForPage } from "../../../lib/seo";
-import { getCenters } from "../../../lib/centers";
+import { getServerPublicCenters } from "../../../src/lib/serverPublicData";
 import { CenterBookingForm } from "../../../components/centres/CenterBookingForm";
 
 export const metadata: Metadata = {
@@ -22,8 +22,10 @@ export const metadata: Metadata = {
   description: "Planifiez et pré-réservez votre séance d'électrostimulation AQ8 EMS ou Wonder dans le centre de votre choix en Algérie.",
 };
 
-export default function ReservationPage() {
-  const centers = getCenters();
+export const dynamic = "force-dynamic";
+
+export default async function ReservationPage() {
+  const centers = await getServerPublicCenters();
 
   return (
     <main className="bg-white">

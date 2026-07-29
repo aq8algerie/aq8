@@ -14,7 +14,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { getSeoForPage } from "../../../lib/seo";
-import { getCenters } from "../../../lib/centers";
+import { getServerPublicCenters, getServerPublicSettings } from "../../../src/lib/serverPublicData";
 import { ContactForm } from "../../../components/contact/ContactForm";
 
 export const metadata: Metadata = {
@@ -22,19 +22,23 @@ export const metadata: Metadata = {
   description: getSeoForPage("contact").description,
 };
 
-const contactInfo = {
-  address: "12 Rue des Glycines, Hydra, Alger",
-  phone: "+213 (0) 23 48 50 60",
-  email: "contact@aq8algerie.com",
-};
-
 function getWhatsAppUrl(phone: string) {
   const digits = phone.replace(/[^0-9]/g, "");
   return `https://wa.me/${digits}`;
 }
 
-export default function ContactPage() {
-  const centers = getCenters();
+export const dynamic = "force-dynamic";
+
+export default async function ContactPage() {
+  const [centers, settings] = await Promise.all([
+    getServerPublicCenters(),
+    getServerPublicSettings(),
+  ]);
+  const contactInfo = {
+    address: settings['addressAlgérie'] || centers[0]?.address || 'Algérie',
+    phone: settings.contactPhone || centers[0]?.phone || '',
+    email: settings.contactEmail || 'notifications@aq8algerie-dz.com',
+  };
 
   return (
     <main className="bg-white">

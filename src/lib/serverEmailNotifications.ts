@@ -11,7 +11,7 @@ import type {
 } from '../types';
 import type { PublicBookingRequestInput, PublicContactMessageInput, PublicContactRequestType } from './publicFormValidation';
 
-type EmailResult = {
+export type EmailResult = {
   sent: boolean;
   skipped?: string;
   error?: string;

@@ -7,10 +7,9 @@ import React, { useState } from 'react';
 import { ShieldCheck, Building, Lock, Mail, Activity, Loader2, KeyRound, ArrowLeft, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { Center, CenterManager } from '../types';
 import { auth, db } from '../lib/firebase';
-import { INITIAL_MANAGERS } from '../mockData';
 
 type CrmRole = 'super_admin' | 'center_manager';
 
@@ -52,83 +51,29 @@ export function CrmPortal({
   const isAuthBusy = isSubmitting || isGoogleSubmitting;
 
   const loadUserProfile = async (user: User): Promise<UserProfile> => {
-    const normalizedEmail = (user.email || '').toLowerCase().trim();
-
-    // Look up manager in passed props OR initial seed managers list
-    const matchedManager = 
-      managers.find(m => m.email.toLowerCase().trim() === normalizedEmail) ||
-      INITIAL_MANAGERS.find(m => m.email.toLowerCase().trim() === normalizedEmail);
-
-    let defaultRole: CrmRole | null = null;
-    let defaultCenterId: string | null = null;
-    let defaultName = user.displayName || user.email || 'Utilisateur CRM';
-
-    if (matchedManager) {
-      defaultRole = 'center_manager';
-      defaultCenterId = matchedManager.centerId;
-      defaultName = matchedManager.name || defaultName;
-    } else if (
-      normalizedEmail === 'aq8algerie@gmail.com' ||
-      normalizedEmail.includes('admin') ||
-      normalizedEmail.includes('superadmin')
-    ) {
-      defaultRole = 'super_admin';
-      defaultCenterId = null;
-    }
-
-    try {
-      const userRef = doc(db, 'users', user.uid);
-
-      // Create a 5-second timeout for getDoc so network issues never freeze the UI
-      const fetchPromise = getDoc(userRef);
-      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
-      const snapshot = await Promise.race([fetchPromise, timeoutPromise]);
-
-      if (snapshot && snapshot.exists()) {
-        const profile = snapshot.data() as UserProfile;
-        if (profile.active === false) {
-          throw new Error('Votre accès CRM est désactivé. Contactez un administrateur.');
-        }
-        return profile;
-      }
-
-      // If document doesn't exist yet, attempt to write it
-      if (defaultRole) {
-        const newProfile: UserProfile = {
-          role: defaultRole,
-          centerId: defaultCenterId,
-          name: defaultName,
-          active: true,
-        };
-
-        setDoc(userRef, {
-          ...newProfile,
-          uid: user.uid,
-          email: normalizedEmail,
-          createdAt: new Date().toISOString(),
-        }).catch((err) => console.warn('Background setDoc profile creation:', err));
-
-        return newProfile;
-      }
-    } catch (dbErr: any) {
-      console.warn('Firestore user fetch failed, using fallback:', dbErr);
-      if (dbErr?.message?.includes('désactivé')) {
-        throw dbErr;
-      }
-    }
-
-    // Fallback if Firestore query timed out or failed but user matches a manager email
-    if (defaultRole) {
-      return {
-        role: defaultRole,
-        centerId: defaultCenterId,
-        name: defaultName,
-        active: true,
-      };
-    }
-
+    const userRef = doc(db, 'users', user.uid);
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('La vérification de votre accès CRM a expiré. Réessayez dans quelques instants.')), 8000);
+    });
+    const snapshot = await Promise.race([getDoc(userRef), timeoutPromise]);
     const userEmailDisplay = user.email ? ` (${user.email})` : '';
-    throw new Error(`Votre compte${userEmailDisplay} est connecté, mais aucun rôle CRM (Super Admin ou Gérant) ne lui est rattaché. Veuillez contacter l'administrateur pour ajouter ${user.email} dans la liste des gérants.`);
+
+    if (!snapshot.exists()) {
+      throw new Error(`Votre compte${userEmailDisplay} est authentifié, mais aucun accès CRM ne lui a été attribué. Contactez le super administrateur.`);
+    }
+
+    const profile = snapshot.data() as UserProfile;
+    if (profile.active !== true) {
+      throw new Error('Votre accès CRM est désactivé. Contactez le super administrateur.');
+    }
+    if (profile.role !== 'super_admin' && profile.role !== 'center_manager') {
+      throw new Error('Le rôle associé à votre compte CRM est invalide.');
+    }
+    if (profile.role === 'center_manager' && !profile.centerId) {
+      throw new Error('Aucun centre n’est rattaché à votre compte manager.');
+    }
+
+    return profile;
   };
 
   const completeAuthenticatedLogin = async (user: User) => {
@@ -158,10 +103,10 @@ export function CrmPortal({
       : '';
     const message = error instanceof Error ? error.message : fallback;
 
-    if (code.includes('popup-closed-by-user')) return 'Connexion Google annulee.';
-    if (code.includes('popup-blocked')) return 'La fenetre Google a ete bloquee par le navigateur. Autorisez les popups pour ce site.';
-    if (code.includes('operation-not-allowed')) return "La connexion Google n'est pas encore activee dans Firebase Authentication.";
-    if (code.includes('unauthorized-domain')) return "Ce domaine n'est pas autorise dans Firebase Authentication.";
+    if (code.includes('popup-closed-by-user')) return 'Connexion Google annulée.';
+    if (code.includes('popup-blocked')) return 'La fenêtre Google a été bloquée par le navigateur. Autorisez les fenêtres contextuelles pour ce site.';
+    if (code.includes('operation-not-allowed')) return "La connexion Google n'est pas encore activée dans Firebase Authentication.";
+    if (code.includes('unauthorized-domain')) return "Ce domaine n'est pas autorisé dans Firebase Authentication.";
     if (code.includes('account-exists-with-different-credential')) {
       return 'Un compte CRM existe deja avec cet e-mail. Connectez-vous avec le mot de passe, puis liez le compte Google cote Firebase.';
     }
@@ -189,7 +134,7 @@ export function CrmPortal({
       await completeAuthenticatedLogin(credential.user);
     } catch (error) {
       await signOut(auth).catch(() => undefined);
-      setErrorMessage(getFriendlyAuthError(error, 'Connexion impossible. Verifiez vos identifiants.'));
+      setErrorMessage(getFriendlyAuthError(error, 'Connexion impossible. Vérifiez vos identifiants.'));
     } finally {
       setIsSubmitting(false);
     }

@@ -81,7 +81,7 @@ export function PublicAbout() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-4xl space-y-6">
+      <section id="faq" className="mx-auto max-w-4xl scroll-mt-24 space-y-6">
         <div className="space-y-3 text-center">
           <p className="inline-flex items-center justify-center gap-2 text-sm font-bold text-[#ff5757]"><HelpCircle className="h-4 w-4" />Questions fréquentes</p>
           <h2 className="font-display text-3xl font-bold leading-tight text-[#242424]">Les réponses essentielles avant votre première séance.</h2>

@@ -34,13 +34,6 @@ import {
   BookingRequest
 } from "@/src/types";
 
-import {
-  AQ8Database,
-  INITIAL_CENTERS,
-  INITIAL_SERVICES,
-  INITIAL_PACKAGES,
-  INITIAL_SETTINGS
-} from "@/src/mockData";
 import { auth, db } from "@/src/lib/firebase";
 import {
   collection,
@@ -117,6 +110,7 @@ export default function CrmPage() {
       await syncFirestoreCollection(db, colName, newList, oldList);
     } catch (error) {
       console.error(`Error syncing collection ${colName}:`, error);
+      throw error;
     }
   };
 
@@ -200,42 +194,39 @@ export default function CrmPage() {
       const list: CenterManager[] = [];
       snapshot.forEach(doc => list.push(doc.data() as CenterManager));
       setManagers(list);
-      AQ8Database.saveManagers(list);
     });
 
     const unsubClients = onSnapshot(clientsRef, (snapshot) => {
       const list: Client[] = [];
-      snapshot.forEach(doc => list.push(doc.data() as Client));
+      snapshot.forEach(doc => {
+        const client = doc.data() as Client;
+        if (client.status !== 'archived') list.push(client);
+      });
       setClients(list);
-      AQ8Database.saveClients(list);
     });
 
     const unsubAppointments = onSnapshot(appointmentsRef, (snapshot) => {
       const list: Appointment[] = [];
       snapshot.forEach(doc => list.push(doc.data() as Appointment));
       setAppointments(list);
-      AQ8Database.saveAppointments(list);
     });
 
     const unsubClientPackages = onSnapshot(clientPackagesRef, (snapshot) => {
       const list: ClientPackage[] = [];
       snapshot.forEach(doc => list.push(doc.data() as ClientPackage));
       setClientPackages(list);
-      AQ8Database.saveClientPackages(list);
     });
 
     const unsubPayments = onSnapshot(paymentsRef, (snapshot) => {
       const list: Payment[] = [];
       snapshot.forEach(doc => list.push(doc.data() as Payment));
       setPayments(list);
-      AQ8Database.savePayments(list);
     });
 
     const unsubMeasurements = onSnapshot(measurementsRef, (snapshot) => {
       const list: Measurement[] = [];
       snapshot.forEach(doc => list.push(doc.data() as Measurement));
       setMeasurements(list);
-      AQ8Database.saveMeasurements(list);
     });
 
     const unsubBookingRequests = onSnapshot(bookingRequestsRef, (snapshot) => {
@@ -283,8 +274,8 @@ export default function CrmPage() {
     setLoggedManagerName("");
   };
 
-  const updateCenters = (newCenters: Center[]) => {
-    syncCollection("centers", newCenters, centers);
+  const updateCenters = async (newCenters: Center[]) => {
+    await syncCollection("centers", newCenters, centers);
   };
   const updateManagers = (newManagers: CenterManager[]) => {
     syncCollection("managers", newManagers, managers);
@@ -523,7 +514,7 @@ export default function CrmPage() {
               managers={managers}
               services={services}
               packages={packages}
-              settings={settings || { appName: "AQ8 Algérie", contactEmail: "contact@aq8algerie.com", contactPhone: "+213 (0) 23 48 50 60", addressAlgérie: "Hydra, Alger", currency: "DZD", enableVoucherPromo: true }}
+              settings={settings || { appName: "AQ8 Algérie", contactEmail: "notifications@aq8algerie-dz.com", contactPhone: "+213 (0) 23 48 50 60", addressAlgérie: "Hydra, Alger", currency: "DZD", enableVoucherPromo: true }}
               appointmentsCount={appointments.length}
               paymentsCount={payments.length}
               totalRevenue={totalRevenue}
@@ -532,7 +523,6 @@ export default function CrmPage() {
               payments={payments}
               appointments={appointments}
               onUpdateCenters={updateCenters}
-              onUpdateManagers={updateManagers}
               onUpdateServices={updateServices}
               onUpdatePackages={updatePackages}
               onUpdateSettings={updateSettings}
@@ -555,8 +545,6 @@ export default function CrmPage() {
               measurements={measurements}
               services={services}
               bookingRequests={bookingRequests}
-              onUpdateClients={updateClients}
-              onUpdatePayments={updatePayments}
               onUpdateMeasurements={updateMeasurements}
               activeTab={crmCenterManagerTab}
               onTabChange={setCrmCenterManagerTab}

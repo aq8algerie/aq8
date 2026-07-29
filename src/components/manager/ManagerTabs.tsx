@@ -39,13 +39,16 @@ export function ManagerTabs({
   ];
 
   return (
-    <div id="manager-navigation-tabs" className="flex border-b border-slate-200 overflow-x-auto gap-1 pb-px scrollbar-thin">
+    <div id="manager-navigation-tabs" role="tablist" aria-label="Navigation du centre" className="flex border-b border-slate-200 overflow-x-auto gap-1 pb-px scrollbar-thin">
       {tabs.map(tab => {
         const badgeCount = badges[tab.id] || 0;
         return (
           <button
             key={tab.id}
             id={`tab-btn-${tab.id}`}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
             onClick={() => {
               onClearSelectedClient();
               onTabChange(tab.id);

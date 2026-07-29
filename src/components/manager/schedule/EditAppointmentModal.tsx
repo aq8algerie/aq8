@@ -6,7 +6,7 @@
 import React from 'react';
 import { Edit2 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Appointment, AppointmentStatus, Center, Client, Service } from '../../../types';
+import { Appointment, Center, Client, Service } from '../../../types';
 import { getTodayDateString } from '../../../lib/centerManagerUtils';
 import { getBookingHoursForDate, getServiceTypeById, getSlotAvailability } from '../../../lib/bookingCapacityRules';
 
@@ -125,20 +125,6 @@ export function EditAppointmentModal({
                 })}
               </select>
             </div>
-          </div>
-
-          <div className="space-y-1">
-            <label className="font-semibold text-slate-600 block">Statut de la Séance *</label>
-            <select
-              value={appointment.status}
-              onChange={(event) => onAppointmentChange({ ...appointment, status: event.target.value as AppointmentStatus })}
-              className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none"
-              required
-            >
-              <option value="booked">Séance Planifiée (En attente)</option>
-              <option value="completed">Séance Effectuée (Validée)</option>
-              <option value="cancelled">Séance Annulée</option>
-            </select>
           </div>
 
           <div className="space-y-1">

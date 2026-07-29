@@ -47,7 +47,12 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 
 export let analytics: any = null;
-if (typeof window !== "undefined") {
+const analyticsEnabled =
+  getEnv("VITE_FIREBASE_ANALYTICS_ENABLED", "NEXT_PUBLIC_FIREBASE_ANALYTICS_ENABLED")
+    ?.trim()
+    .toLowerCase() === "true";
+
+if (typeof window !== "undefined" && analyticsEnabled) {
   isSupported().then((supported) => {
     if (supported) {
       analytics = getAnalytics(app);

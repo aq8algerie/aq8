@@ -6,9 +6,8 @@ import {
   runTransaction,
   Transaction,
 } from 'firebase/firestore';
-import { Appointment, BookingRequest, Center, Client, ClientPackage, Package, Payment, Service } from '../types';
+import { Appointment, BookingRequest, Center, Client, Service } from '../types';
 import { validateSessionCompletion } from './packageRules';
-import { isSameClientPackageActivation, isSamePaymentOperation, validatePackageActivation, validatePaymentRegistration } from './paymentRules';
 import {
   BookingServiceType,
   CenterBookingConfig,
@@ -20,7 +19,6 @@ import {
   isCenterOpenForDateTime,
 } from './bookingCapacityRules';
 
-type PaymentMethod = Payment['method'];
 type AppointmentSlotSource = 'manual' | 'booking_request' | 'backfill' | 'legacy';
 
 type AppointmentSlotEntry = {
@@ -469,7 +467,7 @@ export async function createAppointmentInTransaction(
 
 export async function updateAppointmentInTransaction(
   db: Firestore,
-  params: Appointment & { updatedAt: string }
+  params: Appointment & { updatedAt: string; audit: CrmTransactionAuditContext }
 ): Promise<void> {
   await runTransaction(db, async transaction => {
     assertString(params.id, 'Reservation invalide.');
@@ -492,6 +490,12 @@ export async function updateAppointmentInTransaction(
       throw new Error("Cette réservation n'appartient pas à votre centre.");
     }
 
+    if (currentAppointment.status !== 'booked' || params.status !== 'booked') {
+      throw new Error(
+        'Seules les réservations planifiées peuvent être modifiées. Utilisez les actions dédiées pour valider ou annuler une séance.'
+      );
+    }
+
     const clientSnapshot = await transaction.get(clientRef);
     if (!clientSnapshot.exists()) {
       throw new Error('Client introuvable.');
@@ -511,11 +515,8 @@ export async function updateAppointmentInTransaction(
     const oldSlotId = getAppointmentSlotId(currentAppointment.dateTime);
     const newSlotId = getAppointmentSlotId(params.dateTime);
     const sameSlot = oldSlotId === newSlotId;
-    const shouldHoldNewSlot = shouldHoldAppointmentSlot(params.status);
-
-    let nextOldSlot = shouldHoldAppointmentSlot(currentAppointment.status)
-      ? removeAppointmentFromSlot(oldSlot, params.id, centerConfig)
-      : oldSlot;
+    const shouldHoldNewSlot = true;
+    let nextOldSlot = removeAppointmentFromSlot(oldSlot, params.id, centerConfig);
     let nextNewSlot = nextOldSlot;
 
     if (!sameSlot) {
@@ -533,15 +534,13 @@ export async function updateAppointmentInTransaction(
       }), centerConfig);
     }
 
-    const updateData: Appointment = {
-      id: params.id,
+    const updateData: Partial<Appointment> = {
       clientId: params.clientId,
       serviceId: params.serviceId,
-      centerId: params.centerId,
       dateTime: params.dateTime,
       duration: params.duration,
-      status: params.status,
-      notes: params.notes || ''
+      notes: params.notes || '',
+      updatedAt: params.updatedAt,
     };
 
     if (sameSlot) {
@@ -553,157 +552,26 @@ export async function updateAppointmentInTransaction(
       }
     }
 
-    transaction.set(appointmentRef, updateData);
-  });
-}
-
-export async function deleteAppointmentInTransaction(
-  db: Firestore,
-  params: {
-    appointmentId: string;
-    centerId: string;
-  }
-): Promise<void> {
-  await runTransaction(db, async transaction => {
-    assertString(params.appointmentId, 'Reservation invalide.');
-    assertString(params.centerId, 'Centre invalide.');
-
-    const appointmentRef = doc(db, 'appointments', params.appointmentId);
-    const appointmentSnapshot = await transaction.get(appointmentRef);
-    if (!appointmentSnapshot.exists()) {
-      throw new Error('Reservation introuvable.');
-    }
-
-    const appointment = appointmentSnapshot.data() as Appointment;
-    if (appointment.centerId !== params.centerId) {
-      throw new Error("Cette réservation n'appartient pas à votre centre.");
-    }
-
-    const centerConfig = await readCenterConfig(transaction, db, params.centerId);
-    const slotRef = getAppointmentSlotRef(db, params.centerId, appointment.dateTime);
-    const slotSnapshot = await transaction.get(slotRef);
-    const slot = await normalizeSlotFromSnapshot(transaction, db, slotSnapshot, params.centerId, appointment.dateTime, new Date().toISOString(), centerConfig);
-    const nextSlot = removeAppointmentFromSlot(slot, params.appointmentId, centerConfig);
-
-    writeSlotOrDelete(transaction, db, slotRef, nextSlot);
-    transaction.delete(appointmentRef);
-  });
-}
-
-export async function completeAppointmentWithSessionDeduction(
-  db: Firestore,
-  params: {
-    appointmentId: string;
-    centerId: string;
-    clientPackageId: string;
-    audit: CrmTransactionAuditContext;
-  }
-): Promise<{
-  sessionsRemaining: number;
-  clientPackageId: string;
-  packageStatus: ClientPackage['status'];
-}> {
-  const completedAt = new Date().toISOString();
-
-  return runTransaction(db, async transaction => {
-    assertString(params.appointmentId, 'Réservation invalide.');
-    assertString(params.centerId, 'Centre invalide.');
-    assertString(params.clientPackageId, 'Forfait client invalide.');
-
-    const appointmentRef = doc(db, 'appointments', params.appointmentId);
-    const clientPackageRef = doc(db, 'client_packages', params.clientPackageId);
-
-    const appointmentSnapshot = await transaction.get(appointmentRef);
-    if (!appointmentSnapshot.exists()) {
-      throw new Error('Réservation introuvable.');
-    }
-
-    const appointment = {
-      ...appointmentSnapshot.data(),
-      id: appointmentSnapshot.id,
-    } as Appointment;
-    const clientRef = doc(db, 'clients', appointment.clientId);
-    const serviceRef = doc(db, 'services', appointment.serviceId);
-
-    const clientSnapshot = await transaction.get(clientRef);
-    const clientPackageSnapshot = await transaction.get(clientPackageRef);
-    const serviceSnapshot = await transaction.get(serviceRef);
-
-    const client = clientSnapshot.exists()
-      ? { ...clientSnapshot.data(), id: clientSnapshot.id } as Client
-      : undefined;
-    const clientPackage = clientPackageSnapshot.exists()
-      ? { ...clientPackageSnapshot.data(), id: clientPackageSnapshot.id } as ClientPackage
-      : undefined;
-    const service = serviceSnapshot.exists()
-      ? { ...serviceSnapshot.data(), id: serviceSnapshot.id } as Service
-      : undefined;
-
-    const packageRef = clientPackage
-      ? doc(db, 'packages', clientPackage.packageId)
-      : null;
-    const packageSnapshot = packageRef
-      ? await transaction.get(packageRef)
-      : null;
-    const packageDefinition = packageSnapshot?.exists()
-      ? { ...packageSnapshot.data(), id: packageSnapshot.id } as Package
-      : undefined;
-
-    const validation = validateSessionCompletion({
-      appointment,
-      client,
-      clientPackage,
-      service,
-      packageDefinition,
-      managerCenterId: params.centerId,
-    });
-    if (validation.valid === false) {
-      throw new Error(validation.error);
-    }
-
-    const sessionsRemaining = clientPackage.sessionsRemaining - 1;
-    const packageStatus: ClientPackage['status'] = sessionsRemaining === 0 ? 'completed' : 'active';
-    const clientName = `${client.firstName} ${client.lastName}`.trim() || appointment.clientId;
-    const serviceName = service.name || (service.type === 'aq8' ? 'AQ8' : 'Wonder');
-
-    transaction.update(clientPackageRef, {
-      sessionsRemaining,
-      status: packageStatus,
-      updatedAt: completedAt,
-      lastSessionAt: completedAt,
-      lastCompletedAppointmentId: appointment.id,
-    });
-    transaction.update(appointmentRef, {
-      status: 'completed',
-      completedAt,
-      completedByUserId: params.audit.userId,
-      completedByUserName: params.audit.userName || params.audit.userId,
-      completedWithClientPackageId: clientPackage.id,
-      deductedCredits: 1,
-    });
-
+    transaction.update(appointmentRef, updateData);
     writeCrmAuditLog(transaction, db, params.audit, {
-      action: 'COMPLETE_APPOINTMENT',
-      details: `Validation de la séance du ${appointment.dateTime.replace('T', ' ')} pour ${clientName}. 1 crédit ${serviceName} déduit du forfait ${packageDefinition.name}. Solde restant : ${sessionsRemaining} séance(s).`,
-      targetId: appointment.id,
+      action: 'UPDATE_APPOINTMENT',
+      details: `Modification de la réservation ${params.id}. Nouvelle date/heure : ${params.dateTime.replace('T', ' ')}.`,
+      targetId: params.id,
       targetType: 'appointment',
       centerId: params.centerId,
       centerName: params.audit.centerName,
-      timestamp: completedAt,
+      timestamp: params.updatedAt,
     });
-
-    return {
-      sessionsRemaining,
-      clientPackageId: clientPackage.id,
-      packageStatus,
-    };
   });
 }
+
 export async function cancelAppointmentInTransaction(
   db: Firestore,
   params: {
     appointmentId: string;
     centerId: string;
+    reason?: string;
+    audit: CrmTransactionAuditContext;
   }
 ): Promise<void> {
   await runTransaction(db, async transaction => {
@@ -721,16 +589,31 @@ export async function cancelAppointmentInTransaction(
       throw new Error('Seules les réservations planifiées peuvent être annulées.');
     }
 
+    const cancelledAt = new Date().toISOString();
     const centerConfig = await readCenterConfig(transaction, db, params.centerId);
     const slotRef = getAppointmentSlotRef(db, params.centerId, appointment.dateTime);
     const slotSnapshot = await transaction.get(slotRef);
-    const slot = await normalizeSlotFromSnapshot(transaction, db, slotSnapshot, params.centerId, appointment.dateTime, new Date().toISOString(), centerConfig);
+    const slot = await normalizeSlotFromSnapshot(transaction, db, slotSnapshot, params.centerId, appointment.dateTime, cancelledAt, centerConfig);
     const nextSlot = removeAppointmentFromSlot(slot, params.appointmentId, centerConfig);
 
     writeSlotOrDelete(transaction, db, slotRef, nextSlot);
     transaction.update(appointmentRef, {
-      status: 'cancelled'
+      status: 'cancelled',
+      cancelledAt,
+      cancelledByUserId: params.audit.userId,
+      cancelledByUserName: params.audit.userName || params.audit.userId,
+      cancellationReason: params.reason?.trim() || 'Annulation manager',
+      updatedAt: cancelledAt,
     });
+    writeCrmAuditLog(transaction, db, params.audit, {
+      action: 'CANCEL_APPOINTMENT',
+      details: `Annulation de la réservation ${appointment.id} du ${appointment.dateTime.replace('T', ' ')}. Motif : ${params.reason?.trim() || 'Annulation manager'}.`,
+      targetId: appointment.id,
+      targetType: 'appointment',
+      centerId: params.centerId,
+      centerName: params.audit.centerName,
+      timestamp: cancelledAt,
+    });;
   });
 }
 
@@ -945,265 +828,5 @@ export async function rejectBookingRequestInTransaction(
       centerName: params.audit.centerName || centerConfig.name,
       timestamp: params.processedAt,
     });
-  });
-}
-export async function assignPackageToClient(
-  db: Firestore,
-  params: {
-    clientPackageId: string;
-    centerId: string;
-    clientId: string;
-    packageId: string;
-    purchaseDate: string;
-    audit: CrmTransactionAuditContext;
-  }
-): Promise<{ clientPackageId: string; created: boolean }> {
-  const activatedAt = new Date().toISOString();
-
-  return runTransaction(db, async transaction => {
-    assertString(params.clientPackageId, 'Identifiant de forfait client invalide.');
-    assertString(params.centerId, 'Centre invalide.');
-    assertString(params.clientId, 'Client invalide.');
-    assertString(params.packageId, 'Forfait invalide.');
-    assertString(params.purchaseDate, "Date d'activation invalide.");
-
-    const clientPackageRef = doc(db, 'client_packages', params.clientPackageId);
-    const existingClientPackageSnapshot = await transaction.get(clientPackageRef);
-    if (existingClientPackageSnapshot.exists()) {
-      const existingClientPackage = {
-        ...existingClientPackageSnapshot.data(),
-        id: existingClientPackageSnapshot.id,
-      } as ClientPackage;
-      const expectedClientPackage = {
-        id: params.clientPackageId,
-        clientId: params.clientId,
-        packageId: params.packageId,
-        centerId: params.centerId,
-        purchaseDate: params.purchaseDate,
-        sessionsRemaining: existingClientPackage.sessionsRemaining,
-        totalSessions: existingClientPackage.totalSessions,
-        status: existingClientPackage.status,
-      } as ClientPackage;
-
-      if (!isSameClientPackageActivation(existingClientPackage, expectedClientPackage)) {
-        throw new Error('Cet identifiant correspond déjà à une autre activation de forfait.');
-      }
-
-      return { clientPackageId: params.clientPackageId, created: false };
-    }
-
-    const clientRef = doc(db, 'clients', params.clientId);
-    const packageRef = doc(db, 'packages', params.packageId);
-    const clientSnapshot = await transaction.get(clientRef);
-    const packageSnapshot = await transaction.get(packageRef);
-    const center = await readCenterConfig(transaction, db, params.centerId);
-
-    const client = clientSnapshot.exists()
-      ? { ...clientSnapshot.data(), id: clientSnapshot.id } as Client
-      : undefined;
-    const packageDefinition = packageSnapshot.exists()
-      ? { ...packageSnapshot.data(), id: packageSnapshot.id } as Package
-      : undefined;
-
-    const validation = validatePackageActivation({
-      center,
-      client,
-      packageDefinition,
-      centerId: params.centerId,
-    });
-    if (validation.valid === false) {
-      throw new Error(validation.error);
-    }
-
-    const clientPackage: ClientPackage = {
-      id: params.clientPackageId,
-      clientId: params.clientId,
-      packageId: params.packageId,
-      centerId: params.centerId,
-      sessionsRemaining: packageDefinition.sessionsCount,
-      totalSessions: packageDefinition.sessionsCount,
-      purchaseDate: params.purchaseDate,
-      status: 'active',
-      activatedAt,
-      activatedByUserId: params.audit.userId,
-      activatedByUserName: params.audit.userName || params.audit.userId,
-    };
-    transaction.set(clientPackageRef, clientPackage);
-
-    const clientName = `${client.firstName} ${client.lastName}`.trim() || params.clientId;
-    writeCrmAuditLog(transaction, db, params.audit, {
-      action: 'ASSIGN_PACKAGE',
-      details: `Activation du forfait ${packageDefinition.name} pour ${clientName}, avec ${packageDefinition.sessionsCount} séance(s).`,
-      targetId: params.clientPackageId,
-      targetType: 'client_package',
-      centerId: params.centerId,
-      centerName: params.audit.centerName,
-      timestamp: activatedAt,
-    });
-
-    return { clientPackageId: params.clientPackageId, created: true };
-  });
-}
-export async function recordPaymentWithOptionalPackage(
-  db: Firestore,
-  params: {
-    paymentId: string;
-    clientPackageId?: string;
-    centerId: string;
-    clientId: string;
-    packageId: string;
-    amount: number;
-    method: PaymentMethod;
-    receiptNumber: string;
-    date: string;
-    autoActivatePackage: boolean;
-    audit: CrmTransactionAuditContext;
-  }
-): Promise<{
-  paymentId: string;
-  clientPackageId?: string;
-  packageActivated: boolean;
-  created: boolean;
-}> {
-  const recordedAt = new Date().toISOString();
-
-  return runTransaction(db, async transaction => {
-    assertString(params.paymentId, 'Identifiant de paiement invalide.');
-    assertString(params.centerId, 'Centre invalide.');
-    assertString(params.clientId, 'Client invalide.');
-    assertString(params.packageId, 'Forfait invalide.');
-    assertString(params.receiptNumber, 'Référence de reçu invalide.');
-    assertString(params.date, 'Date de paiement invalide.');
-
-    if (params.autoActivatePackage) {
-      assertString(params.clientPackageId, 'Identifiant de forfait client invalide.');
-    } else if (params.clientPackageId) {
-      throw new Error("Un forfait client ne peut pas être lié sans activation.");
-    }
-
-    const paymentRef = doc(db, 'payments', params.paymentId);
-    const paymentSnapshot = await transaction.get(paymentRef);
-    const expectedPayment: Payment = {
-      id: params.paymentId,
-      clientId: params.clientId,
-      packageId: params.packageId,
-      centerId: params.centerId,
-      amount: params.amount,
-      date: params.date,
-      method: params.method,
-      receiptNumber: params.receiptNumber,
-      ...(params.clientPackageId ? { clientPackageId: params.clientPackageId } : {}),
-    };
-
-    if (paymentSnapshot.exists()) {
-      const existingPayment = {
-        ...paymentSnapshot.data(),
-        id: paymentSnapshot.id,
-      } as Payment;
-      if (!isSamePaymentOperation(existingPayment, expectedPayment)) {
-        throw new Error('Cet identifiant correspond déjà à un autre paiement.');
-      }
-
-      if (params.autoActivatePackage && params.clientPackageId) {
-        const existingClientPackageSnapshot = await transaction.get(
-          doc(db, 'client_packages', params.clientPackageId)
-        );
-        if (
-          !existingClientPackageSnapshot.exists() ||
-          existingClientPackageSnapshot.data().sourcePaymentId !== params.paymentId
-        ) {
-          throw new Error("Le paiement existe mais l'activation du forfait est incohérente.");
-        }
-      }
-
-      return {
-        paymentId: params.paymentId,
-        ...(params.clientPackageId ? { clientPackageId: params.clientPackageId } : {}),
-        packageActivated: params.autoActivatePackage,
-        created: false,
-      };
-    }
-
-    const clientRef = doc(db, 'clients', params.clientId);
-    const packageRef = doc(db, 'packages', params.packageId);
-    const clientSnapshot = await transaction.get(clientRef);
-    const packageSnapshot = await transaction.get(packageRef);
-    const center = await readCenterConfig(transaction, db, params.centerId);
-
-    const client = clientSnapshot.exists()
-      ? { ...clientSnapshot.data(), id: clientSnapshot.id } as Client
-      : undefined;
-    const packageDefinition = packageSnapshot.exists()
-      ? { ...packageSnapshot.data(), id: packageSnapshot.id } as Package
-      : undefined;
-
-    const validation = validatePaymentRegistration({
-      center,
-      client,
-      packageDefinition,
-      centerId: params.centerId,
-      amount: params.amount,
-      method: params.method,
-      receiptNumber: params.receiptNumber,
-      autoActivatePackage: params.autoActivatePackage,
-    });
-    if (validation.valid === false) {
-      throw new Error(validation.error);
-    }
-
-    let clientPackageRef: DocumentReference | null = null;
-    if (params.autoActivatePackage && params.clientPackageId) {
-      clientPackageRef = doc(db, 'client_packages', params.clientPackageId);
-      const clientPackageSnapshot = await transaction.get(clientPackageRef);
-      if (clientPackageSnapshot.exists()) {
-        throw new Error('Cet identifiant de forfait client est déjà utilisé.');
-      }
-    }
-
-    const payment: Payment = {
-      ...expectedPayment,
-      createdAt: recordedAt,
-      recordedByUserId: params.audit.userId,
-      recordedByUserName: params.audit.userName || params.audit.userId,
-    };
-    transaction.set(paymentRef, payment);
-
-    if (clientPackageRef && params.clientPackageId) {
-      const clientPackage: ClientPackage = {
-        id: params.clientPackageId,
-        clientId: params.clientId,
-        packageId: params.packageId,
-        centerId: params.centerId,
-        sessionsRemaining: packageDefinition.sessionsCount,
-        totalSessions: packageDefinition.sessionsCount,
-        purchaseDate: params.date,
-        status: 'active',
-        activatedAt: recordedAt,
-        activatedByUserId: params.audit.userId,
-        activatedByUserName: params.audit.userName || params.audit.userId,
-        sourcePaymentId: params.paymentId,
-      };
-      transaction.set(clientPackageRef, clientPackage);
-    }
-
-    const clientName = `${client.firstName} ${client.lastName}`.trim() || params.clientId;
-    writeCrmAuditLog(transaction, db, params.audit, {
-      action: params.autoActivatePackage
-        ? 'RECORD_PAYMENT_AND_ACTIVATE_PACKAGE'
-        : 'RECORD_PAYMENT',
-      details: `Paiement de ${params.amount} DZD enregistré pour ${clientName}, forfait ${packageDefinition.name}, référence ${params.receiptNumber}.${params.autoActivatePackage ? ' Forfait activé dans la même opération.' : ''}`,
-      targetId: params.paymentId,
-      targetType: 'payment',
-      centerId: params.centerId,
-      centerName: params.audit.centerName,
-      timestamp: recordedAt,
-    });
-
-    return {
-      paymentId: params.paymentId,
-      ...(params.clientPackageId ? { clientPackageId: params.clientPackageId } : {}),
-      packageActivated: params.autoActivatePackage,
-      created: true,
-    };
   });
 }

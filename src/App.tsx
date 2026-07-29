@@ -965,7 +965,7 @@ export default function App() {
                   managers={managers}
                   services={services}
                   packages={packages}
-                  settings={settings || { appName: 'AQ8 Algérie', contactEmail: 'contact@aq8algerie.com', contactPhone: '+213 (0) 23 48 50 60', addressAlgérie: 'Hydra, Alger', currency: 'DZD', enableVoucherPromo: true }}
+                  settings={settings || { appName: 'AQ8 Algérie', contactEmail: 'notifications@aq8algerie-dz.com', contactPhone: '+213 (0) 23 48 50 60', addressAlgérie: 'Hydra, Alger', currency: 'DZD', enableVoucherPromo: true }}
                   appointmentsCount={appointments.length}
                   paymentsCount={payments.length}
                   totalRevenue={totalRevenue}
@@ -974,7 +974,6 @@ export default function App() {
                   payments={payments}
                   appointments={appointments}
                   onUpdateCenters={updateCenters}
-                  onUpdateManagers={updateManagers}
                   onUpdateServices={updateServices}
                   onUpdatePackages={updatePackages}
                   onUpdateSettings={updateSettings}
@@ -998,8 +997,6 @@ export default function App() {
                   measurements={measurements}
                   services={services}
                   bookingRequests={bookingRequests}
-                  onUpdateClients={updateClients}
-                  onUpdatePayments={updatePayments}
                   onUpdateMeasurements={updateMeasurements}
                   activeTab={crmCenterManagerTab}
                   onTabChange={setCrmCenterManagerTab}

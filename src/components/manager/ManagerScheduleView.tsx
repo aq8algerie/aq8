@@ -16,7 +16,6 @@ import { getTodayDateString } from '../../lib/centerManagerUtils';
 import { getBookingHoursForDate } from '../../lib/bookingCapacityRules';
 import { db } from '../../lib/firebase';
 import { notifyCrmEmail } from '../../lib/emailNotificationClient';
-import { ProfessionalConfirmDialog } from './ProfessionalConfirmDialog';
 import { ProfessionalToast, ProfessionalToastState, ToastAction, ToastType } from './ProfessionalToast';
 import { PendingBookingRequestsPanel } from './schedule/PendingBookingRequestsPanel';
 import { ScheduleToolbar, ScheduleViewType } from './schedule/ScheduleToolbar';
@@ -55,7 +54,6 @@ interface ManagerScheduleViewProps {
   onCompleteAppointment: (id: string, options?: AppointmentMutationOptions) => Promise<CrmActionResult>;
   onCancelAppointment: (id: string, options?: AppointmentMutationOptions) => Promise<CrmActionResult>;
   onUpdateAppointment: (appointment: Appointment) => Promise<CrmActionResult>;
-  onDeleteAppointment: (id: string) => Promise<CrmActionResult>;
   clientPackages: ClientPackage[];
   packages: Package[];
   onBookAppointmentClick: () => void;
@@ -65,10 +63,6 @@ interface ManagerScheduleViewProps {
   userName: string;
 }
 
-
-type ScheduleConfirmation =
-  | { kind: 'delete-single'; appointmentId: string }
-  | { kind: 'delete-bulk'; appointmentIds: string[] };
 
 export function ManagerScheduleView({
   centerId,
@@ -80,7 +74,6 @@ export function ManagerScheduleView({
   onCompleteAppointment,
   onCancelAppointment,
   onUpdateAppointment,
-  onDeleteAppointment,
   clientPackages,
   packages,
   onBookAppointmentClick,
@@ -127,8 +120,6 @@ export function ManagerScheduleView({
 
   // Toast message
   const [toast, setToast] = useState<ProfessionalToastState | null>(null);
-  const [pendingConfirmation, setPendingConfirmation] = useState<ScheduleConfirmation | null>(null);
-  const [confirmingAction, setConfirmingAction] = useState(false);
   const showToast = (message: string, type: ToastType = 'success', action?: ToastAction, title?: string) => {
     setToast({ message, type, action, title });
     setTimeout(() => setToast(null), 4200);
@@ -216,68 +207,6 @@ export function ManagerScheduleView({
   const focusedDateStr = formatDateToYYYYMMDD(focusedDate);
   const focusedDateTimelineHours = getBookingHoursForDate(centerId, focusedDateStr, currentCenter);
 
-  const getAppointmentClientLabel = (appointmentId: string) => {
-    const appointment = centerAppointments.find(candidate => candidate.id === appointmentId);
-    const client = appointment ? centerClients.find(candidate => candidate.id === appointment.clientId) : null;
-    if (!client) return 'cette réservation';
-    return `${client.firstName} ${client.lastName}`.trim() || 'cette réservation';
-  };
-
-  const confirmationCopy = pendingConfirmation
-    ? pendingConfirmation.kind === 'delete-single'
-      ? {
-          title: 'Supprimer cette réservation ?',
-          description: `${getAppointmentClientLabel(pendingConfirmation.appointmentId)} sera retiré du planning. La capacité du créneau sera libérée immédiatement.`,
-          confirmLabel: 'Supprimer',
-        }
-      : {
-          title: `Supprimer ${pendingConfirmation.appointmentIds.length} réservations ?`,
-          description: 'Les réservations sélectionnées seront retirées du planning. Les places correspondantes seront libérées.',
-          confirmLabel: `Supprimer ${pendingConfirmation.appointmentIds.length}`,
-        }
-    : null;
-
-  const executePendingConfirmation = async () => {
-    if (!pendingConfirmation || confirmingAction) return;
-    setConfirmingAction(true);
-
-    try {
-      if (pendingConfirmation.kind === 'delete-single') {
-        const result = await onDeleteAppointment(pendingConfirmation.appointmentId);
-        if (result.ok) {
-          setSelectedIds(prev => prev.filter(x => x !== pendingConfirmation.appointmentId));
-          showToast('Le rendez-vous a été retiré du planning et la capacité est libérée.', 'success', 'deleted');
-        } else {
-          showToast(result.error || 'Suppression impossible.', 'error');
-        }
-        return;
-      }
-
-      let countSuccess = 0;
-      let countFail = 0;
-      const deletedIds: string[] = [];
-
-      for (const appointmentId of pendingConfirmation.appointmentIds) {
-        const result = await onDeleteAppointment(appointmentId);
-        if (result.ok) {
-          countSuccess++;
-          deletedIds.push(appointmentId);
-        } else {
-          countFail++;
-        }
-      }
-
-      setSelectedIds(prev => prev.filter(id => !deletedIds.includes(id)));
-      if (countFail > 0) {
-        showToast(`${countSuccess} supprimée(s), ${countFail} échouée(s).`, 'error');
-      } else {
-        showToast(`${countSuccess} réservations supprimées du planning.`, 'success', 'deleted');
-      }
-    } finally {
-      setConfirmingAction(false);
-      setPendingConfirmation(null);
-    }
-  };
   // 4. Individual Actions
   const handleSingleComplete = async (id: string) => {
     const result = await onCompleteAppointment(id, { silent: true });
@@ -295,10 +224,6 @@ export function ManagerScheduleView({
     } else {
       showToast(result.error || 'Annulation impossible.', 'error');
     }
-  };
-
-  const handleSingleDelete = (id: string) => {
-    setPendingConfirmation({ kind: 'delete-single', appointmentId: id });
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -376,13 +301,7 @@ export function ManagerScheduleView({
     }
   };
 
-  const handleBulkDelete = () => {
-    if (selectedIds.length === 0) {
-      showToast('Aucune réservation sélectionnée.', 'error');
-      return;
-    }
-    setPendingConfirmation({ kind: 'delete-bulk', appointmentIds: [...selectedIds] });
-  };
+
 
   // Booking Requests handlers
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -513,24 +432,6 @@ export function ManagerScheduleView({
         onDismiss={() => setToast(null)}
         id="manager-schedule-toast"
       />
-      {confirmationCopy && (
-        <ProfessionalConfirmDialog
-          open={Boolean(pendingConfirmation)}
-          title={confirmationCopy.title}
-          description={confirmationCopy.description}
-          confirmLabel={confirmationCopy.confirmLabel}
-          cancelLabel="Garder"
-          tone="danger"
-          loading={confirmingAction}
-          id="manager-schedule-confirm-dialog"
-          onCancel={() => {
-            if (!confirmingAction) {
-              setPendingConfirmation(null);
-            }
-          }}
-          onConfirm={executePendingConfirmation}
-        />
-      )}
       {/* ===================================================== */}
       <PendingBookingRequestsPanel
         requests={pendingRequests}
@@ -556,7 +457,6 @@ export function ManagerScheduleView({
         selectedCount={selectedIds.length}
         onComplete={handleBulkComplete}
         onCancel={handleBulkCancel}
-        onDelete={handleBulkDelete}
         onClearSelection={() => setSelectedIds([])}
       />
       {/* ========================================================= */}
@@ -581,7 +481,6 @@ export function ManagerScheduleView({
           onEditAppointment={setEditingApt}
           onCompleteAppointment={handleSingleComplete}
           onCancelAppointment={handleSingleCancel}
-          onDeleteAppointment={handleSingleDelete}
           currentCenter={currentCenter}
         />
       )}

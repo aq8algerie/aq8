@@ -8,14 +8,17 @@ import { HomeWhyChoose } from "@/components/home/HomeWhyChoose";
 import { HomeHowItWorks } from "@/components/home/HomeHowItWorks";
 import { HomeShortFAQ } from "@/components/home/HomeShortFAQ";
 import { HomeFinalCTA } from "@/components/home/HomeFinalCTA";
-import { centers } from "@/lib/centers";
+import { getServerPublicCenters } from "@/src/lib/serverPublicData";
 
 export const metadata: Metadata = {
   title: getSeoForPage("home").title,
   description: getSeoForPage("home").description,
 };
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const centers = await getServerPublicCenters();
   return (
     <main className="space-y-16 py-4">
       <SeoJsonLd type="organization" />

@@ -16,6 +16,7 @@ import {
   validatePaymentRegistration,
 } from './paymentRules';
 import { getBookingMinimumDate, validatePublicBookingRequest, validatePublicContactMessage } from './publicFormValidation';
+import { validatePaymentReversal } from './financialLedgerRules';
 
 function test(name: string, run: () => void) {
   run();
@@ -595,6 +596,56 @@ test('public contact validation rejects invalid center and long messages', () =>
 
   assert.equal(invalidCenter.valid, false);
   assert.equal(longMessage.valid, false);
+});
+
+test('payment reversal keeps the ledger balanced only before package consumption', () => {
+  const payment: Payment = {
+    id: 'pay-reversible',
+    clientId: 'client-1',
+    packageId: 'package-aq8',
+    centerId: 'center-1',
+    amount: 12000,
+    date: '2026-07-20',
+    method: 'cash',
+    kind: 'payment',
+    status: 'posted',
+  };
+
+  assert.deepEqual(
+    validatePaymentReversal({
+      payment,
+      clientPackage: { ...activePackage, sessionsRemaining: activePackage.totalSessions },
+      centerId: 'center-1',
+    }),
+    { valid: true },
+  );
+  assert.equal(
+    validatePaymentReversal({
+      payment,
+      clientPackage: { ...activePackage, sessionsRemaining: activePackage.totalSessions - 1 },
+      centerId: 'center-1',
+    }).valid,
+    false,
+  );
+});
+
+test('payment reversal rejects cross-center and reversal entries', () => {
+  const payment: Payment = {
+    id: 'pay-cross-center',
+    clientId: 'client-1',
+    packageId: 'package-aq8',
+    centerId: 'center-1',
+    amount: 12000,
+    date: '2026-07-20',
+    method: 'cash',
+  };
+
+  assert.equal(validatePaymentReversal({ payment, clientPackage: undefined, centerId: 'center-2' }).valid, false);
+  assert.equal(validatePaymentReversal({
+    payment: { ...payment, kind: 'reversal', amount: -12000 },
+    clientPackage: undefined,
+    centerId: 'center-1',
+  }).valid, false);
 });
 
 console.log('All business-rule tests passed.');
