@@ -3,6 +3,7 @@ import { getAdminDb } from './serverFirebaseAdmin';
 import { getPublicCenters } from './centerVisibility';
 import { INITIAL_CENTERS, INITIAL_SETTINGS } from '../mockData';
 import type { Center, GeneralSettings } from '../types';
+import { toPlainFirestoreData } from './firestoreSerialization';
 
 const PUBLIC_DATA_TIMEOUT_MS = 4_000;
 
@@ -29,10 +30,10 @@ export async function getServerPublicCenters(): Promise<Center[]> {
       getAdminDb().collection('centers').get(),
       'Firestore centers',
     );
-    const centers = snapshot.docs.map(doc => ({
+    const centers = snapshot.docs.map(doc => toPlainFirestoreData({
       ...doc.data(),
       id: doc.id,
-    } as Center));
+    }) as Center);
     return getPublicCenters(centers);
   } catch (error) {
     if (process.env.NODE_ENV === 'production') {
@@ -60,7 +61,7 @@ export async function getServerPublicSettings(): Promise<GeneralSettings> {
       'Firestore settings',
     );
     return snapshot.exists
-      ? snapshot.data() as GeneralSettings
+      ? toPlainFirestoreData(snapshot.data()) as GeneralSettings
       : INITIAL_SETTINGS;
   } catch (error) {
     if (process.env.NODE_ENV === 'production') {

@@ -11,7 +11,7 @@ export const metadata: any = {
   icons: {
     icon: "/images/favicon.png",
     shortcut: "/images/favicon.png",
-    apple: "/images/favicon.png",
+    apple: "/images/apple-touch-icon.png",
   },
   appleWebApp: {
     capable: true,
@@ -30,7 +30,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" type="image/png" href="/images/favicon.png" />
         <link rel="shortcut icon" href="/images/favicon.png" />
-        <link rel="apple-touch-icon" href="/images/favicon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
       </head>
       <body className="min-h-screen bg-slate-50 text-slate-800 antialiased">
         <DataProvider>

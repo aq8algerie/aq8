@@ -10,28 +10,16 @@ export default function manifest() {
     orientation: "portrait-primary",
     icons: [
       {
-        src: "/images/favicon.png",
+        src: "/images/icon-192.png",
         sizes: "192x192",
         type: "image/png",
         purpose: "any"
       },
       {
-        src: "/images/favicon.png",
+        src: "/images/icon-512.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "any"
-      },
-      {
-        src: "/images/favicon.png",
-        sizes: "192x192",
-        type: "image/png",
-        purpose: "maskable"
-      },
-      {
-        src: "/images/favicon.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "maskable"
       }
     ]
   };
