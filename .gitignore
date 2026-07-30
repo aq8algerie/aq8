@@ -9,3 +9,8 @@ coverage/
 db-audit/out/
 scratch/
 .next/
+.firebase/
+cle.json
+firebase-adminsdk*.json
+*service-account*.json
+*credentials*.json

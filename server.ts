@@ -31,6 +31,7 @@ async function runBookingExpiration() {
 
 async function startServer() {
   const app = express();
+  app.disable('x-powered-by');
   app.set('trust proxy', 1);
 
   const publicApiLimiter = createLimiter(
@@ -50,7 +51,9 @@ async function startServer() {
   app.use('/api/crm-managers', protectedMutationLimiter);
   app.use('/api/crm-operations', protectedMutationLimiter);
   app.use('/api/crm-clients', protectedMutationLimiter);
+  app.use('/api/crm-center-settings', protectedMutationLimiter);
   app.use('/api/email-notifications/retry', protectedMutationLimiter);
+  app.use('/api/email-notifications/crm', protectedMutationLimiter);
 
   const nextApp = (next as any)({ dev: process.env.NODE_ENV !== 'production' });
   const nextHandler = nextApp.getRequestHandler();

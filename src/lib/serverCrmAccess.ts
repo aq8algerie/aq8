@@ -13,6 +13,12 @@ export type ServerCrmProfile = {
   token: DecodedIdToken;
 };
 
+const BLOCKED_CENTER_STATUSES = new Set(['suspended', 'showcase', 'inactive', 'archived']);
+
+export function isOperationalCrmCenterStatus(status: unknown): boolean {
+  return !BLOCKED_CENTER_STATUSES.has(String(status || '').trim().toLowerCase());
+}
+
 export class CrmAccessError extends Error {
   constructor(message: string, public readonly statusCode: number) {
     super(message);
@@ -52,12 +58,25 @@ export async function verifyServerCrmAccess(
     throw new CrmAccessError('Profil CRM non autorisé.', 403);
   }
 
+  const centerId = typeof data.centerId === 'string' && data.centerId.trim()
+    ? data.centerId.trim()
+    : null;
+  if (role === 'center_manager') {
+    if (!centerId) {
+      throw new CrmAccessError('Aucun centre actif n’est rattaché à ce compte manager.', 403);
+    }
+    const centerSnapshot = await getAdminDb().collection('centers').doc(centerId).get();
+    if (!centerSnapshot.exists || !isOperationalCrmCenterStatus(centerSnapshot.data()?.status)) {
+      throw new CrmAccessError('L’accès CRM de ce centre est suspendu.', 403);
+    }
+  }
+
   return {
     uid: token.uid,
     email: String(token.email || data.email || '').trim().toLowerCase(),
     name: String(data.displayName || data.name || token.name || token.email || token.uid),
     role,
-    centerId: typeof data.centerId === 'string' ? data.centerId : null,
+    centerId,
     active: true,
     token,
   };
@@ -69,6 +88,6 @@ export function getCrmErrorResponse(error: unknown): { status: number; message: 
   }
   return {
     status: 500,
-    message: error instanceof Error ? error.message : 'Erreur CRM inattendue.',
+    message: 'Erreur CRM inattendue.',
   };
 }

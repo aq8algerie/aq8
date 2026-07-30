@@ -46,7 +46,7 @@ import { findActivePackageForClientAndService, isPackageCompatibleWithService, i
 import { AlertTriangle } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { notifyCrmEmailBestEffort } from '../lib/emailNotificationClient';
-import { doc, updateDoc } from 'firebase/firestore';
+import { updateCenterSettings } from '../lib/centerSettingsClient';
 import {
   AppointmentMutationOptions,
   cancelAppointmentInTransaction,
@@ -149,7 +149,6 @@ export function CenterManagerViews({
     payload: Partial<Center>,
     successMessage: string,
     successTitle: string,
-    audit: { action: string; details: string; targetType?: string }
   ): Promise<CrmActionResult> => {
     if (!currentCenter) {
       const message = 'Centre introuvable.';
@@ -158,18 +157,7 @@ export function CenterManagerViews({
     }
 
     try {
-      await updateDoc(doc(db, 'centers', centerId), {
-        ...payload,
-        updatedAt: new Date().toISOString(),
-      });
-      await logCrmAction(userId, userName, 'center_manager', {
-        action: audit.action,
-        details: audit.details,
-        targetId: centerId,
-        targetType: audit.targetType || 'center',
-        centerId,
-        centerName: currentCenter.name,
-      });
+      await updateCenterSettings(centerId, payload);
       triggerToast(successMessage, 'success', 'updated', successTitle);
       return { ok: true };
     } catch (error) {
@@ -190,11 +178,6 @@ export function CenterManagerViews({
       },
       'Paramètres de réservation mis à jour.',
       'Paramètres enregistrés',
-      {
-        action: 'UPDATE_BOOKING_SETTINGS',
-        details: `Mise à jour des paramètres de réservation du centre : ${currentCenter.name}`,
-        targetType: 'center',
-      }
     );
   };
 
@@ -203,14 +186,8 @@ export function CenterManagerViews({
       settings,
       'Informations du centre mises à jour.',
       'Centre mis à jour',
-      {
-        action: 'UPDATE_CENTER_PUBLIC_PROFILE',
-        details: `Mise à jour des informations publiques du centre : ${currentCenter.name}`,
-        targetType: 'center',
-      }
     )
   );
-
   // Custom center services filtering & pricing
   const centerServices = services
     .filter(s => {

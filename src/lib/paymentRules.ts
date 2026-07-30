@@ -27,8 +27,8 @@ export function validatePackageActivation({
     return { valid: false, error: "L'adhérent est introuvable ou n'appartient pas à votre centre." };
   }
 
-  if (client.status === 'suspended') {
-    return { valid: false, error: "Le compte de cet adhérent est suspendu." };
+  if (client.status === 'suspended' || client.status === 'archived') {
+    return { valid: false, error: "Le compte de cet adhérent n’est pas actif." };
   }
 
   if (!packageDefinition) {

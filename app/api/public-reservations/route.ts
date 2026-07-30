@@ -24,7 +24,14 @@ import {
   CenterBookingConfig,
 } from '@/src/lib/bookingCapacityRules';
 import { sendPublicReservationNotifications } from '@/src/lib/serverEmailNotifications';
-import type { Center, Service, ClientPackage } from '@/src/types';
+import type { Center, Service } from '@/src/types';
+
+class PublicReservationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'PublicReservationError';
+  }
+}
 
 type AppointmentSlotSource = 'manual' | 'booking_request' | 'backfill' | 'legacy';
 
@@ -117,11 +124,11 @@ function buildPublicBookingSlot(slot: AppointmentSlot) {
 async function readAdminServiceType(transaction: any, db: any, serviceId: string): Promise<BookingServiceType> {
   const serviceSnapshot = await transaction.get(db.collection('services').doc(serviceId));
   if (!serviceSnapshot.exists) {
-    throw new Error('Prestation introuvable.');
+    throw new PublicReservationError('Prestation introuvable.');
   }
   const service = serviceSnapshot.data() as Service;
   if (!isBookingServiceType(service.type)) {
-    throw new Error('Type de prestation invalide.');
+    throw new PublicReservationError('Type de prestation invalide.');
   }
   return service.type;
 }
@@ -176,7 +183,7 @@ async function normalizeAdminSlot(
 
 function addBookingHoldToSlot(slot: AppointmentSlot, entry: AppointmentSlotEntry, center?: CenterBookingConfig): AppointmentSlot {
   if (!isCenterOpenForDateTime(slot.centerId, slot.dateTime, center)) {
-    throw new Error("Ce créneau est en dehors des horaires d'ouverture du centre.");
+    throw new PublicReservationError("Ce créneau est en dehors des horaires d'ouverture du centre.");
   }
 
   const booked = Object.values(slot.appointments).filter(candidate => (
@@ -185,7 +192,7 @@ function addBookingHoldToSlot(slot: AppointmentSlot, entry: AppointmentSlotEntry
   const capacity = getSlotCapacity(slot.centerId, entry.serviceType, center);
 
   if (booked >= capacity) {
-    throw new Error(`Capacité ${getServiceTypeLabel(entry.serviceType)} atteinte sur ce créneau (${booked}/${capacity}).`);
+    throw new PublicReservationError(`Capacité ${getServiceTypeLabel(entry.serviceType)} atteinte sur ce créneau (${booked}/${capacity}).`);
   }
 
   return recomputeSlot({
@@ -220,12 +227,12 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
   const db = getAdminDb();
   const requestedCenterId = String(input.centerId || '').trim();
   if (!requestedCenterId) {
-    throw new Error('Centre invalide. Veuillez choisir un centre disponible.');
+    throw new PublicReservationError('Centre invalide. Veuillez choisir un centre disponible.');
   }
 
   const centerSnapshot = await db.collection('centers').doc(requestedCenterId).get();
   if (!centerSnapshot.exists) {
-    throw new Error('Centre introuvable.');
+    throw new PublicReservationError('Centre introuvable.');
   }
 
   const center = { id: centerSnapshot.id, ...(centerSnapshot.data() as Omit<Center, 'id'>) } as Center;
@@ -240,63 +247,14 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
     center,
   );
   if (validation.valid === false) {
-    throw new Error(validation.error);
+    throw new PublicReservationError(validation.error);
   }
 
   const data = validation.data;
-  const phoneSearch = String(data.phone || '').trim();
-  let warningMessage: string | undefined = undefined;
-
-  if (phoneSearch) {
-    const clientsSnap = await db.collection('clients')
-      .where('phone', '==', phoneSearch)
-      .where('centerId', '==', data.centerId)
-      .get();
-
-    if (!clientsSnap.empty) {
-      const clientDoc = clientsSnap.docs[0];
-      const clientId = clientDoc.id;
-
-      const pkgsSnap = await db.collection('client_packages')
-        .where('clientId', '==', clientId)
-        .get();
-
-      const clientPkgs = pkgsSnap.docs.map(doc => doc.data() as ClientPackage);
-
-      const hasActiveValidPackage = clientPkgs.some(cp => {
-        if (cp.status !== 'active' || cp.sessionsRemaining <= 0) return false;
-        if (!cp.purchaseDate) return false;
-        const purchase = new Date(cp.purchaseDate);
-        if (isNaN(purchase.getTime())) return false;
-        const diffDays = (Date.now() - purchase.getTime()) / (1000 * 60 * 60 * 24);
-        return diffDays <= 45;
-      });
-
-      if (!hasActiveValidPackage) {
-        const appointmentsSnap = await db.collection('appointments')
-          .where('clientId', '==', clientId)
-          .where('status', '==', 'booked')
-          .get();
-
-        const requestsSnap = await db.collection('booking_requests')
-          .where('phone', '==', phoneSearch)
-          .where('centerId', '==', data.centerId)
-          .where('status', '==', 'pending')
-          .get();
-
-        if (!appointmentsSnap.empty || !requestsSnap.empty) {
-          throw new Error("Votre forfait est épuisé ou expiré et vous avez déjà une séance planifiée. Veuillez vous rendre au centre pour régler votre forfait afin de pouvoir réserver à nouveau.");
-        } else {
-          warningMessage = "Votre forfait est épuisé ou expiré. Votre créneau est pré-réservé, mais veuillez vous rendre au centre pour régler votre forfait lors de votre séance, sans quoi vous ne pourrez plus prendre de nouveaux rendez-vous.";
-        }
-      }
-    }
-  }
-
   const serviceType = data.service as BookingServiceType;
   const service = findReservableService(center, services, serviceType);
   if (!service) {
-    throw new Error('Prestation indisponible dans ce centre.');
+    throw new PublicReservationError('Prestation indisponible dans ce centre.');
   }
 
   const createdAt = new Date().toISOString();
@@ -311,7 +269,7 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
   await db.runTransaction(async transaction => {
     const transactionCenterSnapshot = await transaction.get(centerRef);
     if (!transactionCenterSnapshot.exists) {
-      throw new Error('Centre introuvable.');
+      throw new PublicReservationError('Centre introuvable.');
     }
     const transactionCenter = { id: transactionCenterSnapshot.id, ...(transactionCenterSnapshot.data() as Omit<Center, 'id'>) } as Center;
     reservedCenter = transactionCenter;
@@ -352,7 +310,6 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
     service: data.service,
     bookingDate: data.bookingDate,
     bookingTime: data.bookingTime,
-    ...(warningMessage ? { warning: warningMessage } : {})
   };
 
   sendPublicReservationNotifications({
@@ -376,9 +333,15 @@ export async function POST(request: Request) {
     }
 
     const reservation = await createPublicReservation(validation.data);
-    return NextResponse.json({ ok: true, reservation, warning: (reservation as any).warning }, { status: 201 });
+    return NextResponse.json({ ok: true, reservation }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Réservation impossible pour ce créneau.';
-    return NextResponse.json({ ok: false, error: message }, { status: 400 });
+    if (error instanceof PublicReservationError) {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+    }
+    console.error('[public-reservations] unexpected failure:', error);
+    return NextResponse.json(
+      { ok: false, error: 'Réservation momentanément indisponible. Veuillez réessayer.' },
+      { status: 500 },
+    );
   }
 }

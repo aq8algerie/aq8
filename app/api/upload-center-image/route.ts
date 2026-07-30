@@ -42,6 +42,9 @@ export async function POST(request: Request) {
     if (!(file instanceof File) || !centerId) {
       throw new CrmAccessError('Fichier ou identifiant du centre manquant.', 400);
     }
+    if (!/^[a-zA-Z0-9_-]{1,120}$/.test(centerId)) {
+      throw new CrmAccessError('Identifiant du centre invalide.', 400);
+    }
     if (actor.role === 'center_manager' && actor.centerId !== centerId) {
       throw new CrmAccessError('Vous ne pouvez modifier que l’image de votre centre.', 403);
     }

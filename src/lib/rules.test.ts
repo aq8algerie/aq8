@@ -18,6 +18,7 @@ import {
 import { getBookingMinimumDate, validatePublicBookingRequest, validatePublicContactMessage } from './publicFormValidation';
 import { validatePaymentReversal } from './financialLedgerRules';
 import { createBlogBlock, estimateBlogReadingTime, slugifyBlogTitle, validateBlogPostDraft } from './blog';
+import { CrmAccessError, getCrmErrorResponse, isOperationalCrmCenterStatus } from './serverCrmAccess';
 
 function test(name: string, run: () => void) {
   run();
@@ -369,7 +370,7 @@ test('session completion blocks a package from another technology', () => {
   assert.equal(result.valid, false);
 });
 
-test('session completion blocks expired packages and suspended clients', () => {
+test('session completion blocks expired packages and inactive clients', () => {
   const expiredPackage = validateSessionCompletion({
     appointment,
     client,
@@ -386,9 +387,18 @@ test('session completion blocks expired packages and suspended clients', () => {
     packageDefinition: packageDefinitions[0],
     managerCenterId: 'center-1',
   });
+  const archivedClient = validateSessionCompletion({
+    appointment,
+    client: { ...client, status: 'archived' },
+    clientPackage: activePackage,
+    service: services[0],
+    packageDefinition: packageDefinitions[0],
+    managerCenterId: 'center-1',
+  });
 
   assert.equal(expiredPackage.valid, false);
   assert.equal(suspendedClient.valid, false);
+  assert.equal(archivedClient.valid, false);
 });
 
 test('payment registration accepts a valid payment and package activation', () => {
@@ -708,3 +718,34 @@ test('blog reading time has a one-minute minimum', () => {
   assert.equal(estimateBlogReadingTime([]), 1);
 });
 console.log('All business-rule tests passed.');
+test('suspended, showcase, inactive and archived centers are denied at server access', () => {
+  assert.equal(isOperationalCrmCenterStatus('active'), true);
+  assert.equal(isOperationalCrmCenterStatus('Ouvert'), true);
+  assert.equal(isOperationalCrmCenterStatus(undefined), true);
+  assert.equal(isOperationalCrmCenterStatus('suspended'), false);
+  assert.equal(isOperationalCrmCenterStatus('SHOWCASE'), false);
+  assert.equal(isOperationalCrmCenterStatus(' inactive '), false);
+  assert.equal(isOperationalCrmCenterStatus('archived'), false);
+});
+
+test('unexpected CRM errors never expose internal server details', () => {
+  assert.deepEqual(getCrmErrorResponse(new Error('private key path leaked')), {
+    status: 500,
+    message: 'Erreur CRM inattendue.',
+  });
+  assert.deepEqual(getCrmErrorResponse(new CrmAccessError('Accès interdit.', 403)), {
+    status: 403,
+    message: 'Accès interdit.',
+  });
+});
+
+test('package activation rejects archived clients', () => {
+  const archivedClient: Client = { ...client, status: 'archived' };
+  const result = validatePackageActivation({
+    center: paymentCenter,
+    client: archivedClient,
+    packageDefinition: packageDefinitions[0],
+    centerId: paymentCenter.id,
+  });
+  assert.equal(result.valid, false);
+});

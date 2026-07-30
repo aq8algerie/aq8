@@ -11,7 +11,7 @@ type SitemapEntry = {
 const BASE_URL = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://www.aq8algerie-dz.com')
   .replace(/\/+$/, '');
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 export default async function sitemap(): Promise<SitemapEntry[]> {
   const now = new Date();

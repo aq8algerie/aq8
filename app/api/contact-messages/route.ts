@@ -43,7 +43,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, id: messageRef.id }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Impossible d\'envoyer le message.';
-    return NextResponse.json({ ok: false, error: message }, { status: 400 });
+    console.error('[contact-messages] unexpected failure:', error);
+    return NextResponse.json(
+      { ok: false, error: 'Impossible d’envoyer le message pour le moment.' },
+      { status: 500 },
+    );
   }
 }
