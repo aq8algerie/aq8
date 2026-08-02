@@ -22,6 +22,7 @@ export default function robots() {
           '/#/login',
           '/#/crm',
           '/crm',
+          '/login',
           '/dashboard',
           '/admin',
           '/manager'
