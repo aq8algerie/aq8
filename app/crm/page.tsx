@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense, useState, useEffect, useMemo } from "react";
+import dynamic from "next/dynamic";
 import {
   Activity,
   Calendar,
@@ -50,9 +51,6 @@ import { useData } from "@/components/context/DataProvider";
 import { saveDocument, syncCollection as syncFirestoreCollection } from "@/src/lib/firestoreRepository";
 import { getPublicCenters } from "@/src/lib/centerVisibility";
 
-import { CrmPortal } from "@/src/components/CrmPortal";
-import { SuperAdminViews } from "@/src/components/SuperAdminViews";
-import { CenterManagerViews } from "@/src/components/CenterManagerViews";
 import { SuperAdminTabId } from "@/src/components/super-admin/SuperAdminTabs";
 
 type CrmRole = "super_admin" | "center_manager";
@@ -72,6 +70,20 @@ function CrmLoadingState() {
     </div>
   );
 }
+const CrmPortal = dynamic(
+  () => import("@/src/components/CrmPortal").then(module => module.CrmPortal),
+  { ssr: false, loading: CrmLoadingState },
+);
+
+const SuperAdminViews = dynamic(
+  () => import("@/src/components/SuperAdminViews").then(module => module.SuperAdminViews),
+  { ssr: false, loading: CrmLoadingState },
+);
+
+const CenterManagerViews = dynamic(
+  () => import("@/src/components/CenterManagerViews").then(module => module.CenterManagerViews),
+  { ssr: false, loading: CrmLoadingState },
+);
 
 export default function CrmPage() {
   const { centers, services, packages, settings } = useData();
