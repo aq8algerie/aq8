@@ -928,6 +928,7 @@ export function CenterManagerViews({
             {activeSubTab === 'dashboard' && (
               <ManagerDashboard
                 centerId={centerId}
+                center={currentCenter}
                 clients={clients}
                 appointments={appointments}
                 payments={payments}
@@ -987,8 +988,6 @@ export function CenterManagerViews({
                 clients={clients}
                 appointments={appointments}
                 services={centerServices}
-                clientPackages={clientPackages}
-                packages={centerPackages}
                 onCompleteAppointment={handleCompleteAppointment}
                 onCancelAppointment={handleCancelAppointment}
                 onUpdateAppointment={handleUpdateAppointment}

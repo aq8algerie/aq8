@@ -29,9 +29,14 @@ import {
   FileText
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Client, Appointment, Service, ClientPackage, Package } from '../../types';
+import { Client, Appointment, Service } from '../../types';
 import { formatDateTime, getTodayDateString } from '../../lib/centerManagerUtils';
-import { findActivePackageForClient } from '../../lib/packageRules';
+import {
+  getAppointmentStatusLabel,
+  getAppointmentTechnology,
+  getClientDisplayName,
+  isAppointmentOverdue,
+} from '../../lib/managerPresentation';
 import { AppointmentMutationOptions, CrmActionResult } from '../../lib/crmTransactions';
 import { ProfessionalToast, ProfessionalToastState, ToastAction, ToastType } from './ProfessionalToast';
 
@@ -40,8 +45,6 @@ interface ManagerBookingsViewProps {
   clients: Client[];
   appointments: Appointment[];
   services: Service[];
-  clientPackages: ClientPackage[];
-  packages: Package[];
   onCompleteAppointment: (id: string, options?: AppointmentMutationOptions) => Promise<CrmActionResult>;
   onCancelAppointment: (id: string, options?: AppointmentMutationOptions) => Promise<CrmActionResult>;
   onUpdateAppointment: (appointment: Appointment) => Promise<CrmActionResult>;
@@ -53,8 +56,6 @@ export function ManagerBookingsView({
   clients,
   appointments,
   services,
-  clientPackages,
-  packages,
   onCompleteAppointment,
   onCancelAppointment,
   onUpdateAppointment,
@@ -67,7 +68,7 @@ export function ManagerBookingsView({
   const [serviceFilter, setServiceFilter] = useState<'All' | string>('All');
   const [dateFilter, setDateFilter] = useState<'All' | 'today' | 'upcoming' | 'past' | 'thisWeek' | 'thisMonth'>('All');
   const [genderFilter, setGenderFilter] = useState<'All' | 'H' | 'F' | 'unknown'>('All');
-  const [technologyFilter, setTechnologyFilter] = useState<'All' | 'aq8' | 'wonder' | 'mix' | 'none'>('All');
+  const [technologyFilter, setTechnologyFilter] = useState<'All' | 'aq8' | 'wonder' | 'none'>('All');
 
   // Selection state for Bulk Actions
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -91,16 +92,11 @@ export function ManagerBookingsView({
   };
 
   const safeText = (value: unknown) => String(value ?? '').trim();
-  const getClientDisplayName = (client?: Client) => {
-    if (!client) return 'Adhérent inconnu';
-    const fullName = [safeText(client.firstName), safeText(client.lastName)].filter(Boolean).join(' ');
-    return fullName || safeText(client.phone) || safeText(client.email) || 'Adhérent sans nom';
-  };
-  const getTechnologyForClient = (clientId: string) => {
-    const active = findActivePackageForClient(clientId, clientPackages);
-    if (!active) return null;
-    const pkg = packages.find(p => p.id === active.packageId);
-    return pkg ? pkg.type : null;
+  const getStatusBadgeClass = (appointment: Appointment) => {
+    if (appointment.status === 'completed') return 'bg-green-50 text-green-600 border border-green-100';
+    if (appointment.status === 'cancelled') return 'bg-slate-100 text-slate-500 border border-slate-200';
+    if (isAppointmentOverdue(appointment)) return 'bg-amber-50 text-amber-700 border border-amber-200';
+    return 'bg-blue-50 text-blue-600 border border-blue-100';
   };
 
   const getAppointmentDate = (appointment: Appointment) => {
@@ -146,7 +142,7 @@ export function ManagerBookingsView({
     const srv = services.find(s => s.id === apt.serviceId);
     const serviceName = safeText(srv?.name).toLowerCase();
     const normalizedSearch = searchQuery.trim().toLowerCase();
-    const tech = cl ? getTechnologyForClient(cl.id) : null;
+    const tech = getAppointmentTechnology(apt, services);
 
     const matchesSearch =
       !normalizedSearch ||
@@ -443,8 +439,7 @@ export function ManagerBookingsView({
               <option value="All">Toutes les technologies</option>
               <option value="aq8">AQ8 EMS</option>
               <option value="wonder">Wonder</option>
-              <option value="mix">Mixte</option>
-              <option value="none">Sans forfait actif</option>
+              <option value="none">Technologie non renseignée</option>
             </select>
           </div>
 
@@ -553,7 +548,7 @@ export function ManagerBookingsView({
                     const cl = centerClients.find(c => c.id === apt.clientId);
                     const srv = services.find(s => s.id === apt.serviceId);
                     const isSelected = selectedIds.includes(apt.id);
-                    const tech = cl ? getTechnologyForClient(cl.id) : null;
+                    const tech = getAppointmentTechnology(apt, services);
 
                     return (
                       <tr
@@ -575,7 +570,7 @@ export function ManagerBookingsView({
                         {/* Client details */}
                         <td className="p-4">
                           <div className="font-bold text-[#353535] flex items-center gap-1.5">
-                            {cl ? `${cl.firstName} ${cl.lastName}` : 'Adhérent inconnu'}
+                            {getClientDisplayName(cl)}
                             {cl?.gender === 'F' ? (
                               <span className="w-1.5 h-1.5 rounded-full bg-rose-400" title="Femme"></span>
                             ) : cl?.gender === 'H' ? (
@@ -599,27 +594,19 @@ export function ManagerBookingsView({
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold ${
                               tech === 'aq8'
                                 ? 'bg-rose-50 text-rose-600 border border-rose-100'
-                                : tech === 'wonder'
-                                ? 'bg-slate-100 text-slate-800 border border-slate-200'
-                                : 'bg-slate-50 text-slate-500'
+                                : 'bg-slate-100 text-slate-800 border border-slate-200'
                             }`}>
-                              {tech === 'aq8' ? 'AQ8 EMS' : tech === 'wonder' ? 'Wonder' : 'Mixte'}
+                              {tech === 'aq8' ? 'AQ8 EMS' : 'Wonder'}
                             </span>
                           ) : (
-                            <span className="text-slate-300 italic text-[10px]">Aucun</span>
+                            <span className="text-slate-400 italic text-[10px]">Non renseignée</span>
                           )}
                         </td>
 
                         {/* Status badge */}
                         <td className="p-4">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                            apt.status === 'completed'
-                              ? 'bg-green-50 text-green-600 border border-green-100'
-                              : apt.status === 'booked'
-                              ? 'bg-blue-50 text-blue-600 border border-blue-100'
-                              : 'bg-slate-100 text-slate-400'
-                          }`}>
-                            {apt.status === 'completed' ? 'Effectuée' : apt.status === 'booked' ? 'Planifiée' : 'Annulée'}
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${getStatusBadgeClass(apt)}`}>
+                            {getAppointmentStatusLabel(apt)}
                           </span>
                         </td>
 
@@ -744,7 +731,7 @@ export function ManagerBookingsView({
                 const cl = centerClients.find(c => c.id === apt.clientId);
                 const srv = services.find(s => s.id === apt.serviceId);
                 const isSelected = selectedIds.includes(apt.id);
-                const tech = cl ? getTechnologyForClient(cl.id) : null;
+                const tech = getAppointmentTechnology(apt, services);
 
                 return (
                   <div
@@ -773,7 +760,7 @@ export function ManagerBookingsView({
                         </div>
                         <div>
                           <h4 className="font-bold text-slate-800 text-sm">
-                            {cl ? `${cl.firstName} ${cl.lastName}` : 'Adhérent inconnu'}
+                            {getClientDisplayName(cl)}
                           </h4>
                           <span className="text-[10px] text-slate-400 font-mono block">{cl?.phone}</span>
                         </div>
@@ -802,28 +789,20 @@ export function ManagerBookingsView({
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold ${
                               tech === 'aq8'
                                 ? 'bg-rose-50 text-rose-600 border border-rose-100'
-                                : tech === 'wonder'
-                                ? 'bg-slate-100 text-slate-800 border border-slate-200'
-                                : 'bg-slate-50 text-slate-500'
+                                : 'bg-slate-100 text-slate-800 border border-slate-200'
                             }`}>
-                              {tech === 'aq8' ? 'AQ8 EMS' : tech === 'wonder' ? 'Wonder' : 'Mixte'}
+                              {tech === 'aq8' ? 'AQ8 EMS' : 'Wonder'}
                             </span>
                           ) : (
-                            <span className="text-slate-400 italic text-[10px]">Aucune</span>
+                            <span className="text-slate-400 italic text-[10px]">Non renseignée</span>
                           )}
                         </div>
                       </div>
 
                       {/* Footer Actions & Status Badge */}
                       <div className="flex items-center justify-between pt-1">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          apt.status === 'completed'
-                            ? 'bg-green-50 text-green-600'
-                            : apt.status === 'booked'
-                            ? 'bg-blue-50 text-blue-600'
-                            : 'bg-slate-100 text-slate-400'
-                        }`}>
-                          {apt.status === 'completed' ? 'Effectuée' : apt.status === 'booked' ? 'Planifiée' : 'Annulée'}
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${getStatusBadgeClass(apt)}`}>
+                          {getAppointmentStatusLabel(apt)}
                         </span>
 
                         <div className="flex items-center gap-1">
@@ -914,7 +893,7 @@ export function ManagerBookingsView({
               {(() => {
                 const cl = centerClients.find(c => c.id === viewingApt.clientId);
                 const srv = services.find(s => s.id === viewingApt.serviceId);
-                const tech = cl ? getTechnologyForClient(cl.id) : null;
+                const tech = getAppointmentTechnology(viewingApt, services);
                 return (
                   <>
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
@@ -924,7 +903,7 @@ export function ManagerBookingsView({
                         </div>
                         <div>
                           <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Adhérent enregistré</span>
-                          <h5 className="font-bold text-slate-800 text-sm">{cl ? `${cl.firstName} ${cl.lastName}` : 'Adhérent inconnu'}</h5>
+                          <h5 className="font-bold text-slate-800 text-sm">{getClientDisplayName(cl)}</h5>
                         </div>
                       </div>
 
@@ -959,19 +938,17 @@ export function ManagerBookingsView({
                           <span className="text-slate-800 font-bold block font-mono">{formatDateTime(viewingApt.dateTime)}</span>
                         </div>
                         <div className="space-y-1">
-                          <span className="text-slate-400 font-semibold block">Technologie Forfait</span>
+                          <span className="text-slate-400 font-semibold block">Technologie de la séance</span>
                           {tech ? (
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 mt-1 rounded-md text-[10px] font-bold ${
                               tech === 'aq8'
                                 ? 'bg-rose-50 text-rose-600 border border-rose-100'
-                                : tech === 'wonder'
-                                ? 'bg-slate-100 text-slate-800 border border-slate-200'
-                                : 'bg-slate-50 text-slate-500'
+                                : 'bg-slate-100 text-slate-800 border border-slate-200'
                             }`}>
-                              {tech === 'aq8' ? 'AQ8 EMS (Électrostimulation)' : tech === 'wonder' ? 'Wonder Sculpt' : 'Cure Mixte'}
+                              {tech === 'aq8' ? 'AQ8 EMS (Électrostimulation)' : 'Wonder Sculpt'}
                             </span>
                           ) : (
-                            <span className="text-slate-400 italic block">Aucun forfait actif</span>
+                            <span className="text-slate-400 italic block">Non renseignée</span>
                           )}
                         </div>
                       </div>
@@ -983,14 +960,8 @@ export function ManagerBookingsView({
                         </div>
                         <div className="space-y-1">
                           <span className="text-slate-400 font-semibold block">Statut Actuel</span>
-                          <span className={`inline-flex items-center px-2 py-0.5 mt-1 rounded-full text-[10px] font-bold ${
-                            viewingApt.status === 'completed'
-                              ? 'bg-green-100 text-green-700'
-                              : viewingApt.status === 'booked'
-                              ? 'bg-blue-100 text-blue-700'
-                              : 'bg-slate-100 text-slate-400'
-                          }`}>
-                            {viewingApt.status === 'completed' ? 'Séance Effectuée' : viewingApt.status === 'booked' ? 'Rendez-vous planifié' : 'Séance Annulée'}
+                          <span className={`inline-flex items-center px-2 py-0.5 mt-1 rounded-full text-[10px] font-bold ${getStatusBadgeClass(viewingApt)}`}>
+                            {getAppointmentStatusLabel(viewingApt)}
                           </span>
                         </div>
                       </div>
@@ -1057,7 +1028,7 @@ export function ManagerBookingsView({
                 >
                   {centerClients.map(c => (
                     <option key={c.id} value={c.id}>
-                      {c.firstName} {c.lastName} ({c.phone})
+                      {getClientDisplayName(c)} ({c.phone})
                     </option>
                   ))}
                 </select>

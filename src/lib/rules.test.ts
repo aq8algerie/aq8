@@ -19,6 +19,8 @@ import { getBookingMinimumDate, validatePublicBookingRequest, validatePublicCont
 import { validatePaymentReversal } from './financialLedgerRules';
 import { createBlogBlock, estimateBlogReadingTime, slugifyBlogTitle, validateBlogPostDraft } from './blog';
 import { CrmAccessError, getCrmErrorResponse, isOperationalCrmCenterStatus } from './serverCrmAccess';
+import { getMonthToDateOccupancy } from './managerDashboardMetrics';
+import { getAppointmentStatusLabel, getAppointmentTechnology, getClientDisplayName } from './managerPresentation';
 
 function test(name: string, run: () => void) {
   run();
@@ -716,6 +718,65 @@ test('blog validation accepts a complete structured article', () => {
 
 test('blog reading time has a one-minute minimum', () => {
   assert.equal(estimateBlogReadingTime([]), 1);
+});
+test('manager occupancy uses dynamic center hours and capacities month-to-date', () => {
+  const center: Center = {
+    id: 'center-2',
+    name: 'AQ8 Ouled Fayet',
+    city: 'Alger',
+    address: 'Ouled Fayet',
+    phone: '0000000000',
+    email: 'center@example.com',
+    imageUrl: '',
+    services: ['aq8', 'wonder'],
+    schedule: '',
+    description: '',
+    bookingCapacity: { aq8: 2, wonder: 1 },
+    bookingHours: { '1': [{ start: '10:00', end: '12:00' }] },
+  };
+  const appointments: Appointment[] = [
+    { id: 'apt-aq8-1', clientId: 'client-1', serviceId: 'service-1', centerId: center.id, dateTime: '2026-08-03T10:00', duration: 20, status: 'booked' },
+    { id: 'apt-aq8-2', clientId: 'client-2', serviceId: 'service-1', centerId: center.id, dateTime: '2026-08-03T11:00', duration: 20, status: 'completed' },
+    { id: 'apt-wonder-1', clientId: 'client-3', serviceId: 'service-2', centerId: center.id, dateTime: '2026-08-03T10:00', duration: 25, status: 'booked' },
+    { id: 'apt-cancelled', clientId: 'client-4', serviceId: 'service-2', centerId: center.id, dateTime: '2026-08-03T11:00', duration: 25, status: 'cancelled' },
+    { id: 'apt-previous-month', clientId: 'client-5', serviceId: 'service-1', centerId: center.id, dateTime: '2026-07-27T10:00', duration: 20, status: 'booked' },
+  ];
+
+  const occupancy = getMonthToDateOccupancy({
+    appointments,
+    services,
+    centerId: center.id,
+    center,
+    now: new Date('2026-08-03T18:00:00'),
+  });
+
+  assert.deepEqual(occupancy.aq8, { booked: 2, capacity: 4, rate: 50 });
+  assert.deepEqual(occupancy.wonder, { booked: 1, capacity: 2, rate: 50 });
+});
+
+test('manager presentation cleans legacy names and derives appointment technology', () => {
+  const legacyClient: Client = {
+    ...client,
+    firstName: 'Ketfifatima',
+    lastName: 'undefined',
+  };
+  const appointment: Appointment = {
+    id: 'apt-presentation',
+    clientId: legacyClient.id,
+    serviceId: 'service-2',
+    centerId: legacyClient.centerId,
+    dateTime: '2026-07-01T10:00',
+    duration: 25,
+    status: 'booked',
+  };
+
+  assert.equal(getClientDisplayName(legacyClient), 'Ketfifatima');
+  assert.equal(getAppointmentTechnology(appointment, services), 'wonder');
+  assert.equal(getAppointmentStatusLabel(appointment, new Date('2026-08-03T12:00:00')), 'À régulariser');
+  assert.equal(
+    getAppointmentStatusLabel({ ...appointment, dateTime: '2026-08-04T10:00' }, new Date('2026-08-03T12:00:00')),
+    'Planifiée',
+  );
 });
 console.log('All business-rule tests passed.');
 test('suspended, showcase, inactive and archived centers are denied at server access', () => {

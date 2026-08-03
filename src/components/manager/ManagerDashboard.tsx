@@ -24,7 +24,7 @@ import {
   Zap
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Client, Appointment, Payment, Measurement, Service, Package, ClientPackage } from '../../types';
+import { Client, Appointment, Payment, Measurement, Service, Package, ClientPackage, Center } from '../../types';
 import { StatCard } from './cards/StatCard';
 import { QuickActionsCard } from './cards/QuickActionsCard';
 import { formatDZD } from '../../lib/centerManagerUtils';
@@ -32,9 +32,11 @@ import { SubTabId } from './ManagerTabs';
 import { AppointmentMutationOptions, CrmActionResult } from '../../lib/crmTransactions';
 import { isPackageExpired } from '../../lib/packageRules';
 import { analyzeClientRetention } from '../../lib/crmRetention';
+import { getMonthToDateOccupancy } from '../../lib/managerDashboardMetrics';
 
 interface ManagerDashboardProps {
   centerId: string;
+  center?: Center;
   clients: Client[];
   appointments: Appointment[];
   payments: Payment[];
@@ -54,6 +56,7 @@ interface ManagerDashboardProps {
 
 export function ManagerDashboard({
   centerId,
+  center,
   clients,
   appointments,
   payments,
@@ -104,6 +107,13 @@ export function ManagerDashboard({
   const filteredAppointmentsCount = filteredAppointments.length;
   const filteredMeasurementsCount = filteredMeasurements.length;
   const now = new Date();
+  const monthToDateOccupancy = getMonthToDateOccupancy({
+    appointments: centerAppointments,
+    services,
+    centerId,
+    center,
+    now,
+  });
   const isInMonth = (value: string | undefined, monthOffset = 0) => {
     if (!value) return false;
     const date = new Date(value);
@@ -620,100 +630,57 @@ export function ManagerDashboard({
         <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-xs space-y-4 flex flex-col justify-between">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-emerald-500" />
-            <h4 className="font-bold font-display text-slate-800 text-xs uppercase tracking-wider">Taux d'Occupation Créneaux</h4>
+            <h4 className="font-bold font-display text-slate-800 text-xs uppercase tracking-wider">Occupation du mois à date</h4>
           </div>
-
           {(() => {
-            const centerCapacities: Record<string, { men: number; women: number }> = {
-              'center-1': { men: 40, women: 56 },
-              'center-2': { men: 0, women: 80 },
-              'center-3': { men: 0, women: 60 },
-              'center-4': { men: 50, women: 50 },
-              'center-5': { men: 48, women: 48 }
-            };
-
-            const caps = centerCapacities[centerId] || { men: 40, women: 40 };
-
-            const menBookings = filteredAppointments.filter(a => {
-              const cl = clients.find(c => c.id === a.clientId);
-              return cl && cl.gender === 'H' && a.status !== 'cancelled';
-            }).length;
-
-            const womenBookings = filteredAppointments.filter(a => {
-              const cl = clients.find(c => c.id === a.clientId);
-              return cl && (cl.gender === 'F' || !cl.gender) && a.status !== 'cancelled';
-            }).length;
-
-            const menRate = caps.men > 0 ? Math.min(100, Math.round((menBookings / caps.men) * 100)) : 0;
-            const womenRate = caps.women > 0 ? Math.min(100, Math.round((womenBookings / caps.women) * 100)) : 0;
-
             const radius = 18;
-            const circ = 2 * Math.PI * radius; // ~113
+            const circumference = 2 * Math.PI * radius;
+            const metrics = [
+              {
+                key: 'aq8',
+                label: 'AQ8 EMS',
+                metric: monthToDateOccupancy.aq8,
+                stroke: '#ff5757',
+                panelClass: 'bg-rose-50/20 border-rose-100/30',
+              },
+              {
+                key: 'wonder',
+                label: 'Wonder',
+                metric: monthToDateOccupancy.wonder,
+                stroke: '#353535',
+                panelClass: 'bg-slate-50 border-slate-200/70',
+              },
+            ] as const;
 
             return (
               <div className="grid grid-cols-2 gap-2 pt-1 flex-1 items-center">
-                {/* Women occupancy */}
-                <div className="flex flex-col items-center bg-rose-50/20 border border-rose-100/30 p-2.5 rounded-xl text-center space-y-2">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase">Femmes</span>
-                  <div className="relative w-16 h-16">
-                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 44 44">
-                      <circle cx="22" cy="22" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="2.5" />
-                      <motion.circle
-                        cx="22"
-                        cy="22"
-                        r={radius}
-                        fill="none"
-                        stroke="#ff5757"
-                        strokeWidth="3"
-                        strokeDasharray={circ}
-                        initial={{ strokeDashoffset: circ }}
-                        animate={{ strokeDashoffset: circ - (womenRate / 100) * circ }}
-                        transition={{ duration: 1.0, ease: "easeOut" }}
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center font-mono">
-                      <span className="text-[10px] font-bold text-slate-800">{womenRate}%</span>
-                    </div>
-                  </div>
-                  <span className="text-[9px] text-slate-500 font-semibold">{womenBookings}/{caps.women} RDV</span>
-                </div>
-
-                {/* Men occupancy */}
-                <div className="flex flex-col items-center bg-blue-50/20 border border-blue-100/30 p-2.5 rounded-xl text-center space-y-2">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase">Hommes</span>
-                  {caps.men > 0 ? (
-                    <>
-                      <div className="relative w-16 h-16">
-                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 44 44">
-                          <circle cx="22" cy="22" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="2.5" />
-                          <motion.circle
-                            cx="22"
-                            cy="22"
-                            r={radius}
-                            fill="none"
-                            stroke="#3b82f6"
-                            strokeWidth="3"
-                            strokeDasharray={circ}
-                            initial={{ strokeDashoffset: circ }}
-                            animate={{ strokeDashoffset: circ - (menRate / 100) * circ }}
-                            transition={{ duration: 1.0, ease: "easeOut" }}
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center font-mono">
-                          <span className="text-[10px] font-bold text-slate-800">{menRate}%</span>
-                        </div>
+                {metrics.map(({ key, label, metric, stroke, panelClass }) => (
+                  <div key={key} className={`flex flex-col items-center border p-2.5 rounded-xl text-center space-y-2 ${panelClass}`}>
+                    <span className="text-[9px] font-bold text-slate-500 uppercase">{label}</span>
+                    <div className="relative w-16 h-16">
+                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 44 44">
+                        <circle cx="22" cy="22" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="2.5" />
+                        <motion.circle
+                          cx="22"
+                          cy="22"
+                          r={radius}
+                          fill="none"
+                          stroke={stroke}
+                          strokeWidth="3"
+                          strokeDasharray={circumference}
+                          initial={{ strokeDashoffset: circumference }}
+                          animate={{ strokeDashoffset: circumference - (metric.rate / 100) * circumference }}
+                          transition={{ duration: 1.0, ease: "easeOut" }}
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center font-mono">
+                        <span className="text-[10px] font-bold text-slate-800">{metric.rate}%</span>
                       </div>
-                      <span className="text-[9px] text-slate-500 font-semibold">{menBookings}/{caps.men} RDV</span>
-                    </>
-                  ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center py-3 text-[9px] text-slate-400 italic font-semibold">
-                      <Venus className="h-5 w-5 text-rose-400 opacity-60 mb-0.5" />
-                      <span>Femmes Uniq.</span>
                     </div>
-                  )}
-                </div>
+                    <span className="text-[9px] text-slate-500 font-semibold">{metric.booked}/{metric.capacity} places</span>
+                  </div>
+                ))}
               </div>
             );
           })()}
