@@ -2,20 +2,31 @@ import React, { useRef } from 'react';
 import {
   ArrowDown,
   ArrowUp,
+  BookOpen,
+  CalendarDays,
   Check,
   Heading2,
   Image as ImageIcon,
+  Info,
   List,
   Loader2,
+  MapPin,
+  Megaphone,
   Plus,
+  Sparkles,
+  Tag,
   Trash2,
   UploadCloud,
 } from 'lucide-react';
+import type { Center } from '../../types';
 import {
   BLOG_CATEGORIES,
+  BLOG_PUBLICATION_TYPES,
+  getBlogPublicationType,
   type BlogBlockType,
   type BlogContentBlock,
   type BlogPostDraft,
+  type BlogPublicationType,
 } from '../../lib/blog';
 
 type PublicationCheck = {
@@ -25,9 +36,11 @@ type PublicationCheck = {
 
 type SimpleBlogEditorProps = {
   draft: BlogPostDraft;
+  centers: Center[];
   uploading: string;
   publicationChecks: PublicationCheck[];
   onTitleChange: (title: string) => void;
+  onPublicationTypeChange: (type: BlogPublicationType) => void;
   onDraftChange: (key: keyof BlogPostDraft, value: BlogPostDraft[keyof BlogPostDraft]) => void;
   onUpdateBlock: (id: string, patch: Partial<BlogContentBlock>) => void;
   onMoveBlock: (index: number, direction: -1 | 1) => void;
@@ -36,6 +49,13 @@ type SimpleBlogEditorProps = {
   onCoverUpload: (file?: File) => Promise<void>;
   onBlockImageUpload: (blockId: string, file?: File) => Promise<void>;
 };
+
+const TYPE_ICONS = {
+  article: BookOpen,
+  promotion: Tag,
+  news: Megaphone,
+  event: CalendarDays,
+} as const;
 
 const SIMPLE_BLOCK_LABELS: Record<BlogBlockType, string> = {
   paragraph: 'Texte',
@@ -55,11 +75,21 @@ function getBlockPlaceholder(type: BlogBlockType): string {
   return 'Écrivez votre texte ici...';
 }
 
+function toLocalDateTimeValue(value?: string | null): string {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const offset = date.getTimezoneOffset();
+  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
+}
+
 export function SimpleBlogEditor({
   draft,
+  centers,
   uploading,
   publicationChecks,
   onTitleChange,
+  onPublicationTypeChange,
   onDraftChange,
   onUpdateBlock,
   onMoveBlock,
@@ -70,10 +100,48 @@ export function SimpleBlogEditor({
 }: SimpleBlogEditorProps) {
   const coverInputRef = useRef<HTMLInputElement>(null);
   const completedChecks = publicationChecks.filter(item => item.ok).length;
+  const publication = getBlogPublicationType(draft.publicationType);
+  const visibleCenters = centers.filter(center => {
+    const status = String(center.status || '').toLowerCase();
+    return !['archived', 'inactive', 'suspended'].includes(status);
+  });
+
+  const toggleCenter = (centerId: string) => {
+    const next = draft.targetCenterIds.includes(centerId)
+      ? draft.targetCenterIds.filter(id => id !== centerId)
+      : [...draft.targetCenterIds, centerId];
+    onDraftChange('targetCenterIds', next);
+  };
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-5 px-4 py-5 lg:grid-cols-[minmax(0,1fr)_280px] lg:px-6">
-      <div className="space-y-4">
+    <div className="mx-auto grid max-w-7xl gap-5 px-4 py-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:px-6">
+      <div className="space-y-5">
+        <section className="rounded-lg border border-slate-200 bg-white p-5 sm:p-7">
+          <span className="text-[10px] font-extrabold uppercase text-slate-400">Type de publication</span>
+          <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
+            {BLOG_PUBLICATION_TYPES.map(type => {
+              const Icon = TYPE_ICONS[type.id];
+              const selected = draft.publicationType === type.id;
+              return (
+                <button
+                  key={type.id}
+                  type="button"
+                  onClick={() => onPublicationTypeChange(type.id)}
+                  aria-pressed={selected}
+                  className={'flex min-h-20 flex-col items-start justify-between rounded-md border p-3 text-left transition ' + (
+                    selected
+                      ? 'border-[#ff5757] bg-rose-50 text-[#242424]'
+                      : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
+                  )}
+                >
+                  <Icon className={'h-4 w-4 ' + (selected ? 'text-[#ff5757]' : 'text-slate-400')} />
+                  <span className="text-xs font-bold">{type.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
         <section className="space-y-5 rounded-lg border border-slate-200 bg-white p-5 sm:p-7">
           <div>
             <label className="mb-2 block text-[10px] font-extrabold uppercase text-slate-400">
@@ -83,7 +151,15 @@ export function SimpleBlogEditor({
               rows={2}
               value={draft.title}
               onChange={event => onTitleChange(event.target.value)}
-              placeholder="Un titre clair et utile"
+              placeholder={
+                draft.publicationType === 'promotion'
+                  ? 'Ex. Offre découverte AQ8 à Ouled Fayet'
+                  : draft.publicationType === 'event'
+                    ? 'Ex. Journée portes ouvertes AQ8 Draria'
+                    : draft.publicationType === 'news'
+                      ? 'Ex. Un nouveau centre AQ8 ouvre ses portes'
+                      : 'Ex. Comment préparer sa première séance AQ8'
+              }
               className="w-full resize-none border-0 p-0 font-display text-2xl font-bold leading-tight text-[#242424] outline-none placeholder:text-slate-300 sm:text-3xl"
             />
           </div>
@@ -100,16 +176,53 @@ export function SimpleBlogEditor({
               value={draft.excerpt}
               onChange={event => onDraftChange('excerpt', event.target.value)}
               maxLength={420}
-              placeholder="Résumez ce que le lecteur va apprendre."
+              placeholder="L’essentiel de la publication en deux ou trois phrases."
               className="w-full resize-none border-0 p-0 text-sm font-medium leading-7 text-slate-600 outline-none placeholder:text-slate-300"
             />
           </div>
         </section>
 
+        {(draft.publicationType === 'promotion' || draft.publicationType === 'event') && (
+          <section className="grid gap-4 rounded-lg border border-slate-200 bg-white p-5 sm:grid-cols-2 sm:p-6">
+            <div className="sm:col-span-2">
+              <h3 className="font-display text-base font-bold text-[#242424]">
+                {draft.publicationType === 'event' ? 'Date et lieu' : 'Durée de l’offre'}
+              </h3>
+            </div>
+            <label className="space-y-2 text-[10px] font-extrabold uppercase text-slate-400">
+              Début {draft.publicationType === 'promotion' && <span className="normal-case">(facultatif)</span>}
+              <input
+                type="datetime-local"
+                value={toLocalDateTimeValue(draft.startsAt)}
+                onChange={event => onDraftChange('startsAt', event.target.value || null)}
+                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold normal-case text-slate-700 outline-none focus:border-[#ff5757]"
+              />
+            </label>
+            <label className="space-y-2 text-[10px] font-extrabold uppercase text-slate-400">
+              Fin
+              <input
+                type="datetime-local"
+                value={toLocalDateTimeValue(draft.endsAt)}
+                onChange={event => onDraftChange('endsAt', event.target.value || null)}
+                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold normal-case text-slate-700 outline-none focus:border-[#ff5757]"
+              />
+            </label>
+            <label className="space-y-2 text-[10px] font-extrabold uppercase text-slate-400 sm:col-span-2">
+              <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> Lieu</span>
+              <input
+                value={draft.location}
+                onChange={event => onDraftChange('location', event.target.value)}
+                placeholder={draft.publicationType === 'event' ? 'Ex. Centre AQ8 Draria' : 'Ex. Tous les centres AQ8'}
+                className="h-10 w-full rounded-md border border-slate-200 px-3 text-xs font-medium normal-case text-slate-700 outline-none focus:border-[#ff5757]"
+              />
+            </label>
+          </section>
+        )}
+
         <section className="space-y-3">
           <div className="flex items-center justify-between gap-4 px-1">
             <div>
-              <h3 className="font-display text-base font-bold text-[#242424]">Contenu de l’article</h3>
+              <h3 className="font-display text-base font-bold text-[#242424]">Contenu</h3>
               <span className="text-[10px] font-medium text-slate-400">{draft.content.length} section(s)</span>
             </div>
             <button
@@ -190,11 +303,7 @@ export function SimpleBlogEditor({
                 ) : block.type === 'image' ? (
                   <div className="space-y-3">
                     {block.imageUrl ? (
-                      <img
-                        src={block.imageUrl}
-                        alt=""
-                        className="aspect-[16/8] w-full rounded-md bg-slate-100 object-cover"
-                      />
+                      <img src={block.imageUrl} alt="" className="aspect-[16/8] w-full rounded-md bg-slate-100 object-cover" />
                     ) : (
                       <label className="flex aspect-[16/6] cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 transition hover:border-[#ff5757]">
                         {uploading === block.id
@@ -221,20 +330,15 @@ export function SimpleBlogEditor({
                         />
                       </label>
                     )}
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <input
-                        value={block.imageAlt || ''}
-                        onChange={event => onUpdateBlock(block.id, { imageAlt: event.target.value })}
-                        placeholder="Description de l’image"
-                        className="rounded-md border border-slate-200 px-3 py-2 text-xs outline-none focus:border-[#ff5757]"
-                      />
-                      <input
-                        value={block.caption || ''}
-                        onChange={event => onUpdateBlock(block.id, { caption: event.target.value })}
-                        placeholder="Légende facultative"
-                        className="rounded-md border border-slate-200 px-3 py-2 text-xs outline-none focus:border-[#ff5757]"
-                      />
-                    </div>
+                    <input
+                      value={block.caption || ''}
+                      onChange={event => onUpdateBlock(block.id, {
+                        caption: event.target.value,
+                        imageAlt: block.imageAlt || event.target.value,
+                      })}
+                      placeholder="Légende facultative"
+                      className="w-full rounded-md border border-slate-200 px-3 py-2 text-xs outline-none focus:border-[#ff5757]"
+                    />
                   </div>
                 ) : (
                   <textarea
@@ -242,7 +346,7 @@ export function SimpleBlogEditor({
                     value={block.text || ''}
                     onChange={event => onUpdateBlock(block.id, { text: event.target.value })}
                     placeholder={getBlockPlaceholder(block.type)}
-                    className={`w-full resize-y border-0 p-0 leading-7 text-slate-700 outline-none placeholder:text-slate-300 ${
+                    className={'w-full resize-y border-0 p-0 leading-7 text-slate-700 outline-none placeholder:text-slate-300 ' + (
                       block.type === 'heading'
                         ? 'font-display text-xl font-bold'
                         : block.type === 'subheading'
@@ -250,7 +354,7 @@ export function SimpleBlogEditor({
                           : block.type === 'quote'
                             ? 'text-base font-semibold italic'
                             : 'text-sm'
-                    }`}
+                    )}
                   />
                 )}
               </div>
@@ -287,11 +391,7 @@ export function SimpleBlogEditor({
             Image principale
           </label>
           {draft.coverImageUrl ? (
-            <img
-              src={draft.coverImageUrl}
-              alt=""
-              className="aspect-[16/10] w-full rounded-md bg-slate-100 object-cover"
-            />
+            <img src={draft.coverImageUrl} alt="" className="aspect-[16/10] w-full rounded-md bg-slate-100 object-cover" />
           ) : (
             <button
               type="button"
@@ -321,18 +421,10 @@ export function SimpleBlogEditor({
               Remplacer
             </button>
           )}
-          <input
-            value={draft.coverImageAlt}
-            onChange={event => onDraftChange('coverImageAlt', event.target.value)}
-            placeholder="Description de l’image"
-            className="mt-3 w-full rounded-md border border-slate-200 px-3 py-2 text-[10px] outline-none focus:border-[#ff5757]"
-          />
         </section>
 
-        <section className="rounded-lg border border-slate-200 bg-white p-4">
-          <label className="mb-2 block text-[10px] font-extrabold uppercase text-slate-400">
-            Catégorie
-          </label>
+        <section className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+          <label className="block text-[10px] font-extrabold uppercase text-slate-400">Classement</label>
           <select
             value={draft.category}
             onChange={event => onDraftChange('category', event.target.value as BlogPostDraft['category'])}
@@ -342,30 +434,110 @@ export function SimpleBlogEditor({
               <option key={category.id} value={category.id}>{category.label}</option>
             ))}
           </select>
+          <label className="flex cursor-pointer items-center justify-between gap-4 rounded-md bg-slate-50 px-3 py-2.5">
+            <span className="text-xs font-bold text-slate-700">Mettre à la une</span>
+            <input
+              type="checkbox"
+              checked={draft.featured}
+              onChange={event => onDraftChange('featured', event.target.checked)}
+              className="h-4 w-4 accent-[#ff5757]"
+            />
+          </label>
+        </section>
+
+        <section className="rounded-lg border border-slate-200 bg-white p-4">
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-[10px] font-extrabold uppercase text-slate-400">Centres concernés</label>
+            {draft.targetCenterIds.length > 0 && (
+              <button type="button" onClick={() => onDraftChange('targetCenterIds', [])} className="text-[9px] font-bold text-[#ff5757]">
+                Tout le réseau
+              </button>
+            )}
+          </div>
+          {draft.targetCenterIds.length === 0 && (
+            <p className="mt-2 rounded-md bg-emerald-50 px-3 py-2 text-[10px] font-bold text-emerald-700">Tout le réseau AQ8</p>
+          )}
+          <div className="mt-2 max-h-40 space-y-1 overflow-y-auto">
+            {visibleCenters.map(center => (
+              <label key={center.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-slate-50">
+                <input
+                  type="checkbox"
+                  checked={draft.targetCenterIds.includes(center.id)}
+                  onChange={() => toggleCenter(center.id)}
+                  className="h-3.5 w-3.5 accent-[#ff5757]"
+                />
+                <span className="min-w-0 truncate text-[10px] font-semibold text-slate-600">{center.name}</span>
+              </label>
+            ))}
+          </div>
+        </section>
+
+        <section className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+          <label className="block text-[10px] font-extrabold uppercase text-slate-400">Bouton public</label>
+          <input
+            value={draft.ctaLabel}
+            onChange={event => onDraftChange('ctaLabel', event.target.value)}
+            placeholder={publication.defaultCtaLabel}
+            className="h-9 w-full rounded-md border border-slate-200 px-3 text-xs font-semibold outline-none focus:border-[#ff5757]"
+          />
+          <input
+            value={draft.ctaUrl}
+            onChange={event => onDraftChange('ctaUrl', event.target.value)}
+            placeholder="/reservation"
+            className="h-9 w-full rounded-md border border-slate-200 px-3 text-xs font-medium outline-none focus:border-[#ff5757]"
+          />
+        </section>
+
+        <section className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+          <label className="block text-[10px] font-extrabold uppercase text-slate-400">Publication programmée</label>
+          <input
+            type="datetime-local"
+            value={toLocalDateTimeValue(draft.scheduledAt)}
+            onChange={event => onDraftChange('scheduledAt', event.target.value || null)}
+            className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-[#ff5757]"
+          />
+          <p className="text-[9px] leading-4 text-slate-400">
+            Laissez vide pour publier immédiatement.
+          </p>
         </section>
 
         <section className="rounded-lg border border-slate-200 bg-white p-4">
           <div className="flex items-center justify-between gap-3">
             <span className="text-[10px] font-extrabold uppercase text-slate-400">Prêt à publier</span>
-            <span className="text-[10px] font-bold text-slate-500">
-              {completedChecks}/{publicationChecks.length}
-            </span>
+            <span className="text-[10px] font-bold text-slate-500">{completedChecks}/{publicationChecks.length}</span>
           </div>
           <div className="mt-3 space-y-2">
-            {publicationChecks.slice(0, 6).map(item => (
+            {publicationChecks.map(item => (
               <div key={item.label} className="flex items-center gap-2">
-                <span className={`flex h-4 w-4 items-center justify-center rounded-full ${
+                <span className={'flex h-4 w-4 items-center justify-center rounded-full ' + (
                   item.ok ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-300'
-                }`}>
+                )}>
                   {item.ok ? <Check className="h-2.5 w-2.5" /> : <span className="h-1 w-1 rounded-full bg-current" />}
                 </span>
-                <span className={`text-[10px] font-semibold ${item.ok ? 'text-slate-600' : 'text-slate-400'}`}>
+                <span className={'text-[10px] font-semibold ' + (item.ok ? 'text-slate-600' : 'text-slate-400')}>
                   {item.label}
                 </span>
               </div>
             ))}
           </div>
         </section>
+
+        <section className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+          <div>
+            <h3 className="text-[10px] font-extrabold uppercase text-emerald-700">Référencement automatique</h3>
+            <p className="mt-1 text-[9px] leading-4 text-emerald-700/75">
+              Google, le partage social et l’adresse publique sont optimisés lors de l’enregistrement.
+            </p>
+          </div>
+        </section>
+
+        {draft.publicationType === 'promotion' && !draft.endsAt && (
+          <section className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+            <p className="text-[10px] font-semibold leading-5 text-amber-800">Ajoutez une date de fin avant publication.</p>
+          </section>
+        )}
       </aside>
     </div>
   );

@@ -17,7 +17,17 @@ import {
 } from './paymentRules';
 import { getBookingMinimumDate, validatePublicBookingRequest, validatePublicContactMessage } from './publicFormValidation';
 import { validatePaymentReversal } from './financialLedgerRules';
-import { createBlogBlock, estimateBlogReadingTime, slugifyBlogTitle, validateBlogPostDraft } from './blog';
+import {
+  createAutomaticBlogSeo,
+  createBlogBlock,
+  estimateBlogReadingTime,
+  getEffectiveBlogStatus,
+  isBlogPostPubliclyVisible,
+  normalizeBlogCtaUrl,
+  slugifyBlogTitle,
+  validateBlogPostDraft,
+  type BlogPost,
+} from './blog';
 import { CrmAccessError, getCrmErrorResponse, isOperationalCrmCenterStatus } from './serverCrmAccess';
 import { getMonthToDateOccupancy } from './managerDashboardMetrics';
 import { getAppointmentStatusLabel, getAppointmentTechnology, getClientDisplayName } from './managerPresentation';
@@ -718,6 +728,50 @@ test('blog validation accepts a complete structured article', () => {
 
 test('blog reading time has a one-minute minimum', () => {
   assert.equal(estimateBlogReadingTime([]), 1);
+});
+test('blog SEO is generated automatically from editorial fields', () => {
+  const seo = createAutomaticBlogSeo({
+    title: 'Journée découverte au centre AQ8 Draria',
+    excerpt: 'Découvrez le centre AQ8 Draria, rencontrez son équipe et réservez une séance découverte lors de notre prochaine journée portes ouvertes.',
+    content: [],
+    category: 'actualites',
+    publicationType: 'event',
+    location: 'AQ8 Draria',
+  });
+
+  assert.equal(seo.slug, 'journee-decouverte-au-centre-aq8-draria');
+  assert.ok(seo.seoTitle.length <= 65);
+  assert.ok(seo.seoDescription.length <= 160);
+  assert.ok(seo.tags.includes('Événement'));
+  assert.ok(seo.tags.includes('AQ8 Draria'));
+});
+
+test('scheduled blog content becomes public only at the planned time', () => {
+  const scheduled = {
+    status: 'scheduled',
+    scheduledAt: '2026-08-05T09:00:00.000Z',
+  } as BlogPost;
+
+  assert.equal(getEffectiveBlogStatus(scheduled, new Date('2026-08-05T08:59:59.000Z')), 'scheduled');
+  assert.equal(getEffectiveBlogStatus(scheduled, new Date('2026-08-05T09:00:00.000Z')), 'published');
+});
+
+test('blog calls to action reject unsafe protocols', () => {
+  assert.equal(normalizeBlogCtaUrl('/reservation?centre=draria'), '/reservation?centre=draria');
+  assert.equal(normalizeBlogCtaUrl('https://www.aq8algerie-dz.com/contact'), 'https://www.aq8algerie-dz.com/contact');
+  assert.equal(normalizeBlogCtaUrl('javascript:alert(1)'), '/reservation');
+  assert.equal(normalizeBlogCtaUrl('//malicious.example'), '/reservation');
+});
+test('expired promotions are automatically removed from the public feed', () => {
+  const promotion = {
+    status: 'published',
+    scheduledAt: null,
+    publicationType: 'promotion',
+    endsAt: '2026-08-10T18:00:00.000Z',
+  } as BlogPost;
+
+  assert.equal(isBlogPostPubliclyVisible(promotion, new Date('2026-08-10T17:59:00.000Z')), true);
+  assert.equal(isBlogPostPubliclyVisible(promotion, new Date('2026-08-10T18:01:00.000Z')), false);
 });
 test('manager occupancy uses dynamic center hours and capacities month-to-date', () => {
   const center: Center = {

@@ -7,8 +7,10 @@ import { HomeCentersPreview } from "@/components/home/HomeCentersPreview";
 import { HomeWhyChoose } from "@/components/home/HomeWhyChoose";
 import { HomeHowItWorks } from "@/components/home/HomeHowItWorks";
 import { HomeShortFAQ } from "@/components/home/HomeShortFAQ";
+import { HomeLatestArticles } from "@/components/home/HomeLatestArticles";
 import { HomeFinalCTA } from "@/components/home/HomeFinalCTA";
 import { getServerPublicCenters } from "@/src/lib/serverPublicData";
+import { getServerPublishedBlogPosts } from "@/src/lib/serverBlogData";
 
 export const metadata: Metadata = {
   title: getSeoForPage("home").title,
@@ -18,16 +20,21 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const centers = await getServerPublicCenters();
+  const [centers, publishedPosts] = await Promise.all([
+    getServerPublicCenters(),
+    getServerPublishedBlogPosts(),
+  ]);
+
   return (
     <main className="space-y-16 py-4">
       <SeoJsonLd type="organization" />
 
-      <HomeHero />
+      <HomeHero centerCount={centers.length} />
       <HomeTechnologies />
       <HomeCentersPreview centers={centers} />
       <HomeWhyChoose />
       <HomeHowItWorks />
+      <HomeLatestArticles posts={publishedPosts} />
       <HomeShortFAQ />
       <HomeFinalCTA />
     </main>

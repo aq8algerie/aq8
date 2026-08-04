@@ -108,7 +108,7 @@ export function PublicHome({ onNavigate, onSelectCenter, centers }: { onNavigate
   return (
     <div className="space-y-20 py-0 sm:space-y-24">
       <SeoJsonLd type="organization" />
-      <HomeHero />
+      <HomeHero centerCount={centers.length} />
       <HomeTechnologies />
       <HomeCentersPreview centers={centers} />
       <HomeWhyChoose />

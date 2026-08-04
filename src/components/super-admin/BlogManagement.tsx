@@ -1,44 +1,44 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  AlignLeft,
   Archive,
-  ArrowDown,
-  ArrowUp,
   BookOpen,
+  CalendarDays,
   Check,
   Clock3,
   Edit3,
   ExternalLink,
+  Eye,
   FileText,
-  Heading2,
-  Heading3,
   Image as ImageIcon,
-  Info,
-  List,
   Loader2,
-  MessageSquareQuote,
+  Megaphone,
   Plus,
-  Search,
   Save,
-  Settings2,
+  Search,
   Sparkles,
+  Tag,
   Trash2,
-  UploadCloud,
   X,
 } from 'lucide-react';
 import { BlogArticleContent } from '../../../components/blog/BlogArticleContent';
+import type { Center } from '../../types';
 import {
-  BLOG_CATEGORIES,
+  BLOG_PUBLICATION_TYPES,
+  createAutomaticBlogExcerpt,
   createBlogBlock,
   createEmptyBlogDraft,
   estimateBlogReadingTime,
   getBlogCategoryLabel,
+  getBlogPublicationType,
+  getBlogPublicationTypeLabel,
+  normalizeStoredBlogPost,
   slugifyBlogTitle,
   type BlogBlockType,
   type BlogContentBlock,
   type BlogPost,
   type BlogPostDraft,
   type BlogPostStatus,
+  type BlogPublicationType,
 } from '../../lib/blog';
 import {
   createBlogPost,
@@ -51,39 +51,47 @@ import { ProfessionalToast, type ProfessionalToastState } from '../manager/Profe
 import { ProfessionalConfirmDialog } from '../manager/ProfessionalConfirmDialog';
 import { SimpleBlogEditor } from './SimpleBlogEditor';
 
-type EditorTab = 'content' | 'seo' | 'publication' | 'preview';
 type StatusFilter = 'all' | BlogPostStatus;
+type TypeFilter = 'all' | BlogPublicationType;
+type EditorMode = 'edit' | 'preview';
 
 const STATUS_LABELS: Record<BlogPostStatus, string> = {
   draft: 'Brouillon',
+  scheduled: 'Planifié',
   published: 'Publié',
   archived: 'Archivé',
 };
 
-const BLOCK_ACTIONS: Array<{ type: BlogBlockType; label: string; icon: typeof AlignLeft }> = [
-  { type: 'paragraph', label: 'Paragraphe', icon: AlignLeft },
-  { type: 'heading', label: 'Titre H2', icon: Heading2 },
-  { type: 'subheading', label: 'Titre H3', icon: Heading3 },
-  { type: 'bullets', label: 'Liste', icon: List },
-  { type: 'quote', label: 'Citation', icon: MessageSquareQuote },
-  { type: 'callout', label: 'Encadré', icon: Info },
-  { type: 'image', label: 'Image', icon: ImageIcon },
-];
+const TYPE_ICONS = {
+  article: BookOpen,
+  promotion: Tag,
+  news: Megaphone,
+  event: CalendarDays,
+} as const;
 
-function toDraft(post: BlogPost): BlogPostDraft {
+function toDraft(source: BlogPost): BlogPostDraft {
+  const post = normalizeStoredBlogPost(source);
   return {
     id: post.id,
     title: post.title,
     slug: post.slug,
     excerpt: post.excerpt,
+    publicationType: post.publicationType,
     category: post.category,
     tags: post.tags || [],
+    targetCenterIds: post.targetCenterIds,
     coverImageUrl: post.coverImageUrl,
     coverImageAlt: post.coverImageAlt,
     authorName: post.authorName,
     authorRole: post.authorRole,
     reviewerName: post.reviewerName,
     content: post.content || [],
+    ctaLabel: post.ctaLabel,
+    ctaUrl: post.ctaUrl,
+    startsAt: post.startsAt,
+    endsAt: post.endsAt,
+    location: post.location,
+    scheduledAt: post.scheduledAt,
     seoTitle: post.seoTitle,
     seoDescription: post.seoDescription,
     status: post.status,
@@ -92,31 +100,40 @@ function toDraft(post: BlogPost): BlogPostDraft {
   };
 }
 
-function formatDate(value?: string | null): string {
+function formatDate(value?: string | null, withTime = false): string {
   if (!value) return 'Non publié';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Date invalide';
   return new Intl.DateTimeFormat('fr-DZ', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
-  }).format(new Date(value));
+    ...(withTime ? { hour: '2-digit', minute: '2-digit' } : {}),
+  }).format(date);
 }
 
 function statusClasses(status: BlogPostStatus): string {
   if (status === 'published') return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+  if (status === 'scheduled') return 'border-sky-200 bg-sky-50 text-sky-700';
   if (status === 'archived') return 'border-slate-200 bg-slate-100 text-slate-600';
   return 'border-amber-200 bg-amber-50 text-amber-700';
 }
 
-export function BlogManagement() {
+function hasFutureSchedule(value?: string | null): boolean {
+  if (!value) return false;
+  const date = new Date(value);
+  return !Number.isNaN(date.getTime()) && date > new Date();
+}
+
+export function BlogManagement({ centers }: { centers: Center[] }) {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [editorOpen, setEditorOpen] = useState(false);
-  const [editorTab, setEditorTab] = useState<EditorTab>('content');
-  const [simpleEditor, setSimpleEditor] = useState(true);
+  const [editorMode, setEditorMode] = useState<EditorMode>('edit');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<BlogPostDraft>(createEmptyBlogDraft());
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
@@ -124,7 +141,6 @@ export function BlogManagement() {
   const [uploading, setUploading] = useState('');
   const [pendingDelete, setPendingDelete] = useState<BlogPost | null>(null);
   const [toast, setToast] = useState<ProfessionalToastState | null>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const showToast = (
     message: string,
@@ -139,7 +155,7 @@ export function BlogManagement() {
     setLoading(true);
     setLoadError('');
     try {
-      setPosts(await listBlogPosts());
+      setPosts((await listBlogPosts()).map(normalizeStoredBlogPost));
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : 'Chargement éditorial impossible.');
     } finally {
@@ -156,38 +172,57 @@ export function BlogManagement() {
     return posts.filter(post => {
       const matchesSearch = !term
         || post.title.toLowerCase().includes(term)
+        || post.excerpt.toLowerCase().includes(term)
         || post.tags.some(tag => tag.toLowerCase().includes(term));
       const matchesStatus = statusFilter === 'all' || post.status === statusFilter;
-      const matchesCategory = categoryFilter === 'all' || post.category === categoryFilter;
-      return matchesSearch && matchesStatus && matchesCategory;
+      const matchesType = typeFilter === 'all' || post.publicationType === typeFilter;
+      return matchesSearch && matchesStatus && matchesType;
     });
-  }, [categoryFilter, posts, search, statusFilter]);
+  }, [posts, search, statusFilter, typeFilter]);
 
   const stats = useMemo(() => ({
     total: posts.length,
     published: posts.filter(post => post.status === 'published').length,
+    scheduled: posts.filter(post => post.status === 'scheduled').length,
     drafts: posts.filter(post => post.status === 'draft').length,
-    featured: posts.filter(post => post.status === 'published' && post.featured).length,
   }), [posts]);
 
-  const publicationChecks = useMemo(() => [
-    { label: 'Titre éditorial', ok: draft.title.trim().length >= 8 },
-    { label: 'Résumé de 80 caractères', ok: draft.excerpt.trim().length >= 80 },
-    { label: 'Image de couverture', ok: Boolean(draft.coverImageUrl) },
-    { label: 'Texte alternatif', ok: Boolean(draft.coverImageAlt.trim()) },
-    { label: 'Au moins deux blocs', ok: draft.content.filter(block => block.type === 'image' ? block.imageUrl : block.text || block.items?.some(Boolean)).length >= 2 },
-    { label: 'Auteur identifié', ok: Boolean(draft.authorName.trim()) },
-    { label: 'Description SEO', ok: draft.seoDescription.trim().length >= 120 },
-  ], [draft]);
-  const readyForPublication = publicationChecks.slice(0, 6).every(item => item.ok);
+  const automaticExcerpt = createAutomaticBlogExcerpt(draft);
+  const completedContent = draft.content.filter(block => (
+    block.type === 'image' ? block.imageUrl : block.text || block.items?.some(Boolean)
+  ));
+  const publicationChecks = useMemo(() => {
+    const checks = [
+      { label: 'Titre clair', ok: draft.title.trim().length >= 8 },
+      { label: 'Résumé complet', ok: automaticExcerpt.length >= 80 },
+      { label: 'Image principale', ok: Boolean(draft.coverImageUrl) },
+      { label: 'Contenu structuré', ok: completedContent.length >= 2 },
+    ];
+    if (draft.publicationType === 'event') {
+      checks.push({ label: 'Date de début', ok: Boolean(draft.startsAt) });
+    }
+    if (draft.publicationType === 'promotion' || draft.publicationType === 'event') {
+      checks.push({ label: 'Date de fin', ok: Boolean(draft.endsAt) });
+    }
+    return checks;
+  }, [
+    automaticExcerpt.length,
+    completedContent.length,
+    draft.coverImageUrl,
+    draft.endsAt,
+    draft.publicationType,
+    draft.startsAt,
+    draft.title,
+  ]);
+  const readyForPublication = publicationChecks.every(item => item.ok);
   const estimatedReadingTime = estimateBlogReadingTime(draft.content);
+  const willSchedule = hasFutureSchedule(draft.scheduledAt);
 
-  const openNewEditor = () => {
+  const openNewEditor = (publicationType: BlogPublicationType = 'article') => {
     setEditingId(null);
-    setDraft(createEmptyBlogDraft());
+    setDraft(createEmptyBlogDraft(publicationType));
     setSlugManuallyEdited(false);
-    setEditorTab('content');
-    setSimpleEditor(true);
+    setEditorMode('edit');
     setEditorOpen(true);
   };
 
@@ -195,8 +230,7 @@ export function BlogManagement() {
     setEditingId(post.id);
     setDraft(toDraft(post));
     setSlugManuallyEdited(true);
-    setEditorTab('content');
-    setSimpleEditor(true);
+    setEditorMode('edit');
     setEditorOpen(true);
   };
 
@@ -209,8 +243,25 @@ export function BlogManagement() {
       ...current,
       title,
       slug: slugManuallyEdited ? current.slug : slugifyBlogTitle(title),
-      seoTitle: editingId ? current.seoTitle : title.slice(0, 70),
+      coverImageAlt: current.coverImageAlt || (title ? 'Illustration de ' + title : ''),
     }));
+  };
+
+  const handlePublicationTypeChange = (publicationType: BlogPublicationType) => {
+    setDraft(current => {
+      const previous = getBlogPublicationType(current.publicationType);
+      const next = getBlogPublicationType(publicationType);
+      return {
+        ...current,
+        publicationType,
+        category: publicationType === 'news' || publicationType === 'event'
+          ? 'actualites'
+          : current.category,
+        ctaLabel: !current.ctaLabel || current.ctaLabel === previous.defaultCtaLabel
+          ? next.defaultCtaLabel
+          : current.ctaLabel,
+      };
+    });
   };
 
   const updateBlock = (id: string, patch: Partial<BlogContentBlock>) => {
@@ -240,9 +291,13 @@ export function BlogManagement() {
     if (!file) return;
     setUploading('cover');
     try {
-      const url = await uploadBlogImage(editingId || `draft-${Date.now()}`, file, 'cover');
-      updateDraft('coverImageUrl', url);
-      showToast('L’image de couverture est prête pour la publication.', 'success', 'Image ajoutée');
+      const url = await uploadBlogImage(editingId || 'draft-' + Date.now(), file, 'cover');
+      setDraft(current => ({
+        ...current,
+        coverImageUrl: url,
+        coverImageAlt: current.coverImageAlt || (current.title ? 'Illustration de ' + current.title : 'Publication AQ8 Algérie'),
+      }));
+      showToast('L’image principale est prête.', 'success', 'Image ajoutée');
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Téléversement impossible.', 'error', 'Image refusée');
     } finally {
@@ -254,8 +309,11 @@ export function BlogManagement() {
     if (!file) return;
     setUploading(blockId);
     try {
-      const url = await uploadBlogImage(editingId || `draft-${Date.now()}`, file, 'content');
-      updateBlock(blockId, { imageUrl: url });
+      const url = await uploadBlogImage(editingId || 'draft-' + Date.now(), file, 'content');
+      updateBlock(blockId, {
+        imageUrl: url,
+        imageAlt: draft.title ? 'Illustration de ' + draft.title : 'Publication AQ8 Algérie',
+      });
       showToast('L’image a été ajoutée au contenu.', 'success', 'Image insérée');
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Téléversement impossible.', 'error', 'Image refusée');
@@ -264,41 +322,51 @@ export function BlogManagement() {
     }
   };
 
-  const saveArticle = async (status: BlogPostStatus, closeAfter = false) => {
+  const savePublication = async (status: BlogPostStatus, closeAfter = false) => {
     if (busy) return;
     setBusy(true);
     try {
-      const payload = {
+      const payload: BlogPostDraft = {
         ...draft,
+        excerpt: automaticExcerpt,
         status,
-        seoTitle: draft.seoTitle || draft.title.slice(0, 70),
-        seoDescription: draft.seoDescription || draft.excerpt.slice(0, 170),
       };
       const saved = editingId
         ? await updateBlogPost(editingId, payload)
         : await createBlogPost(payload);
-      setEditingId(saved.id);
-      setDraft(toDraft(saved));
+      const normalized = normalizeStoredBlogPost(saved);
+      setEditingId(normalized.id);
+      setDraft(toDraft(normalized));
       setSlugManuallyEdited(true);
       setPosts(current => {
-        const exists = current.some(post => post.id === saved.id);
+        const exists = current.some(post => post.id === normalized.id);
         const next = exists
-          ? current.map(post => post.id === saved.id ? saved : post)
-          : [saved, ...current];
+          ? current.map(post => post.id === normalized.id ? normalized : post)
+          : [normalized, ...current];
         return next.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
       });
+
+      const typeLabel = getBlogPublicationTypeLabel(normalized.publicationType);
       showToast(
         status === 'published'
-          ? 'L’article est maintenant visible sur le site public.'
-          : status === 'archived'
-            ? 'L’article a été archivé et retiré du site public.'
-            : 'Le brouillon a été enregistré.',
+          ? typeLabel + ' visible sur le site public.'
+          : status === 'scheduled'
+            ? typeLabel + ' programmé pour le ' + formatDate(normalized.scheduledAt, true) + '.'
+            : status === 'archived'
+              ? typeLabel + ' retiré du site public.'
+              : 'Le brouillon a été enregistré.',
         'success',
-        status === 'published' ? 'Article publié' : status === 'archived' ? 'Article archivé' : 'Brouillon enregistré',
+        status === 'published'
+          ? 'Publication réussie'
+          : status === 'scheduled'
+            ? 'Publication planifiée'
+            : status === 'archived'
+              ? 'Contenu archivé'
+              : 'Brouillon enregistré',
       );
       if (closeAfter) setEditorOpen(false);
     } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Enregistrement impossible.', 'error', 'Article non enregistré');
+      showToast(error instanceof Error ? error.message : 'Enregistrement impossible.', 'error', 'Contenu non enregistré');
     } finally {
       setBusy(false);
     }
@@ -311,21 +379,23 @@ export function BlogManagement() {
       await deleteBlogPost(pendingDelete.id);
       setPosts(current => current.filter(post => post.id !== pendingDelete.id));
       setPendingDelete(null);
-      showToast('L’article a été supprimé définitivement.', 'success', 'Article supprimé');
+      showToast('Le contenu a été supprimé définitivement.', 'success', 'Contenu supprimé');
     } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Suppression impossible.', 'error', 'Article conservé');
+      showToast(error instanceof Error ? error.message : 'Suppression impossible.', 'error', 'Contenu conservé');
     } finally {
       setBusy(false);
     }
   };
+
+  const primaryStatus: BlogPostStatus = willSchedule ? 'scheduled' : 'published';
 
   return (
     <div className="space-y-6">
       <ProfessionalToast toast={toast} onDismiss={() => setToast(null)} id="blog-admin-toast" />
       <ProfessionalConfirmDialog
         open={Boolean(pendingDelete)}
-        title="Supprimer définitivement cet article ?"
-        description={`« ${pendingDelete?.title || ''} » et son historique éditorial ne seront plus accessibles. Les images déjà téléversées restent conservées dans Storage.`}
+        title="Supprimer définitivement ce contenu ?"
+        description={'« ' + (pendingDelete?.title || '') + ' » ne sera plus accessible.'}
         confirmLabel="Supprimer définitivement"
         cancelLabel="Conserver"
         tone="danger"
@@ -341,32 +411,32 @@ export function BlogManagement() {
             <Sparkles className="h-3.5 w-3.5" />
             Pôle éditorial
           </div>
-          <h2 className="font-display text-2xl font-bold text-[#242424]">Conseils & actualités</h2>
+          <h2 className="font-display text-2xl font-bold text-[#242424]">Magazine & actualités</h2>
           <p className="mt-1 max-w-2xl text-xs font-medium leading-relaxed text-slate-500">
-            Préparez, relisez et publiez les contenus qui accompagnent les clients avant leur réservation.
+            Conseils, promotions, informations et événements du réseau AQ8.
           </p>
         </div>
         <button
           type="button"
-          onClick={openNewEditor}
+          onClick={() => openNewEditor()}
           className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff5757] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#e94949]"
         >
           <Plus className="h-4 w-4" />
-          Nouvel article
+          Nouvelle publication
         </button>
       </section>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
-          { label: 'Articles', value: stats.total, icon: FileText, tone: 'text-slate-700 bg-slate-100' },
+          { label: 'Contenus', value: stats.total, icon: FileText, tone: 'text-slate-700 bg-slate-100' },
           { label: 'Publiés', value: stats.published, icon: Check, tone: 'text-emerald-700 bg-emerald-50' },
+          { label: 'Planifiés', value: stats.scheduled, icon: CalendarDays, tone: 'text-sky-700 bg-sky-50' },
           { label: 'Brouillons', value: stats.drafts, icon: Edit3, tone: 'text-amber-700 bg-amber-50' },
-          { label: 'À la une', value: stats.featured, icon: Sparkles, tone: 'text-[#ff5757] bg-rose-50' },
         ].map(item => {
           const Icon = item.icon;
           return (
             <div key={item.label} className="flex items-center gap-3 rounded-md border border-slate-200 bg-white p-4">
-              <span className={`flex h-9 w-9 items-center justify-center rounded-md ${item.tone}`}>
+              <span className={'flex h-9 w-9 items-center justify-center rounded-md ' + item.tone}>
                 <Icon className="h-4 w-4" />
               </span>
               <div>
@@ -379,13 +449,13 @@ export function BlogManagement() {
       </div>
 
       <section className="space-y-4">
-        <div className="grid gap-3 md:grid-cols-[1fr_180px_210px]">
+        <div className="grid gap-3 md:grid-cols-[1fr_180px_190px]">
           <label className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               value={search}
               onChange={event => setSearch(event.target.value)}
-              placeholder="Rechercher par titre ou mot-clé"
+              placeholder="Rechercher un contenu"
               className="h-10 w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 text-xs font-medium outline-none transition focus:border-[#ff5757]"
             />
           </label>
@@ -396,17 +466,18 @@ export function BlogManagement() {
           >
             <option value="all">Tous les statuts</option>
             <option value="published">Publiés</option>
+            <option value="scheduled">Planifiés</option>
             <option value="draft">Brouillons</option>
             <option value="archived">Archivés</option>
           </select>
           <select
-            value={categoryFilter}
-            onChange={event => setCategoryFilter(event.target.value)}
+            value={typeFilter}
+            onChange={event => setTypeFilter(event.target.value as TypeFilter)}
             className="h-10 rounded-md border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 outline-none focus:border-[#ff5757]"
           >
-            <option value="all">Toutes les catégories</option>
-            {BLOG_CATEGORIES.map(category => (
-              <option key={category.id} value={category.id}>{category.label}</option>
+            <option value="all">Tous les formats</option>
+            {BLOG_PUBLICATION_TYPES.map(type => (
+              <option key={type.id} value={type.id}>{type.pluralLabel}</option>
             ))}
           </select>
         </div>
@@ -427,91 +498,98 @@ export function BlogManagement() {
           <div className="flex min-h-56 flex-col items-center justify-center border border-dashed border-slate-300 bg-white px-6 text-center">
             <BookOpen className="mb-4 h-9 w-9 text-[#ff5757]" />
             <h3 className="font-display text-base font-bold text-[#242424]">
-              {posts.length === 0 ? 'Votre espace éditorial est prêt' : 'Aucun article ne correspond aux filtres'}
+              {posts.length === 0 ? 'Votre espace éditorial est prêt' : 'Aucun contenu ne correspond aux filtres'}
             </h3>
             <p className="mt-2 max-w-md text-xs leading-relaxed text-slate-500">
               {posts.length === 0
-                ? 'Créez votre premier brouillon, ajoutez une image, effectuez la relecture SEO puis publiez-le.'
-                : 'Modifiez la recherche ou les filtres pour retrouver un article.'}
+                ? 'Créez le premier contenu public du réseau AQ8.'
+                : 'Modifiez la recherche ou les filtres.'}
             </p>
             {posts.length === 0 && (
-              <button type="button" onClick={openNewEditor} className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-[#ff5757]">
+              <button type="button" onClick={() => openNewEditor()} className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-[#ff5757]">
                 <Plus className="h-4 w-4" />
-                Commencer un article
+                Créer une publication
               </button>
             )}
           </div>
         ) : (
           <div className="overflow-hidden border border-slate-200 bg-white">
-            <div className="hidden grid-cols-[minmax(0,1fr)_150px_120px_120px_110px] gap-4 border-b border-slate-100 bg-slate-50 px-4 py-3 text-[9px] font-extrabold uppercase text-slate-400 md:grid">
-              <span>Article</span>
-              <span>Catégorie</span>
+            <div className="hidden grid-cols-[minmax(0,1fr)_130px_120px_120px_110px] gap-4 border-b border-slate-100 bg-slate-50 px-4 py-3 text-[9px] font-extrabold uppercase text-slate-400 md:grid">
+              <span>Publication</span>
+              <span>Format</span>
               <span>Statut</span>
-              <span>Mise à jour</span>
+              <span>Diffusion</span>
               <span className="text-right">Actions</span>
             </div>
             <div className="divide-y divide-slate-100">
-              {filteredPosts.map(post => (
-                <article
-                  key={post.id}
-                  className="grid gap-3 px-4 py-4 transition hover:bg-slate-50/70 md:grid-cols-[minmax(0,1fr)_150px_120px_120px_110px] md:items-center md:gap-4"
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="h-14 w-20 shrink-0 overflow-hidden bg-slate-100">
-                      {post.coverImageUrl ? (
-                        <img src={post.coverImageUrl} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full items-center justify-center"><ImageIcon className="h-5 w-5 text-slate-300" /></div>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="truncate text-xs font-bold text-[#242424]">{post.title}</h3>
-                      <p className="mt-1 truncate text-[10px] font-medium text-slate-400">/conseils/{post.slug}</p>
-                      <div className="mt-1 flex items-center gap-1.5 text-[9px] text-slate-400">
-                        <Clock3 className="h-3 w-3" />
-                        {post.readingTimeMinutes} min
-                        {post.featured && <span className="font-bold text-[#ff5757]">• À la une</span>}
+              {filteredPosts.map(post => {
+                const TypeIcon = TYPE_ICONS[post.publicationType];
+                const diffusionDate = post.status === 'scheduled' ? post.scheduledAt : post.updatedAt;
+                return (
+                  <article
+                    key={post.id}
+                    className="grid gap-3 px-4 py-4 transition hover:bg-slate-50/70 md:grid-cols-[minmax(0,1fr)_130px_120px_120px_110px] md:items-center md:gap-4"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="h-14 w-20 shrink-0 overflow-hidden rounded bg-slate-100">
+                        {post.coverImageUrl ? (
+                          <img src={post.coverImageUrl} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full items-center justify-center"><ImageIcon className="h-5 w-5 text-slate-300" /></div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="truncate text-xs font-bold text-[#242424]">{post.title}</h3>
+                        <p className="mt-1 truncate text-[10px] font-medium text-slate-400">{getBlogCategoryLabel(post.category)}</p>
+                        <div className="mt-1 flex items-center gap-1.5 text-[9px] text-slate-400">
+                          <Clock3 className="h-3 w-3" />
+                          {post.readingTimeMinutes} min
+                          {post.featured && <span className="font-bold text-[#ff5757]">• À la une</span>}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <span className="text-[10px] font-bold text-slate-600">{getBlogCategoryLabel(post.category)}</span>
-                  <span className={`w-fit rounded-full border px-2.5 py-1 text-[9px] font-extrabold ${statusClasses(post.status)}`}>
-                    {STATUS_LABELS[post.status]}
-                  </span>
-                  <span className="text-[10px] font-medium text-slate-500">{formatDate(post.updatedAt)}</span>
-                  <div className="flex justify-end gap-1">
-                    {post.status === 'published' && (
-                      <a
-                        href={`/conseils/${post.slug}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        title="Voir sur le site public"
-                        className="rounded-md p-2 text-slate-400 transition hover:bg-white hover:text-[#ff5757]"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => openEditor(post)}
-                      title="Modifier l’article"
-                      className="rounded-md p-2 text-slate-400 transition hover:bg-white hover:text-[#242424]"
-                    >
-                      <Edit3 className="h-4 w-4" />
-                    </button>
-                    {post.status !== 'published' && (
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-600">
+                      <TypeIcon className="h-3.5 w-3.5 text-[#ff5757]" />
+                      {getBlogPublicationTypeLabel(post.publicationType)}
+                    </span>
+                    <span className={'w-fit rounded-full border px-2.5 py-1 text-[9px] font-extrabold ' + statusClasses(post.status)}>
+                      {STATUS_LABELS[post.status]}
+                    </span>
+                    <span className="text-[10px] font-medium text-slate-500">{formatDate(diffusionDate, post.status === 'scheduled')}</span>
+                    <div className="flex justify-end gap-1">
+                      {post.status === 'published' && (
+                        <a
+                          href={'/conseils/' + post.slug}
+                          target="_blank"
+                          rel="noreferrer"
+                          title="Voir sur le site public"
+                          className="rounded-md p-2 text-slate-400 transition hover:bg-white hover:text-[#ff5757]"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      )}
                       <button
                         type="button"
-                        onClick={() => setPendingDelete(post)}
-                        title="Supprimer l’article"
-                        className="rounded-md p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                        onClick={() => openEditor(post)}
+                        title="Modifier"
+                        className="rounded-md p-2 text-slate-400 transition hover:bg-white hover:text-[#242424]"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Edit3 className="h-4 w-4" />
                       </button>
-                    )}
-                  </div>
-                </article>
-              ))}
+                      {post.status !== 'published' && (
+                        <button
+                          type="button"
+                          onClick={() => setPendingDelete(post)}
+                          title="Supprimer"
+                          className="rounded-md p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </div>
         )}
@@ -519,8 +597,8 @@ export function BlogManagement() {
 
       {editorOpen && (
         <div className="fixed inset-0 z-50 flex flex-col bg-[#f6f7f9]">
-          <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 sm:px-6">
-            <div className="flex min-w-0 items-center gap-3">
+          <header className="flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-3 py-2 sm:px-6">
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={() => !busy && setEditorOpen(false)}
@@ -529,85 +607,68 @@ export function BlogManagement() {
               >
                 <X className="h-5 w-5" />
               </button>
-              <div className="min-w-0">
-                <h2 className="truncate text-sm font-bold text-[#242424]">{draft.title || 'Nouvel article'}</h2>
+              <div className="hidden min-w-0 sm:block">
+                <h2 className="truncate text-sm font-bold text-[#242424]">{draft.title || 'Nouvelle publication'}</h2>
                 <p className="text-[10px] font-medium text-slate-400">
-                  {draft.status === 'published' ? 'Article public' : 'Espace de rédaction'} • {estimatedReadingTime} min de lecture
+                  {getBlogPublicationTypeLabel(draft.publicationType)} • {estimatedReadingTime} min de lecture
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  setSimpleEditor(current => !current);
-                  setEditorTab('content');
-                }}
-                className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white p-2 text-xs font-bold text-slate-600 transition hover:border-slate-300 hover:text-[#242424] sm:px-3"
-                title={simpleEditor ? 'Afficher les options avancées' : 'Revenir à la rédaction simple'}
+                onClick={() => setEditorMode(current => current === 'edit' ? 'preview' : 'edit')}
+                aria-label={editorMode === 'edit' ? 'Afficher l’aperçu' : 'Revenir à la rédaction'}
+                title={editorMode === 'edit' ? 'Aperçu' : 'Rédaction'}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300"
               >
-                <Settings2 className="h-4 w-4" />
-                <span className="hidden lg:inline">{simpleEditor ? 'Options avancées' : 'Rédaction simple'}</span>
+                {editorMode === 'edit' ? <Eye className="h-4 w-4" /> : <Edit3 className="h-4 w-4" />}
               </button>
+              {(draft.status === 'published' || draft.status === 'scheduled') && (
+                <button
+                  type="button"
+                  onClick={() => void savePublication('archived', true)}
+                  disabled={busy}
+                  aria-label="Archiver"
+                  title="Archiver et retirer du site"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 disabled:opacity-50"
+                >
+                  <Archive className="h-4 w-4" />
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => void saveArticle('draft')}
+                onClick={() => void savePublication('draft')}
                 disabled={busy}
                 aria-label="Enregistrer le brouillon"
                 title="Enregistrer le brouillon"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 bg-white text-xs font-bold text-slate-700 transition hover:border-slate-400 disabled:opacity-50 sm:h-auto sm:w-auto sm:gap-2 sm:px-4 sm:py-2"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 transition hover:border-slate-400 disabled:opacity-50 sm:w-auto sm:gap-2 sm:px-4"
               >
                 <Save className="h-4 w-4" />
-                <span className="hidden sm:inline">Enregistrer</span>
+                <span className="hidden sm:inline text-xs font-bold">Enregistrer</span>
               </button>
               <button
                 type="button"
-                onClick={() => void saveArticle('published')}
+                onClick={() => void savePublication(primaryStatus)}
                 disabled={busy || !readyForPublication}
-                title={readyForPublication ? 'Publier sur le site public' : 'Complétez la checklist de publication'}
-                className="inline-flex min-w-28 items-center justify-center gap-2 rounded-md bg-[#ff5757] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#e94949] disabled:cursor-not-allowed disabled:opacity-45"
+                title={readyForPublication ? (willSchedule ? 'Programmer la publication' : 'Publier maintenant') : 'Complétez la checklist'}
+                className="inline-flex min-w-24 items-center justify-center gap-2 rounded-md bg-[#ff5757] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#e94949] disabled:cursor-not-allowed disabled:opacity-45 sm:min-w-28 sm:px-4"
               >
                 {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                Publier
+                {willSchedule ? 'Planifier' : 'Publier'}
               </button>
             </div>
           </header>
 
-          {!simpleEditor && (
-            <div className="shrink-0 overflow-x-auto border-b border-slate-200 bg-white px-4 sm:px-6">
-              <div role="tablist" className="flex gap-5">
-                {[
-                  { id: 'content' as const, label: 'Contenu' },
-                  { id: 'seo' as const, label: 'Référencement' },
-                  { id: 'publication' as const, label: 'Publication' },
-                  { id: 'preview' as const, label: 'Aperçu' },
-                ].map(tab => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={editorTab === tab.id}
-                    onClick={() => setEditorTab(tab.id)}
-                    className={`border-b-2 py-3 text-xs font-bold transition ${
-                      editorTab === tab.id
-                        ? 'border-[#ff5757] text-[#ff5757]'
-                        : 'border-transparent text-slate-500 hover:text-slate-800'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
           <main className="flex-1 overflow-y-auto">
-            {simpleEditor && (
+            {editorMode === 'edit' ? (
               <SimpleBlogEditor
                 draft={draft}
+                centers={centers}
                 uploading={uploading}
                 publicationChecks={publicationChecks}
                 onTitleChange={handleTitleChange}
+                onPublicationTypeChange={handlePublicationTypeChange}
                 onDraftChange={updateDraft}
                 onUpdateBlock={updateBlock}
                 onMoveBlock={moveBlock}
@@ -616,275 +677,9 @@ export function BlogManagement() {
                 onCoverUpload={handleCoverUpload}
                 onBlockImageUpload={handleBlockImageUpload}
               />
-            )}
-            {!simpleEditor && editorTab === 'content' && (
-              <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:px-6">
-                <div className="space-y-5">
-                  <section className="space-y-4 border border-slate-200 bg-white p-5 sm:p-6">
-                    <div>
-                      <label className="mb-1.5 block text-[10px] font-extrabold uppercase text-slate-400">Titre de l’article</label>
-                      <textarea
-                        rows={2}
-                        value={draft.title}
-                        onChange={event => handleTitleChange(event.target.value)}
-                        placeholder="Un titre clair, utile et précis"
-                        className="w-full resize-none border-0 p-0 font-display text-2xl font-bold leading-tight text-[#242424] outline-none placeholder:text-slate-300 sm:text-3xl"
-                      />
-                    </div>
-                    <div className="border-t border-slate-100 pt-4">
-                      <label className="mb-1.5 block text-[10px] font-extrabold uppercase text-slate-400">Résumé public</label>
-                      <textarea
-                        rows={3}
-                        value={draft.excerpt}
-                        onChange={event => updateDraft('excerpt', event.target.value)}
-                        maxLength={420}
-                        placeholder="Présentez en quelques lignes ce que le lecteur va apprendre."
-                        className="w-full resize-none border-0 p-0 text-sm font-medium leading-6 text-slate-600 outline-none placeholder:text-slate-300"
-                      />
-                      <div className="mt-2 text-right text-[9px] font-bold text-slate-400">{draft.excerpt.length}/420</div>
-                    </div>
-                  </section>
-
-                  <section className="space-y-3">
-                    {draft.content.map((block, index) => (
-                      <div key={block.id} className="group border border-slate-200 bg-white">
-                        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-3 py-2">
-                          <span className="text-[9px] font-extrabold uppercase text-slate-400">
-                            {BLOCK_ACTIONS.find(item => item.type === block.type)?.label || 'Bloc'}
-                          </span>
-                          <div className="flex items-center gap-0.5">
-                            <button type="button" onClick={() => moveBlock(index, -1)} disabled={index === 0} title="Monter" className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-20"><ArrowUp className="h-3.5 w-3.5" /></button>
-                            <button type="button" onClick={() => moveBlock(index, 1)} disabled={index === draft.content.length - 1} title="Descendre" className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-20"><ArrowDown className="h-3.5 w-3.5" /></button>
-                            <button type="button" onClick={() => removeBlock(block.id)} title="Supprimer le bloc" className="p-1.5 text-slate-400 hover:text-rose-600"><Trash2 className="h-3.5 w-3.5" /></button>
-                          </div>
-                        </div>
-                        <div className="p-4 sm:p-5">
-                          {block.type === 'bullets' ? (
-                            <textarea
-                              rows={Math.max(3, block.items?.length || 1)}
-                              value={(block.items || []).join('\n')}
-                              onChange={event => updateBlock(block.id, { items: event.target.value.split('\n') })}
-                              placeholder={'Une idée par ligne\nUn conseil concret\nUne information utile'}
-                              className="w-full resize-y border-0 p-0 text-sm leading-7 text-slate-700 outline-none placeholder:text-slate-300"
-                            />
-                          ) : block.type === 'image' ? (
-                            <div className="space-y-4">
-                              {block.imageUrl ? (
-                                <img src={block.imageUrl} alt="" className="aspect-[16/9] w-full bg-slate-100 object-cover" />
-                              ) : (
-                                <label className="flex aspect-[16/7] cursor-pointer flex-col items-center justify-center border border-dashed border-slate-300 bg-slate-50 text-center hover:border-[#ff5757]">
-                                  {uploading === block.id ? <Loader2 className="h-6 w-6 animate-spin text-[#ff5757]" /> : <UploadCloud className="h-6 w-6 text-[#ff5757]" />}
-                                  <span className="mt-2 text-xs font-bold text-slate-600">Ajouter une image dans l’article</span>
-                                  <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={event => void handleBlockImageUpload(block.id, event.target.files?.[0])} />
-                                </label>
-                              )}
-                              {block.imageUrl && (
-                                <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-bold text-[#ff5757]">
-                                  <UploadCloud className="h-4 w-4" />
-                                  Remplacer l’image
-                                  <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={event => void handleBlockImageUpload(block.id, event.target.files?.[0])} />
-                                </label>
-                              )}
-                              <div className="grid gap-3 sm:grid-cols-2">
-                                <input value={block.imageAlt || ''} onChange={event => updateBlock(block.id, { imageAlt: event.target.value })} placeholder="Texte alternatif de l’image" className="rounded-md border border-slate-200 px-3 py-2 text-xs outline-none focus:border-[#ff5757]" />
-                                <input value={block.caption || ''} onChange={event => updateBlock(block.id, { caption: event.target.value })} placeholder="Légende facultative" className="rounded-md border border-slate-200 px-3 py-2 text-xs outline-none focus:border-[#ff5757]" />
-                              </div>
-                            </div>
-                          ) : (
-                            <textarea
-                              rows={block.type === 'paragraph' ? 5 : block.type === 'callout' ? 3 : 2}
-                              value={block.text || ''}
-                              onChange={event => updateBlock(block.id, { text: event.target.value })}
-                              placeholder={
-                                block.type === 'heading' ? 'Titre de section'
-                                  : block.type === 'subheading' ? 'Sous-titre'
-                                    : block.type === 'quote' ? 'Citation ou parole d’expert'
-                                      : block.type === 'callout' ? 'Information importante à retenir'
-                                        : 'Développez une idée utile pour le lecteur...'
-                              }
-                              className={`w-full resize-y border-0 p-0 leading-7 text-slate-700 outline-none placeholder:text-slate-300 ${
-                                block.type === 'heading' ? 'font-display text-xl font-bold'
-                                  : block.type === 'subheading' ? 'font-display text-lg font-bold'
-                                    : block.type === 'quote' ? 'text-base font-semibold italic'
-                                      : 'text-sm'
-                              }`}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </section>
-
-                  <div className="border border-dashed border-slate-300 bg-white p-3">
-                    <p className="mb-2 px-1 text-[9px] font-extrabold uppercase text-slate-400">Ajouter un bloc</p>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-                      {BLOCK_ACTIONS.map(action => {
-                        const Icon = action.icon;
-                        return (
-                          <button
-                            key={action.type}
-                            type="button"
-                            onClick={() => addBlock(action.type)}
-                            className="flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-md border border-slate-100 bg-slate-50 px-2 py-2 text-[9px] font-bold text-slate-600 transition hover:border-[#ff5757]/30 hover:bg-rose-50 hover:text-[#ff5757]"
-                          >
-                            <Icon className="h-4 w-4" />
-                            {action.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
-                  <section className="border border-slate-200 bg-white p-4">
-                    <label className="mb-3 block text-[10px] font-extrabold uppercase text-slate-400">Image de couverture</label>
-                    {draft.coverImageUrl ? (
-                      <img src={draft.coverImageUrl} alt="" className="aspect-[16/10] w-full bg-slate-100 object-cover" />
-                    ) : (
-                      <button type="button" onClick={() => coverInputRef.current?.click()} className="flex aspect-[16/10] w-full flex-col items-center justify-center border border-dashed border-slate-300 bg-slate-50 text-slate-500 transition hover:border-[#ff5757]">
-                        {uploading === 'cover' ? <Loader2 className="h-6 w-6 animate-spin text-[#ff5757]" /> : <ImageIcon className="h-6 w-6 text-[#ff5757]" />}
-                        <span className="mt-2 text-[10px] font-bold">Téléverser une image</span>
-                      </button>
-                    )}
-                    <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={event => void handleCoverUpload(event.target.files?.[0])} />
-                    {draft.coverImageUrl && (
-                      <button type="button" onClick={() => coverInputRef.current?.click()} className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold text-[#ff5757]">
-                        <UploadCloud className="h-3.5 w-3.5" />
-                        Remplacer
-                      </button>
-                    )}
-                    <input
-                      value={draft.coverImageAlt}
-                      onChange={event => updateDraft('coverImageAlt', event.target.value)}
-                      placeholder="Décrivez précisément l’image"
-                      className="mt-3 w-full rounded-md border border-slate-200 px-3 py-2 text-[10px] outline-none focus:border-[#ff5757]"
-                    />
-                  </section>
-
-                  <section className="space-y-3 border border-slate-200 bg-white p-4">
-                    <label className="block text-[10px] font-extrabold uppercase text-slate-400">Classement</label>
-                    <select value={draft.category} onChange={event => updateDraft('category', event.target.value as BlogPostDraft['category'])} className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none focus:border-[#ff5757]">
-                      {BLOG_CATEGORIES.map(category => <option key={category.id} value={category.id}>{category.label}</option>)}
-                    </select>
-                    <input
-                      value={draft.tags.join(', ')}
-                      onChange={event => updateDraft('tags', event.target.value.split(',').map(tag => tag.trim()).filter(Boolean))}
-                      placeholder="Tags séparés par des virgules"
-                      className="w-full rounded-md border border-slate-200 px-3 py-2 text-xs outline-none focus:border-[#ff5757]"
-                    />
-                  </section>
-                </aside>
-              </div>
-            )}
-
-            {!simpleEditor && editorTab === 'seo' && (
-              <div className="mx-auto grid max-w-5xl gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:px-6">
-                <section className="space-y-5 border border-slate-200 bg-white p-5 sm:p-6">
-                  <div>
-                    <label className="mb-1.5 block text-[10px] font-extrabold uppercase text-slate-400">URL publique</label>
-                    <div className="flex items-center rounded-md border border-slate-200 bg-slate-50 px-3">
-                      <span className="text-xs text-slate-400">/conseils/</span>
-                      <input
-                        value={draft.slug}
-                        onChange={event => {
-                          setSlugManuallyEdited(true);
-                          updateDraft('slug', slugifyBlogTitle(event.target.value));
-                        }}
-                        className="min-w-0 flex-1 bg-transparent py-2.5 text-xs font-bold text-slate-700 outline-none"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="mb-1.5 flex justify-between gap-3 text-[10px] font-extrabold uppercase text-slate-400">
-                      <label>Titre SEO</label><span>{draft.seoTitle.length}/70</span>
-                    </div>
-                    <input value={draft.seoTitle} onChange={event => updateDraft('seoTitle', event.target.value.slice(0, 70))} placeholder={draft.title || 'Titre affiché dans Google'} className="w-full rounded-md border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#ff5757]" />
-                  </div>
-                  <div>
-                    <div className="mb-1.5 flex justify-between gap-3 text-[10px] font-extrabold uppercase text-slate-400">
-                      <label>Description SEO</label><span>{draft.seoDescription.length}/170</span>
-                    </div>
-                    <textarea rows={4} value={draft.seoDescription} onChange={event => updateDraft('seoDescription', event.target.value.slice(0, 170))} placeholder="Une description précise qui donne envie de lire l’article." className="w-full resize-none rounded-md border border-slate-200 px-3 py-2.5 text-sm leading-6 outline-none focus:border-[#ff5757]" />
-                  </div>
-                </section>
-                <aside className="space-y-3 border border-slate-200 bg-white p-5 lg:sticky lg:top-6 lg:self-start">
-                  <span className="text-[10px] font-extrabold uppercase text-slate-400">Aperçu Google</span>
-                  <div>
-                    <p className="truncate text-xs text-emerald-700">aq8algerie-dz.com › conseils › {draft.slug || 'article'}</p>
-                    <h3 className="mt-1 text-lg font-medium leading-snug text-[#1a0dab]">{draft.seoTitle || draft.title || 'Titre de votre article'}</h3>
-                    <p className="mt-1 text-xs leading-5 text-slate-600">{draft.seoDescription || draft.excerpt || 'La description de l’article apparaîtra ici.'}</p>
-                  </div>
-                  <p className="border-t border-slate-100 pt-3 text-[10px] leading-5 text-slate-400">
-                    L’affichage exact reste déterminé par le moteur de recherche.
-                  </p>
-                </aside>
-              </div>
-            )}
-
-            {!simpleEditor && editorTab === 'publication' && (
-              <div className="mx-auto grid max-w-5xl gap-6 px-4 py-6 lg:grid-cols-2 lg:px-6">
-                <section className="space-y-5 border border-slate-200 bg-white p-5 sm:p-6">
-                  <div>
-                    <h3 className="font-display text-lg font-bold text-[#242424]">Responsabilité éditoriale</h3>
-                    <p className="mt-1 text-xs leading-relaxed text-slate-500">Identifiez clairement la personne qui écrit et celle qui relit les informations sensibles.</p>
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="space-y-1.5 text-[10px] font-extrabold uppercase text-slate-400">
-                      Auteur
-                      <input value={draft.authorName} onChange={event => updateDraft('authorName', event.target.value)} className="w-full rounded-md border border-slate-200 px-3 py-2.5 text-xs font-medium normal-case text-slate-700 outline-none focus:border-[#ff5757]" />
-                    </label>
-                    <label className="space-y-1.5 text-[10px] font-extrabold uppercase text-slate-400">
-                      Fonction
-                      <input value={draft.authorRole} onChange={event => updateDraft('authorRole', event.target.value)} className="w-full rounded-md border border-slate-200 px-3 py-2.5 text-xs font-medium normal-case text-slate-700 outline-none focus:border-[#ff5757]" />
-                    </label>
-                  </div>
-                  <label className="block space-y-1.5 text-[10px] font-extrabold uppercase text-slate-400">
-                    Relecteur ou expert consulté
-                    <input value={draft.reviewerName} onChange={event => updateDraft('reviewerName', event.target.value)} placeholder="Facultatif, recommandé pour les sujets santé et bien-être" className="w-full rounded-md border border-slate-200 px-3 py-2.5 text-xs font-medium normal-case text-slate-700 outline-none focus:border-[#ff5757]" />
-                  </label>
-                  <label className="flex cursor-pointer items-start justify-between gap-5 border-t border-slate-100 pt-5">
-                    <div>
-                      <span className="block text-xs font-bold text-[#242424]">Mettre à la une</span>
-                      <span className="mt-1 block text-[10px] leading-relaxed text-slate-500">Cet article occupera l’emplacement principal de la page Conseils.</span>
-                    </div>
-                    <input type="checkbox" checked={draft.featured} onChange={event => updateDraft('featured', event.target.checked)} className="mt-1 h-4 w-4 accent-[#ff5757]" />
-                  </label>
-                  {draft.status === 'published' && (
-                    <button type="button" disabled={busy} onClick={() => void saveArticle('archived', true)} className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-4 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50">
-                      <Archive className="h-4 w-4" />
-                      Archiver et retirer du site
-                    </button>
-                  )}
-                </section>
-
-                <section className="border border-slate-200 bg-white p-5 sm:p-6">
-                  <div className="mb-5 flex items-center justify-between gap-4">
-                    <div>
-                      <h3 className="font-display text-lg font-bold text-[#242424]">Checklist avant publication</h3>
-                      <p className="mt-1 text-xs text-slate-500">{publicationChecks.filter(item => item.ok).length}/{publicationChecks.length} points validés</p>
-                    </div>
-                    <div className={`flex h-11 w-11 items-center justify-center rounded-full ${readyForPublication ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-                      {readyForPublication ? <Check className="h-5 w-5" /> : <Clock3 className="h-5 w-5" />}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    {publicationChecks.map(item => (
-                      <div key={item.label} className="flex items-center gap-3 border-b border-slate-100 py-2.5 last:border-0">
-                        <span className={`flex h-5 w-5 items-center justify-center rounded-full ${item.ok ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
-                          {item.ok ? <Check className="h-3 w-3" /> : <span className="h-1.5 w-1.5 rounded-full bg-current" />}
-                        </span>
-                        <span className={`text-xs font-semibold ${item.ok ? 'text-slate-700' : 'text-slate-400'}`}>{item.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              </div>
-            )}
-
-            {!simpleEditor && editorTab === 'preview' && (
-              <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-                <article className="overflow-hidden border border-slate-200 bg-white">
+            ) : (
+              <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+                <article className="overflow-hidden rounded-lg border border-slate-200 bg-white">
                   {draft.coverImageUrl ? (
                     <img src={draft.coverImageUrl} alt={draft.coverImageAlt} className="aspect-[16/8] w-full bg-slate-100 object-cover" />
                   ) : (
@@ -892,12 +687,12 @@ export function BlogManagement() {
                   )}
                   <div className="px-5 py-8 sm:px-10">
                     <div className="mb-4 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase text-[#ff5757]">
-                      <span>{getBlogCategoryLabel(draft.category)}</span>
+                      <span>{getBlogPublicationTypeLabel(draft.publicationType)}</span>
                       <span className="text-slate-300">•</span>
-                      <span className="text-slate-400">{estimatedReadingTime} min de lecture</span>
+                      <span>{getBlogCategoryLabel(draft.category)}</span>
                     </div>
-                    <h1 className="font-display text-3xl font-bold leading-tight text-[#242424] sm:text-5xl">{draft.title || 'Titre de l’article'}</h1>
-                    <p className="mt-5 text-base leading-7 text-slate-600">{draft.excerpt || 'Le résumé de votre article apparaîtra ici.'}</p>
+                    <h1 className="font-display text-3xl font-bold leading-tight text-[#242424] sm:text-5xl">{draft.title || 'Titre de la publication'}</h1>
+                    <p className="mt-5 text-base leading-7 text-slate-600">{automaticExcerpt || 'Le résumé apparaîtra ici.'}</p>
                     <div className="my-8 border-t border-slate-100" />
                     <BlogArticleContent blocks={draft.content} />
                   </div>

@@ -707,7 +707,7 @@ export function SuperAdminViews({
       )}
       {/* D. Pôle éditorial */}
       {activeSubTab === 'blog' && (
-        <BlogManagement />
+        <BlogManagement centers={centers} />
       )}
       {/* E. Analyses / Stats */}
       {/* E. Analyses / Stats */}

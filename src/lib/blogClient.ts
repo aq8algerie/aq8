@@ -21,13 +21,19 @@ async function callBlogApi(
   body?: unknown,
   query = '',
 ): Promise<BlogApiResponse> {
-  const token = await getCrmToken();
+  const user = auth.currentUser;
+  const token = user ? await user.getIdToken() : '';
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  if (body) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   const response = await fetch(`/api/blog-posts${query}`, {
     method,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
-    },
+    headers,
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
   const payload = await response.json().catch(() => null) as BlogApiResponse | null;
@@ -38,8 +44,18 @@ async function callBlogApi(
 }
 
 export async function listBlogPosts(): Promise<BlogPost[]> {
-  const response = await callBlogApi('GET');
-  return response.posts || [];
+  try {
+    const user = auth.currentUser;
+    const token = user ? await user.getIdToken() : '';
+    const response = await fetch('/api/blog-posts', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    const payload = await response.json().catch(() => null) as BlogApiResponse | null;
+    return payload?.posts || [];
+  } catch (err) {
+    console.warn('[blogClient] listBlogPosts fallback error:', err);
+    return [];
+  }
 }
 
 export async function createBlogPost(post: BlogPostDraft): Promise<BlogPost> {
