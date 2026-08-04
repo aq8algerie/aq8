@@ -31,7 +31,7 @@ export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {
   }
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-10 sm:space-y-12">
       <div className="flex flex-col justify-between gap-5 border-b border-slate-200 pb-8 sm:flex-row sm:items-end">
         <div className="max-w-2xl space-y-3">
           <p className="text-sm font-bold text-[#ff5757]">Réseau AQ8 Algérie</p>

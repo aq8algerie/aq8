@@ -735,9 +735,8 @@ export default function App() {
             {currentRoute === 'login' && (
               <Suspense fallback={<CrmLoadingState />}>
                 <CrmPortal
-                centers={centers}
-                managers={managers}
-                onLoginSuccess={handleLoginSuccess}
+                  centers={centers}
+                  onLoginSuccess={handleLoginSuccess}
                 />
               </Suspense>
             )}
@@ -746,9 +745,8 @@ export default function App() {
               authReady ? (
                 <Suspense fallback={<CrmLoadingState />}>
                   <CrmPortal
-                  centers={centers}
-                  managers={managers}
-                  onLoginSuccess={handleLoginSuccess}
+                    centers={centers}
+                    onLoginSuccess={handleLoginSuccess}
                   />
                 </Suspense>
               ) : (

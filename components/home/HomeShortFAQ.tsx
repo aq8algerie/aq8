@@ -9,7 +9,7 @@ const faqs = [
 
 export function HomeShortFAQ() {
   return (
-    <section className="space-y-8">
+    <section className="space-y-10 sm:space-y-12">
       <div className="flex flex-col justify-between gap-5 border-b border-slate-200 pb-8 sm:flex-row sm:items-end">
         <div className="max-w-2xl space-y-3">
           <p className="inline-flex items-center gap-2 text-sm font-bold text-[#ff5757]"><HelpCircle className="h-4 w-4" />Questions fréquentes</p>

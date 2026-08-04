@@ -4,11 +4,11 @@
  */
 
 import React, { useState } from 'react';
-import { ShieldCheck, Building, Lock, Mail, Activity, Loader2, KeyRound, ArrowLeft, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, Loader2, KeyRound, ArrowLeft, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { Center, CenterManager } from '../types';
+import { Center } from '../types';
 import { auth, db } from '../lib/firebase';
 
 type CrmRole = 'super_admin' | 'center_manager';
@@ -23,11 +23,9 @@ type UserProfile = {
 
 export function CrmPortal({
   centers,
-  managers,
   onLoginSuccess
 }: {
   centers: Center[];
-  managers: CenterManager[];
   onLoginSuccess: (role: CrmRole, centerId: string | null, managerName: string) => void;
 }) {
   const [email, setEmail] = useState('');
@@ -44,7 +42,6 @@ export function CrmPortal({
   const [resetError, setResetError] = useState<string | null>(null);
   const [isResetting, setIsResetting] = useState(false);
 
-  const isDemoLoginEnabled = process.env.NODE_ENV === 'development';
   const isAuthBusy = isSubmitting || isGoogleSubmitting;
 
   const loadUserProfile = async (user: User): Promise<UserProfile> => {
@@ -154,19 +151,6 @@ export function CrmPortal({
     }
   };
 
-  const handleQuickDemoLogin = (role: CrmRole, mgr?: CenterManager) => {
-    setErrorMessage(null);
-    if (role === 'super_admin') {
-      onLoginSuccess('super_admin', null, 'Karim Benchikh');
-    } else if (mgr) {
-      if (centers.length === 0) {
-        setErrorMessage('Aucun centre disponible. Connexion démo impossible.');
-        return;
-      }
-      onLoginSuccess('center_manager', mgr.centerId, mgr.name);
-    }
-  };
-
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setResetError(null);
@@ -191,8 +175,6 @@ export function CrmPortal({
       setIsResetting(false);
     }
   };
-
-  const isCentersEmpty = centers.length === 0;
 
   return (
     <div className="max-w-md mx-auto py-8 space-y-8">
@@ -378,78 +360,6 @@ export function CrmPortal({
             )}
             Continuer avec Google
           </button>
-        </div>
-      )}
-
-      {isDemoLoginEnabled && (
-        <div className="bg-slate-50 rounded-3xl p-6 border border-slate-200 space-y-4">
-          <div className="flex items-center gap-2">
-            <Activity className="h-4 w-4 text-[#ff5757]" />
-            <h4 className="font-bold text-[#353535] text-xs font-display">Mode démonstration local</h4>
-          </div>
-          <p className="text-[11px] text-slate-500 leading-relaxed">
-            Raccourcis réservés au développement. En production, l’accès passe par Firebase Auth et le profil CRM.
-          </p>
-
-          <div className="space-y-3 pt-1">
-            <button
-              onClick={() => handleQuickDemoLogin('super_admin')}
-              className="w-full p-3 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-left transition-premium flex items-center justify-between group cursor-pointer shadow-xs"
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="p-1.5 bg-[#ff5757]/10 text-[#ff5757] rounded-lg">
-                  <ShieldCheck className="h-4 w-4" />
-                </div>
-                <div className="space-y-0.5">
-                  <span className="font-bold text-slate-700 text-xs block group-hover:text-[#ff5757] transition-colors">Accès Super Admin</span>
-                  <span className="text-[10px] text-slate-500 font-mono">session locale</span>
-                </div>
-              </div>
-              <span className="text-[10px] text-[#ff5757] font-semibold bg-[#ff5757]/10 py-1 px-2.5 rounded-md">
-                Tester →
-              </span>
-            </button>
-
-            <div className="space-y-2 border-t border-slate-200/60 pt-3">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Accès gérant de centre</span>
-
-              {isCentersEmpty ? (
-                <div className="p-3 bg-amber-50 border border-amber-100 text-amber-700 text-xs rounded-xl font-medium">
-                  Aucun centre disponible pour le moment.
-                </div>
-              ) : managers.length === 0 ? (
-                <div className="p-3 bg-slate-100 border border-slate-200 text-slate-500 text-xs rounded-xl italic">
-                  Aucun manager de centre chargé pour le moment.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-2">
-                  {managers.map((mgr) => {
-                    const center = centers.find(c => c.id === mgr.centerId);
-                    return (
-                      <button
-                        key={mgr.id}
-                        onClick={() => handleQuickDemoLogin('center_manager', mgr)}
-                        className="p-2.5 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-left transition-premium flex items-center justify-between group cursor-pointer shadow-xs"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="p-1 bg-slate-100 text-slate-600 rounded-md">
-                            <Building className="h-3.5 w-3.5" />
-                          </div>
-                          <div className="space-y-0.5">
-                            <span className="font-bold text-slate-700 text-[11px] block group-hover:text-slate-900">{mgr.name}</span>
-                            <span className="text-[9px] text-[#ff5757] font-bold">{center?.name || 'Centre'} ({center?.city || 'Algérie'})</span>
-                          </div>
-                        </div>
-                        <span className="text-[9px] text-slate-500 hover:text-slate-800">
-                          Entrer →
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       )}
     </div>

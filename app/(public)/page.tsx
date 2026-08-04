@@ -26,17 +26,19 @@ export default async function HomePage() {
   ]);
 
   return (
-    <main className="space-y-16 py-4">
+    <main className="py-4 sm:py-6">
       <SeoJsonLd type="organization" />
 
-      <HomeHero centerCount={centers.length} />
-      <HomeTechnologies />
-      <HomeCentersPreview centers={centers} />
-      <HomeWhyChoose />
-      <HomeHowItWorks />
-      <HomeLatestArticles posts={publishedPosts} />
-      <HomeShortFAQ />
-      <HomeFinalCTA />
+      <div className="space-y-20 sm:space-y-24 lg:space-y-28">
+        <HomeHero centerCount={centers.length} />
+        <HomeTechnologies />
+        <HomeCentersPreview centers={centers} />
+        <HomeWhyChoose />
+        <HomeHowItWorks />
+        <HomeLatestArticles posts={publishedPosts} />
+        <HomeShortFAQ />
+        <HomeFinalCTA />
+      </div>
     </main>
   );
 }

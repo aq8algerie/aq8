@@ -327,7 +327,6 @@ export default function CrmPage() {
       <div className="max-w-md mx-auto py-16 px-4">
         <CrmPortal
           centers={centers}
-          managers={managers}
           onLoginSuccess={handleLoginSuccess}
         />
       </div>

@@ -34,7 +34,7 @@ const technologies = [
 
 export function HomeTechnologies() {
   return (
-    <section className="space-y-8">
+    <section className="space-y-10 sm:space-y-12">
       <div className="grid gap-6 border-b border-slate-200 pb-8 lg:grid-cols-12 lg:items-end">
         <div className="space-y-3 lg:col-span-7">
           <p className="text-sm font-bold text-[#ff5757]">AQ8 & Wonder</p>
