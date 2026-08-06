@@ -7,6 +7,7 @@ coverage/
 .env*
 !.env.example
 db-audit/out/
+db-audit/dump*
 scratch/
 .next/
 .firebase/

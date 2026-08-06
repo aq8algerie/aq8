@@ -1,25 +1,55 @@
 import Link from "next/link";
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { ArrowRight, Calendar, MessageCircle, Sparkles } from "lucide-react";
 
 export function HomeFinalCTA() {
   return (
-    <section className="relative isolate overflow-hidden rounded-lg bg-[#242424] px-6 py-14 text-white sm:px-10 lg:px-12">
-      <img src="/images/prestations/wonder-ems.webp" alt="Centre AQ8 Algérie" className="absolute inset-0 h-full w-full object-cover opacity-28" referrerPolicy="no-referrer" />
-      <div className="absolute inset-0 bg-[#242424]/78" />
+    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a1a1a] via-[#242424] to-[#2d1919] px-6 py-14 text-white shadow-2xl sm:px-12 sm:py-16 lg:px-16">
+      {/* Background Decorative Ambient Glows */}
+      <div className="pointer-events-none absolute -left-16 -top-16 h-72 w-72 rounded-full bg-[#ff5757]/20 blur-3xl" />
+      <div className="pointer-events-none absolute -right-16 -bottom-16 h-72 w-72 rounded-full bg-[#ff5757]/15 blur-3xl" />
+      <img
+        src="/images/prestations/wonder-ems.webp"
+        alt="Centre AQ8 Algérie"
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-15 mix-blend-overlay"
+        referrerPolicy="no-referrer"
+      />
+
       <div className="relative z-10 grid gap-8 lg:grid-cols-12 lg:items-center">
+        {/* Left Column Text */}
         <div className="max-w-2xl space-y-4 lg:col-span-8">
-          <p className="text-sm font-bold text-[#ff5757]">Prêt à commencer ?</p>
-          <h2 className="font-display text-3xl font-bold leading-tight sm:text-4xl">Trouvez votre centre AQ8 et envoyez une demande de réservation.</h2>
-          <p className="text-sm font-medium leading-relaxed text-white/72 sm:text-base">Les horaires, prestations et disponibilités peuvent varier selon les centres. L'équipe du centre vous confirme le créneau adapté.</p>
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-bold text-white backdrop-blur-md">
+            <Sparkles className="h-3.5 w-3.5 text-[#ff7777]" />
+            <span>Prêt à vivre l'expérience AQ8 ?</span>
+          </div>
+
+          <h2 className="font-display text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl leading-tight">
+            Trouvez votre centre et réservez votre séance d'essai dès aujourd'hui.
+          </h2>
+
+          <p className="text-sm font-normal leading-relaxed text-slate-300 sm:text-base">
+            Découvrez l'efficacité de 20 minutes d'électrostimulation ou la précision de Wonder Sculpt avec l'un de nos coachs certifiés en Algérie.
+          </p>
         </div>
-        <div className="flex flex-col gap-3 lg:col-span-4 lg:items-end">
-          <Link href="/centres" aria-label="Découvrir les centres AQ8 en Algérie" className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#ff5757] px-6 py-3 text-sm font-bold text-white transition-premium hover:bg-[#e94949] sm:w-auto">
-            Découvrir nos centres
+
+        {/* Right Column Action Buttons */}
+        <div className="flex flex-col gap-3 sm:flex-row lg:flex-col lg:col-span-4 lg:items-end">
+          <Link
+            href="/reservation"
+            aria-label="Réserver une séance AQ8"
+            className="inline-flex w-full items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-[#ff5757] to-[#e63e3e] px-6 py-4 text-sm font-bold text-white shadow-xl shadow-[#ff5757]/25 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-[#ff5757]/35 sm:w-auto"
+          >
+            <Calendar className="h-4 w-4" />
+            <span>Réserver ma séance</span>
             <ArrowRight className="h-4 w-4" />
           </Link>
-          <Link href="/contact" aria-label="Contacter AQ8 Algérie" className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-white/18 bg-white/10 px-6 py-3 text-sm font-bold text-white transition-premium hover:bg-white/16 sm:w-auto">
-            <MessageCircle className="h-4 w-4 text-[#ff5757]" />
-            Nous contacter
+
+          <Link
+            href="/contact"
+            aria-label="Contacter AQ8 Algérie"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-4 text-sm font-semibold text-white backdrop-blur-md transition-all duration-300 hover:bg-white/20 sm:w-auto"
+          >
+            <MessageCircle className="h-4 w-4 text-[#ff7777]" />
+            <span>Nous contacter</span>
           </Link>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Clock, Users } from "lucide-react";
+import { ArrowRight, Clock, MapPin, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { Center } from "../../src/types";
 
 interface HomeCentersPreviewProps {
@@ -9,10 +9,10 @@ interface HomeCentersPreviewProps {
 function getCenterAudienceLabel(center: Center) {
   const hasWomenHours = (center.womenHours?.length ?? 0) > 0;
   const hasMenHours = (center.menHours?.length ?? 0) > 0;
-  if (hasWomenHours && hasMenHours) return "Créneaux hommes & femmes";
-  if (hasWomenHours) return "Créneaux femmes";
-  if (hasMenHours) return "Créneaux hommes";
-  return "Horaires à confirmer";
+  if (hasWomenHours && hasMenHours) return "Créneaux Hommes & Femmes";
+  if (hasWomenHours) return "Réservé Femmes";
+  if (hasMenHours) return "Réservé Hommes";
+  return "Horaires flexibles";
 }
 
 export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {
@@ -20,11 +20,16 @@ export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {
 
   if (!centers.length) {
     return (
-      <section className="rounded-lg border border-slate-200 bg-white px-6 py-12 text-center sm:px-10">
+      <section className="rounded-2xl border border-slate-200/80 bg-white px-6 py-12 text-center shadow-lg sm:px-10">
         <div className="mx-auto max-w-xl space-y-4">
-          <p className="text-sm font-bold text-[#ff5757]">Centres AQ8</p>
-          <h2 className="font-display text-2xl font-bold text-[#242424] sm:text-3xl">Nos centres seront bientôt disponibles</h2>
-          <p className="text-sm font-medium leading-relaxed text-slate-600">Les centres AQ8 seront affichés ici avec leurs horaires, prestations, consignes et moyens de contact.</p>
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#fff0f0] px-3 py-1 text-xs font-bold text-[#ff5757]">
+            <MapPin className="h-3.5 w-3.5" />
+            Réseau National AQ8
+          </div>
+          <h2 className="font-display text-2xl font-black text-[#242424] sm:text-3xl">Nos centres seront bientôt disponibles</h2>
+          <p className="text-sm font-medium leading-relaxed text-slate-600">
+            Les centres de proximité AQ8 seront affichés ici avec leurs horaires, équipements, photos et accès de réservation directe.
+          </p>
         </div>
       </section>
     );
@@ -32,38 +37,100 @@ export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {
 
   return (
     <section className="space-y-10 sm:space-y-12">
-      <div className="flex flex-col justify-between gap-5 border-b border-slate-200 pb-8 sm:flex-row sm:items-end">
+      {/* Section Header */}
+      <div className="flex flex-col justify-between gap-5 border-b border-slate-200/80 pb-8 sm:flex-row sm:items-end">
         <div className="max-w-2xl space-y-3">
-          <p className="text-sm font-bold text-[#ff5757]">Réseau AQ8 Algérie</p>
-          <h2 className="font-display text-3xl font-bold leading-tight text-[#242424] sm:text-4xl">Choisir un centre devient plus simple.</h2>
-          <p className="text-sm font-medium leading-relaxed text-slate-600 sm:text-base">Chaque centre affiche ses prestations, ses horaires, ses consignes et son accès réservation avec une information maintenue à jour.</p>
+          <div className="inline-flex items-center gap-2 rounded-md bg-[#fff0f0] px-3 py-1 text-xs font-extrabold uppercase text-[#ff5757]">
+            <MapPin className="h-3.5 w-3.5" />
+            Réseau Officiel Algérie
+          </div>
+          <h2 className="font-display text-3xl font-black tracking-tight text-[#242424] sm:text-4xl lg:text-5xl">
+            Trouvez le centre AQ8 le plus proche.
+          </h2>
+          <p className="text-sm font-medium leading-relaxed text-slate-600 sm:text-base">
+            Chaque centre partenaire propose des équipements haut de gamme, des coachs dédiés et un accès à la réservation instantanée.
+          </p>
         </div>
-        <Link href="/centres" aria-label="Voir tous les centres AQ8 en Algérie" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#242424] px-5 py-3 text-sm font-bold text-white transition-premium hover:bg-[#ff5757]">
-          Voir les centres
-          <span className="rounded bg-white/12 px-2 py-0.5 text-xs">{centers.length}</span>
+
+        <Link
+          href="/centres"
+          aria-label="Voir la liste complète des centres AQ8 en Algérie"
+          className="inline-flex shrink-0 items-center justify-center gap-2.5 rounded-xl bg-[#242424] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:bg-[#ff5757] hover:scale-[1.02]"
+        >
+          <span>Tous nos centres</span>
+          <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-extrabold">{centers.length}</span>
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+      {/* Centers Cards Grid */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {previewCenters.map((center) => (
-          <article key={center.id} className="group overflow-hidden rounded-lg border border-slate-200 bg-white">
-            <div className="relative h-48 overflow-hidden bg-slate-100">
-              <img src={center.imageUrl || "/images/aq8algerie.webp"} alt={"Centre AQ8 " + center.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" referrerPolicy="no-referrer" />
-              <div className="absolute left-4 top-4 rounded-md bg-white px-3 py-1.5 text-xs font-bold text-[#242424]">{center.city}</div>
+          <article
+            key={center.id}
+            className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md transition-all duration-500 hover:-translate-y-1.5 hover:border-[#ff5757]/40 hover:shadow-xl"
+          >
+            <div>
+              {/* Center Cover Image */}
+              <div className="relative h-52 w-full overflow-hidden bg-slate-900">
+                <img
+                  src={center.imageUrl || "/images/aq8algerie.webp"}
+                  alt={`Centre AQ8 EMS & Wonder à ${center.name}`}
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+
+                {/* City Tag Badge Top Left */}
+                <div className="absolute top-4 left-4 flex items-center gap-1.5 rounded-lg bg-black/60 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md">
+                  <MapPin className="h-3.5 w-3.5 text-[#ff5757]" />
+                  <span>{center.city}</span>
+                </div>
+
+                {/* Verified Badge Top Right */}
+                <div className="absolute top-4 right-4 flex items-center gap-1 rounded-lg bg-emerald-500/90 px-2.5 py-1 text-[10px] font-extrabold uppercase text-white shadow-sm backdrop-blur">
+                  <ShieldCheck className="h-3 w-3" />
+                  <span>Certifié</span>
+                </div>
+
+                {/* Bottom Overlay Title */}
+                <div className="absolute bottom-4 left-4 right-4">
+                  <h3 className="font-display text-xl font-black text-white">
+                    {center.name}
+                  </h3>
+                </div>
+              </div>
+
+              {/* Center Info Body */}
+              <div className="space-y-4 p-5 sm:p-6">
+                <p className="line-clamp-2 text-xs font-medium leading-relaxed text-slate-600">
+                  {center.address}
+                </p>
+
+                <div className="space-y-2 border-t border-slate-100 pt-4 text-xs font-semibold text-slate-700">
+                  <div className="flex items-center gap-2 text-slate-800">
+                    <Users className="h-4 w-4 shrink-0 text-[#ff5757]" />
+                    <span>{getCenterAudienceLabel(center)}</span>
+                  </div>
+                  {center.schedule && (
+                    <div className="flex items-start gap-2 text-slate-600">
+                      <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#ff5757]" />
+                      <span className="line-clamp-1">{center.schedule}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="space-y-5 p-5">
-              <div className="space-y-2">
-                <h3 className="font-display text-lg font-bold text-[#242424]">{center.name}</h3>
-                <p className="line-clamp-2 text-sm font-medium leading-relaxed text-slate-600">{center.address}</p>
-              </div>
-              <div className="space-y-2 border-t border-slate-100 pt-4 text-xs font-medium text-slate-600">
-                <div className="flex items-center gap-2"><Users className="h-4 w-4 text-[#ff5757]" />{getCenterAudienceLabel(center)}</div>
-                {center.schedule && <div className="flex items-start gap-2"><Clock className="mt-0.5 h-4 w-4 text-[#ff5757]" /><span>{center.schedule}</span></div>}
-              </div>
-              <Link href={"/centres/" + center.slug} aria-label={"Découvrir le centre AQ8 " + center.name} className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-300 px-4 py-2.5 text-sm font-bold text-[#242424] transition-premium hover:border-[#ff5757] hover:text-[#ff5757]">
-                Voir le centre
-                <ArrowRight className="h-4 w-4" />
+
+            {/* Action Footer */}
+            <div className="p-5 pt-0 sm:p-6 sm:pt-0">
+              <Link
+                href={`/centres/${center.slug}`}
+                aria-label={`Découvrir le centre AQ8 de ${center.name}`}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white py-3 px-4 text-sm font-bold text-[#242424] transition-all duration-300 hover:border-[#ff5757] hover:bg-[#ff5757] hover:text-white"
+              >
+                <span>Fiche du centre & Réservation</span>
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
           </article>

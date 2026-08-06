@@ -1,63 +1,117 @@
 import Link from "next/link";
-import { ArrowRight, CalendarCheck, CheckCircle2, ClipboardList, MapPin, MessageCircle } from "lucide-react";
+import { ArrowRight, CalendarCheck, CheckCircle2, ClipboardList, MapPin, MessageCircle, Sparkles } from "lucide-react";
 
 const steps = [
-  { step: "01", title: "Choisir", desc: "Sélectionnez le centre le plus adapté selon la ville, les prestations et les horaires disponibles.", icon: MapPin },
-  { step: "02", title: "Demander", desc: "Envoyez une demande de réservation depuis la page publique du centre choisi.", icon: ClipboardList },
-  { step: "03", title: "Confirmer", desc: "L'équipe du centre valide le créneau selon les disponibilités et les consignes internes.", icon: MessageCircle },
-  { step: "04", title: "Préparer", desc: "Arrivez avec les équipements demandés et laissez l'équipe vous accompagner pendant la séance.", icon: CalendarCheck },
+  {
+    step: "01",
+    title: "Trouver votre centre",
+    desc: "Sélectionnez le centre de proximité le plus pratique selon votre ville (Alger, Blida, Tlemcen...) et vos horaires.",
+    icon: MapPin,
+  },
+  {
+    step: "02",
+    title: "Demande en ligne",
+    desc: "Renseignez vos coordonnées et votre créneau souhaité en quelques clics sur la fiche du centre.",
+    icon: ClipboardList,
+  },
+  {
+    step: "03",
+    title: "Validation rapide",
+    desc: "L'équipe du centre vous confirme votre rendez-vous selon vos objectifs et les règles d'accueil.",
+    icon: MessageCircle,
+  },
+  {
+    step: "04",
+    title: "Séance & Coaching",
+    desc: "Profitez d'un accompagnement personnalisé avec votre coach certifié pour des résultats optimaux.",
+    icon: CalendarCheck,
+  },
 ];
 
 export function HomeHowItWorks() {
   return (
-    <section className="overflow-hidden rounded-lg bg-[linear-gradient(135deg,#fff8f7_0%,#ffffff_46%,#fff1ed_100%)] p-6 shadow-[0_24px_80px_rgba(255,87,87,0.10)] sm:p-8 lg:p-10">
-      <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
-        <div className="space-y-3 lg:col-span-7">
-          <p className="inline-flex items-center gap-2 rounded-md border border-white/80 bg-white/75 px-3 py-2 text-sm font-bold text-[#ff5757] shadow-sm backdrop-blur">
-            <CheckCircle2 className="h-4 w-4" />
-            Parcours de réservation
-          </p>
-          <h2 className="font-display text-3xl font-bold leading-tight text-[#242424] sm:text-4xl">
-            Réserver sans friction, avec validation du centre.
+    <section className="space-y-10 sm:space-y-12">
+      {/* Section Header */}
+      <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-8 lg:flex-row lg:items-end lg:justify-between">
+        <div className="max-w-2xl space-y-3">
+          <div className="inline-flex items-center gap-2 rounded-md bg-[#fff0f0] px-3 py-1 text-xs font-extrabold uppercase text-[#ff5757]">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            Parcours Simple & Rapide
+          </div>
+          <h2 className="font-display text-3xl font-black tracking-tight text-[#242424] sm:text-4xl lg:text-5xl">
+            Réservez votre séance en 4 étapes simples.
           </h2>
         </div>
-        <p className="text-sm font-medium leading-relaxed text-slate-600 lg:col-span-5">
-          Le client envoie une demande claire. Le centre garde la main sur la confirmation, les capacités et les informations pratiques.
+        <p className="max-w-md text-sm font-medium leading-relaxed text-slate-600 sm:text-base">
+          Un parcours sans friction : envoyez votre demande et votre centre partenaire s'occupe de la réservation.
         </p>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-4">
+      {/* Steps Cards Grid */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {steps.map((item, index) => {
           const Icon = item.icon;
           return (
-            <article key={item.step} className="group relative min-h-[235px] rounded-lg bg-white/72 p-5 shadow-sm backdrop-blur transition-premium hover:-translate-y-1 hover:bg-white">
-              {index < steps.length - 1 && (
-                <div className="pointer-events-none absolute left-[calc(100%-10px)] top-12 hidden h-px w-8 bg-[#ff5757]/25 lg:block" />
-              )}
-              <div className="flex items-start justify-between gap-4">
-                <span className="rounded-md bg-[#242424] px-2.5 py-1 text-xs font-bold text-white">{item.step}</span>
-                <div className="flex h-11 w-11 items-center justify-center rounded-md bg-[#ff5757]/10 text-[#ff5757] transition-premium group-hover:bg-[#ff5757] group-hover:text-white">
-                  <Icon className="h-5 w-5" />
+            <article
+              key={item.step}
+              className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-6 shadow-md transition-all duration-300 hover:-translate-y-1.5 hover:border-[#ff5757]/40 hover:shadow-xl sm:p-7"
+            >
+              {/* Top Step Pill & Icon */}
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="flex h-8 w-12 items-center justify-center rounded-lg bg-[#242424] font-display text-xs font-black text-white shadow-sm">
+                    {item.step}
+                  </span>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#fff0f0] text-[#ff5757] transition-all duration-300 group-hover:bg-[#ff5757] group-hover:text-white group-hover:scale-110">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                </div>
+
+                <div className="mt-6 space-y-3">
+                  <h3 className="font-display text-lg font-bold tracking-tight text-[#242424]">
+                    {item.title}
+                  </h3>
+                  <p className="text-xs font-medium leading-relaxed text-slate-600">
+                    {item.desc}
+                  </p>
                 </div>
               </div>
-              <div className="mt-8 space-y-3">
-                <h3 className="font-display text-xl font-bold text-[#242424]">{item.title}</h3>
-                <p className="text-sm font-medium leading-relaxed text-slate-600">{item.desc}</p>
+
+              {/* Progress Line Indicator */}
+              <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-2">
+                <div className="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-[#ff5757] to-[#ff8f8f] transition-all duration-500 group-hover:w-full"
+                    style={{ width: `${(index + 1) * 25}%` }}
+                  />
+                </div>
+                <span className="text-[10px] font-bold text-slate-400">Étape {index + 1}/4</span>
               </div>
             </article>
           );
         })}
       </div>
 
-      <div className="mt-6 flex flex-col gap-5 rounded-lg bg-[#242424] p-6 text-white shadow-[0_18px_50px_rgba(36,36,36,0.16)] sm:flex-row sm:items-center sm:justify-between sm:p-7">
-        <div className="max-w-2xl space-y-2">
-          <h3 className="font-display text-xl font-bold">Vous ne savez pas quel centre choisir ?</h3>
-          <p className="text-sm font-medium leading-relaxed text-white/70">Comparez les prestations, horaires et consignes sur la page centres.</p>
+      {/* Callout Banner Footer */}
+      <div className="rounded-2xl bg-slate-900 p-6 text-white shadow-xl sm:p-8">
+        <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
+          <div className="space-y-1">
+            <h4 className="font-display text-lg font-bold flex items-center gap-2 justify-center sm:justify-start">
+              <Sparkles className="h-4 w-4 text-[#ff5757]" />
+              Prêt à planifier votre séance découverte ?
+            </h4>
+            <p className="text-xs font-medium text-slate-300">
+              Sélectionnez votre centre et réservez votre créneau en moins de 2 minutes.
+            </p>
+          </div>
+          <Link
+            href="/reservation"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#ff5757] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:bg-[#e64747] hover:scale-105"
+          >
+            <span>Réverser maintenant</span>
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
-        <Link href="/centres" aria-label="Voir les centres AQ8 en Algérie" className="inline-flex items-center justify-center gap-2 rounded-md bg-white px-5 py-3 text-sm font-bold text-[#242424] transition-premium hover:bg-[#ff5757] hover:text-white">
-          Voir les centres
-          <ArrowRight className="h-4 w-4" />
-        </Link>
       </div>
     </section>
   );

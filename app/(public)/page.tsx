@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getSeoForPage } from "@/lib/seo";
 import { SeoJsonLd } from "@/components/seo/SeoJsonLd";
 import { HomeHero } from "@/components/home/HomeHero";
+import { HomeTrustBar } from "@/components/home/HomeTrustBar";
 import { HomeTechnologies } from "@/components/home/HomeTechnologies";
 import { HomeCentersPreview } from "@/components/home/HomeCentersPreview";
 import { HomeWhyChoose } from "@/components/home/HomeWhyChoose";
@@ -28,9 +29,13 @@ export default async function HomePage() {
   return (
     <main className="py-4 sm:py-6">
       <SeoJsonLd type="organization" />
+      <SeoJsonLd type="faq" />
 
-      <div className="space-y-20 sm:space-y-24 lg:space-y-28">
-        <HomeHero centerCount={centers.length} />
+      <div className="space-y-16 sm:space-y-20 lg:space-y-24">
+        <div className="space-y-6">
+          <HomeHero centerCount={centers.length} />
+          <HomeTrustBar />
+        </div>
         <HomeTechnologies />
         <HomeCentersPreview centers={centers} />
         <HomeWhyChoose />

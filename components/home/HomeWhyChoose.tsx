@@ -1,31 +1,99 @@
-import { Activity, ClipboardCheck, MapPinned, ShieldCheck, Sparkles } from "lucide-react";
+import { Activity, ClipboardCheck, MapPinned, ShieldCheck, Sparkles, Trophy, Zap } from "lucide-react";
 
 const features = [
-  { title: "Encadrement clair", desc: "Chaque séance est accompagnée par l'équipe du centre avec des consignes adaptées au profil du client.", icon: ShieldCheck },
-  { title: "Suivi personnalisé", desc: "Le suivi corporel aide à garder une progression lisible selon les objectifs et la régularité des séances.", icon: Activity },
-  { title: "Deux technologies", desc: "AQ8 EMS et Wonder offrent deux approches complémentaires : active, ciblée, encadrée.", icon: Sparkles },
-  { title: "Informations fiables", desc: "Horaires, capacités, consignes et statuts des centres peuvent évoluer depuis l'interface CRM.", icon: ClipboardCheck },
+  {
+    title: "Coaching Individuel Certifié",
+    desc: "Chaque séance d'électrostimulation ou de sculpt est strictement encadrée par un coach diplômé certifié AQ8.",
+    icon: ShieldCheck,
+    badge: "100% Accompagné",
+  },
+  {
+    title: "Suivi Corporel & Mensurations",
+    desc: "Des bilans réguliers et la possibilité de suivre l'évolution de votre silhouette séance après séance.",
+    icon: Activity,
+    badge: "Résultats Visibles",
+  },
+  {
+    title: "Synergie Dual Technology",
+    desc: "L'alliance unique de l'effort actif AQ8 EMS et du travail électromagnétique supramaximal Wonder Sculpt.",
+    icon: Sparkles,
+    badge: "Haute Performance",
+  },
+  {
+    title: "Réservation Directe & Transparente",
+    desc: "Consultez les créneaux, les horaires hommes/femmes et réservez instantanément dans le centre de votre choix.",
+    icon: ClipboardCheck,
+    badge: "Simple & Rapide",
+  },
 ];
 
 export function HomeWhyChoose() {
   return (
-    <section className="grid gap-8 lg:grid-cols-12">
-      <div className="space-y-4 rounded-lg bg-[linear-gradient(135deg,#fff8f7_0%,#ffffff_46%,#fff1ed_100%)] p-6 shadow-[0_24px_80px_rgba(255,87,87,0.10)] sm:p-8 lg:col-span-4">
-        <p className="inline-flex items-center gap-2 rounded-md border border-white/80 bg-white/75 px-3 py-2 text-sm font-bold text-[#ff5757] shadow-sm backdrop-blur"><MapPinned className="h-4 w-4" />Expérience AQ8</p>
-        <h2 className="font-display text-3xl font-bold leading-tight text-[#242424] sm:text-4xl">Une expérience plus lisible, du choix du centre à la séance.</h2>
-        <p className="text-sm font-medium leading-relaxed text-slate-600">Le site public privilégie maintenant les informations utiles, les actions rapides et une présentation plus sobre de l'offre.</p>
-      </div>
-      <div className="grid gap-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50/70 shadow-sm lg:col-span-8 lg:grid-cols-2">
-        {features.map((feature) => {
-          const Icon = feature.icon;
-          return (
-            <article key={feature.title} className="border-b border-slate-100 p-5 lg:border-r last:border-b-0 lg:[&:nth-child(2n)]:border-r-0 lg:[&:nth-child(n+3)]:border-b-0">
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-md bg-white text-[#ff5757] shadow-sm"><Icon className="h-5 w-5" /></div>
-              <h3 className="font-display text-base font-bold text-[#242424]">{feature.title}</h3>
-              <p className="mt-2 text-sm font-medium leading-relaxed text-slate-600">{feature.desc}</p>
-            </article>
-          );
-        })}
+    <section className="space-y-10 sm:space-y-12">
+      <div className="grid gap-8 lg:grid-cols-12 lg:items-stretch">
+        {/* Left Bento Banner */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#242424] via-[#1a1a1a] to-[#2b1717] p-8 text-white shadow-xl lg:col-span-4 flex flex-col justify-between">
+          <div className="pointer-events-none absolute -right-12 -top-12 h-64 w-64 rounded-full bg-[#ff5757]/20 blur-3xl" />
+          
+          <div className="relative z-10 space-y-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white backdrop-blur-md">
+              <Trophy className="h-4 w-4 text-[#ff7777]" />
+              <span>L'Excellence AQ8</span>
+            </div>
+
+            <h2 className="font-display text-3xl font-black leading-tight tracking-tight sm:text-4xl">
+              Pourquoi choisir l'expérience AQ8 en Algérie ?
+            </h2>
+
+            <p className="text-sm font-normal leading-relaxed text-slate-300">
+              Du premier bilan à chaque séance, bénéficiez d'une prise en charge haut de gamme, sans compromis sur la sécurité et le confort.
+            </p>
+          </div>
+
+          <div className="relative z-10 pt-8 border-t border-white/10 mt-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#ff5757] text-white shadow-md">
+                <Zap className="h-5 w-5" />
+              </div>
+              <div>
+                <span className="block text-xs font-bold text-white">Technologie N°1 mondiale</span>
+                <span className="block text-[11px] text-slate-400">Adoptée par les centres experts</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Bento Cards Grid */}
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:col-span-8">
+          {features.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <article
+                key={feature.title}
+                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[#ff5757]/40 hover:shadow-xl sm:p-7"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#fff0f0] text-[#ff5757] shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:bg-[#ff5757] group-hover:text-white">
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-700">
+                      {feature.badge}
+                    </span>
+                  </div>
+
+                  <h3 className="font-display text-lg font-bold tracking-tight text-[#242424]">
+                    {feature.title}
+                  </h3>
+
+                  <p className="text-xs font-medium leading-relaxed text-slate-600">
+                    {feature.desc}
+                  </p>
+                </div>
+              </article>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
