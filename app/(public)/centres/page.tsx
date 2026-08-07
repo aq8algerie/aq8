@@ -35,8 +35,8 @@ export default async function CentresPage({ centers: providedCenters }: { center
               Découvrir AQ8 EMS
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/wonder" aria-label="Découvrir Wonder Sculpt" className="inline-flex items-center justify-center rounded-md border border-slate-300 px-5 py-3 text-sm font-bold text-[#242424] transition-premium hover:border-[#ff5757] hover:text-[#ff5757]">
-              Découvrir Wonder
+            <Link href="/wonder" aria-label="Découvrir Wonder Axion" className="inline-flex items-center justify-center rounded-md border border-slate-300 px-5 py-3 text-sm font-bold text-[#242424] transition-premium hover:border-[#ff5757] hover:text-[#ff5757]">
+              Découvrir Wonder Axion
             </Link>
           </div>
         </section>

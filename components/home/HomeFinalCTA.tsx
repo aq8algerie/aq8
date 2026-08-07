@@ -27,7 +27,7 @@ export function HomeFinalCTA() {
           </h2>
 
           <p className="text-sm font-normal leading-relaxed text-slate-300 sm:text-base">
-            Découvrez l'efficacité de 20 minutes d'électrostimulation ou la précision de Wonder Sculpt avec l'un de nos coachs certifiés en Algérie.
+            Découvrez l'efficacité de 20 minutes d'électrostimulation ou la précision de Wonder Axion avec l'un de nos coachs certifiés en Algérie.
           </p>
         </div>
 

@@ -945,7 +945,7 @@ export function ManagerBookingsView({
                                 ? 'bg-rose-50 text-rose-600 border border-rose-100'
                                 : 'bg-slate-100 text-slate-800 border border-slate-200'
                             }`}>
-                              {tech === 'aq8' ? 'AQ8 EMS (Électrostimulation)' : 'Wonder Sculpt'}
+                              {tech === 'aq8' ? 'AQ8 EMS (Électrostimulation)' : 'Wonder Axion'}
                             </span>
                           ) : (
                             <span className="text-slate-400 italic block">Non renseignée</span>

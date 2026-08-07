@@ -21,12 +21,12 @@ const technologies = [
     ],
   },
   {
-    title: "Wonder Sculpt",
+    title: "Wonder Axion",
     subtitle: "Technologie Électromagnétique Supramaximale",
     tagline: "Sculpting ciblé haute intensité",
     href: "/wonder",
     image: "/images/prestations/wonder-ems.webp",
-    alt: "Séance Wonder Sculpt ciblé chez AQ8 Algérie",
+    alt: "Séance Wonder Axion ciblé chez AQ8 Algérie",
     icon: Target,
     badge: "Définition & Tonification",
     badgeColor: "bg-[#242424] text-white",
@@ -55,7 +55,7 @@ export function HomeTechnologies() {
           </h2>
         </div>
         <p className="max-w-md text-sm font-medium leading-relaxed text-slate-600 sm:text-base">
-          Découvrez la puissance de l'électrostimulation AQ8 EMS et du body shaping Wonder Sculpt dans vos centres certifiés en Algérie.
+          Découvrez la puissance de l'électrostimulation AQ8 EMS et du body shaping Wonder Axion dans vos centres certifiés en Algérie.
         </p>
       </div>
 
@@ -145,7 +145,7 @@ export function HomeTechnologies() {
       <div className="rounded-2xl bg-gradient-to-r from-[#242424] to-[#343434] p-6 text-white shadow-xl sm:p-8">
         <div className="flex flex-col items-center justify-between gap-4 text-center md:flex-row md:text-left">
           <div className="space-y-1">
-            <h4 className="font-display text-lg font-bold">Vous hésitez entre AQ8 EMS et Wonder Sculpt ?</h4>
+            <h4 className="font-display text-lg font-bold">Vous hésitez entre AQ8 EMS et Wonder Axion ?</h4>
             <p className="text-xs font-medium text-slate-300">
               Nos coachs certifiés vous orientent vers la formule ou la combinaison parfaite lors de votre séance découverte.
             </p>

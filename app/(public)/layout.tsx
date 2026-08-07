@@ -140,12 +140,12 @@ export default function PublicLayout({
                     onClick={() => setTechnologyMenuOpen(false)}
                     className="flex items-start gap-3 rounded-xl p-3 hover:bg-slate-50 transition-all group/item"
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#242424] text-white shadow-md group-hover/item:scale-110 transition-transform">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#242424] text-white shadow-md group-hover/item:scale-110 transition-transform">
                       <Target className="h-4 w-4 text-[#ff7777]" />
                     </div>
                     <div>
                       <span className="block font-display text-sm font-black text-[#242424] group-hover/item:text-[#ff5757]">
-                        Wonder Sculpt
+                        Wonder Axion
                       </span>
                       <span className="block text-[11px] font-medium text-slate-500">
                         Body shaping électromagnétique ciblé
@@ -297,7 +297,7 @@ export default function PublicLayout({
                   }`}
                 >
                   <Target className="h-4 w-4 text-[#242424] mx-auto mb-1" />
-                  Wonder Sculpt
+                  Wonder Axion
                 </Link>
               </div>
             </div>
@@ -326,7 +326,7 @@ export default function PublicLayout({
               />
             </Link>
             <p className="text-xs text-slate-400 leading-relaxed">
-              AQ8 Algérie réunit les technologies leaders EMS et Wonder Sculpt avec un suivi 100% personnalisé centre par centre.
+              AQ8 Algérie réunit les technologies leaders EMS et Wonder Axion avec un suivi 100% personnalisé centre par centre.
             </p>
           </div>
 
@@ -334,7 +334,7 @@ export default function PublicLayout({
             <h4 className="font-display text-sm font-bold text-white">Navigation & Info</h4>
             <ul className="space-y-2.5 text-slate-400">
               <li><Link href="/aq8" className="hover:text-white transition">AQ8 EMS active</Link></li>
-              <li><Link href="/wonder" className="hover:text-white transition">Wonder Sculpting</Link></li>
+              <li><Link href="/wonder" className="hover:text-white transition">Wonder Axion</Link></li>
               <li><Link href="/conseils" className="hover:text-white transition">Conseils & actualités</Link></li>
               <li><Link href="/a-propos#faq" className="hover:text-white transition text-[#ff7777]">Foire aux questions (FAQ)</Link></li>
               <li><Link href="/a-propos" className="hover:text-white transition">À propos d'AQ8</Link></li>

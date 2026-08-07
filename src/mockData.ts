@@ -88,7 +88,7 @@ export const INITIAL_CENTERS: Center[] = [
     imageUrl: '/images/centres/aq8-blida.webp',
     services: ['aq8', 'wonder'],
     schedule: 'Sam, Dim: 09:00 - 17:00 | Mar: 13:00 - 19:00 | Lun, Mer: 16:00 - 19:00 | Jeu, Ven: Fermé',
-    description: 'Retrouvez notre équipe d\'experts à Blida pour un coaching de précision combinant électrostimulation haut de gamme et Wonder Sculpting.',
+    description: 'Retrouvez notre équipe d\'experts à Blida pour un coaching de précision combinant électrostimulation haut de gamme et Wonder Axion.',
     slug: 'blida',
     status: 'Femmes uniquement',
     importantNotes: [
@@ -366,7 +366,7 @@ export const INITIAL_CLIENTS: Client[] = [
     phone: '0770 44 55 66',
     centerId: 'center-1',
     createdAt: '2026-06-01',
-    notes: 'Adore le Wonder Sculpting pour les fessiers. Séance régulière.',
+    notes: 'Adore le Wonder Axion pour les fessiers. Séance régulière.',
     gender: 'F'
   },
   {

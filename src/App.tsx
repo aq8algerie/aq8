@@ -579,7 +579,7 @@ export default function App() {
                 <div className="invisible absolute left-0 top-full z-50 mt-2 w-56 rounded-2xl border border-slate-100 bg-white p-2 opacity-0 shadow-xl shadow-slate-900/10 transition-all group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
                   {[
                     { id: 'aq8', label: 'AQ8 EMS' },
-                    { id: 'wonder', label: 'Wonder Sculpt' }
+                    { id: 'wonder', label: 'Wonder Axion' }
                   ].map(link => (
                     <button
                       key={link.id}
@@ -671,7 +671,7 @@ export default function App() {
                 <div className="px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Technologie</div>
                 {[
                   { id: 'aq8', label: 'AQ8 EMS' },
-                  { id: 'wonder', label: 'Wonder Sculpt' }
+                  { id: 'wonder', label: 'Wonder Axion' }
                 ].map(link => (
                   <button
                     key={link.id}
@@ -1032,7 +1032,7 @@ export default function App() {
               <h4 className="font-display text-sm font-bold text-white">Technologies</h4>
               <ul className="space-y-2 text-slate-400">
                 <li><button onClick={() => navigate('aq8')} className="hover:text-white transition">AQ8 EMS</button></li>
-                <li><button onClick={() => navigate('wonder')} className="hover:text-white transition">Wonder Sculpt</button></li>
+                <li><button onClick={() => navigate('wonder')} className="hover:text-white transition">Wonder Axion</button></li>
               </ul>
             </div>
 

@@ -34,16 +34,16 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     id: 'faq-2',
     category: 'tech',
-    question: "Comment fonctionne la technologie Wonder Sculpting ?",
-    answer: "Wonder est un système de sculpting corporel de haute intensité combinant les ondes électromagnétiques ciblées (HIEMT) et l'électrostimulation de forte puissance. Réalisé en position allongée ou semi-assise, il provoque 52 000 contractions musculaires profondes en 25 minutes pour galber simultanément les fessiers, raffermir les abdominaux et tonifier les cuisses.",
+    question: "Comment fonctionne la technologie Wonder Axion ?",
+    answer: "Wonder Axion associe des émissions magnétiques et électriques supramaximales. En position allongée ou semi-assise, le dispositif déclenche jusqu'à 52 000 contractions profondes en 25 minutes sur les abdominaux, les fessiers et les cuisses pour un sculpting corporel ciblé.",
     tags: ['wonder', 'sculpting', 'ventre', 'fessiers', 'musculation passive'],
     popular: true
   },
   {
     id: 'faq-3',
     category: 'tech',
-    question: "Quelle est la différence entre AQ8 EMS et Wonder Sculpt ?",
-    answer: "AQ8 EMS accompagne votre effort dynamique actif (squats, fentes, gainage guidés par le coach), idéal pour la perte de masse graisseuse globale, le renforcement du dos et le métabolisme. Wonder Sculpt s'effectue en posture passive ciblée pour sculpter les zones rebelles (ventre, fessiers, cuisses) avec une puissance de contraction extrême.",
+    question: "Quelle est la différence entre AQ8 EMS et Wonder Axion ?",
+    answer: "AQ8 EMS accompagne votre effort dynamique actif (squats, fentes, gainage guidés par le coach), idéal pour la perte de masse graisseuse globale, le renforcement du dos et le métabolisme. Wonder Axion s'effectue en posture passive ciblée pour sculpter les zones rebelles (ventre, fessiers, cuisses) avec une puissance de contraction extrême.",
     tags: ['différence', 'comparaison', 'aq8 vs wonder', 'choix'],
     popular: true
   },

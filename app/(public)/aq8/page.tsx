@@ -106,10 +106,10 @@ export default function Aq8Page() {
 
               <Link
                 href="/wonder"
-                aria-label="Découvrir Wonder Sculpt"
+                aria-label="Découvrir Wonder Axion"
                 className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/10 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-white/15"
               >
-                Découvrir Wonder
+                Découvrir Wonder Axion
               </Link>
             </div>
           </div>

@@ -7,8 +7,8 @@ const faqs = [
     a: "L'AQ8 EMS est une technologie sans fil d'origine espagnole sollicitant simultanément 350 muscles grâce à des impulsions contrôlées. En 20 minutes d'entraînement encadré, vous obtenez l'équivalent de 4 heures de musculation traditionnelle.",
   },
   {
-    q: "Quelle est la différence avec la technologie Wonder Sculpt ?",
-    a: "AQ8 EMS est une séance active où vous effectuez des mouvements guidés par un coach. Wonder Sculpt combine des impulsions électromagnétiques supramaximales en position allongée pour 52 000 contractions ciblées sur l'abdomen et les fessiers.",
+    q: "Quelle est la différence avec la technologie Wonder Axion ?",
+    a: "AQ8 EMS est une séance active où vous effectuez des mouvements guidés par un coach. Wonder Axion combine des impulsions électromagnétiques supramaximales en position allongée pour 52 000 contractions ciblées sur l'abdomen et les fessiers.",
   },
   {
     q: "Combien de séances par semaine sont conseillées ?",

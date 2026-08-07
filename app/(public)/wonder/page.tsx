@@ -86,12 +86,12 @@ export default function WonderPage() {
           <div className="relative z-10 mx-auto max-w-4xl text-center flex flex-col items-center justify-center space-y-7">
             <span className="inline-flex items-center gap-2 rounded-full border border-[#ff5757]/30 bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
               <Flame className="h-3.5 w-3.5" />
-              Wonder Sculpt
+              Wonder Axion
             </span>
 
             <div className="space-y-5 max-w-3xl mx-auto">
               <h1 className="font-display text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
-                Wonder — sculpting corporel ciblé et tonification
+                Wonder Axion — sculpting corporel ciblé et tonification
               </h1>
 
               <p className="text-sm font-medium leading-relaxed text-slate-300 sm:text-base lg:text-lg">

@@ -113,7 +113,7 @@ function BlogHero({ onSelectCategory }: { onSelectCategory: (cat: BlogCategory |
 
         {/* Hero Subtitle */}
         <p className="mt-5 max-w-2xl text-base font-normal leading-relaxed text-slate-300 sm:text-lg">
-          Le magazine officiel pour comprendre les technologies <strong className="text-white font-semibold">AQ8 EMS</strong> et <strong className="text-white font-semibold">Wonder Sculpt</strong>, optimiser vos entraînements, votre nutrition et suivre la vie de nos centres.
+          Le magazine officiel pour comprendre les technologies <strong className="text-white font-semibold">AQ8 EMS</strong> et <strong className="text-white font-semibold">Wonder Axion</strong>, optimiser vos entraînements, votre nutrition et suivre la vie de nos centres.
         </p>
 
         {/* Key Pillars Ticker */}
@@ -196,7 +196,7 @@ function CategoryExplorer({
   const categories: { id: BlogCategory | "all"; label: string; icon: string; desc: string; count?: string }[] = [
     { id: "all", label: "Toutes les publications", icon: "💎", desc: "Conseils, offres et guides" },
     { id: "aq8-ems", label: "AQ8 EMS", icon: "⚡", desc: "Électrostimulation globale 20min" },
-    { id: "wonder", label: "Wonder Sculpt", icon: "🔥", desc: "Remodelage musculaire ciblé" },
+    { id: "wonder", label: "Wonder Axion", icon: "🔥", desc: "Remodelage musculaire ciblé" },
     { id: "bien-etre", label: "Santé & Dos", icon: "🌿", desc: "Postures, lombaires & bien-être" },
     { id: "conseils", label: "Conseils Pratiques", icon: "💡", desc: "Alimentation & préparation" },
     { id: "actualites", label: "Vie du Réseau", icon: "📢", desc: "Nouveautés & évènements" },
@@ -388,7 +388,7 @@ function InsiderClubAndFaq() {
       a: "1 à 2 séances de 20 minutes par semaine suffisent largement. Étant donné l'intensité équivalente à 4h de sport traditionnel, le corps nécessite 48h de repos pour reconstruire la fibre musculaire."
     },
     {
-      q: "Wonder Sculpt et AQ8 EMS : Peut-on combiner les deux ?",
+      q: "Wonder Axion et AQ8 EMS : Peut-on combiner les deux ?",
       a: "Absolument ! C'est d'ailleurs notre Cure Combinée la plus populaire. L'EMS agit sur l'ensemble de la masse musculaire et du métabolisme, tandis que Wonder cible intensément les abdominaux et fessiers."
     },
     {

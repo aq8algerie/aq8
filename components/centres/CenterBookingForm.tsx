@@ -62,7 +62,7 @@ type ReservationResponse = {
 function getServiceLabel(service: string) {
   if (!service) return "";
   if (service.toLowerCase() === "aq8") return "AQ8 EMS";
-  if (service.toLowerCase() === "wonder") return "Wonder Sculpt";
+  if (service.toLowerCase() === "wonder") return "Wonder Axion";
   return service;
 }
 

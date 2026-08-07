@@ -10,7 +10,7 @@ type CentresListProps = { centers: Center[] };
 
 function getServiceLabel(service: string) {
   if (service.toLowerCase() === "aq8") return "AQ8 EMS";
-  if (service.toLowerCase() === "wonder") return "Wonder Sculpt";
+  if (service.toLowerCase() === "wonder") return "Wonder Axion";
   return service;
 }
 
@@ -170,7 +170,7 @@ export function CentresList({ centers }: CentresListProps) {
             >
               <option value="all">Toutes les technologies</option>
               <option value="aq8">AQ8 EMS (Électrostimulation)</option>
-              <option value="wonder">Wonder Sculpt</option>
+              <option value="wonder">Wonder Axion</option>
             </select>
           </div>
 

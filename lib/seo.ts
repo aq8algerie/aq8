@@ -37,18 +37,18 @@ export const staticPageSeo: Record<string, Omit<PageSeo, 'canonicalUrl'>> = {
     keywords: ["AQ8 EMS", "électrostimulation sans fil", "EMS Algérie", "coaching privé Alger", "tonification musculaire", "perte de poids"]
   },
   wonder: {
-    title: "Wonder AQ8 Algérie - Sculpting, tonification et accompagnement minceur",
-    description: "Découvrez Wonder chez AQ8 Algérie : une solution de sculpting corporel et d’accompagnement minceur encadrée par nos équipes.",
-    keywords: ["Wonder AQ8", "Wonder sculpting Algérie", "musculation passive Alger", "tonification fessiers", "minceur sans effort"]
+    title: "Wonder Axion AQ8 Algérie - Sculpting, tonification et accompagnement minceur",
+    description: "Découvrez Wonder Axion chez AQ8 Algérie : une solution de sculpting corporel et d’accompagnement minceur encadrée par nos équipes.",
+    keywords: ["Wonder AQ8", "Wonder Axion Algérie", "musculation passive Alger", "tonification fessiers", "minceur sans effort"]
   },
   centers: {
-    title: "Centres AQ8 en Algérie - Trouver votre centre AQ8 ou Wonder",
-    description: "Consultez la liste des centres AQ8 Algérie, leurs horaires, prestations, coordonnées et règles de réservation.",
-    keywords: ["centres AQ8", "salles de sport AQ8", "Bir Khadem gym", "AQ8 Ouled Fayet", "AQ8 Blida", "AQ8 Tlemcen", "AQ8 Sidi Yahia"]
+    title: "Centres AQ8 en Algérie - Trouver votre centre AQ8 ou Wonder Axion",
+    description: "Trouvez le centre AQ8 ou partenaire le plus proche pour vos séances d'électrostimulation AQ8 EMS et Wonder Axion en Algérie.",
+    keywords: ["centres AQ8", "centre EMS Alger", "AQ8 Birkhadem", "AQ8 Ouled Fayet", "AQ8 Blida", "AQ8 Tlemcen"]
   },
   faq: {
-    title: "FAQ - Questions Fréquentes AQ8 Algérie",
-    description: "Tout savoir sur l'électrostimulation, les contre-indications, le déroulement des séances d'EMS et de Wonder chez AQ8 Algérie.",
+    title: "Foire Aux Questions AQ8 Algérie | EMS, Wonder Axion, réservation & conseils",
+    description: "Tout savoir sur l'électrostimulation, les contre-indications, le déroulement des séances d'EMS et de Wonder Axion chez AQ8 Algérie.",
     keywords: ["FAQ AQ8", "questions électrostimulation", "danger EMS", "wonder contre indications"]
   },
   contact: {
@@ -57,9 +57,9 @@ export const staticPageSeo: Record<string, Omit<PageSeo, 'canonicalUrl'>> = {
     keywords: ["contact AQ8 Algérie", "numéro téléphone AQ8", "réservation EMS Alger"]
   },
   booking: {
-    title: "Réservez votre séance - AQ8 Algérie",
-    description: "Planifiez et pré-réservez votre séance d'électrostimulation AQ8 EMS ou Wonder dans le centre de votre choix en Algérie.",
-    keywords: ["réservation AQ8", "réserver EMS Algérie", "réserver Wonder Sculpt", "séance d'électrostimulation"]
+    title: "Réserver une séance AQ8 Algérie | Électrostimulation EMS & Wonder Axion",
+    description: "Planifiez et pré-réservez votre séance d'électrostimulation AQ8 EMS ou Wonder Axion dans le centre de votre choix en Algérie.",
+    keywords: ["réservation AQ8", "réserver EMS Algérie", "réserver Wonder Axion", "séance d'électrostimulation"]
   }
 };
 

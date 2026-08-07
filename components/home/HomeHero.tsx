@@ -21,7 +21,7 @@ export function HomeHero({ centerCount }: HomeHeroProps) {
             <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/15 bg-white/8 px-3.5 py-1.5 text-[11px] sm:text-xs font-semibold text-white/90 backdrop-blur-md shadow-inner">
               <span className="flex h-2 w-2 shrink-0 rounded-full bg-[#ff5757] animate-pulse" />
               <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-[#ff7777]" />
-              <span className="truncate">N°1 Électrostimulation EMS & Wonder Sculpt en Algérie</span>
+              <span className="truncate">N°1 Électrostimulation EMS & Wonder Axion en Algérie</span>
             </div>
 
             {/* SEO-Optimized Heading & Subtitle */}
@@ -30,7 +30,7 @@ export function HomeHero({ centerCount }: HomeHeroProps) {
                 Transformez votre corps en <span className="bg-gradient-to-r from-[#ff6b6b] via-[#ff8f8f] to-white bg-clip-text text-transparent">20 minutes</span> par séance
               </h1>
               <p className="max-w-xl text-xs sm:text-base lg:text-lg font-normal leading-relaxed text-slate-300">
-                La référence de l’entraînement révolutionnaire AQ8 EMS et du sculpt électromagnétique Wonder Sculpt dans vos centres certifiés en Algérie.
+                La référence de l’entraînement révolutionnaire AQ8 EMS et de la technologie électromagnétique Wonder Axion dans vos centres certifiés en Algérie.
               </p>
             </div>
 

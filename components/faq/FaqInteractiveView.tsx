@@ -84,7 +84,7 @@ export function FaqInteractiveView() {
         </h1>
 
         <p className="text-sm sm:text-base font-medium text-slate-600 leading-relaxed">
-          Technologies AQ8 EMS & Wonder Sculpt, déroulement des séances, tenue conseillée, règles de réservation et contre-indications.
+          Technologies AQ8 EMS & Wonder Axion, déroulement des séances, tenue conseillée, règles de réservation et contre-indications.
         </p>
       </div>
 

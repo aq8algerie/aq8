@@ -46,7 +46,7 @@ export function PendingBookingRequestsPanel({
                 <div>
                   <span className="font-bold text-sm text-slate-800">{request.firstName} {request.lastName}</span>
                   <span className="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                    {request.service === 'aq8' ? 'AQ8 EMS' : request.service === 'wonder' ? 'Wonder Sculpt' : request.service}
+                    {request.service === 'aq8' ? 'AQ8 EMS' : request.service === 'wonder' ? 'Wonder Axion' : request.service}
                   </span>
                 </div>
               </div>

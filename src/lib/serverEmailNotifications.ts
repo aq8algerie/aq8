@@ -119,7 +119,7 @@ function formatDzd(amount?: number): string {
 function serviceLabel(service?: string): string {
   const value = String(service || '').toLowerCase();
   if (value === 'aq8') return 'AQ8 EMS';
-  if (value === 'wonder') return 'Wonder Sculpt';
+  if (value === 'wonder') return 'Wonder Axion';
   return service || 'Prestation AQ8';
 }
 

@@ -6,8 +6,8 @@ import { PwaRegister } from "@/components/PwaRegister";
 
 export const metadata: any = {
   metadataBase: new URL(process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "https://www.aq8algerie-dz.com"),
-  title: "AQ8 Algérie | Électrostimulation EMS & Wonder Sculpt",
-  description: "AQ8 EMS & Wonder Sculpting en Algérie. Réservez votre séance dans le centre AQ8 le plus proche.",
+  title: "AQ8 Algérie | Électrostimulation EMS & Wonder Axion",
+  description: "AQ8 EMS & Wonder Axion en Algérie. Réservez votre séance dans le centre AQ8 le plus proche.",
   icons: {
     icon: "/images/favicon.png",
     shortcut: "/images/favicon.png",

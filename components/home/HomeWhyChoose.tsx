@@ -15,7 +15,7 @@ const features = [
   },
   {
     title: "Synergie Dual Technology",
-    desc: "L'alliance unique de l'effort actif AQ8 EMS et du travail électromagnétique supramaximal Wonder Sculpt.",
+    desc: "L'alliance unique de l'effort actif AQ8 EMS et du travail électromagnétique supramaximal Wonder Axion.",
     icon: Sparkles,
     badge: "Haute Performance",
   },

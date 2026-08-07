@@ -78,15 +78,15 @@ export const DEFAULT_BLOG_POSTS: BlogPost[] = [
   },
   {
     id: "post-default-2",
-    title: "Wonder Sculpting vs EMS AQ8 : Quelle technologie est faite pour vous ?",
-    slug: "wonder-sculpting-vs-ems-aq8-comparatif",
-    excerpt: "Brûler les graisses ciblées ou renforcer 350 muscles à la fois ? Comparez les avantages uniques de Wonder Sculpt et d'AQ8 EMS pour choisir votre cure.",
+    title: "Wonder Axion vs EMS AQ8 : Quelle technologie est faite pour vous ?",
+    slug: "wonder-axion-vs-ems-aq8-comparatif",
+    excerpt: "Brûler les graisses ciblées ou renforcer 350 muscles à la fois ? Comparez les avantages uniques de Wonder Axion et d'AQ8 EMS pour choisir votre cure.",
     publicationType: "article",
     category: "wonder",
-    tags: ["Wonder Sculpt", "AQ8 EMS", "Comparatif", "Silhouette"],
+    tags: ["Wonder Axion", "AQ8 EMS", "Comparatif", "Silhouette"],
     targetCenterIds: [],
     coverImageUrl: "/images/blog/wonder-vs-ems.avif",
-    coverImageAlt: "Comparaison des technologies Wonder Body Sculpting et AQ8 EMS pour le remodelage de la silhouette",
+    coverImageAlt: "Comparaison des technologies Wonder Axion et AQ8 EMS pour le remodelage de la silhouette",
     authorName: "Yasmine Merabet",
     authorRole: "Spécialiste Remodelage AQ8",
     reviewerName: "Dr. Amine Redouane",
@@ -99,7 +99,7 @@ export const DEFAULT_BLOG_POSTS: BlogPost[] = [
       {
         id: "b22",
         type: "paragraph",
-        text: "L'EMS AQ8 utilise l'électrostimulation globale pour faire travailler l'ensemble du corps en mouvement guidé avec un coach. Wonder Sculpting combine les ondes magnétiques et électriques ciblées pour déclencher jusqu'à 36 000 contractions supramaximales en 25 minutes allongé."
+        text: "L'EMS AQ8 utilise l'électrostimulation globale pour faire travailler l'ensemble du corps en mouvement guidé avec un coach. Wonder Axion combine les ondes magnétiques et électriques ciblées pour déclencher jusqu'à 36 000 contractions supramaximales en 25 minutes allongé."
       },
       {
         id: "b23",
@@ -123,8 +123,8 @@ export const DEFAULT_BLOG_POSTS: BlogPost[] = [
     endsAt: null,
     location: "",
     scheduledAt: null,
-    seoTitle: "Wonder Sculpting vs AQ8 EMS : Le Comparatif Complet | AQ8 Algérie",
-    seoDescription: "Analyse comparative entre l'EMS globale AQ8 et le Wonder Sculpting ciblé pour sculpter votre silhouette rapidement.",
+    seoTitle: "Wonder Axion vs AQ8 EMS : Le Comparatif Complet | AQ8 Algérie",
+    seoDescription: "Analyse comparative entre l'EMS globale AQ8 et le Wonder Axion ciblé pour sculpter votre silhouette rapidement.",
     status: "published",
     featured: false,
     readingTimeMinutes: 4,
