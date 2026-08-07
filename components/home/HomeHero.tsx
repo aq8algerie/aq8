@@ -71,8 +71,8 @@ export function HomeHero({ centerCount }: HomeHeroProps) {
         </div>
 
         {/* Right Column: Hero Visual Image + Floating Glassmorphism Badges */}
-        <div className="relative flex items-end justify-center px-4 pb-6 pt-6 sm:px-8 sm:pt-8 lg:col-span-5 lg:h-full lg:px-8 lg:pb-0">
-          <div className="relative h-[260px] xs:h-[320px] sm:h-[420px] lg:h-[480px] w-full max-w-[340px] xs:max-w-[380px] sm:max-w-[460px]">
+        <div className="relative flex items-end justify-center px-4 pb-6 pt-10 sm:px-8 sm:pt-14 lg:col-span-5 lg:h-full lg:px-8 lg:pb-0">
+          <div className="relative h-[340px] xs:h-[410px] sm:h-[530px] lg:h-[600px] w-full max-w-[400px] xs:max-w-[460px] sm:max-w-[560px] lg:max-w-[600px]">
             <img
               src="/images/aq8algerie.webp"
               alt="Séance de coaching personnalisé AQ8 EMS en Algérie"
@@ -84,32 +84,32 @@ export function HomeHero({ centerCount }: HomeHeroProps) {
               className="h-full w-full object-contain object-bottom drop-shadow-[0_20px_40px_rgba(0,0,0,0.5)] transition-transform duration-700 hover:scale-[1.02]"
             />
 
-            {/* Floating Glassmorphism Badge Top Left (Adaptif Mobile & Desktop) */}
-            <div className="absolute top-1 left-1 sm:top-2 sm:-left-6 lg:-left-10 z-20 flex items-center gap-2.5 sm:gap-3 rounded-xl sm:rounded-2xl border border-white/20 bg-black/60 p-2 sm:p-3 shadow-xl backdrop-blur-md max-w-[85%] sm:max-w-none">
-              <div className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br from-[#ff5757] to-[#d93838] text-white shadow-md">
+            {/* Floating Glassmorphism Badge Top Left (Positionné plus haut au-dessus de l'image) */}
+            <div className="absolute -top-8 left-0 sm:-top-12 sm:-left-8 lg:-left-14 z-20 flex items-center gap-2.5 sm:gap-3 rounded-xl sm:rounded-2xl border border-white/20 bg-black/70 p-2.5 sm:p-3.5 shadow-2xl backdrop-blur-md">
+              <div className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br from-[#ff5757] to-[#d93838] text-white shadow-md">
                 <Zap className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1">
-                  <span className="text-[11px] sm:text-xs font-bold text-white truncate">AQ8 EMS Pro</span>
-                  <Sparkles className="h-3 w-3 shrink-0 text-[#ff7777]" />
+                  <span className="text-xs sm:text-sm font-bold text-white truncate">AQ8 EMS Pro</span>
+                  <Sparkles className="h-3.5 w-3.5 shrink-0 text-[#ff7777]" />
                 </div>
-                <span className="block text-[9px] sm:text-[10px] font-medium text-slate-300 truncate">350 muscles stimulés</span>
+                <span className="block text-[10px] sm:text-xs font-medium text-slate-300 truncate">350 muscles stimulés</span>
               </div>
             </div>
 
             {/* Floating Glassmorphism Badge Bottom Right */}
-            <div className="absolute bottom-4 right-1 sm:bottom-12 sm:-right-4 z-20 flex items-center gap-2 sm:gap-2.5 rounded-xl sm:rounded-2xl border border-white/20 bg-black/50 px-2.5 py-2 sm:px-3.5 sm:py-2.5 shadow-xl backdrop-blur-md">
+            <div className="absolute bottom-4 right-1 sm:bottom-10 sm:-right-6 z-20 flex items-center gap-2 sm:gap-2.5 rounded-xl sm:rounded-2xl border border-white/20 bg-black/60 px-3 py-2 sm:px-4 sm:py-3 shadow-2xl backdrop-blur-md">
               <div className="flex items-center gap-0.5 sm:gap-1 text-amber-400">
-                <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-amber-400" />
-                <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-amber-400" />
-                <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-amber-400" />
-                <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-amber-400" />
-                <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-amber-400" />
+                <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-amber-400" />
+                <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-amber-400" />
+                <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-amber-400" />
+                <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-amber-400" />
+                <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-amber-400" />
               </div>
-              <div className="border-l border-white/15 pl-2 sm:pl-2.5 text-left">
-                <span className="block text-[11px] sm:text-xs font-extrabold text-white">4.9 / 5</span>
-                <span className="block text-[9px] sm:text-[10px] text-slate-300">Satisfaction clients</span>
+              <div className="border-l border-white/15 pl-2 sm:pl-3 text-left">
+                <span className="block text-xs sm:text-sm font-extrabold text-white">4.9 / 5</span>
+                <span className="block text-[10px] sm:text-xs text-slate-300">Satisfaction clients</span>
               </div>
             </div>
           </div>
