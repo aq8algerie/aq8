@@ -4,6 +4,7 @@ import { SeoJsonLd } from "@/components/seo/SeoJsonLd";
 import { HomeHero } from "@/components/home/HomeHero";
 import { HomeTrustBar } from "@/components/home/HomeTrustBar";
 import { HomeTechnologies } from "@/components/home/HomeTechnologies";
+import { HomeProgramSimulator } from "@/components/home/HomeProgramSimulator";
 import { HomeCentersPreview } from "@/components/home/HomeCentersPreview";
 import { HomeWhyChoose } from "@/components/home/HomeWhyChoose";
 import { HomeHowItWorks } from "@/components/home/HomeHowItWorks";
@@ -37,6 +38,7 @@ export default async function HomePage() {
           <HomeTrustBar />
         </div>
         <HomeTechnologies />
+        <HomeProgramSimulator />
         <HomeCentersPreview centers={centers} />
         <HomeWhyChoose />
         <HomeHowItWorks />
