@@ -365,7 +365,7 @@ export default function PublicLayout({
             </p>
             <p className="text-slate-400 flex items-center gap-2 font-bold text-[#ff7777]">
               <Phone className="h-4 w-4 shrink-0" />
-              <span>{settings?.contactPhone || "+213 (0) 23 48 50 60"}</span>
+              <span>{settings?.contactPhone || "+213 795 12 84 09"}</span>
             </p>
           </div>
         </div>

@@ -963,7 +963,7 @@ export default function App() {
                   managers={managers}
                   services={services}
                   packages={packages}
-                  settings={settings || { appName: 'AQ8 Algérie', contactEmail: 'notifications@aq8algerie-dz.com', contactPhone: '+213 (0) 23 48 50 60', addressAlgérie: 'Hydra, Alger', currency: 'DZD', enableVoucherPromo: true }}
+                  settings={settings || { appName: 'AQ8 Algérie', contactEmail: 'notifications@aq8algerie-dz.com', contactPhone: '+213 795 12 84 09', addressAlgérie: 'Hydra, Alger', currency: 'DZD', enableVoucherPromo: true }}
                   appointmentsCount={appointments.length}
                   paymentsCount={payments.length}
                   totalRevenue={totalRevenue}
@@ -1061,7 +1061,7 @@ export default function App() {
                 {settings?.addressAlgérie || '12 Rue des Glycines, Hydra, Alger'}
               </p>
               <p className="text-slate-400 flex items-center gap-1.5 font-bold text-[#ff5757]">
-                <Phone className="h-4 w-4 shrink-0" /> {settings?.contactPhone || '+213 (0) 23 48 50 60'}
+                <Phone className="h-4 w-4 shrink-0" /> {settings?.contactPhone || '+213 795 12 84 09'}
               </p>
             </div>
           </div>

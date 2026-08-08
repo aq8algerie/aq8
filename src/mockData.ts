@@ -609,7 +609,7 @@ export const INITIAL_MEASUREMENTS: Measurement[] = [
 export const INITIAL_SETTINGS: GeneralSettings = {
   appName: 'AQ8 Algérie',
   contactEmail: 'notifications@aq8algerie-dz.com',
-  contactPhone: '+213 (0) 23 48 50 60',
+  contactPhone: '+213 795 12 84 09',
   addressAlgérie: '12 Rue des Glycines, Hydra, Alger',
   currency: 'DZD',
   enableVoucherPromo: true

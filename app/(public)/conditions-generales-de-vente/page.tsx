@@ -36,7 +36,7 @@ export default async function TermsOfSalePage() {
   const settings = await getServerPublicSettings();
   const appName = settings?.appName || "AQ8 Algérie";
   const address = settings?.addressAlgérie || "12 Rue des Glycines, Hydra, Alger";
-  const phone = settings?.contactPhone || "+213 (0) 23 48 50 60";
+  const phone = settings?.contactPhone || "+213 795 12 84 09";
 
   const sections: LegalDocumentSection[] = [
     {
