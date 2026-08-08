@@ -38,11 +38,11 @@ export function HomeHero({ centerCount }: HomeHeroProps) {
             <div className="flex flex-col sm:flex-row max-w-md gap-3 pt-1 sm:pt-2">
               <Link
                 href="/reservation"
-                aria-label="Réserver une séance d'essai AQ8"
-                className="group relative inline-flex min-h-12 w-full sm:w-auto items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-[#ff5757] to-[#e63e3e] px-5 sm:px-6 py-3.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-[#ff5757]/25 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#ff5757]/35 active:scale-[0.98]"
+                aria-label="Réserver une séance AQ8"
+                className="group relative inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#ff5757] via-[#ff4747] to-[#e63e3e] px-7 py-4 font-display text-sm sm:text-base font-extrabold text-white shadow-[0_12px_32px_rgba(255,87,87,0.35)] transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_20px_45px_rgba(255,87,87,0.5)] active:scale-[0.98] border border-white/20"
               >
-                <Calendar className="h-4 w-4 transition-transform group-hover:scale-110" />
-                <span>Réserver une séance d'essai</span>
+                <Calendar className="h-5 w-5 transition-transform duration-300 group-hover:rotate-12" />
+                <span>Réserver une séance</span>
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link

@@ -185,8 +185,8 @@ export const DEFAULT_BLOG_POSTS: BlogPost[] = [
   },
   {
     id: "post-default-4",
-    title: "Offre Découverte Réseau : Bilan Corporel & Essai Personnalisé AQ8",
-    slug: "offre-decouverte-seance-bilan-essai-aq8",
+    title: "Offre Découverte Réseau : Bilan Corporel & Séance Découverte",
+    slug: "offre-decouverte-seance-bilan-decouverte-aq8",
     excerpt: "Bénéficiez d'un bilan corporel complet et d'un accompagnement personnalisé dans nos 6 centres en Algérie (Alger, Blida, Tlemcen).",
     publicationType: "promotion",
     category: "actualites",

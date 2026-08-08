@@ -23,7 +23,7 @@ export function HomeFinalCTA() {
           </div>
 
           <h2 className="font-display text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl leading-tight">
-            Trouvez votre centre et réservez votre séance d'essai dès aujourd'hui.
+            Trouvez votre centre et réservez votre séance dès aujourd'hui.
           </h2>
 
           <p className="text-sm font-normal leading-relaxed text-slate-300 sm:text-base">

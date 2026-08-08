@@ -95,10 +95,10 @@ export function SettingsPanel({ settings, onSave }: SettingsPanelProps) {
           <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-rose-50/30 border border-slate-200/80 flex items-center justify-between gap-4">
             <div className="space-y-1">
               <span className="font-extrabold text-slate-900 block text-xs flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-[#ff5757]" /> Offre Découverte d'Essai
+                <Sparkles className="h-3.5 w-3.5 text-[#ff5757]" /> Offre Découverte
               </span>
               <span className="text-[11px] text-slate-500 font-medium leading-relaxed block">
-                Affiche l'appel à l'action pour la séance d'essai gratuite ou découverte sur le site vitrine.
+                Affiche l'appel à l'action pour la séance découverte sur le site vitrine.
               </span>
             </div>
             <label className="relative inline-flex items-center cursor-pointer shrink-0">

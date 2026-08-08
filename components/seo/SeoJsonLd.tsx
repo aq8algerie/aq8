@@ -49,7 +49,7 @@ export function SeoJsonLd({ type, center }: SeoJsonLdProps) {
       },
       {
         q: "Faut-il apporter une tenue spécifique ?",
-        a: "Pour l'EMS AQ8, une sous-tenue spécifique en coton respirant est requise pour assurer la parfaite conduction des impulsions. Nous vous fournissons cette tenue lors de votre première séance d'essai."
+        a: "Pour l'EMS AQ8, une sous-tenue spécifique en coton respirant est requise pour assurer la parfaite conduction des impulsions. Nous vous fournissons cette tenue lors de votre première séance."
       },
       {
         q: "Le traitement est-il douloureux ?",
