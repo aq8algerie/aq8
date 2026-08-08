@@ -16,9 +16,9 @@ const steps = [
   },
   {
     step: "03",
-    title: "Validation rapide",
-    desc: "L'équipe du centre vous confirme votre rendez-vous selon vos objectifs et les règles d'accueil.",
-    icon: MessageCircle,
+    title: "Réservation instantanée",
+    desc: "Votre créneau disponible est réservé et confirmé immédiatement en direct dans l'agenda du centre.",
+    icon: CalendarCheck,
   },
   {
     step: "04",

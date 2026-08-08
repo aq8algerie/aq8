@@ -14,7 +14,8 @@ import {
   BookOpen,
   Zap,
   Target,
-  Sparkles
+  Sparkles,
+  User
 } from "lucide-react";
 import { useData } from "@/components/context/DataProvider";
 import { getPublicCenters } from "@/src/lib/centerVisibility";
@@ -198,28 +199,43 @@ export default function PublicLayout({
             </nav>
 
             {/* Right Action Buttons */}
-            <div className="hidden lg:flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-2.5">
+              <Link
+                href="/client"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-3 text-xs font-bold text-[#242424] transition-all duration-200 hover:border-[#ff5757] hover:bg-[#fff0f0] hover:text-[#ff5757] shadow-sm"
+              >
+                <User className="h-4 w-4 text-[#ff5757]" />
+                <span>Mon Espace</span>
+              </Link>
               <Link
                 href="/reservation"
                 className="group relative inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5757] to-[#e63e3e] px-5 py-3 text-xs font-bold text-white shadow-lg shadow-[#ff5757]/25 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#ff5757]/35 active:scale-[0.98]"
               >
                 <Calendar className="h-4 w-4 transition-transform group-hover:scale-110" />
-                <span>Réserver une séance</span>
+                <span>Réserver</span>
               </Link>
               <Link
                 href="/login"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-3 text-xs font-bold text-[#242424] transition-all duration-200 hover:border-[#242424] hover:bg-slate-50 shadow-sm"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100 px-3 py-3 text-xs font-bold text-slate-600 transition-all duration-200 hover:bg-slate-200 shadow-sm"
+                title="Accès Administrateur / Coach CRM"
               >
-                <ShieldCheck className="h-4 w-4 text-[#ff5757]" />
-                <span>Accès CRM</span>
+                <ShieldCheck className="h-4 w-4 text-slate-500" />
+                <span>CRM</span>
               </Link>
             </div>
 
             {/* Mobile menu toggle */}
             <div className="flex lg:hidden items-center gap-2">
               <Link
+                href="/client"
+                className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#242424] shadow-sm"
+              >
+                <User className="h-3.5 w-3.5 text-[#ff5757]" />
+                <span>Espace</span>
+              </Link>
+              <Link
                 href="/reservation"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-[#ff5757] px-3.5 py-2.5 text-xs font-bold text-white shadow-sm"
+                className="inline-flex items-center gap-1 rounded-xl bg-[#ff5757] px-3.5 py-2 text-xs font-bold text-white shadow-sm"
               >
                 <Calendar className="h-3.5 w-3.5" />
                 <span>Réserver</span>
@@ -230,7 +246,7 @@ export default function PublicLayout({
                 aria-expanded={mobileMenuOpen}
                 aria-controls="public-mobile-menu"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2.5 text-slate-700 hover:text-black rounded-xl bg-slate-100 transition-colors"
+                className="p-2 text-slate-700 hover:text-black rounded-xl bg-slate-100 transition-colors"
               >
                 {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
@@ -242,12 +258,20 @@ export default function PublicLayout({
         {mobileMenuOpen && (
           <div id="public-mobile-menu" className="lg:hidden bg-white/98 backdrop-blur-xl border-b border-slate-200 px-4 pt-3 pb-6 space-y-3 text-xs font-bold shadow-2xl">
             <Link
+              href="/client"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-[#242424]"
+            >
+              <User className="h-4 w-4 text-[#ff5757]" />
+              Mon Espace Adhérent (RDV & Mensurations)
+            </Link>
+            <Link
               href="/reservation"
               onClick={() => setMobileMenuOpen(false)}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5757] to-[#e63e3e] px-4 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#ff5757]/20"
             >
               <Calendar className="h-4 w-4" />
-              Réserver une séance d'essai
+              Réserver une séance
             </Link>
 
             <div className="space-y-1 pt-1">
@@ -333,10 +357,11 @@ export default function PublicLayout({
           <div className="space-y-4 text-xs">
             <h4 className="font-display text-sm font-bold text-white">Navigation & Info</h4>
             <ul className="space-y-2.5 text-slate-400">
+              <li><Link href="/client" className="hover:text-white transition text-[#ff7777] font-bold">Mon Espace Adhérent</Link></li>
               <li><Link href="/aq8" className="hover:text-white transition">AQ8 EMS active</Link></li>
               <li><Link href="/wonder" className="hover:text-white transition">Wonder Axion</Link></li>
               <li><Link href="/conseils" className="hover:text-white transition">Conseils & actualités</Link></li>
-              <li><Link href="/a-propos#faq" className="hover:text-white transition text-[#ff7777]">Foire aux questions (FAQ)</Link></li>
+              <li><Link href="/a-propos#faq" className="hover:text-white transition">Foire aux questions (FAQ)</Link></li>
               <li><Link href="/a-propos" className="hover:text-white transition">À propos d'AQ8</Link></li>
             </ul>
           </div>

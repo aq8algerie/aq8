@@ -72,8 +72,8 @@ export default async function ReservationPage() {
                     desc: "Les disponibilités affichées sont synchronisées en direct avec l'agenda du centre.",
                   },
                   {
-                    title: "3. Validation par l'équipe",
-                    desc: "Dès réception, le centre bloque votre place et valide votre rendez-vous.",
+                    title: "3. Réservation instantanée",
+                    desc: "Votre créneau disponible est réservé et confirmé en direct dans l'agenda du centre sans attente.",
                   },
                 ].map((step, index) => (
                   <div key={index} className="space-y-1">

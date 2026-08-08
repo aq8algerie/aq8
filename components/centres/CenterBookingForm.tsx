@@ -347,7 +347,7 @@ export function CenterBookingForm({
       }
 
       setSuccessMsg(
-        payload?.warning || `Votre créneau est pré-réservé pour le centre ${resolvedCenterName}. L'équipe du centre vous contactera pour confirmer définitivement le rendez-vous.`,
+        payload?.warning || `Votre créneau est réservé et confirmé pour le centre ${resolvedCenterName} le ${new Date(bookingDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} à ${bookingTime}.`,
       );
 
       setFirstName("");
@@ -375,14 +375,14 @@ export function CenterBookingForm({
           </div>
           <div className="space-y-2">
             <h2 className="font-display text-xl font-bold text-emerald-900">
-              Créneau pré-réservé
+              Rendez-vous confirmé instantanément !
             </h2>
             <p className="text-sm font-medium leading-relaxed text-emerald-800">
               {successMsg}
             </p>
-            <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4 text-xs font-bold text-amber-800 space-y-1.5">
-              <p className="font-medium leading-relaxed text-amber-800">
-                La confirmation finale reste faite par l'équipe du centre après vérification du planning et du paiement.
+            <div className="mt-4 rounded-md border border-emerald-200 bg-emerald-100/60 p-4 text-xs font-bold text-emerald-900 space-y-1.5">
+              <p className="font-medium leading-relaxed text-emerald-900">
+                Votre place est verrouillée dans l'agenda du centre. Vous recevrez les détails de votre rendez-vous.
               </p>
             </div>
           </div>
@@ -391,7 +391,7 @@ export function CenterBookingForm({
             onClick={() => setSuccessMsg("")}
             className="w-full rounded-md bg-[#353535] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#ff5757] cursor-pointer"
           >
-            Faire une autre réservation
+            Réserver un autre créneau
           </button>
         </div>
       </div>
@@ -404,13 +404,13 @@ export function CenterBookingForm({
       
       <div className="mb-5 space-y-2">
         <span className="text-xs font-bold uppercase text-[#ff5757]">
-          Réservation en ligne
+          Réservation en ligne instantanée
         </span>
         <h2 className="font-display text-xl font-bold text-[#353535]">
           {resolvedCenterName ? `Dans votre centre de ${resolvedCenterCity}` : "Séance dans l'un de nos centres"}
         </h2>
         <p className="text-sm font-medium leading-relaxed text-slate-500">
-          Choisissez une prestation, une date et une heure disponible. Le créneau est bloqué en attente de confirmation par le centre.
+          Choisissez votre prestation, la date et l'heure souhaitées. Le créneau est bloqué et confirmé directement en temps réel.
         </p>
       </div>
 
@@ -712,7 +712,7 @@ export function CenterBookingForm({
             <button
               type="submit"
               disabled={!canSubmit}
-              className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#ff5757] px-5 py-3 text-sm font-bold text-white transition-premium hover:bg-[#e94949] hover:shadow-lg hover:shadow-[#ff5757]/15 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#ff5757] px-5 py-3.5 text-sm font-bold text-white transition-premium hover:bg-[#e94949] hover:shadow-lg hover:shadow-[#ff5757]/15 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
@@ -722,18 +722,18 @@ export function CenterBookingForm({
               ) : (
                 <>
                   <Calendar className="h-4 w-4" />
-                  Pré-réserver mon créneau
+                  Réserver mon créneau (Confirmation instantanée)
                 </>
               )}
             </button>
 
             <p className="text-xs font-medium leading-relaxed text-slate-500 text-center">
-              La réservation bloque une place disponible, puis l'équipe du centre confirme définitivement le rendez-vous.
-              En envoyant cette demande, vous reconnaissez avoir pris connaissance des{" "}
+              Votre réservation bloque immédiatement une place disponible et la confirme en direct dans l'agenda.
+              En envoyant cette réservation, vous reconnaissez avoir pris connaissance des{" "}
               <a href="/conditions-generales-de-vente" className="font-bold text-slate-700 underline underline-offset-2 hover:text-[#ff5757]">CGV</a>
               {" "}et de la{" "}
               <a href="/politique-de-confidentialite" className="font-bold text-slate-700 underline underline-offset-2 hover:text-[#ff5757]">politique de confidentialité</a>.
-              Aucun paiement n'est déclenché en ligne.
+              Aucun paiement n'est requis en ligne.
             </p>
           </form>
         </>
