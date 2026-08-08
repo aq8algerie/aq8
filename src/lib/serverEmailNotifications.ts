@@ -598,6 +598,35 @@ async function sendPaymentRecordedEmail(db: Firestore, payload: Extract<CrmEmail
   });
 }
 
+export async function sendCustomPasswordResetEmail(params: {
+  email: string;
+  name?: string;
+  resetLink: string;
+}): Promise<EmailResult> {
+  const { email, name, resetLink } = params;
+  const config = getEmailConfig();
+
+  const recipientName = name || email.split('@')[0];
+
+  const template = emailLayout({
+    eyebrow: 'Sécurité & Accès CRM',
+    title: 'Définition de votre mot de passe gérant AQ8',
+    intro: `Bonjour ${escapeHtml(recipientName)}, vous avez demandé la définition ou la réinitialisation de votre mot de passe pour accéder au CRM AQ8 Algérie. Cliquez sur le bouton ci-dessous pour choisir votre nouveau mot de passe en toute sécurité.`,
+    note: "Ce lien de réinitialisation est personnel, sécurisé et à usage unique. Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail.",
+    cta: {
+      label: 'Définir mon mot de passe',
+      href: resetLink,
+    },
+  });
+
+  return sendEmail({
+    to: [email],
+    replyTo: config.replyTo,
+    subject: 'AQ8 Algérie — Initialisation sécurisée de votre mot de passe',
+    ...template,
+  });
+}
+
 export async function sendCrmEmailNotification(db: Firestore, payload: CrmEmailNotificationPayload): Promise<EmailResult> {
   switch (payload.type) {
     case 'booking_request_accepted':

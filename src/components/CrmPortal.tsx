@@ -161,16 +161,19 @@ export function CrmPortal({
     }
     setIsResetting(true);
     try {
-      await sendPasswordResetEmail(auth, trimmed);
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: trimmed }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.ok === false) {
+        throw new Error(data.error || 'Impossible d\'envoyer l\'e-mail.');
+      }
       setResetSent(true);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Impossible d\'envoyer l\'e-mail. Vérifiez l\'adresse saisie.';
-      // Translate common Firebase error codes
-      if (msg.includes('user-not-found') || msg.includes('invalid-email')) {
-        setResetError('Adresse e-mail introuvable ou invalide.');
-      } else {
-        setResetError(msg);
-      }
+      setResetError(msg);
     } finally {
       setIsResetting(false);
     }
