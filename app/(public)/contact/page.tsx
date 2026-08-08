@@ -37,7 +37,7 @@ export default async function ContactPage() {
   const contactInfo = {
     address: settings['addressAlgérie'] || centers[0]?.address || 'Algérie',
     phone: settings.contactPhone || centers[0]?.phone || '',
-    email: settings.contactEmail || 'notifications@aq8algerie-dz.com',
+    email: settings.contactEmail || 'aq8algerie@gmail.com',
   };
 
   return (
