@@ -842,7 +842,7 @@ export function SuperAdminViews({
                       <label className="font-semibold text-slate-600 block">Téléphone Direct *</label>
                       <input
                         type="text" required value={centerPhone} onChange={(e) => setCenterPhone(e.target.value)}
-                        placeholder="+213 (0) 23 48 90 91" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757]"
+                        placeholder="+213 795 12 84 09" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757]"
                       />
                     </div>
                     <div className="space-y-1">

@@ -201,7 +201,7 @@ export function generateJsonLd(route: string, center?: Center): string {
       "description": siteConfig.description,
       "contactPoint": {
         "@type": "ContactPoint",
-        "telephone": "+213-23-48-50-60",
+        "telephone": "+213 795 12 84 09",
         "contactType": "customer service",
         "areaServed": "DZ",
         "availableLanguage": ["French", "Arabic"]
