@@ -67,6 +67,8 @@ export function ClientProfileView({
   const age = calculateAge(client.dob);
   const isSuspended = client.status === 'suspended';
 
+  const [activeProfileTab, setActiveProfileTab] = React.useState<'profile' | 'measurements' | 'packages'>('profile');
+
   // Stats calculation
   const completedSessionsCount = clientApts.filter(a => a.status === 'completed').length;
   const activePkg = clientPkgs.find(cp => cp.status === 'active' && cp.sessionsRemaining > 0);
@@ -171,6 +173,45 @@ export function ClientProfileView({
         </div>
       </div>
 
+      {/* Profile Sub-Tabs Bar */}
+      <div className="flex border-b border-slate-200 space-x-2 sm:space-x-4 overflow-x-auto">
+        <button
+          type="button"
+          onClick={() => setActiveProfileTab('profile')}
+          className={`pb-3 px-2 text-xs sm:text-sm font-extrabold border-b-2 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+            activeProfileTab === 'profile'
+              ? 'border-[#ff5757] text-[#ff5757]'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <User className="h-4 w-4" /> Dossier Client & Santé
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveProfileTab('measurements')}
+          className={`pb-3 px-2 text-xs sm:text-sm font-extrabold border-b-2 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+            activeProfileTab === 'measurements'
+              ? 'border-[#ff5757] text-[#ff5757]'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Scale className="h-4 w-4 text-[#ff5757]" /> Section Mensurations & Graphique ({clientMeas.length})
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveProfileTab('packages')}
+          className={`pb-3 px-2 text-xs sm:text-sm font-extrabold border-b-2 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+            activeProfileTab === 'packages'
+              ? 'border-[#ff5757] text-[#ff5757]'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Award className="h-4 w-4" /> Forfaits & Séances ({clientPkgs.length})
+        </button>
+      </div>
+
       {/* KPI Metrics Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-xs flex items-center gap-3">
@@ -178,7 +219,7 @@ export function ClientProfileView({
             <CheckCircle2 className="h-5 w-5" />
           </div>
           <div>
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Séances Végétées</span>
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Séances Faites</span>
             <span className="text-base font-black font-display text-slate-800">{completedSessionsCount} faites</span>
           </div>
         </div>
@@ -193,13 +234,16 @@ export function ClientProfileView({
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-xs flex items-center gap-3">
+        <div
+          onClick={() => setActiveProfileTab('measurements')}
+          className="p-4 rounded-2xl bg-white border border-slate-100 shadow-xs flex items-center gap-3 cursor-pointer hover:border-[#ff5757]/40 transition"
+        >
           <div className="h-10 w-10 shrink-0 rounded-xl bg-rose-50 text-[#ff5757] flex items-center justify-center">
             <Scale className="h-5 w-5" />
           </div>
           <div>
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Suivis Bilan</span>
-            <span className="text-base font-black font-display text-slate-800">{clientMeas.length} enregistrés</span>
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Mensurations Loguées</span>
+            <span className="text-base font-black font-display text-[#ff5757]">{clientMeas.length} enregistrées ➔</span>
           </div>
         </div>
 
@@ -216,238 +260,301 @@ export function ClientProfileView({
         </div>
       </div>
 
-      {/* Main Grid Layout */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Left main columns */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Detailed Profile Information */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs space-y-4">
-            <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-2">
-              <User className="h-4 w-4 text-[#ff5757]" /> Fiche Informations Détaillées
-            </h4>
+      {/* Tab 1: Profile & Dossier Santé */}
+      {activeProfileTab === 'profile' && (
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            {/* Detailed Profile Information */}
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs space-y-4">
+              <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-2">
+                <User className="h-4 w-4 text-[#ff5757]" /> Fiche Informations Détaillées
+              </h4>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <div className="flex justify-between items-center py-1 border-b border-slate-200/50">
-                  <span className="text-slate-400 font-semibold">Date de naissance :</span>
-                  <span className="font-semibold text-slate-700">{client.dob ? `${client.dob} (${age} ans)` : '-'}</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <div className="flex justify-between items-center py-1 border-b border-slate-200/50">
+                    <span className="text-slate-400 font-semibold">Date de naissance :</span>
+                    <span className="font-semibold text-slate-700">{client.dob ? `${client.dob} (${age} ans)` : '-'}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-slate-200/50">
+                    <span className="text-slate-400 font-semibold">Profession :</span>
+                    <span className="font-semibold text-slate-700 truncate max-w-[150px]">{client.profession || '-'}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-400 font-semibold">Groupe Sanguin :</span>
+                    <span className="font-bold text-[#ff5757] font-mono">{client.bloodType || '-'}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center py-1 border-b border-slate-200/50">
-                  <span className="text-slate-400 font-semibold">Profession :</span>
-                  <span className="font-semibold text-slate-700 truncate max-w-[150px]">{client.profession || '-'}</span>
-                </div>
-                <div className="flex justify-between items-center py-1">
-                  <span className="text-slate-400 font-semibold">Groupe Sanguin :</span>
-                  <span className="font-bold text-[#ff5757] font-mono">{client.bloodType || '-'}</span>
+
+                <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <span className="font-bold text-slate-400 block text-[10px] uppercase tracking-wider">🚨 En Cas d'Urgence</span>
+                  <div className="flex justify-between items-center py-1 border-b border-slate-200/50">
+                    <span className="text-slate-400 font-semibold">Contact :</span>
+                    <span className="font-semibold text-slate-700">{client.emergencyContactName || '-'}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-400 font-semibold">Téléphone :</span>
+                    <span className="font-semibold text-slate-700 font-mono">{client.emergencyContactPhone || '-'}</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <span className="font-bold text-slate-400 block text-[10px] uppercase tracking-wider">🚨 En Cas d'Urgence</span>
-                <div className="flex justify-between items-center py-1 border-b border-slate-200/50">
-                  <span className="text-slate-400 font-semibold">Contact :</span>
-                  <span className="font-semibold text-slate-700">{client.emergencyContactName || '-'}</span>
+              {/* Sport Goals tags */}
+              {client.sportGoals && client.sportGoals.length > 0 && (
+                <div className="space-y-2 pt-2">
+                  <span className="font-bold text-slate-400 text-[10px] uppercase tracking-wider block">🎯 Objectifs Sportifs & Remise en Forme</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {client.sportGoals.map((goal, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1 bg-[#ff5757]/5 border border-[#ff5757]/20 text-[#ff5757] px-3 py-1 rounded-xl text-[10px] font-bold">
+                        <Heart className="h-3 w-3 fill-[#ff5757]" /> {goal}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex justify-between items-center py-1">
-                  <span className="text-slate-400 font-semibold">Téléphone :</span>
-                  <span className="font-semibold text-slate-700 font-mono">{client.emergencyContactPhone || '-'}</span>
+              )}
+            </div>
+
+            {/* Medical Alerts & Coach notes */}
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs space-y-4">
+              <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <ShieldAlert className="h-4 w-4 text-rose-500" /> Dossier Santé & Contre-indications
+              </h4>
+
+              {client.medicalConditions ? (
+                <div className="p-4 bg-rose-50 border border-rose-200/80 text-rose-700 rounded-2xl flex items-start gap-3 shadow-xs">
+                  <ShieldAlert className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1 text-xs">
+                    <span className="font-extrabold block uppercase tracking-wide text-[10px] text-rose-900">Alerte Médicale / Vigilance :</span>
+                    <p className="font-semibold leading-relaxed text-rose-800">{client.medicalConditions}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-2xl text-xs font-bold flex items-center gap-2">
+                  🟢 Aucune contre-indication ou problème de santé déclaré.
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <span className="font-bold text-slate-400 text-[10px] uppercase tracking-wider block">📝 Remarques & Suivi Entraînement Coach</span>
+                <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs text-slate-700 italic leading-relaxed">
+                  {client.notes ? client.notes : "Aucune note sportive supplémentaire enregistrée."}
                 </div>
               </div>
             </div>
 
-            {/* Sport Goals tags */}
-            {client.sportGoals && client.sportGoals.length > 0 && (
-              <div className="space-y-2 pt-2">
-                <span className="font-bold text-slate-400 text-[10px] uppercase tracking-wider block">🎯 Objectifs Sportifs & Remise en Forme</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {client.sportGoals.map((goal, idx) => (
-                    <span key={idx} className="inline-flex items-center gap-1 bg-[#ff5757]/5 border border-[#ff5757]/20 text-[#ff5757] px-3 py-1 rounded-xl text-[10px] font-bold">
-                      <Heart className="h-3 w-3 fill-[#ff5757]" /> {goal}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+            {/* Session logs */}
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs space-y-4">
+              <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <Calendar className="h-4 w-4 text-[#ff5757]" /> Historique des Séances ({clientApts.length})
+              </h4>
 
-          {/* Medical Alerts & Coach notes */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs space-y-4">
-            <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
-              <ShieldAlert className="h-4 w-4 text-rose-500" /> Dossier Santé & Contre-indications
-            </h4>
-
-            {client.medicalConditions ? (
-              <div className="p-4 bg-rose-50 border border-rose-200/80 text-rose-700 rounded-2xl flex items-start gap-3 shadow-xs">
-                <ShieldAlert className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
-                <div className="space-y-1 text-xs">
-                  <span className="font-extrabold block uppercase tracking-wide text-[10px] text-rose-900">Alerte Médicale / Vigilance :</span>
-                  <p className="font-semibold leading-relaxed text-rose-800">{client.medicalConditions}</p>
-                </div>
-              </div>
-            ) : (
-              <div className="p-3.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-2xl text-xs font-bold flex items-center gap-2">
-                🟢 Aucune contre-indication ou problème de santé déclaré.
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <span className="font-bold text-slate-400 text-[10px] uppercase tracking-wider block">📝 Remarques & Suivi Entraînement Coach</span>
-              <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs text-slate-700 italic leading-relaxed">
-                {client.notes ? client.notes : "Aucune note sportive supplémentaire enregistrée."}
-              </div>
-            </div>
-          </div>
-
-          {/* Detailed Measurements History Section */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
-              <div className="space-y-0.5">
-                <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                  <Scale className="h-4 w-4 text-[#ff5757]" /> Suivi Détaillé des Mensurations & Bilan Corporel ({clientMeas.length})
-                </h4>
-                <p className="text-[11px] text-slate-400 font-medium">Historique des prises de mesures anatomiques en centre</p>
-              </div>
-              <button
-                type="button"
-                onClick={onLogMeasurement}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-[#ff5757] px-3.5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-[#e03030] cursor-pointer w-fit"
-              >
-                <Scale className="h-3.5 w-3.5" /> Loguer mensurations
-              </button>
-            </div>
-
-            {clientMeas.length > 0 ? (
-              <div className="space-y-5">
-                {/* Latest Measurement Highlights Card */}
-                {(() => {
-                  const sorted = [...clientMeas].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-                  const latest = sorted[0];
-                  const initial = sorted[sorted.length - 1];
-
-                  const weightDiff = sorted.length > 1 && latest.weight && initial.weight ? (latest.weight - initial.weight).toFixed(1) : null;
-                  const waistDiff = sorted.length > 1 && latest.waist && initial.waist ? (latest.waist - initial.waist).toFixed(1) : null;
-
-                  return (
-                    <div className="rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 p-4 text-white shadow-md space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#ff7777] bg-[#ff5757]/20 border border-[#ff5757]/30 px-2.5 py-1 rounded-lg">
-                          Dernier Bilan Logué • {latest.date}
+              {clientApts.length > 0 ? (
+                <div className="divide-y divide-slate-100">
+                  {[...clientApts].sort((a, b) => b.dateTime.localeCompare(a.dateTime)).map(apt => {
+                    const srv = services.find(s => s.id === apt.serviceId);
+                    return (
+                      <div key={apt.id} className="py-3.5 flex justify-between items-center text-xs">
+                        <div className="space-y-1">
+                          <span className="font-bold text-slate-800 block">{srv?.name || 'Prestation AQ8'}</span>
+                          <span className="font-mono text-[11px] text-slate-500 block">{formatDateTime(apt.dateTime)}</span>
+                          {apt.notes && <p className="text-[10px] text-slate-400 italic">Notes gérant : "{apt.notes}"</p>}
+                        </div>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          apt.status === 'completed'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : apt.status === 'booked'
+                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                            : 'bg-slate-100 text-slate-500 border border-slate-200'
+                        }`}>
+                          {apt.status === 'completed' ? 'Effectuée' : apt.status === 'booked' ? 'Planifiée' : 'Annulée'}
                         </span>
-                        {weightDiff !== null && (
-                          <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full ${
-                            Number(weightDiff) <= 0 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                          }`}>
-                            Poids global : {Number(weightDiff) > 0 ? `+${weightDiff}` : weightDiff} kg
-                          </span>
-                        )}
                       </div>
-
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                        <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
-                          <span className="block text-[10px] text-slate-400 uppercase">Poids</span>
-                          <span className="text-base font-black text-white">{latest.weight ? `${latest.weight} kg` : '-'}</span>
-                        </div>
-                        <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
-                          <span className="block text-[10px] text-slate-400 uppercase">Tour de Taille</span>
-                          <span className="text-base font-black text-white">{latest.waist ? `${latest.waist} cm` : '-'}</span>
-                        </div>
-                        <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
-                          <span className="block text-[10px] text-slate-400 uppercase">Tour d'Hanches</span>
-                          <span className="text-base font-black text-white">{latest.hips ? `${latest.hips} cm` : '-'}</span>
-                        </div>
-                        <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
-                          <span className="block text-[10px] text-slate-400 uppercase">Cuisses / Poitrine</span>
-                          <span className="text-sm font-bold text-slate-200">
-                            {latest.thighs ? `${latest.thighs}cm` : '-'} / {latest.chest ? `${latest.chest}cm` : '-'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {(latest.bodyFat || latest.muscleMass) && (
-                        <div className="flex gap-4 pt-1 text-xs border-t border-white/10 font-medium">
-                          {latest.bodyFat && (
-                            <span className="text-emerald-400">Masse Graisseuse : <strong className="font-bold">{latest.bodyFat}%</strong></span>
-                          )}
-                          {latest.muscleMass && (
-                            <span className="text-[#ff7777]">Masse Musculaire : <strong className="font-bold">{latest.muscleMass}%</strong></span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-
-                {/* Measurements History Table */}
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase font-bold text-slate-500">
-                        <th className="py-2.5 px-3">Date</th>
-                        <th className="py-2.5 px-3">Poids</th>
-                        <th className="py-2.5 px-3">Taille</th>
-                        <th className="py-2.5 px-3">Hanches</th>
-                        <th className="py-2.5 px-3">Cuisses</th>
-                        <th className="py-2.5 px-3">Poitrine</th>
-                        <th className="py-2.5 px-3">Gras / Muscle</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 font-medium">
-                      {[...clientMeas]
-                        .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
-                        .map((m, idx) => (
-                          <tr key={m.id || idx} className="hover:bg-slate-50/80 transition">
-                            <td className="py-2.5 px-3 font-bold text-slate-800 whitespace-nowrap">{m.date}</td>
-                            <td className="py-2.5 px-3 font-black text-[#ff5757]">{m.weight} kg</td>
-                            <td className="py-2.5 px-3 text-slate-700">{m.waist ? `${m.waist} cm` : '-'}</td>
-                            <td className="py-2.5 px-3 text-slate-700">{m.hips ? `${m.hips} cm` : '-'}</td>
-                            <td className="py-2.5 px-3 text-slate-700">{m.thighs ? `${m.thighs} cm` : '-'}</td>
-                            <td className="py-2.5 px-3 text-slate-700">{m.chest ? `${m.chest} cm` : '-'}</td>
-                            <td className="py-2.5 px-3 text-slate-600">
-                              {m.bodyFat ? `${m.bodyFat}% G` : ''} {m.muscleMass ? `${m.muscleMass}% M` : ''} {!m.bodyFat && !m.muscleMass && '-'}
-                            </td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
+                    );
+                  })}
                 </div>
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center space-y-3">
-                <Scale className="mx-auto h-8 w-8 text-slate-400" />
-                <div className="space-y-1">
-                  <p className="text-xs font-bold text-slate-700">Aucune fiche de mensurations loguée</p>
-                  <p className="text-[11px] text-slate-400 max-w-sm mx-auto">
-                    Prenez le poids et les mensurations anatomiques lors du bilan initial pour suivre la progression de l'adhérent.
-                  </p>
+              ) : (
+                <div className="py-6 text-center text-slate-400 text-xs italic">
+                  Aucune séance passée enregistrée pour cet adhérent.
                 </div>
-                <button
-                  type="button"
-                  onClick={onLogMeasurement}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#353535] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#ff5757] cursor-pointer"
-                >
-                  <Scale className="h-3.5 w-3.5 text-[#ff7777]" /> Enregistrer un bilan
-                </button>
-              </div>
-            )}
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <ActivePackageCard
+              clientPackages={clientPkgs}
+              packages={packages}
+              onAssignClick={onAssignPackage}
+            />
+            <MeasurementChart
+              measurements={clientMeas}
+              onLogMeasurementClick={onLogMeasurement}
+            />
           </div>
         </div>
+      )}
 
-        {/* Right sidebars */}
+      {/* Tab 2: Section Mensurations Détaillée (Tableau + Graphique) */}
+      {activeProfileTab === 'measurements' && (
         <div className="space-y-6">
-          {/* Active Package display */}
-          <ActivePackageCard
-            clientPackages={clientPkgs}
-            packages={packages}
-            onAssignClick={onAssignPackage}
-          />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-3xl p-6 border border-slate-100 shadow-xs">
+            <div className="space-y-1">
+              <span className="text-xs font-bold uppercase text-[#ff5757] tracking-wider">
+                Suivi Anatomique Adhérent
+              </span>
+              <h3 className="text-2xl font-black font-display text-slate-900">
+                Tableau & Graphique des Mensurations
+              </h3>
+              <p className="text-xs text-slate-500 font-medium">
+                Consultez l'historique complet des relevés, le tableau comparatif et le graphique d'amincissement.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onLogMeasurement}
+              className="inline-flex items-center gap-2 rounded-2xl bg-[#ff5757] px-5 py-3 text-xs font-extrabold text-white shadow-md transition hover:bg-[#e03030] cursor-pointer w-fit"
+            >
+              <Scale className="h-4 w-4" /> Loguer des mensurations
+            </button>
+          </div>
 
-          {/* Weight graph tracking */}
-          <MeasurementChart
-            measurements={clientMeas}
-            onLogMeasurementClick={onLogMeasurement}
-          />
+          {/* Grid with Table & Chart */}
+          <div className="grid lg:grid-cols-12 gap-6">
+            {/* Table Column */}
+            <div className="lg:col-span-7 bg-white rounded-3xl p-6 border border-slate-100 shadow-xs space-y-4">
+              <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <Scale className="h-4 w-4 text-[#ff5757]" /> Tableau des Mensurations Loguées ({clientMeas.length})
+              </h4>
+
+              {clientMeas.length > 0 ? (
+                <div className="space-y-4">
+                  {/* Latest Measurement Highlight Card */}
+                  {(() => {
+                    const sorted = [...clientMeas].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+                    const latest = sorted[0];
+                    const initial = sorted[sorted.length - 1];
+                    const weightDiff = sorted.length > 1 && latest.weight && initial.weight ? (latest.weight - initial.weight).toFixed(1) : null;
+
+                    return (
+                      <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-5 text-white shadow-lg space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#ff7777] bg-[#ff5757]/20 border border-[#ff5757]/30 px-3 py-1 rounded-lg">
+                            Dernier Relevé • {latest.date}
+                          </span>
+                          {weightDiff !== null && (
+                            <span className={`text-[11px] font-extrabold px-3 py-1 rounded-full ${
+                              Number(weightDiff) <= 0 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                            }`}>
+                              Progression : {Number(weightDiff) > 0 ? `+${weightDiff}` : weightDiff} kg
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                          <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
+                            <span className="block text-[10px] text-slate-400 uppercase font-bold">Poids</span>
+                            <span className="text-lg font-black text-white">{latest.weight ? `${latest.weight} kg` : '-'}</span>
+                          </div>
+                          <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
+                            <span className="block text-[10px] text-slate-400 uppercase font-bold">Taille</span>
+                            <span className="text-lg font-black text-white">{latest.waist ? `${latest.waist} cm` : '-'}</span>
+                          </div>
+                          <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
+                            <span className="block text-[10px] text-slate-400 uppercase font-bold">Hanches</span>
+                            <span className="text-lg font-black text-white">{latest.hips ? `${latest.hips} cm` : '-'}</span>
+                          </div>
+                          <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
+                            <span className="block text-[10px] text-slate-400 uppercase font-bold">Cuisses</span>
+                            <span className="text-lg font-black text-white">{latest.thighs ? `${latest.thighs} cm` : '-'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Full Data Table */}
+                  <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-200 bg-slate-100 text-[10px] uppercase font-bold text-slate-600">
+                          <th className="py-3 px-3">Date</th>
+                          <th className="py-3 px-3">Poids</th>
+                          <th className="py-3 px-3">Taille</th>
+                          <th className="py-3 px-3">Hanches</th>
+                          <th className="py-3 px-3">Cuisses</th>
+                          <th className="py-3 px-3">Poitrine</th>
+                          <th className="py-3 px-3">Masse Gras %</th>
+                          <th className="py-3 px-3">Masse Muscle %</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+                        {[...clientMeas]
+                          .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+                          .map((m, idx) => (
+                            <tr key={m.id || idx} className="hover:bg-slate-50 transition">
+                              <td className="py-3 px-3 font-bold text-slate-900 whitespace-nowrap">{m.date}</td>
+                              <td className="py-3 px-3 font-black text-[#ff5757]">{m.weight} kg</td>
+                              <td className="py-3 px-3">{m.waist ? `${m.waist} cm` : '-'}</td>
+                              <td className="py-3 px-3">{m.hips ? `${m.hips} cm` : '-'}</td>
+                              <td className="py-3 px-3">{m.thighs ? `${m.thighs} cm` : '-'}</td>
+                              <td className="py-3 px-3">{m.chest ? `${m.chest} cm` : '-'}</td>
+                              <td className="py-3 px-3 text-emerald-600 font-bold">{m.bodyFat ? `${m.bodyFat}%` : '-'}</td>
+                              <td className="py-3 px-3 text-rose-600 font-bold">{m.muscleMass ? `${m.muscleMass}%` : '-'}</td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center space-y-3">
+                  <Scale className="mx-auto h-10 w-10 text-slate-400" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-slate-800">Aucune mensuration loguée pour le moment</p>
+                    <p className="text-xs text-slate-500 max-w-md mx-auto">
+                      Prenez le poids et les mensurations anatomiques lors du bilan initial pour remplir le tableau de suivi.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onLogMeasurement}
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#ff5757] px-4 py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-[#e03030]"
+                  >
+                    <Scale className="h-4 w-4" /> Enregistrer le 1er bilan
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Graph Column */}
+            <div className="lg:col-span-5 space-y-6">
+              <MeasurementChart
+                measurements={clientMeas}
+                onLogMeasurementClick={onLogMeasurement}
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Tab 3: Forfaits & Abonnements */}
+      {activeProfileTab === 'packages' && (
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <ActivePackageCard
+              clientPackages={clientPkgs}
+              packages={packages}
+              onAssignClick={onAssignPackage}
+            />
+          </div>
+          <div className="space-y-6">
+            <MeasurementChart
+              measurements={clientMeas}
+              onLogMeasurementClick={onLogMeasurement}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
