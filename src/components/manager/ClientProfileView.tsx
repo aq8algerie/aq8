@@ -53,7 +53,9 @@ export function ClientProfileView({
   // Filter for this client
   const clientApts = appointments.filter(a => a.clientId === client.id);
   const clientPkgs = clientPackages.filter(cp => cp.clientId === client.id);
-  const clientMeas = measurements.filter(m => m.clientId === client.id);
+  const clientMeas = (measurements || []).filter(m =>
+    m && m.clientId && String(m.clientId).trim().toLowerCase() === String(client.id).trim().toLowerCase()
+  );
 
   // Calculate age if DOB exists
   const calculateAge = (dobString?: string) => {
@@ -196,7 +198,7 @@ export function ClientProfileView({
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
-          <Scale className="h-4 w-4 text-[#ff5757]" /> Section Mensurations & Graphique ({clientMeas.length})
+          <Scale className="h-4 w-4 text-[#ff5757]" /> Mensurations et suivis ({clientMeas.length})
         </button>
 
         <button

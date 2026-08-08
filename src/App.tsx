@@ -283,42 +283,42 @@ export default function App() {
 
     const unsubscribeManagers = onSnapshot(managersRef, (snapshot) => {
       const list: CenterManager[] = [];
-      snapshot.forEach(doc => list.push(doc.data() as CenterManager));
+      snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as CenterManager));
       setManagers(list);
       AQ8Database.saveManagers(list);
     });
 
     const unsubscribeClients = onSnapshot(clientsRef, (snapshot) => {
       const list: Client[] = [];
-      snapshot.forEach(doc => list.push(doc.data() as Client));
+      snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as Client));
       setClients(list);
       AQ8Database.saveClients(list);
     });
 
     const unsubscribeAppointments = onSnapshot(appointmentsRef, (snapshot) => {
       const list: Appointment[] = [];
-      snapshot.forEach(doc => list.push(doc.data() as Appointment));
+      snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as Appointment));
       setAppointments(list);
       AQ8Database.saveAppointments(list);
     });
 
     const unsubscribeClientPackages = onSnapshot(clientPackagesRef, (snapshot) => {
       const list: ClientPackage[] = [];
-      snapshot.forEach(doc => list.push(doc.data() as ClientPackage));
+      snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as ClientPackage));
       setClientPackages(list);
       AQ8Database.saveClientPackages(list);
     });
 
     const unsubscribePayments = onSnapshot(paymentsRef, (snapshot) => {
       const list: Payment[] = [];
-      snapshot.forEach(doc => list.push(doc.data() as Payment));
+      snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as Payment));
       setPayments(list);
       AQ8Database.savePayments(list);
     });
 
     const unsubscribeMeasurements = onSnapshot(measurementsRef, (snapshot) => {
       const list: Measurement[] = [];
-      snapshot.forEach(doc => list.push(doc.data() as Measurement));
+      snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as Measurement));
       setMeasurements(list);
       AQ8Database.saveMeasurements(list);
     });
