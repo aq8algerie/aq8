@@ -298,39 +298,135 @@ export function ClientProfileView({
             </div>
           </div>
 
-          {/* Session logs */}
+          {/* Detailed Measurements History Section */}
           <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs space-y-4">
-            <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
-              <Calendar className="h-4 w-4 text-[#ff5757]" /> Historique des Séances ({clientApts.length})
-            </h4>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div className="space-y-0.5">
+                <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                  <Scale className="h-4 w-4 text-[#ff5757]" /> Suivi Détaillé des Mensurations & Bilan Corporel ({clientMeas.length})
+                </h4>
+                <p className="text-[11px] text-slate-400 font-medium">Historique des prises de mesures anatomiques en centre</p>
+              </div>
+              <button
+                type="button"
+                onClick={onLogMeasurement}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[#ff5757] px-3.5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-[#e03030] cursor-pointer w-fit"
+              >
+                <Scale className="h-3.5 w-3.5" /> Loguer mensurations
+              </button>
+            </div>
 
-            {clientApts.length > 0 ? (
-              <div className="divide-y divide-slate-100">
-                {[...clientApts].sort((a, b) => b.dateTime.localeCompare(a.dateTime)).map(apt => {
-                  const srv = services.find(s => s.id === apt.serviceId);
+            {clientMeas.length > 0 ? (
+              <div className="space-y-5">
+                {/* Latest Measurement Highlights Card */}
+                {(() => {
+                  const sorted = [...clientMeas].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+                  const latest = sorted[0];
+                  const initial = sorted[sorted.length - 1];
+
+                  const weightDiff = sorted.length > 1 && latest.weight && initial.weight ? (latest.weight - initial.weight).toFixed(1) : null;
+                  const waistDiff = sorted.length > 1 && latest.waist && initial.waist ? (latest.waist - initial.waist).toFixed(1) : null;
+
                   return (
-                    <div key={apt.id} className="py-3.5 flex justify-between items-center text-xs">
-                      <div className="space-y-1">
-                        <span className="font-bold text-slate-800 block">{srv?.name || 'Prestation AQ8'}</span>
-                        <span className="font-mono text-[11px] text-slate-500 block">{formatDateTime(apt.dateTime)}</span>
-                        {apt.notes && <p className="text-[10px] text-slate-400 italic">Notes gérant : "{apt.notes}"</p>}
+                    <div className="rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 p-4 text-white shadow-md space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#ff7777] bg-[#ff5757]/20 border border-[#ff5757]/30 px-2.5 py-1 rounded-lg">
+                          Dernier Bilan Logué • {latest.date}
+                        </span>
+                        {weightDiff !== null && (
+                          <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full ${
+                            Number(weightDiff) <= 0 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                          }`}>
+                            Poids global : {Number(weightDiff) > 0 ? `+${weightDiff}` : weightDiff} kg
+                          </span>
+                        )}
                       </div>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        apt.status === 'completed'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          : apt.status === 'booked'
-                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                          : 'bg-slate-100 text-slate-500 border border-slate-200'
-                      }`}>
-                        {apt.status === 'completed' ? 'Effectuée' : apt.status === 'booked' ? 'Planifiée' : 'Annulée'}
-                      </span>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                        <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
+                          <span className="block text-[10px] text-slate-400 uppercase">Poids</span>
+                          <span className="text-base font-black text-white">{latest.weight ? `${latest.weight} kg` : '-'}</span>
+                        </div>
+                        <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
+                          <span className="block text-[10px] text-slate-400 uppercase">Tour de Taille</span>
+                          <span className="text-base font-black text-white">{latest.waist ? `${latest.waist} cm` : '-'}</span>
+                        </div>
+                        <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
+                          <span className="block text-[10px] text-slate-400 uppercase">Tour d'Hanches</span>
+                          <span className="text-base font-black text-white">{latest.hips ? `${latest.hips} cm` : '-'}</span>
+                        </div>
+                        <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
+                          <span className="block text-[10px] text-slate-400 uppercase">Cuisses / Poitrine</span>
+                          <span className="text-sm font-bold text-slate-200">
+                            {latest.thighs ? `${latest.thighs}cm` : '-'} / {latest.chest ? `${latest.chest}cm` : '-'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {(latest.bodyFat || latest.muscleMass) && (
+                        <div className="flex gap-4 pt-1 text-xs border-t border-white/10 font-medium">
+                          {latest.bodyFat && (
+                            <span className="text-emerald-400">Masse Graisseuse : <strong className="font-bold">{latest.bodyFat}%</strong></span>
+                          )}
+                          {latest.muscleMass && (
+                            <span className="text-[#ff7777]">Masse Musculaire : <strong className="font-bold">{latest.muscleMass}%</strong></span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
-                })}
+                })()}
+
+                {/* Measurements History Table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase font-bold text-slate-500">
+                        <th className="py-2.5 px-3">Date</th>
+                        <th className="py-2.5 px-3">Poids</th>
+                        <th className="py-2.5 px-3">Taille</th>
+                        <th className="py-2.5 px-3">Hanches</th>
+                        <th className="py-2.5 px-3">Cuisses</th>
+                        <th className="py-2.5 px-3">Poitrine</th>
+                        <th className="py-2.5 px-3">Gras / Muscle</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-medium">
+                      {[...clientMeas]
+                        .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+                        .map((m, idx) => (
+                          <tr key={m.id || idx} className="hover:bg-slate-50/80 transition">
+                            <td className="py-2.5 px-3 font-bold text-slate-800 whitespace-nowrap">{m.date}</td>
+                            <td className="py-2.5 px-3 font-black text-[#ff5757]">{m.weight} kg</td>
+                            <td className="py-2.5 px-3 text-slate-700">{m.waist ? `${m.waist} cm` : '-'}</td>
+                            <td className="py-2.5 px-3 text-slate-700">{m.hips ? `${m.hips} cm` : '-'}</td>
+                            <td className="py-2.5 px-3 text-slate-700">{m.thighs ? `${m.thighs} cm` : '-'}</td>
+                            <td className="py-2.5 px-3 text-slate-700">{m.chest ? `${m.chest} cm` : '-'}</td>
+                            <td className="py-2.5 px-3 text-slate-600">
+                              {m.bodyFat ? `${m.bodyFat}% G` : ''} {m.muscleMass ? `${m.muscleMass}% M` : ''} {!m.bodyFat && !m.muscleMass && '-'}
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             ) : (
-              <div className="py-6 text-center text-slate-400 text-xs italic">
-                Aucune séance passée enregistrée pour cet adhérent.
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center space-y-3">
+                <Scale className="mx-auto h-8 w-8 text-slate-400" />
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-slate-700">Aucune fiche de mensurations loguée</p>
+                  <p className="text-[11px] text-slate-400 max-w-sm mx-auto">
+                    Prenez le poids et les mensurations anatomiques lors du bilan initial pour suivre la progression de l'adhérent.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={onLogMeasurement}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#353535] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#ff5757] cursor-pointer"
+                >
+                  <Scale className="h-3.5 w-3.5 text-[#ff7777]" /> Enregistrer un bilan
+                </button>
               </div>
             )}
           </div>

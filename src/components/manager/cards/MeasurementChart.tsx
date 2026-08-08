@@ -48,7 +48,6 @@ export function MeasurementChart({
               {(() => {
                 const points = sortedMeas.map((m, idx) => {
                   const x = (idx / (sortedMeas.length - 1)) * 360 + 20;
-                  // Assume weight bounds roughly from 40 to 120, let's normalize nicely
                   const weights = sortedMeas.map(ms => ms.weight);
                   const minWeight = Math.min(...weights, 50) - 5;
                   const maxWeight = Math.max(...weights, 90) + 5;
@@ -79,11 +78,27 @@ export function MeasurementChart({
           </div>
           <p className="text-[10px] text-slate-400 text-center italic mt-2">Évolution continue du poids corporel (kg) sur les séances validées.</p>
         </div>
+      ) : sortedMeas.length === 1 ? (
+        <div className="bg-slate-900 text-white rounded-2xl p-4 space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-extrabold uppercase text-[#ff7777] text-[10px]">1er Bilan Enregistré</span>
+            <span className="font-mono text-[10px] text-slate-300">{sortedMeas[0].date}</span>
+          </div>
+          <div className="flex items-baseline justify-between pt-1">
+            <span className="text-2xl font-black text-white">{sortedMeas[0].weight} kg</span>
+            <span className="text-xs text-slate-300">
+              {sortedMeas[0].waist ? `Taille : ${sortedMeas[0].waist}cm` : ''} {sortedMeas[0].hips ? `• Hanches : ${sortedMeas[0].hips}cm` : ''}
+            </span>
+          </div>
+          <p className="text-[10px] text-slate-400 italic pt-1 border-t border-white/10">
+            Ajoutez au moins une 2ème mesure lors du prochain bilan pour afficher la courbe de progression.
+          </p>
+        </div>
       ) : (
         <div className="h-44 bg-slate-50 border border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 text-xs p-4 text-center">
           <Scale className="h-8 w-8 mb-2 stroke-1" />
-          <p>Pas assez d'historique de mesures pour tracer la courbe.</p>
-          <p className="text-[10px] text-slate-400 mt-1">Ajoutez au moins 2 mesures de mensurations pour voir le graphique d'amincissement.</p>
+          <p>Pas encore de mensurations loguées pour cet adhérent.</p>
+          <p className="text-[10px] text-slate-400 mt-1">Cliquez sur Loguer mensurations ci-dessus pour saisir le 1er bilan.</p>
         </div>
       )}
     </div>
