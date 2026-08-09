@@ -196,10 +196,10 @@ export function CrmPortal({
             <img
               src="/images/aq8algerie.webp"
               alt="AQ8 Studio Algérie"
-              className="w-full h-full object-cover opacity-20 grayscale-[10%]"
+              className="w-full h-full object-cover opacity-50 contrast-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#161616] via-[#161616]/85 to-[#161616]/50" />
-            <div className="absolute top-0 right-0 w-80 h-80 bg-[#ff5757]/15 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#161616]/95 via-[#161616]/65 to-[#161616]/35" />
+            <div className="absolute top-0 right-0 w-80 h-80 bg-[#ff5757]/20 rounded-full blur-3xl pointer-events-none" />
           </div>
 
           {/* Top Logo Header */}
