@@ -66,87 +66,28 @@ export function ClientPortalClient() {
     setLoginError("");
 
     try {
-      // 1. Search client by phone in 'clients' collection or 'appointments'
-      // 1. Search clients with flexible phone digits matching
-      const clientsRef = collection(db, "clients");
-      const clientsSnap = await getDocs(clientsRef);
-      const allClients = clientsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-
-      const digitsTarget = cleanPhone.slice(-8);
-      let foundClient: any = allClients.find((cli: any) => {
-        const cliPhone = normalizePhone(cli.phone || "");
-        return cliPhone.slice(-8) === digitsTarget;
+      const response = await fetch('/api/client-portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: targetPhone }),
       });
+      const data = await response.json().catch(() => ({}));
 
-      // 2. Fetch appointments with flexible phone matching
-      const apptRef = collection(db, "appointments");
-      const apptSnap = await getDocs(apptRef);
-      let apptList: any[] = apptSnap.docs
-        .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .filter((appt: any) => {
-          const apptPhone = normalizePhone(appt.clientPhone || appt.phone || "");
-          const apptClientId = String(appt.clientId || "").trim();
-          return (
-            (foundClient?.id && apptClientId === String(foundClient.id).trim()) ||
-            (apptPhone && apptPhone.slice(-8) === digitsTarget)
-          );
-        });
-
-      // Sort appointments by date & time descending
-      apptList.sort((a: any, b: any) => {
-        const dateA = `${a.date || a.bookingDate || ""} ${a.time || a.bookingTime || ""}`;
-        const dateB = `${b.date || b.bookingDate || ""} ${b.time || b.bookingTime || ""}`;
-        return dateB.localeCompare(dateA);
-      });
-
-      // 3. Fetch measurements if client exists
-      let measList: any[] = [];
-      if (foundClient?.id) {
-        const measRef = collection(db, "measurements");
-        const qMeas = query(measRef, where("clientId", "==", foundClient.id));
-        const measSnap = await getDocs(qMeas);
-        measList = measSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        measList.sort((a: any, b: any) => (b.date || b.createdAt || "").localeCompare(a.date || a.createdAt || ""));
-      }
-
-      // 4. Fetch payments if client exists
-      let payList: any[] = [];
-      if (foundClient?.id) {
-        const payRef = collection(db, "payments");
-        const qPay = query(payRef, where("clientId", "==", foundClient.id));
-        const paySnap = await getDocs(qPay);
-        payList = paySnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        payList.sort((a: any, b: any) => (b.date || b.createdAt || "").localeCompare(a.date || a.createdAt || ""));
-      }
-
-      // If client not found in CRM, build lightweight profile from appointments
-      if (!foundClient && apptList.length > 0) {
-        const firstAppt = apptList[0];
-        foundClient = {
-          firstName: firstAppt.clientFirstName || firstAppt.firstName || "Adhérent(e)",
-          lastName: firstAppt.clientLastName || firstAppt.lastName || "",
-          phone: targetPhone,
-          centerName: firstAppt.centerName || "Centre AQ8",
-          totalSessions: apptList.length,
-          status: "Actif",
-        };
-      }
-
-      if (!foundClient && apptList.length === 0) {
-        setLoginError("Aucun compte ou rendez-vous trouvé avec ce numéro. Si vous êtes nouveau client, vous pouvez réserver votre 1ère séance ci-dessous.");
+      if (!response.ok || data.ok === false) {
+        setLoginError(data.error || "Aucun compte ou rendez-vous trouvé avec ce numéro. Si vous êtes nouveau client, vous pouvez réserver votre 1ère séance ci-dessous.");
         setIsLoggingIn(false);
         setIsLoadingData(false);
         return;
       }
 
-      setClientData(foundClient);
-      setAppointments(apptList);
-      setMeasurements(measList);
-      setPayments(payList);
+      setClientData(data.client);
+      setAppointments(data.appointments || []);
+      setMeasurements(data.measurements || []);
+      setPayments(data.payments || []);
       localStorage.setItem("aq8_client_phone", targetPhone);
     } catch (err) {
-      console.error("Error fetching client data:", err);
-      setLoginError("Impossible de charger les données du compte. Veuillez vérifier votre connexion.");
+      console.error("Error fetching client portal data:", err);
+      setLoginError("Impossible de charger les données du compte. Veuillez réessayer.");
     } finally {
       setIsLoggingIn(false);
       setIsLoadingData(false);
