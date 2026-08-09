@@ -204,16 +204,17 @@ export function CrmPortal({
           </div>
 
           {/* Top Logo & Network Badge */}
-          <div className="relative z-10 space-y-4">
-            <div className="flex items-center gap-3.5">
-              <div className="h-12 w-12 bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/20 shadow-md flex items-center justify-center">
-                <img src="/images/logo.png" alt="AQ8 Algérie Logo" className="h-full w-full object-contain" />
-              </div>
-              <div>
-                <span className="font-display font-black text-xl tracking-wider text-white">AQ8 ALGÉRIE</span>
-                <p className="text-[10px] uppercase font-extrabold text-[#ff5757] tracking-widest">Technologie Minceur & EMS</p>
-              </div>
+          <div className="relative z-10 flex items-center justify-between gap-3">
+            <div className="bg-white/95 px-4 py-2 rounded-2xl border border-white/20 shadow-lg inline-flex items-center">
+              <img
+                src="/images/logo.png"
+                alt="AQ8 Algérie"
+                className="h-8 sm:h-10 w-auto max-w-[180px] object-contain"
+              />
             </div>
+            <span className="text-[10px] uppercase font-extrabold px-3 py-1.5 rounded-full bg-[#ff5757] text-white tracking-wider shadow-md shrink-0">
+              Portail CRM
+            </span>
           </div>
 
           {/* Middle Title & Slogan */}
