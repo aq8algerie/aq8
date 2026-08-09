@@ -324,7 +324,7 @@ export default function CrmPage() {
   // RENDER AUTHENTICATION FORM IF NOT LOGGED IN
   if (!crmRole) {
     return (
-      <div className="max-w-md mx-auto py-16 px-4">
+      <div className="min-h-screen bg-slate-100/70 flex items-center justify-center p-3 sm:p-6 lg:p-8">
         <CrmPortal
           centers={centers}
           onLoginSuccess={handleLoginSuccess}

@@ -187,8 +187,7 @@ export function CrmPortal({
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center p-3 sm:p-6 lg:p-8">
-      <div className="w-full max-w-6xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[600px]">
+    <div className="w-full max-w-6xl mx-auto bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[600px]">
 
         {/* ─── COLUMN 1 (LEFT): BRANDING, LOGO, SLOGAN & BACKGROUND ─── */}
         <div className="relative lg:col-span-6 bg-[#161616] text-white p-6 sm:p-8 lg:p-10 flex flex-col justify-between overflow-hidden">
@@ -448,6 +447,5 @@ export function CrmPortal({
           )}
         </div>
       </div>
-    </div>
   );
 }
