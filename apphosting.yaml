@@ -7,18 +7,10 @@ runConfig:
 
 env:
   - variable: RESEND_API_KEY
-    availability:
-      - BUILD
-      - RUNTIME
+    secret: RESEND_API_KEY
   - variable: EMAIL_FROM
     value: "AQ8 Algérie <notifications@aq8algerie.com>"
-    availability:
-      - RUNTIME
   - variable: EMAIL_REPLY_TO
     value: "aq8algerie@gmail.com"
-    availability:
-      - RUNTIME
   - variable: APP_URL
     value: "https://aq8algerie.com"
-    availability:
-      - RUNTIME
