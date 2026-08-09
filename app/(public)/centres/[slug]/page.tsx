@@ -151,8 +151,12 @@ export default async function CenterDetailPage({ params }: PageProps) {
                 </span>
 
                 {publicBadgeLabel && (
-                  <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-300 backdrop-blur-sm">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-extrabold backdrop-blur-sm ${
+                    publicBadgeLabel.toLowerCase().includes('fermé')
+                      ? 'border-red-500/50 bg-red-600/90 text-white shadow-md'
+                      : 'border-amber-400/30 bg-amber-400/10 text-amber-300'
+                  }`}>
+                    <span className={`h-2 w-2 rounded-full ${publicBadgeLabel.toLowerCase().includes('fermé') ? 'bg-white' : 'bg-amber-400'} animate-pulse`} />
                     {publicBadgeLabel}
                   </span>
                 )}

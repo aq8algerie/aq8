@@ -87,10 +87,10 @@ export const INITIAL_CENTERS: Center[] = [
     email: 'blida@aq8algerie.com',
     imageUrl: '/images/centres/aq8-blida.webp',
     services: ['aq8', 'wonder'],
-    schedule: 'Sam, Dim: 09:00 - 17:00 | Mar: 13:00 - 19:00 | Lun, Mer: 16:00 - 19:00 | Jeu, Ven: Fermé',
-    description: 'Retrouvez notre équipe d\'experts à Blida pour un coaching de précision combinant électrostimulation haut de gamme et Wonder Axion.',
+    schedule: 'Fermé temporairement',
+    description: 'Le centre AQ8 Blida est actuellement fermé temporairement. Retrouvez notre équipe d\'experts pour un coaching de précision dès la réouverture.',
     slug: 'blida',
-    status: 'Femmes uniquement',
+    status: 'Fermé temporairement',
     importantNotes: [
       'Horaires d’ouverture adaptés aux créneaux réservés aux femmes.',
       'Vous devez prendre vos rdv LA VEILLE avant 21h30, pas le jour même.',

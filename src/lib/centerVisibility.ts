@@ -26,16 +26,18 @@ export function getCenterOperationalStatus(center: Center): 'active' | 'suspende
 
 export function getCenterStatusLabel(center: Center): string {
   const status = normalizeCenterStatus(center.status);
+  if (status.includes('fermé temporairement') || status.includes('ferme temporairement') || center.slug === 'blida' || center.id === 'center-3') return 'Fermé temporairement';
   if (status === 'suspended') return 'Suspendu';
   if (status === 'showcase') return 'Vitrine uniquement';
   if (status === 'maintenance') return 'En maintenance';
   if (status === 'construction') return 'En construction';
-  if (status === 'active') return 'Operationnel';
-  return center.status || 'Operationnel';
+  if (status === 'active') return 'Opérationnel';
+  return center.status || 'Opérationnel';
 }
 
 export function getPublicCenterBadgeLabel(center: Center): string {
   const status = normalizeCenterStatus(center.status);
+  if (status.includes('fermé temporairement') || status.includes('ferme temporairement') || center.slug === 'blida' || center.id === 'center-3') return 'Fermé temporairement';
   if (status === 'active' || status === 'suspended' || status === 'maintenance' || status === 'construction') return '';
   return center.status || '';
 }

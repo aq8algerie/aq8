@@ -34,6 +34,9 @@ function getAudienceLabel(center: Center) {
 
 function getStatusBadge(center: Center) {
   const status = (center.status || "").toLowerCase();
+  if (status.includes("fermé temporairement") || status.includes("ferme temporairement") || center.slug === "blida" || center.id === "center-3") {
+    return { label: "Fermé temporairement", color: "bg-red-100 text-red-800 border-red-300 font-extrabold shadow-sm" };
+  }
   if (status.includes("femmes uniquement")) {
     return { label: "Femmes uniquement", color: "bg-purple-50 text-purple-700 border-purple-200" };
   }
