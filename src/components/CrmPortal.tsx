@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { ShieldCheck, Lock, Mail, Loader2, KeyRound, ArrowLeft, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, Loader2, KeyRound, ArrowLeft, CheckCircle2, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -173,7 +173,6 @@ export function CrmPortal({
       }
 
       if (data.useFirebaseFallback) {
-        // Fallback to Firebase client Auth sendPasswordResetEmail in French
         auth.languageCode = 'fr';
         await sendPasswordResetEmail(auth, trimmed);
       }
@@ -188,191 +187,263 @@ export function CrmPortal({
   };
 
   return (
-    <div className="max-w-md mx-auto py-8 space-y-8">
-      <div className="text-center space-y-2">
-        <div className="mx-auto h-12 w-12 bg-[#353535] text-white rounded-full flex items-center justify-center shadow-md border border-[#ff5757]/30">
-          {showForgotPassword
-            ? <KeyRound className="h-6 w-6 text-[#ff5757]" />
-            : <ShieldCheck className="h-6 w-6 text-[#ff5757]" />}
-        </div>
-        <h1 className="text-2xl font-bold text-[#353535] font-display">
-          {showForgotPassword ? 'Réinitialiser le mot de passe' : 'Portail CRM AQ8 Algérie'}
-        </h1>
-        <p className="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">
-          {showForgotPassword
-            ? 'Entrez votre adresse e-mail professionnelle. Un lien de réinitialisation vous sera envoyé.'
-            : 'Espace interne réservé à la direction AQ8 Algérie et aux managers de centres.'}
-        </p>
-      </div>
+    <div className="min-h-[85vh] flex items-center justify-center p-3 sm:p-6 lg:p-8">
+      <div className="w-full max-w-5xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[580px]">
 
-      {/* ─── FORGOT PASSWORD PANEL ─── */}
-      {showForgotPassword ? (
-        <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-md space-y-5">
-          {resetSent ? (
-            <div className="flex flex-col items-center gap-4 py-4 text-center">
-              <div className="h-14 w-14 bg-emerald-50 rounded-full flex items-center justify-center">
-                <CheckCircle2 className="h-7 w-7 text-emerald-500" />
+        {/* ─── COLUMN 1 (LEFT): BRANDING, LOGO, SLOGAN & BACKGROUND ─── */}
+        <div className="relative lg:col-span-6 bg-[#1c1c1c] text-white p-8 lg:p-12 flex flex-col justify-between overflow-hidden">
+          {/* Background Image with Gradient Overlay */}
+          <div className="absolute inset-0 z-0">
+            <img
+              src="/images/aq8algerie.webp"
+              alt="AQ8 Studio Algérie"
+              className="w-full h-full object-cover opacity-25 grayscale-[15%]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#1c1c1c] via-[#1c1c1c]/80 to-[#1c1c1c]/40" />
+            <div className="absolute top-0 right-0 w-80 h-80 bg-[#ff5757]/15 rounded-full blur-3xl pointer-events-none" />
+          </div>
+
+          {/* Top Logo & Network Badge */}
+          <div className="relative z-10 space-y-4">
+            <div className="flex items-center gap-3.5">
+              <div className="h-12 w-12 bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/20 shadow-md flex items-center justify-center">
+                <img src="/images/logo.png" alt="AQ8 Algérie Logo" className="h-full w-full object-contain" />
               </div>
-              <div className="space-y-1">
-                <p className="font-bold text-slate-800 text-sm">E-mail envoyé !</p>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Si l’adresse <strong>{resetEmail.trim()}</strong> correspond à un compte CRM,
-                  vous recevrez un lien de réinitialisation dans quelques minutes.
-                </p>
+              <div>
+                <span className="font-display font-black text-xl tracking-wider text-white">AQ8 ALGÉRIE</span>
+                <p className="text-[10px] uppercase font-extrabold text-[#ff5757] tracking-widest">Technologie Minceur & EMS</p>
               </div>
-              <button
-                type="button"
-                onClick={() => { setShowForgotPassword(false); setResetSent(false); setResetEmail(''); setResetError(null); }}
-                className="flex items-center gap-1.5 text-xs font-bold text-[#ff5757] hover:text-[#e04646] transition-colors cursor-pointer"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" /> Retour à la connexion
-              </button>
+            </div>
+          </div>
+
+          {/* Middle Title & Slogan */}
+          <div className="relative z-10 space-y-5 my-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ff5757]/20 border border-[#ff5757]/30 text-[#ff8888] text-xs font-extrabold">
+              <Sparkles className="h-3.5 w-3.5" /> Portail CRM de Gestion
+            </div>
+
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-white leading-tight">
+              L'Excellence Technologique au Service de votre Studio
+            </h2>
+
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
+              Pilotez l’activité de vos centres, suivez l'évolution des mensurations de vos adhérents et gérez vos forfaits en toute sécurité.
+            </p>
+
+            {/* Feature Bullets */}
+            <div className="space-y-3 pt-2 text-xs font-semibold text-slate-200">
+              <div className="flex items-center gap-3">
+                <div className="h-5 w-5 rounded-full bg-[#ff5757]/20 flex items-center justify-center text-[#ff5757] shrink-0">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                </div>
+                <span>Plannings de séances & Pré-réservations web</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-5 w-5 rounded-full bg-[#ff5757]/20 flex items-center justify-center text-[#ff5757] shrink-0">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                </div>
+                <span>Onglet dédié Mensurations & Graphiques de suivi</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-5 w-5 rounded-full bg-[#ff5757]/20 flex items-center justify-center text-[#ff5757] shrink-0">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                </div>
+                <span>Encaissements DZD & Émission des reçus officiels</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Security Footer */}
+          <div className="relative z-10 border-t border-white/10 pt-4 flex items-center justify-between text-[11px] text-slate-400">
+            <span className="flex items-center gap-1.5 font-bold text-slate-300">
+              <ShieldCheck className="h-4 w-4 text-[#ff5757]" /> Espace Sécurisé Direction & Managers
+            </span>
+            <span>AQ8 Algérie © 2026</span>
+          </div>
+        </div>
+
+        {/* ─── COLUMN 2 (RIGHT): FORM CONTAINER ─── */}
+        <div className="lg:col-span-6 p-6 sm:p-10 flex flex-col justify-center bg-white space-y-6">
+          <div className="space-y-2">
+            <div className="h-10 w-10 bg-[#353535] text-white rounded-2xl flex items-center justify-center shadow-md border border-[#ff5757]/30">
+              {showForgotPassword
+                ? <KeyRound className="h-5 w-5 text-[#ff5757]" />
+                : <ShieldCheck className="h-5 w-5 text-[#ff5757]" />}
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#353535] font-display">
+              {showForgotPassword ? 'Réinitialiser le mot de passe' : 'Connexion CRM AQ8'}
+            </h1>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              {showForgotPassword
+                ? 'Entrez votre adresse e-mail professionnelle. Un lien de réinitialisation vous sera envoyé.'
+                : 'Connectez-vous pour accéder au tableau de bord de votre studio.'}
+            </p>
+          </div>
+
+          {/* ─── FORGOT PASSWORD PANEL ─── */}
+          {showForgotPassword ? (
+            <div className="space-y-5">
+              {resetSent ? (
+                <div className="flex flex-col items-center gap-4 py-4 text-center">
+                  <div className="h-14 w-14 bg-emerald-50 rounded-full flex items-center justify-center">
+                    <CheckCircle2 className="h-7 w-7 text-emerald-500" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-bold text-slate-800 text-sm">E-mail envoyé !</p>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      Si l’adresse <strong>{resetEmail.trim()}</strong> correspond à un compte CRM,
+                      vous recevrez un lien de réinitialisation dans quelques instants.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setShowForgotPassword(false); setResetSent(false); setResetEmail(''); setResetError(null); }}
+                    className="flex items-center gap-1.5 text-xs font-bold text-[#ff5757] hover:text-[#e04646] transition-colors cursor-pointer"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" /> Retour à la connexion
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {resetError && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium">
+                      {resetError}
+                    </div>
+                  )}
+
+                  <form onSubmit={handlePasswordReset} className="space-y-4 text-xs">
+                    <div className="space-y-1.5">
+                      <label className="font-semibold text-slate-600 block">E-mail professionnel</label>
+                      <div className="relative">
+                        <Mail className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                        <input
+                          type="email"
+                          required
+                          value={resetEmail}
+                          onChange={(e) => { setResetEmail(e.target.value); setResetError(null); }}
+                          placeholder="karim@aq8algerie.com"
+                          className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50/70 text-slate-900 focus:outline-none focus:border-[#ff5757] text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isResetting}
+                      className="w-full py-3 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl shadow-md transition-premium text-center flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {isResetting && <Loader2 className="h-4 w-4 animate-spin" />}
+                      Envoyer le lien de réinitialisation
+                    </button>
+                  </form>
+
+                  <button
+                    type="button"
+                    onClick={() => { setShowForgotPassword(false); setResetError(null); setResetEmail(''); }}
+                    className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer pt-1"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" /> Retour à la connexion
+                  </button>
+                </>
+              )}
             </div>
           ) : (
-            <>
-              <h3 className="font-bold text-[#353535] font-display text-sm border-b border-slate-100 pb-2">
-                Réinitialisation du mot de passe
-              </h3>
-
-              {resetError && (
+            <div className="space-y-5">
+              {/* MAIN LOGIN FORM */}
+              {errorMessage && (
                 <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium">
-                  {resetError}
+                  {errorMessage}
                 </div>
               )}
 
-              <form onSubmit={handlePasswordReset} className="space-y-4 text-xs">
-                <div className="space-y-1">
+              <form onSubmit={handleManualSubmit} className="space-y-4 text-xs">
+                <div className="space-y-1.5">
                   <label className="font-semibold text-slate-600 block">E-mail professionnel</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                    <Mail className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
                     <input
                       type="email"
                       required
-                      value={resetEmail}
-                      onChange={(e) => { setResetEmail(e.target.value); setResetError(null); }}
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setErrorMessage(null);
+                      }}
                       placeholder="karim@aq8algerie.com"
-                      className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:border-[#ff5757] text-xs"
+                      className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50/70 text-slate-900 focus:outline-none focus:border-[#ff5757] text-xs"
                     />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center">
+                    <label className="font-semibold text-slate-600">Mot de passe</label>
+                    <button
+                      type="button"
+                      onClick={() => { setShowForgotPassword(true); setErrorMessage(null); }}
+                      className="text-[11px] font-bold text-[#ff5757] hover:text-[#e04646] transition-colors cursor-pointer"
+                    >
+                      Mot de passe oublié ?
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setErrorMessage(null);
+                      }}
+                      placeholder="************"
+                      className="w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-xl bg-slate-50/70 text-slate-900 focus:outline-none focus:border-[#ff5757] text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(prev => !prev)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 transition hover:bg-white hover:text-slate-700 cursor-pointer"
+                      aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                      aria-pressed={showPassword}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  disabled={isResetting}
-                  className="w-full py-3 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl shadow-md transition-premium text-center flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                  disabled={isAuthBusy}
+                  className="w-full py-3 bg-[#353535] hover:bg-slate-800 font-semibold text-white rounded-xl shadow-md transition-premium text-center flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {isResetting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Envoyer le lien de réinitialisation
+                  {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Se connecter au CRM
                 </button>
               </form>
 
+              <div className="flex items-center gap-3">
+                <div className="h-px flex-1 bg-slate-100" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">ou</span>
+                <div className="h-px flex-1 bg-slate-100" />
+              </div>
+
               <button
                 type="button"
-                onClick={() => { setShowForgotPassword(false); setResetError(null); setResetEmail(''); }}
-                className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer pt-1"
+                onClick={handleGoogleLogin}
+                disabled={isAuthBusy}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-extrabold text-slate-700 shadow-xs transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2"
               >
-                <ArrowLeft className="h-3.5 w-3.5" /> Retour à la connexion
+                {isGoogleSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-[#ff5757]" />
+                ) : (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-black text-[#4285f4]">G</span>
+                )}
+                Continuer avec Google
               </button>
-            </>
-          )}
-        </div>
-      ) : (
-        <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-md space-y-5">
-          {/* MAIN LOGIN PANEL */}
-          <h3 className="font-bold text-[#353535] font-display text-sm border-b border-slate-100 pb-2">Connexion CRM</h3>
-
-          {errorMessage && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium">
-              {errorMessage}
             </div>
           )}
-
-          <form onSubmit={handleManualSubmit} className="space-y-4 text-xs">
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-600 block">E-mail professionnel</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setErrorMessage(null);
-                  }}
-                  placeholder="karim@aq8algerie.com"
-                  className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:border-[#ff5757] text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <label className="font-semibold text-slate-600">Mot de passe</label>
-                <button
-                  type="button"
-                  onClick={() => { setShowForgotPassword(true); setErrorMessage(null); }}
-                  className="text-[10px] font-bold text-[#ff5757] hover:text-[#e04646] transition-colors cursor-pointer"
-                >
-                  Mot de passe oublie ?
-                </button>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setErrorMessage(null);
-                  }}
-                  placeholder="************"
-                  className="w-full pl-9 pr-10 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:border-[#ff5757] text-xs"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(prev => !prev)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 transition hover:bg-white hover:text-slate-700 cursor-pointer"
-                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                  aria-pressed={showPassword}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isAuthBusy}
-              className="w-full py-3 bg-[#353535] hover:bg-slate-800 font-semibold text-white rounded-xl shadow-md transition-premium text-center flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              Se connecter au CRM
-            </button>
-          </form>
-
-          <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-slate-100" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">ou</span>
-            <div className="h-px flex-1 bg-slate-100" />
-          </div>
-
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            disabled={isAuthBusy}
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-extrabold text-slate-700 shadow-xs transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2"
-          >
-            {isGoogleSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin text-[#ff5757]" />
-            ) : (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-black text-[#4285f4]">G</span>
-            )}
-            Continuer avec Google
-          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
