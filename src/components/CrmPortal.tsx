@@ -168,8 +168,13 @@ export function CrmPortal({
       });
       const data = await res.json().catch(() => ({}));
 
-      if (data.useFirebaseFallback || !res.ok) {
-        // Fallback to Firebase client Auth sendPasswordResetEmail
+      if (!res.ok) {
+        throw new Error(data.error || 'Impossible d\'envoyer l\'e-mail de réinitialisation.');
+      }
+
+      if (data.useFirebaseFallback) {
+        // Fallback to Firebase client Auth sendPasswordResetEmail in French
+        auth.languageCode = 'fr';
         await sendPasswordResetEmail(auth, trimmed);
       }
 
