@@ -102,7 +102,7 @@ export function CrmPortal({
     if (code.includes('operation-not-allowed')) return "La connexion Google n'est pas encore activée dans Firebase Authentication.";
     if (code.includes('unauthorized-domain')) return "Ce domaine n'est pas autorisé dans Firebase Authentication.";
     if (code.includes('account-exists-with-different-credential')) {
-      return 'Un compte CRM existe deja avec cet e-mail. Connectez-vous avec le mot de passe, puis liez le compte Google cote Firebase.';
+      return 'Un compte CRM existe déjà avec cet e-mail. Connectez-vous avec le mot de passe, puis liez le compte Google côté Firebase.';
     }
 
     return message;
@@ -188,42 +188,45 @@ export function CrmPortal({
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center p-3 sm:p-6 lg:p-8">
-      <div className="w-full max-w-5xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[580px]">
+      <div className="w-full max-w-6xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[600px]">
 
         {/* ─── COLUMN 1 (LEFT): BRANDING, LOGO, SLOGAN & BACKGROUND ─── */}
-        <div className="relative lg:col-span-6 bg-[#1c1c1c] text-white p-8 lg:p-12 flex flex-col justify-between overflow-hidden">
+        <div className="relative lg:col-span-6 bg-[#161616] text-white p-6 sm:p-8 lg:p-10 flex flex-col justify-between overflow-hidden">
           {/* Background Image with Gradient Overlay */}
           <div className="absolute inset-0 z-0">
             <img
               src="/images/aq8algerie.webp"
               alt="AQ8 Studio Algérie"
-              className="w-full h-full object-cover opacity-25 grayscale-[15%]"
+              className="w-full h-full object-cover opacity-20 grayscale-[10%]"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#1c1c1c] via-[#1c1c1c]/80 to-[#1c1c1c]/40" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#161616] via-[#161616]/85 to-[#161616]/50" />
             <div className="absolute top-0 right-0 w-80 h-80 bg-[#ff5757]/15 rounded-full blur-3xl pointer-events-none" />
           </div>
 
-          {/* Top Logo & Network Badge */}
-          <div className="relative z-10 flex items-center justify-between gap-3">
-            <div className="bg-white/95 px-4 py-2 rounded-2xl border border-white/20 shadow-lg inline-flex items-center">
-              <img
-                src="/images/logo.png"
-                alt="AQ8 Algérie"
-                className="h-8 sm:h-10 w-auto max-w-[180px] object-contain"
-              />
+          {/* Top Logo Badge Header */}
+          <div className="relative z-10 space-y-3">
+            <div className="flex items-center gap-3.5">
+              <div className="inline-flex items-center justify-center bg-white rounded-2xl p-2.5 shadow-xl border border-white/30">
+                <img
+                  src="/images/logo.png"
+                  alt="AQ8 Algérie Logo"
+                  className="h-10 sm:h-12 w-auto object-contain"
+                />
+              </div>
+              <div>
+                <span className="font-display font-black text-xl tracking-wider text-white block">AQ8 ALGÉRIE</span>
+                <p className="text-[10px] uppercase font-extrabold text-[#ff5757] tracking-widest">Technologie Minceur & EMS</p>
+              </div>
             </div>
-            <span className="text-[10px] uppercase font-extrabold px-3 py-1.5 rounded-full bg-[#ff5757] text-white tracking-wider shadow-md shrink-0">
-              Portail CRM
-            </span>
           </div>
 
           {/* Middle Title & Slogan */}
-          <div className="relative z-10 space-y-5 my-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ff5757]/20 border border-[#ff5757]/30 text-[#ff8888] text-xs font-extrabold">
+          <div className="relative z-10 space-y-4 my-6 sm:my-8">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#ff5757]/20 border border-[#ff5757]/30 text-[#ff8888] text-xs font-extrabold">
               <Sparkles className="h-3.5 w-3.5" /> Portail CRM de Gestion
             </div>
 
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-white leading-tight">
+            <h2 className="font-display text-xl sm:text-2xl font-black text-white leading-snug break-normal hyphens-none">
               L'Excellence Technologique au Service de votre Studio
             </h2>
 
@@ -232,7 +235,7 @@ export function CrmPortal({
             </p>
 
             {/* Feature Bullets */}
-            <div className="space-y-3 pt-2 text-xs font-semibold text-slate-200">
+            <div className="space-y-2.5 pt-2 text-xs font-semibold text-slate-200">
               <div className="flex items-center gap-3">
                 <div className="h-5 w-5 rounded-full bg-[#ff5757]/20 flex items-center justify-center text-[#ff5757] shrink-0">
                   <CheckCircle2 className="h-3.5 w-3.5" />
