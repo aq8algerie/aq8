@@ -67,23 +67,30 @@ export function ClientPortalClient() {
 
     try {
       // 1. Search client by phone in 'clients' collection or 'appointments'
+      // 1. Search clients with flexible phone digits matching
       const clientsRef = collection(db, "clients");
-      const qClient = query(clientsRef, where("phone", "==", targetPhone));
-      const clientSnap = await getDocs(qClient);
+      const clientsSnap = await getDocs(clientsRef);
+      const allClients = clientsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-      let foundClient: any = null;
-      if (!clientSnap.empty) {
-        foundClient = { id: clientSnap.docs[0].id, ...clientSnap.docs[0].data() };
-      }
+      const digitsTarget = cleanPhone.slice(-8);
+      let foundClient: any = allClients.find((cli: any) => {
+        const cliPhone = normalizePhone(cli.phone || "");
+        return cliPhone.slice(-8) === digitsTarget;
+      });
 
-      // 2. Fetch appointments by phone or client ID
+      // 2. Fetch appointments with flexible phone matching
       const apptRef = collection(db, "appointments");
-      const qAppts = query(
-        apptRef,
-        where("clientPhone", "==", targetPhone)
-      );
-      const apptSnap = await getDocs(qAppts);
-      let apptList: any[] = apptSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const apptSnap = await getDocs(apptRef);
+      let apptList: any[] = apptSnap.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter((appt: any) => {
+          const apptPhone = normalizePhone(appt.clientPhone || appt.phone || "");
+          const apptClientId = String(appt.clientId || "").trim();
+          return (
+            (foundClient?.id && apptClientId === String(foundClient.id).trim()) ||
+            (apptPhone && apptPhone.slice(-8) === digitsTarget)
+          );
+        });
 
       // Sort appointments by date & time descending
       apptList.sort((a: any, b: any) => {
