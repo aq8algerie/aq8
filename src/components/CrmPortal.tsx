@@ -167,9 +167,12 @@ export function CrmPortal({
         body: JSON.stringify({ email: trimmed }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.ok === false) {
-        throw new Error(data.error || 'Impossible d\'envoyer l\'e-mail.');
+
+      if (data.useFirebaseFallback || !res.ok) {
+        // Fallback to Firebase client Auth sendPasswordResetEmail
+        await sendPasswordResetEmail(auth, trimmed);
       }
+
       setResetSent(true);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Impossible d\'envoyer l\'e-mail. Vérifiez l\'adresse saisie.';

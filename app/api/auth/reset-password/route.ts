@@ -33,24 +33,39 @@ export async function POST(request: Request) {
         : rawResetLink;
 
       // Send branded luxury email via Resend API
-      await sendCustomPasswordResetEmail({
+      const emailResult = await sendCustomPasswordResetEmail({
         email: rawEmail,
         name: user.displayName || undefined,
         resetLink: customResetUrl,
       });
+
+      if (!emailResult.sent) {
+        console.warn('[auth/reset-password] Custom email skipped or failed:', emailResult);
+        return NextResponse.json({
+          ok: true,
+          emailSent: false,
+          useFirebaseFallback: true,
+          message: 'Service d\'e-mail personnalisé non disponible, basculement vers Firebase Auth.',
+        });
+      }
     } catch (error) {
-      // User not found or auth error: log silently and return success to avoid email enumeration
       console.warn('[auth/reset-password] Request for email:', rawEmail, error);
+      return NextResponse.json({
+        ok: true,
+        emailSent: false,
+        useFirebaseFallback: true,
+      });
     }
 
     return NextResponse.json({
       ok: true,
-      message: 'Si un compte correspond à cette adresse, un e-mail sécurisé de réinitialisation vous a été envoyé.',
+      emailSent: true,
+      message: 'Un e-mail de réinitialisation vous a été envoyé.',
     });
   } catch (error) {
     console.error('[auth/reset-password] Unexpected error:', error);
     return NextResponse.json(
-      { ok: false, error: 'Une erreur serveur est survenue lors de l\'envoi de l\'e-mail.' },
+      { ok: false, useFirebaseFallback: true, error: 'Une erreur serveur est survenue.' },
       { status: 500 }
     );
   }
