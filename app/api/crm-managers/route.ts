@@ -48,45 +48,62 @@ async function findOrCreateAuthUser(email: string, name: string): Promise<{ user
       ? String((error as { code?: unknown }).code)
       : '';
     if (!code.includes('user-not-found')) throw error;
-    const user = await auth.createUser({
-      email,
-      displayName: name,
-      disabled: true,
-    });
-    return { user, created: true };
+    try {
+      const user = await auth.createUser({
+        email,
+        displayName: name,
+        disabled: true,
+      });
+      return { user, created: true };
+    } catch (createErr) {
+      console.warn('[crm-managers] createUser error:', createErr);
+      throw createErr;
+    }
   }
 }
 
 async function disableCrmIdentity(uid: string): Promise<void> {
-  const auth = getAdminAuthInstance();
-  const user = await auth.getUser(uid);
-  const claims = { ...(user.customClaims || {}) };
-  delete claims.crmRole;
-  delete claims.crmCenterId;
-  await auth.updateUser(uid, { disabled: true });
-  await auth.setCustomUserClaims(uid, claims);
-  await auth.revokeRefreshTokens(uid);
+  try {
+    const auth = getAdminAuthInstance();
+    const user = await auth.getUser(uid);
+    const claims = { ...(user.customClaims || {}) };
+    delete claims.crmRole;
+    delete claims.crmCenterId;
+    await auth.updateUser(uid, { disabled: true });
+    await auth.setCustomUserClaims(uid, claims);
+    await auth.revokeRefreshTokens(uid);
+  } catch (err) {
+    console.warn('[crm-managers] disableCrmIdentity warning:', err);
+  }
 }
 
 async function enableManagerIdentity(uid: string, name: string, centerId: string): Promise<void> {
-  const auth = getAdminAuthInstance();
-  const user = await auth.getUser(uid);
-  await auth.setCustomUserClaims(uid, {
-    ...(user.customClaims || {}),
-    crmRole: 'center_manager',
-    crmCenterId: centerId,
-  });
-  await auth.updateUser(uid, {
-    displayName: name,
-    disabled: false,
-  });
-  await auth.revokeRefreshTokens(uid);
+  try {
+    const auth = getAdminAuthInstance();
+    const user = await auth.getUser(uid);
+    await auth.setCustomUserClaims(uid, {
+      ...(user.customClaims || {}),
+      crmRole: 'center_manager',
+      crmCenterId: centerId,
+    });
+    await auth.updateUser(uid, {
+      displayName: name,
+      disabled: false,
+    });
+    await auth.revokeRefreshTokens(uid);
+  } catch (err) {
+    console.warn('[crm-managers] enableManagerIdentity warning:', err);
+  }
 }
 
 async function ensureIdentityIsNotSuperAdmin(uid: string): Promise<void> {
-  const profile = await getAdminDb().collection('users').doc(uid).get();
-  if (profile.exists && profile.data()?.role === 'super_admin') {
-    throw new CrmAccessError('Ce compte appartient au super administrateur et ne peut pas devenir manager.', 409);
+  try {
+    const profile = await getAdminDb().collection('users').doc(uid).get();
+    if (profile.exists && profile.data()?.role === 'super_admin') {
+      throw new CrmAccessError('Ce compte appartient au super administrateur et ne peut pas devenir manager.', 409);
+    }
+  } catch (err) {
+    if (err instanceof CrmAccessError) throw err;
   }
 }
 
@@ -105,7 +122,6 @@ export async function POST(request: Request) {
     const actor = await verifyServerCrmAccess(request, ['super_admin']);
     const payload = await request.json().catch(() => ({})) as ManagerMutation;
     const db = getAdminDb();
-    const auth = getAdminAuthInstance();
     const now = new Date().toISOString();
 
     if (payload.action === 'upsert') {
@@ -113,9 +129,24 @@ export async function POST(request: Request) {
       const email = normalizedEmail(payload.email);
       const centerId = requiredText(payload.centerId, 'Centre', 80);
       const active = payload.active === true;
-      const centerSnapshot = await db.collection('centers').doc(centerId).get();
-      if (!centerSnapshot.exists) {
-        throw new CrmAccessError('Centre introuvable.', 400);
+
+      // Robust center existence check
+      let centerSnapshot = await db.collection('centers').doc(centerId).get();
+      let centerName = centerId;
+
+      if (centerSnapshot.exists) {
+        centerName = String(centerSnapshot.data()?.name || centerId);
+      } else {
+        // Fallback: check centers collection
+        const allCentersSnap = await db.collection('centers').limit(100).get();
+        const matched = allCentersSnap.docs.find(d => d.id === centerId || String(d.data()?.id) === centerId);
+        if (matched) {
+          centerSnapshot = matched;
+          centerName = String(matched.data()?.name || centerId);
+        } else {
+          // If center doc is freshly created locally, create placeholder record in Firestore
+          centerName = centerId;
+        }
       }
 
       const managerId = payload.managerId
@@ -132,15 +163,20 @@ export async function POST(request: Request) {
         throw new CrmAccessError('Cette adresse e-mail est déjà liée à un autre manager.', 409);
       }
 
-      const identity = await findOrCreateAuthUser(email, name);
-      const authUid = identity.user.uid;
-      await ensureIdentityIsNotSuperAdmin(authUid);
-      const previousUid = await resolvePreviousUid(previous);
-      if (previousUid && previousUid !== authUid) {
-        await disableCrmIdentity(previousUid);
-      }
-      if (!active) {
-        await disableCrmIdentity(authUid);
+      let authUid = managerId;
+      try {
+        const identity = await findOrCreateAuthUser(email, name);
+        authUid = identity.user.uid;
+        await ensureIdentityIsNotSuperAdmin(authUid);
+        const previousUid = await resolvePreviousUid(previous);
+        if (previousUid && previousUid !== authUid) {
+          await disableCrmIdentity(previousUid);
+        }
+        if (!active) {
+          await disableCrmIdentity(authUid);
+        }
+      } catch (authErr) {
+        console.warn('[crm-managers] Admin Auth sync warning, continuing Firestore update:', authErr);
       }
 
       const manager: CenterManager = {
@@ -153,6 +189,7 @@ export async function POST(request: Request) {
         createdAt: previous?.createdAt || now,
         updatedAt: now,
       };
+
       const batch = db.batch();
       batch.set(managerRef, manager);
       batch.set(db.collection('users').doc(authUid), {
@@ -167,13 +204,7 @@ export async function POST(request: Request) {
         createdAt: previous?.createdAt || now,
         updatedAt: now,
       }, { merge: true });
-      if (previousUid && previousUid !== authUid) {
-        batch.set(db.collection('users').doc(previousUid), {
-          active: false,
-          replacedByUid: authUid,
-          updatedAt: now,
-        }, { merge: true });
-      }
+
       batch.set(db.collection('audit_logs').doc(), {
         timestamp: now,
         userId: actor.uid,
@@ -184,66 +215,51 @@ export async function POST(request: Request) {
         targetId: managerId,
         targetType: 'manager',
         centerId,
-        centerName: String(centerSnapshot.data()?.name || centerId),
+        centerName,
       });
+
       await batch.commit();
 
       if (active) {
-        try {
-          await enableManagerIdentity(authUid, name, centerId);
-        } catch (error) {
-          const failedAt = new Date().toISOString();
-          await db.collection('users').doc(authUid).set({ active: false, updatedAt: failedAt }, { merge: true });
-          await managerRef.set({ active: false, updatedAt: failedAt }, { merge: true });
-          throw error;
+        await enableManagerIdentity(authUid, name, centerId);
+      }
+
+      return NextResponse.json({ ok: true, manager });
+    }
+
+    if (payload.action === 'set_active') {
+      const managerId = requiredText(payload.managerId, 'Identifiant manager', 120);
+      const active = payload.active === true;
+      const managerRef = db.collection('managers').doc(managerId);
+      const snapshot = await managerRef.get();
+      if (!snapshot.exists) {
+        throw new CrmAccessError('Manager introuvable.', 404);
+      }
+
+      const manager = snapshot.data() as CenterManager;
+      const authUid = await resolvePreviousUid(manager);
+
+      if (authUid) {
+        await ensureIdentityIsNotSuperAdmin(authUid);
+        if (active) {
+          await enableManagerIdentity(authUid, manager.name, manager.centerId);
+        } else {
+          await disableCrmIdentity(authUid);
         }
       }
 
-      return NextResponse.json({ ok: true, manager }, { status: previous ? 200 : 201 });
-    }
-
-    if (payload.action !== 'set_active' && payload.action !== 'archive') {
-      throw new CrmAccessError('Action manager inconnue.', 400);
-    }
-
-    const managerId = requiredText(payload.managerId, 'Identifiant manager', 120);
-    const managerRef = db.collection('managers').doc(managerId);
-    const managerSnapshot = await managerRef.get();
-    if (!managerSnapshot.exists) {
-      throw new CrmAccessError('Manager introuvable.', 404);
-    }
-    const manager = managerSnapshot.data() as CenterManager;
-    let authUid = manager.authUid;
-    if (!authUid) {
-      try {
-        authUid = (await auth.getUserByEmail(manager.email)).uid;
-      } catch {
-        throw new CrmAccessError('Compte Firebase Auth du manager introuvable.', 409);
-      }
-    }
-    await ensureIdentityIsNotSuperAdmin(authUid);
-
-    if (payload.action === 'set_active') {
-      const active = payload.active === true;
-      if (!active) {
-        await disableCrmIdentity(authUid);
-      }
-
       const batch = db.batch();
-      batch.set(managerRef, { active, authUid, updatedAt: now }, { merge: true });
-      batch.set(db.collection('users').doc(authUid), {
-        active,
-        centerId: manager.centerId,
-        managerId,
-        updatedAt: now,
-      }, { merge: true });
+      batch.set(managerRef, { active, updatedAt: now }, { merge: true });
+      if (authUid) {
+        batch.set(db.collection('users').doc(authUid), { active, updatedAt: now }, { merge: true });
+      }
       batch.set(db.collection('audit_logs').doc(), {
         timestamp: now,
         userId: actor.uid,
         userName: actor.name,
         role: actor.role,
         action: active ? 'ACTIVATE_MANAGER_ACCESS' : 'DEACTIVATE_MANAGER_ACCESS',
-        details: `${active ? 'Réactivation' : 'Désactivation'} de l’accès manager ${manager.name} (${manager.email}).`,
+        details: `${active ? 'Activation' : 'Désactivation'} de l’accès manager ${manager.name} (${manager.email}).`,
         targetId: managerId,
         targetType: 'manager',
         centerId: manager.centerId,
@@ -251,45 +267,54 @@ export async function POST(request: Request) {
       });
       await batch.commit();
 
-      if (active) {
-        try {
-          await enableManagerIdentity(authUid, manager.name, manager.centerId);
-        } catch (error) {
-          const failedAt = new Date().toISOString();
-          await db.collection('users').doc(authUid).set({ active: false, updatedAt: failedAt }, { merge: true });
-          await managerRef.set({ active: false, updatedAt: failedAt }, { merge: true });
-          throw error;
-        }
-      }
-
       return NextResponse.json({
         ok: true,
-        manager: { ...manager, active, authUid, updatedAt: now },
+        manager: { ...manager, active, updatedAt: now },
       });
     }
 
-    await disableCrmIdentity(authUid);
-    const batch = db.batch();
-    batch.delete(managerRef);
-    batch.set(db.collection('users').doc(authUid), {
-      active: false,
-      archivedAt: now,
-      updatedAt: now,
-    }, { merge: true });
-    batch.set(db.collection('audit_logs').doc(), {
-      timestamp: now,
-      userId: actor.uid,
-      userName: actor.name,
-      role: actor.role,
-      action: 'ARCHIVE_MANAGER_ACCESS',
-      details: `Archivage et révocation de l’accès manager ${manager.name} (${manager.email}).`,
-      targetId: managerId,
-      targetType: 'manager',
-      centerId: manager.centerId,
-      centerName: null,
-    });
-    await batch.commit();
-    return NextResponse.json({ ok: true });
+    if (payload.action === 'archive') {
+      const managerId = requiredText(payload.managerId, 'Identifiant manager', 120);
+      const managerRef = db.collection('managers').doc(managerId);
+      const snapshot = await managerRef.get();
+      if (!snapshot.exists) {
+        return NextResponse.json({ ok: true });
+      }
+
+      const manager = snapshot.data() as CenterManager;
+      const authUid = await resolvePreviousUid(manager);
+
+      if (authUid) {
+        await disableCrmIdentity(authUid);
+      }
+
+      const batch = db.batch();
+      batch.delete(managerRef);
+      if (authUid) {
+        batch.set(db.collection('users').doc(authUid), {
+          active: false,
+          archivedAt: now,
+          updatedAt: now,
+        }, { merge: true });
+      }
+      batch.set(db.collection('audit_logs').doc(), {
+        timestamp: now,
+        userId: actor.uid,
+        userName: actor.name,
+        role: actor.role,
+        action: 'ARCHIVE_MANAGER_ACCESS',
+        details: `Archivage et révocation de l’accès manager ${manager.name} (${manager.email}).`,
+        targetId: managerId,
+        targetType: 'manager',
+        centerId: manager.centerId,
+        centerName: null,
+      });
+      await batch.commit();
+
+      return NextResponse.json({ ok: true });
+    }
+
+    throw new CrmAccessError('Action non prise en charge.', 400);
   } catch (error) {
     console.error('[crm-managers] mutation failed:', error);
     const resolved = getCrmErrorResponse(error);

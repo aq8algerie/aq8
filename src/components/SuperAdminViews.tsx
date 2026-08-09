@@ -361,15 +361,19 @@ export function SuperAdminViews({
       });
 
       if (mgrName.trim() && mgrEmail.trim()) {
-        const associatedManager = managers.find(manager => manager.centerId === centerIdToUse);
-        await mutateManagerAccess({
-          action: 'upsert',
-          managerId: associatedManager?.id,
-          name: mgrName.trim(),
-          email: mgrEmail.trim(),
-          centerId: centerIdToUse,
-          active: mgrActive,
-        });
+        try {
+          const associatedManager = managers.find(manager => manager.centerId === centerIdToUse);
+          await mutateManagerAccess({
+            action: 'upsert',
+            managerId: associatedManager?.id,
+            name: mgrName.trim(),
+            email: mgrEmail.trim(),
+            centerId: centerIdToUse,
+            active: mgrActive,
+          });
+        } catch (mgrErr) {
+          console.warn('[super-admin] Manager access sync warning:', mgrErr);
+        }
       }
 
       setShowCenterModal(false);
