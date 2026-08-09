@@ -214,15 +214,15 @@ async function sendEmail(message: EmailMessage): Promise<EmailResult> {
   if (!config.from) return { sent: false, skipped: 'missing_sender' };
   if (to.length === 0) return { sent: false, skipped: 'missing_recipient' };
 
-  try {
-    const response = await fetch('https://api.resend.com/emails', {
+  const attemptSend = async (fromSender: string) => {
+    return fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${config.apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: config.from,
+        from: fromSender,
         to,
         subject: message.subject,
         html: message.html,
@@ -230,19 +230,33 @@ async function sendEmail(message: EmailMessage): Promise<EmailResult> {
         ...(message.replyTo ? { reply_to: message.replyTo } : {}),
       }),
     });
+  };
+
+  try {
+    let response = await attemptSend(config.from);
 
     if (!response.ok) {
       const body = await response.text().catch(() => '');
-      const error = `Resend ${response.status}: ${body || response.statusText}`;
-      console.error('[email] send failed:', error);
-      return { sent: false, error };
+
+      // If domain unverified on Resend, retry with onboarding@resend.dev fallback
+      if ((response.status === 403 || response.status === 422 || body.includes('not verified')) && !config.from.includes('onboarding@resend.dev')) {
+        console.warn('[email] Domain unverified on Resend, retrying with onboarding@resend.dev fallback...');
+        response = await attemptSend('AQ8 Algérie <onboarding@resend.dev>');
+      }
+
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => '');
+        const error = `Resend ${response.status}: ${errorBody || body || response.statusText}`;
+        console.error('[email] send failed:', error);
+        return { sent: false, error };
+      }
     }
 
     return { sent: true };
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Erreur inconnue';
+    const msg = error instanceof Error ? error.message : 'Erreur inconnue';
     console.error('[email] send failed:', error);
-    return { sent: false, error: message };
+    return { sent: false, error: msg };
   }
 }
 
