@@ -230,9 +230,22 @@ export function CenterBookingForm({
   useEffect(() => {
     if (defaultDate) {
       setBookingDate(defaultDate);
-      setBookingTime("");
     }
   }, [resolvedCenterId, defaultDate]);
+
+  useEffect(() => {
+    if (availableHours.length > 0) {
+      if (!bookingTime || !availableHours.includes(bookingTime)) {
+        setBookingTime(availableHours[0]);
+      }
+    } else if (hours.length > 0) {
+      if (!bookingTime || !hours.includes(bookingTime)) {
+        setBookingTime(hours[0]);
+      }
+    } else {
+      setBookingTime("");
+    }
+  }, [availableHours, hours, bookingDate]);
 
   useEffect(() => {
     if (!resolvedCenterId) {

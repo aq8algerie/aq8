@@ -30,53 +30,58 @@ export const CENTER_BOOKING_PROFILES: Record<string, CenterBookingProfile> = {
   'center-1': {
     capacities: { aq8: 3, wonder: 1 },
     weeklyHours: {
-      '0': [{ start: '09:00', end: '14:00' }],
-      '2': [{ start: '09:00', end: '14:00' }],
-      '4': [{ start: '09:00', end: '14:00' }],
-      '6': [{ start: '09:00', end: '14:00' }],
+      '0': [{ start: '09:00', end: '14:00' }], // Dimanche
+      '2': [{ start: '09:00', end: '14:00' }], // Mardi
+      '4': [{ start: '09:00', end: '14:00' }], // Jeudi
+      '6': [{ start: '09:00', end: '14:00' }], // Samedi
     },
   },
   'center-2': {
     capacities: { aq8: 2, wonder: 1 },
     weeklyHours: {
-      '0': [{ start: '10:00', end: '19:00' }],
-      '1': [{ start: '10:00', end: '19:00' }],
-      '2': [{ start: '10:00', end: '19:00' }],
-      '3': [{ start: '10:00', end: '19:00' }],
-      '4': [{ start: '10:00', end: '19:00' }],
-      '6': [{ start: '10:00', end: '16:00' }],
+      '0': [{ start: '10:00', end: '19:00' }], // Dimanche
+      '1': [{ start: '10:00', end: '19:00' }], // Lundi
+      '2': [{ start: '10:00', end: '19:00' }], // Mardi
+      '3': [{ start: '10:00', end: '19:00' }], // Mercredi
+      '4': [{ start: '10:00', end: '19:00' }], // Jeudi
+      '6': [{ start: '10:00', end: '16:00' }], // Samedi
     },
   },
   'center-3': {
     capacities: { aq8: 1, wonder: 1 },
-    weeklyHours: {
-      '0': [{ start: '09:00', end: '17:00' }],
-      '1': [{ start: '16:00', end: '19:00' }],
-      '2': [{ start: '13:00', end: '19:00' }],
-      '3': [{ start: '16:00', end: '19:00' }],
-      '6': [{ start: '09:00', end: '17:00' }],
-    },
+    weeklyHours: {}, // Fermé temporairement
   },
   'center-4': {
     capacities: { aq8: 2, wonder: 1 },
     weeklyHours: {
-      '0': [{ start: '09:00', end: '23:00' }],
-      '1': [{ start: '09:00', end: '23:00' }],
-      '2': [{ start: '09:00', end: '23:00' }],
-      '3': [{ start: '09:00', end: '23:00' }],
-      '4': [{ start: '09:00', end: '23:00' }],
-      '6': [{ start: '09:00', end: '23:00' }],
+      '0': [{ start: '09:00', end: '21:00' }], // Dimanche
+      '1': [{ start: '09:00', end: '21:00' }], // Lundi
+      '2': [{ start: '09:00', end: '21:00' }], // Mardi
+      '3': [{ start: '09:00', end: '21:00' }], // Mercredi
+      '4': [{ start: '09:00', end: '21:00' }], // Jeudi
+      '6': [{ start: '09:00', end: '21:00' }], // Samedi
     },
   },
   'center-5': {
     capacities: { aq8: 3, wonder: 1 },
     weeklyHours: {
-      '0': [{ start: '09:00', end: '21:00' }],
-      '1': [{ start: '09:00', end: '21:00' }],
-      '2': [{ start: '09:00', end: '21:00' }],
-      '3': [{ start: '09:00', end: '21:00' }],
-      '4': [{ start: '09:00', end: '21:00' }],
-      '6': [{ start: '10:00', end: '21:00' }],
+      '0': [{ start: '09:00', end: '21:00' }], // Dimanche
+      '1': [{ start: '09:00', end: '21:00' }], // Lundi
+      '2': [{ start: '09:00', end: '21:00' }], // Mardi
+      '3': [{ start: '09:00', end: '21:00' }], // Mercredi
+      '4': [{ start: '09:00', end: '21:00' }], // Jeudi
+      '6': [{ start: '10:00', end: '21:00' }], // Samedi
+    },
+  },
+  'center-6': {
+    capacities: { aq8: 2, wonder: 1 },
+    weeklyHours: {
+      '0': [{ start: '09:00', end: '19:00' }], // Dimanche
+      '1': [{ start: '09:00', end: '19:00' }], // Lundi
+      '2': [{ start: '09:00', end: '19:00' }], // Mardi
+      '3': [{ start: '09:00', end: '19:00' }], // Mercredi
+      '4': [{ start: '09:00', end: '19:00' }], // Jeudi
+      '6': [{ start: '10:00', end: '18:00' }], // Samedi
     },
   },
 };
