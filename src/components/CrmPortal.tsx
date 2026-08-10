@@ -199,7 +199,7 @@ export function CrmPortal({
               className="w-full h-full object-cover opacity-50 contrast-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#161616]/95 via-[#161616]/65 to-[#161616]/35" />
-            <div className="absolute top-0 right-0 w-80 h-80 bg-[#ff5757]/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-80 h-80 bg-[#0284c7]/20 rounded-full blur-3xl pointer-events-none" />
           </div>
 
           {/* Top Logo Header */}
@@ -210,7 +210,7 @@ export function CrmPortal({
                 alt="AQ8 Algérie Logo"
                 className="h-12 sm:h-14 w-auto object-contain brightness-0 invert drop-shadow-md"
               />
-              <p className="text-[11px] uppercase font-extrabold text-[#ff5757] tracking-widest">
+              <p className="text-[11px] uppercase font-extrabold text-[#0284c7] tracking-widest">
                 Technologie Minceur & EMS
               </p>
             </div>
@@ -218,7 +218,7 @@ export function CrmPortal({
 
           {/* Middle Title & Slogan */}
           <div className="relative z-10 space-y-4 my-6 sm:my-8">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#ff5757]/20 border border-[#ff5757]/30 text-[#ff8888] text-xs font-extrabold">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0284c7]/20 border border-[#0284c7]/30 text-[#38bdf8] text-xs font-extrabold">
               <Sparkles className="h-3.5 w-3.5" /> Portail CRM de Gestion
             </div>
 
@@ -233,19 +233,19 @@ export function CrmPortal({
             {/* Feature Bullets */}
             <div className="space-y-2.5 pt-2 text-xs font-semibold text-slate-200">
               <div className="flex items-center gap-3">
-                <div className="h-5 w-5 rounded-full bg-[#ff5757]/20 flex items-center justify-center text-[#ff5757] shrink-0">
+                <div className="h-5 w-5 rounded-full bg-[#0284c7]/20 flex items-center justify-center text-[#0284c7] shrink-0">
                   <CheckCircle2 className="h-3.5 w-3.5" />
                 </div>
                 <span>Plannings de séances & Pré-réservations web</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="h-5 w-5 rounded-full bg-[#ff5757]/20 flex items-center justify-center text-[#ff5757] shrink-0">
+                <div className="h-5 w-5 rounded-full bg-[#0284c7]/20 flex items-center justify-center text-[#0284c7] shrink-0">
                   <CheckCircle2 className="h-3.5 w-3.5" />
                 </div>
                 <span>Onglet dédié Mensurations & Graphiques de suivi</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="h-5 w-5 rounded-full bg-[#ff5757]/20 flex items-center justify-center text-[#ff5757] shrink-0">
+                <div className="h-5 w-5 rounded-full bg-[#0284c7]/20 flex items-center justify-center text-[#0284c7] shrink-0">
                   <CheckCircle2 className="h-3.5 w-3.5" />
                 </div>
                 <span>Encaissements DZD & Émission des reçus officiels</span>
@@ -256,7 +256,7 @@ export function CrmPortal({
           {/* Bottom Security Footer */}
           <div className="relative z-10 border-t border-white/10 pt-4 flex items-center justify-between text-[11px] text-slate-400">
             <span className="flex items-center gap-1.5 font-bold text-slate-300">
-              <ShieldCheck className="h-4 w-4 text-[#ff5757]" /> Espace Sécurisé Direction & Managers
+              <ShieldCheck className="h-4 w-4 text-[#0284c7]" /> Espace Sécurisé Direction & Managers
             </span>
             <span>AQ8 Algérie © 2026</span>
           </div>
@@ -265,10 +265,10 @@ export function CrmPortal({
         {/* ─── COLUMN 2 (RIGHT): FORM CONTAINER ─── */}
         <div className="lg:col-span-6 p-6 sm:p-10 flex flex-col justify-center bg-white space-y-6">
           <div className="space-y-2">
-            <div className="h-10 w-10 bg-[#353535] text-white rounded-2xl flex items-center justify-center shadow-md border border-[#ff5757]/30">
+            <div className="h-10 w-10 bg-[#353535] text-white rounded-2xl flex items-center justify-center shadow-md border border-[#0284c7]/30">
               {showForgotPassword
-                ? <KeyRound className="h-5 w-5 text-[#ff5757]" />
-                : <ShieldCheck className="h-5 w-5 text-[#ff5757]" />}
+                ? <KeyRound className="h-5 w-5 text-[#0284c7]" />
+                : <ShieldCheck className="h-5 w-5 text-[#0284c7]" />}
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-[#353535] font-display">
               {showForgotPassword ? 'Réinitialiser le mot de passe' : 'Connexion CRM AQ8'}
@@ -298,7 +298,7 @@ export function CrmPortal({
                   <button
                     type="button"
                     onClick={() => { setShowForgotPassword(false); setResetSent(false); setResetEmail(''); setResetError(null); }}
-                    className="flex items-center gap-1.5 text-xs font-bold text-[#ff5757] hover:text-[#e04646] transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 text-xs font-bold text-[#0284c7] hover:text-[#0369a1] transition-colors cursor-pointer"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" /> Retour à la connexion
                   </button>
@@ -322,7 +322,7 @@ export function CrmPortal({
                           value={resetEmail}
                           onChange={(e) => { setResetEmail(e.target.value); setResetError(null); }}
                           placeholder="karim@aq8algerie.com"
-                          className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50/70 text-slate-900 focus:outline-none focus:border-[#ff5757] text-xs"
+                          className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50/70 text-slate-900 focus:outline-none focus:border-[#0284c7] text-xs"
                         />
                       </div>
                     </div>
@@ -330,7 +330,7 @@ export function CrmPortal({
                     <button
                       type="submit"
                       disabled={isResetting}
-                      className="w-full py-3 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl shadow-md transition-premium text-center flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full py-3 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-white rounded-xl shadow-md transition-premium text-center flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {isResetting && <Loader2 className="h-4 w-4 animate-spin" />}
                       Envoyer le lien de réinitialisation
@@ -370,7 +370,7 @@ export function CrmPortal({
                         setErrorMessage(null);
                       }}
                       placeholder="karim@aq8algerie.com"
-                      className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50/70 text-slate-900 focus:outline-none focus:border-[#ff5757] text-xs"
+                      className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50/70 text-slate-900 focus:outline-none focus:border-[#0284c7] text-xs"
                     />
                   </div>
                 </div>
@@ -381,7 +381,7 @@ export function CrmPortal({
                     <button
                       type="button"
                       onClick={() => { setShowForgotPassword(true); setErrorMessage(null); }}
-                      className="text-[11px] font-bold text-[#ff5757] hover:text-[#e04646] transition-colors cursor-pointer"
+                      className="text-[11px] font-bold text-[#0284c7] hover:text-[#0369a1] transition-colors cursor-pointer"
                     >
                       Mot de passe oublié ?
                     </button>
@@ -397,7 +397,7 @@ export function CrmPortal({
                         setErrorMessage(null);
                       }}
                       placeholder="************"
-                      className="w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-xl bg-slate-50/70 text-slate-900 focus:outline-none focus:border-[#ff5757] text-xs"
+                      className="w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-xl bg-slate-50/70 text-slate-900 focus:outline-none focus:border-[#0284c7] text-xs"
                     />
                     <button
                       type="button"
@@ -434,7 +434,7 @@ export function CrmPortal({
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-extrabold text-slate-700 shadow-xs transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2"
               >
                 {isGoogleSubmitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-[#ff5757]" />
+                  <Loader2 className="h-4 w-4 animate-spin text-[#0284c7]" />
                 ) : (
                   <span className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-black text-[#4285f4]">G</span>
                 )}

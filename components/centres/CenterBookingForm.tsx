@@ -399,11 +399,11 @@ export function CenterBookingForm({
   }
 
   return (
-    <div className="rounded-lg border border-slate-200/80 bg-white p-6 shadow-[0_24px_60px_rgba(255,87,87,0.06)] relative overflow-hidden ring-1 ring-slate-100/50">
-      <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-[#ff5757] to-amber-400" />
+    <div className="rounded-lg border border-slate-200/80 bg-white p-6 shadow-[0_24px_60px_rgba(2,132,199,0.06)] relative overflow-hidden ring-1 ring-slate-100/50">
+      <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-[#0284c7] to-amber-400" />
       
       <div className="mb-5 space-y-2">
-        <span className="text-xs font-bold uppercase text-[#ff5757]">
+        <span className="text-xs font-bold uppercase text-[#0284c7]">
           Réservation en ligne instantanée
         </span>
         <h2 className="font-display text-xl font-bold text-[#353535]">
@@ -422,7 +422,7 @@ export function CenterBookingForm({
             onChange={(e) => {
               setSelectedCenterId(e.target.value);
             }}
-            className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white"
+            className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#0284c7] focus:bg-white"
           >
             <option value="">-- Sélectionner un centre --</option>
             {allCenters.map((item) => (
@@ -533,7 +533,7 @@ export function CenterBookingForm({
                 value={service}
                 onChange={(e) => setService(e.target.value)}
                 disabled={isLoading}
-                className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+                className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#0284c7] focus:bg-white disabled:opacity-60"
               >
                 {resolvedServices.map((item) => (
                   <option key={item} value={item}>
@@ -552,7 +552,7 @@ export function CenterBookingForm({
                   value={bookingDate}
                   onChange={(e) => setBookingDate(e.target.value)}
                   disabled={isLoading}
-                  className="w-full sm:w-1/2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60 font-semibold"
+                  className="w-full sm:w-1/2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#0284c7] focus:bg-white disabled:opacity-60 font-semibold"
                 />
               </div>
 
@@ -588,7 +588,7 @@ export function CenterBookingForm({
                                 : "text-slate-500 hover:text-slate-800"
                             }`}
                           >
-                            <Icon className={`h-3.5 w-3.5 ${isTabActive ? "text-[#ff5757]" : ""}`} />
+                            <Icon className={`h-3.5 w-3.5 ${isTabActive ? "text-[#0284c7]" : ""}`} />
                             <span>{tab.label}</span>
                           </button>
                         );
@@ -616,9 +616,9 @@ export function CenterBookingForm({
                               whileHover={isFull ? {} : { scale: 1.02 }}
                               whileTap={isFull ? {} : { scale: 0.98 }}
                               layout
-                              className={`relative flex flex-col items-center justify-center rounded-xl p-3 border text-center transition-all outline-none focus:ring-2 focus:ring-[#ff5757]/50 ${
+                              className={`relative flex flex-col items-center justify-center rounded-xl p-3 border text-center transition-all outline-none focus:ring-2 focus:ring-[#0284c7]/50 ${
                                 isSelected
-                                  ? "border-[#ff5757] text-white shadow-lg shadow-[#ff5757]/15 z-10"
+                                  ? "border-[#0284c7] text-white shadow-lg shadow-[#0284c7]/15 z-10"
                                   : isFull
                                   ? "bg-slate-50 border-slate-100 text-slate-400 cursor-not-allowed"
                                   : remaining === 1
@@ -632,7 +632,7 @@ export function CenterBookingForm({
                               {isSelected && (
                                 <motion.div
                                   layoutId="selectedHourBubble"
-                                  className="absolute inset-0 bg-[#ff5757] rounded-xl z-0"
+                                  className="absolute inset-0 bg-[#0284c7] rounded-xl z-0"
                                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                                 />
                               )}
@@ -694,17 +694,17 @@ export function CenterBookingForm({
                 className="rounded-xl border border-slate-100 bg-[#fbfbfe] p-4 text-xs font-semibold space-y-2 mt-4 shadow-sm"
               >
                 <div className="flex items-center gap-1.5 text-slate-500 uppercase tracking-widest text-[9px] font-extrabold">
-                  <ShieldCheck className="h-3.5 w-3.5 text-[#ff5757]" /> Récapitulatif de votre demande
+                  <ShieldCheck className="h-3.5 w-3.5 text-[#0284c7]" /> Récapitulatif de votre demande
                 </div>
                 <div className="text-slate-800 space-y-1">
                   <p>
-                    Prestation : <span className="font-bold text-[#ff5757]">{getServiceLabel(service)}</span>
+                    Prestation : <span className="font-bold text-[#0284c7]">{getServiceLabel(service)}</span>
                   </p>
                   <p>
                     Centre : <span className="font-bold">{resolvedCenterName} ({resolvedCenterCity})</span>
                   </p>
                   <p>
-                    Date & Heure : <span className="font-bold text-[#ff5757]">{new Date(bookingDate).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span> à <span className="font-bold text-[#ff5757]">{bookingTime}</span>
+                    Date & Heure : <span className="font-bold text-[#0284c7]">{new Date(bookingDate).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span> à <span className="font-bold text-[#0284c7]">{bookingTime}</span>
                   </p>
                 </div>
               </motion.div>
@@ -712,7 +712,7 @@ export function CenterBookingForm({
             <button
               type="submit"
               disabled={!canSubmit}
-              className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#ff5757] px-5 py-3.5 text-sm font-bold text-white transition-premium hover:bg-[#e94949] hover:shadow-lg hover:shadow-[#ff5757]/15 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#0284c7] px-5 py-3.5 text-sm font-bold text-white transition-premium hover:bg-[#0369a1] hover:shadow-lg hover:shadow-[#0284c7]/15 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
