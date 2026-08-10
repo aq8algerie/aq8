@@ -74,10 +74,10 @@ export default function Aq8Page() {
             className="absolute inset-0 h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-[#202025]/65" />
-          <div className="absolute inset-0 bg-gradient-to-br from-[#353535]/90 via-[#353535]/55 to-[#ff5757]/25" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#353535]/90 via-[#353535]/55 to-[#0284c7]/25" />
 
           <div className="relative z-10 mx-auto max-w-4xl text-center flex flex-col items-center justify-center space-y-7">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#ff5757]/30 bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#0284c7]/30 bg-[#0284c7]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#0284c7]">
               <Zap className="h-3.5 w-3.5" />
               Technologie AQ8 EMS
             </span>
@@ -98,7 +98,7 @@ export default function Aq8Page() {
               <Link
                 href="/centres"
                 aria-label="Trouver un centre AQ8 en Algérie"
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff5757] px-6 py-3 text-sm font-bold text-white transition-all hover:bg-[#e94949]"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#0284c7] px-6 py-3 text-sm font-bold text-white transition-all hover:bg-[#0369a1]"
               >
                 Trouver un centre
                 <ArrowRight className="h-4 w-4" />
@@ -118,7 +118,7 @@ export default function Aq8Page() {
         {/* Intro */}
         <section className="grid gap-10 lg:grid-cols-12 lg:items-center">
           <div className="space-y-5 lg:col-span-5">
-            <span className="inline-flex items-center gap-2 rounded-full bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[#0284c7]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#0284c7]">
               <Sparkles className="h-3.5 w-3.5" />
               Électrostimulation active
             </span>
@@ -149,7 +149,7 @@ export default function Aq8Page() {
                   key={benefit.title}
                   className="rounded-lg border border-slate-100 bg-white p-6 transition-all"
                 >
-                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-md bg-[#ff5757]/10 text-[#ff5757]">
+                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-md bg-[#0284c7]/10 text-[#0284c7]">
                     <Icon className="h-5 w-5" />
                   </div>
 
@@ -170,7 +170,7 @@ export default function Aq8Page() {
         <section className="rounded-lg border border-slate-100 bg-slate-50 px-6 py-12 sm:px-10 lg:px-12">
           <div className="grid gap-10 lg:grid-cols-12 lg:items-start">
             <div className="space-y-4 lg:col-span-5">
-              <span className="inline-flex items-center gap-2 rounded-full bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
+              <span className="inline-flex items-center gap-2 rounded-full bg-[#0284c7]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#0284c7]">
                 <Dumbbell className="h-3.5 w-3.5" />
                 Objectifs possibles
               </span>
@@ -192,7 +192,7 @@ export default function Aq8Page() {
                   key={objective}
                   className="flex items-center gap-3 rounded-md border border-slate-100 bg-white px-4 py-3"
                 >
-                  <CheckCircle2 className="h-5 w-5 shrink-0 text-[#ff5757]" />
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-[#0284c7]" />
                   <span className="text-sm font-semibold text-slate-700">
                     {objective}
                   </span>
@@ -208,7 +208,7 @@ export default function Aq8Page() {
         {/* Session process */}
         <section className="space-y-10">
           <div className="mx-auto max-w-2xl space-y-4 text-center">
-            <span className="inline-flex items-center gap-2 rounded-full bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[#0284c7]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#0284c7]">
               <Clock className="h-3.5 w-3.5" />
               Déroulement
             </span>
@@ -230,12 +230,12 @@ export default function Aq8Page() {
                 key={step}
                 className="relative overflow-hidden rounded-lg border border-slate-100 bg-white p-6 transition-all"
               >
-                <span className="absolute right-4 top-4 font-mono text-4xl font-black leading-none text-[#ff5757]/10">
+                <span className="absolute right-4 top-4 font-mono text-4xl font-black leading-none text-[#0284c7]/10">
                   {String(index + 1).padStart(2, "0")}
                 </span>
 
                 <div className="relative space-y-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#ff5757]/10 text-sm font-black text-[#ff5757]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#0284c7]/10 text-sm font-black text-[#0284c7]">
                     {index + 1}
                   </div>
 
@@ -288,7 +288,7 @@ export default function Aq8Page() {
               <Link
                 href="/centres"
                 aria-label="Trouver un centre AQ8"
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff5757] px-6 py-3 text-sm font-bold text-white transition-all hover:bg-[#e94949]"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#0284c7] px-6 py-3 text-sm font-bold text-white transition-all hover:bg-[#0369a1]"
               >
                 Trouver un centre
                 <ArrowRight className="h-4 w-4" />

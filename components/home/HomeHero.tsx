@@ -7,11 +7,11 @@ type HomeHeroProps = {
 
 export function HomeHero({ centerCount }: HomeHeroProps) {
   return (
-    <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1a1a1a] via-[#222222] to-[#2a1717] text-white shadow-2xl lg:min-h-[580px]">
+    <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1a1a1a] via-[#1e293b] to-[#0f172a] text-white shadow-2xl lg:min-h-[580px]">
       {/* Background Decorative Ambient Glow */}
-      <div className="pointer-events-none absolute -left-20 -top-20 h-72 w-72 sm:h-96 sm:w-96 rounded-full bg-[#ff5757]/15 blur-3xl" />
-      <div className="pointer-events-none absolute -right-20 -bottom-20 h-72 w-72 sm:h-96 sm:w-96 rounded-full bg-[#ff5757]/10 blur-3xl" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,87,87,0.12),transparent_60%)]" />
+      <div className="pointer-events-none absolute -left-20 -top-20 h-72 w-72 sm:h-96 sm:w-96 rounded-full bg-[#0284c7]/20 blur-3xl" />
+      <div className="pointer-events-none absolute -right-20 -bottom-20 h-72 w-72 sm:h-96 sm:w-96 rounded-full bg-[#0284c7]/15 blur-3xl" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(2,132,199,0.15),transparent_60%)]" />
 
       <div className="relative z-10 grid items-center lg:grid-cols-12 lg:gap-8">
         {/* Left Column: Headline & Action */}
@@ -19,15 +19,15 @@ export function HomeHero({ centerCount }: HomeHeroProps) {
           <div className="space-y-5 sm:space-y-6">
             {/* Top Pill Tag */}
             <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/15 bg-white/8 px-3.5 py-1.5 text-[11px] sm:text-xs font-semibold text-white/90 backdrop-blur-md shadow-inner">
-              <span className="flex h-2 w-2 shrink-0 rounded-full bg-[#ff5757] animate-pulse" />
-              <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-[#ff7777]" />
+              <span className="flex h-2 w-2 shrink-0 rounded-full bg-[#0284c7] animate-pulse" />
+              <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-[#38bdf8]" />
               <span className="truncate">N°1 Électrostimulation EMS & Wonder Axion en Algérie</span>
             </div>
 
             {/* SEO-Optimized Heading & Subtitle */}
             <div className="space-y-3 sm:space-y-4">
               <h1 className="font-display text-2xl xs:text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.1] sm:leading-[1.08]">
-                Transformez votre corps en <span className="bg-gradient-to-r from-[#ff6b6b] via-[#ff8f8f] to-white bg-clip-text text-transparent">20 minutes</span> par séance
+                Transformez votre corps en <span className="bg-gradient-to-r from-[#38bdf8] via-[#7dd3fc] to-white bg-clip-text text-transparent">20 minutes</span> par séance
               </h1>
               <p className="max-w-xl text-xs sm:text-base lg:text-lg font-normal leading-relaxed text-slate-300">
                 La référence de l’entraînement révolutionnaire AQ8 EMS et de la technologie électromagnétique Wonder Axion dans vos centres certifiés en Algérie.
@@ -39,7 +39,7 @@ export function HomeHero({ centerCount }: HomeHeroProps) {
               <Link
                 href="/reservation"
                 aria-label="Réserver une séance AQ8"
-                className="group relative inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#ff5757] via-[#ff4747] to-[#e63e3e] px-7 py-4 font-display text-sm sm:text-base font-extrabold text-white shadow-[0_12px_32px_rgba(255,87,87,0.35)] transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_20px_45px_rgba(255,87,87,0.5)] active:scale-[0.98] border border-white/20"
+                className="group relative inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#0284c7] via-[#0369a1] to-[#075985] px-7 py-4 font-display text-sm sm:text-base font-extrabold text-white shadow-[0_12px_32px_rgba(2,132,199,0.35)] transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_20px_45px_rgba(2,132,199,0.5)] active:scale-[0.98] border border-white/20"
               >
                 <Calendar className="h-5 w-5 transition-transform duration-300 group-hover:rotate-12" />
                 <span>Réserver une séance</span>
