@@ -115,7 +115,7 @@ export function ClientPortalClient() {
       <div className="mx-auto max-w-md space-y-8 py-6">
         {/* Header Title */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#0284c7]/20 bg-[#fff0f0] px-4 py-1.5 text-xs font-extrabold uppercase text-[#0284c7] shadow-sm">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#0284c7]/20 bg-[#f0f9ff] px-4 py-1.5 text-xs font-extrabold uppercase text-[#0284c7] shadow-sm">
             <User className="h-4 w-4" />
             Espace Adhérent AQ8
           </div>
@@ -160,7 +160,7 @@ export function ClientPortalClient() {
             <button
               type="submit"
               disabled={isLoggingIn || !phoneInput.trim()}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#0284c7] py-3.5 px-5 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#e64747] hover:scale-[1.02] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#0284c7] py-3.5 px-5 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#0369a1] hover:scale-[1.02] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isLoggingIn ? (
                 <>
@@ -183,7 +183,7 @@ export function ClientPortalClient() {
             </p>
             <Link
               href="/reservation"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-4 text-xs font-bold text-[#242424] transition hover:border-[#0284c7] hover:bg-[#fff0f0] hover:text-[#0284c7]"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-4 text-xs font-bold text-[#242424] transition hover:border-[#0284c7] hover:bg-[#f0f9ff] hover:text-[#0284c7]"
             >
               <Calendar className="h-3.5 w-3.5 text-[#0284c7]" />
               Réserver ma 1ère séance en direct
@@ -241,7 +241,7 @@ export function ClientPortalClient() {
           <div className="flex items-center gap-3">
             <Link
               href="/reservation"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#0284c7] px-4 py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-[#e64747] hover:scale-105"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0284c7] px-4 py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-[#0369a1] hover:scale-105"
             >
               <Calendar className="h-4 w-4" />
               Réserver un créneau
@@ -339,7 +339,7 @@ export function ClientPortalClient() {
               </div>
               <Link
                 href="/reservation"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#0284c7] px-5 py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-[#e64747]"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#0284c7] px-5 py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-[#0369a1]"
               >
                 <Calendar className="h-4 w-4" />
                 Réserver ma 1ère séance
@@ -360,7 +360,7 @@ export function ClientPortalClient() {
                   >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="rounded-lg bg-[#fff0f0] px-2.5 py-1 text-xs font-black text-[#0284c7] uppercase">
+                        <span className="rounded-lg bg-[#f0f9ff] px-2.5 py-1 text-xs font-black text-[#0284c7] uppercase">
                           {serviceLabel}
                         </span>
                         <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${

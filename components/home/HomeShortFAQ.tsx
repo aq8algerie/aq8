@@ -26,7 +26,7 @@ export function HomeShortFAQ() {
       {/* Section Header */}
       <div className="flex flex-col justify-between gap-5 border-b border-slate-200/80 pb-8 sm:flex-row sm:items-end">
         <div className="max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-md bg-[#fff0f0] px-3 py-1 text-xs font-extrabold uppercase text-[#0284c7]">
+          <div className="inline-flex items-center gap-2 rounded-md bg-[#f0f9ff] px-3 py-1 text-xs font-extrabold uppercase text-[#0284c7]">
             <HelpCircle className="h-3.5 w-3.5" />
             Vos Questions Fréquentes
           </div>
@@ -54,7 +54,7 @@ export function HomeShortFAQ() {
           >
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="rounded-md bg-[#fff0f0] px-2.5 py-1 text-[11px] font-extrabold uppercase text-[#0284c7]">
+                <span className="rounded-md bg-[#f0f9ff] px-2.5 py-1 text-[11px] font-extrabold uppercase text-[#0284c7]">
                   Question 0{index + 1}
                 </span>
                 <Sparkles className="h-4 w-4 text-slate-300 transition-colors group-hover:text-[#38bdf8]" />

@@ -46,7 +46,7 @@ export function HomeTechnologies() {
       {/* Section Header */}
       <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-8 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-md bg-[#fff0f0] px-3 py-1 text-xs font-extrabold uppercase text-[#0284c7]">
+          <div className="inline-flex items-center gap-2 rounded-md bg-[#f0f9ff] px-3 py-1 text-xs font-extrabold uppercase text-[#0284c7]">
             <Sparkles className="h-3.5 w-3.5" />
             Technologies Exclusives AQ8
           </div>
@@ -152,7 +152,7 @@ export function HomeTechnologies() {
           </div>
           <Link
             href="/reservation"
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#0284c7] px-5 py-3 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:bg-[#e64747] hover:scale-105"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#0284c7] px-5 py-3 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:bg-[#0369a1] hover:scale-105"
           >
             <span>Réserver un bilan gratuit</span>
             <ArrowRight className="h-4 w-4" />

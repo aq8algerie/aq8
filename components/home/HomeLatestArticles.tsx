@@ -30,7 +30,7 @@ export function HomeLatestArticles({ posts }: { posts: BlogPost[] }) {
       <div className="grid gap-6 border-b border-slate-200 pb-7 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <div className="max-w-3xl">
           <p className="inline-flex items-center gap-2 text-sm font-bold text-[#0284c7]">
-            <span className="grid h-8 w-8 place-items-center rounded-md bg-[#fff0f0]">
+            <span className="grid h-8 w-8 place-items-center rounded-md bg-[#f0f9ff]">
               <BookOpen className="h-4 w-4" aria-hidden="true" />
             </span>
             {"Conseils & actualit\u00e9s"}

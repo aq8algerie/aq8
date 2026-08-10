@@ -32,7 +32,7 @@ export function HomeWhyChoose() {
     <section className="space-y-10 sm:space-y-12">
       <div className="grid gap-8 lg:grid-cols-12 lg:items-stretch">
         {/* Left Bento Banner */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#242424] via-[#1a1a1a] to-[#2b1717] p-8 text-white shadow-xl lg:col-span-4 flex flex-col justify-between">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#242424] via-[#1e293b] to-[#0f172a] p-8 text-white shadow-xl lg:col-span-4 flex flex-col justify-between">
           <div className="pointer-events-none absolute -right-12 -top-12 h-64 w-64 rounded-full bg-[#0284c7]/20 blur-3xl" />
           
           <div className="relative z-10 space-y-6">
@@ -74,7 +74,7 @@ export function HomeWhyChoose() {
               >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#fff0f0] text-[#0284c7] shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:bg-[#0284c7] group-hover:text-white">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#f0f9ff] text-[#0284c7] shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:bg-[#0284c7] group-hover:text-white">
                       <Icon className="h-6 w-6" />
                     </div>
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-700">

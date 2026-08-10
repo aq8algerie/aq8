@@ -166,7 +166,7 @@ function calculateRecommendation(
         "Sculpting ciblé sur les zones réfractaires",
         "Suivi de mensurations hebdomadaire en centre",
       ],
-      gradient: "from-[#242424] to-[#402020]",
+      gradient: "from-[#242424] to-[#1e293b]",
       image: "/images/prestations/aq8.webp",
     };
   }
@@ -213,7 +213,7 @@ export function HomeProgramSimulator() {
 
       {/* Header Info */}
       <div className="relative z-10 mx-auto max-w-3xl text-center space-y-3">
-        <div className="inline-flex items-center gap-2 rounded-full border border-[#0284c7]/20 bg-[#fff0f0] px-4 py-1.5 text-xs font-extrabold uppercase text-[#0284c7] shadow-sm">
+        <div className="inline-flex items-center gap-2 rounded-full border border-[#0284c7]/20 bg-[#f0f9ff] px-4 py-1.5 text-xs font-extrabold uppercase text-[#0284c7] shadow-sm">
           <Sparkles className="h-4 w-4" />
           Bilan Interactif Gratuit
         </div>
@@ -258,7 +258,7 @@ export function HomeProgramSimulator() {
                   onClick={() => setSelectedObjective(obj.id)}
                   className={`group relative flex flex-col justify-between rounded-2xl p-5 text-left transition-all duration-300 border ${
                     isSelected
-                      ? "border-[#0284c7] bg-[#fff8f8] shadow-lg ring-2 ring-[#0284c7]/20 scale-[1.02]"
+                      ? "border-[#0284c7] bg-[#f0f9ff] shadow-lg ring-2 ring-[#0284c7]/20 scale-[1.02]"
                       : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80"
                   }`}
                 >
@@ -299,7 +299,7 @@ export function HomeProgramSimulator() {
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#0284c7] px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#e64747] hover:scale-105"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0284c7] px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#0369a1] hover:scale-105"
             >
               <span>Étape suivante</span>
               <ArrowRight className="h-4 w-4" />
@@ -324,7 +324,7 @@ export function HomeProgramSimulator() {
                   onClick={() => setSelectedFrequency(freq.id)}
                   className={`group relative flex flex-col justify-between rounded-2xl p-5 text-center transition-all duration-300 border ${
                     isSelected
-                      ? "border-[#0284c7] bg-[#fff8f8] shadow-lg ring-2 ring-[#0284c7]/20 scale-[1.02]"
+                      ? "border-[#0284c7] bg-[#f0f9ff] shadow-lg ring-2 ring-[#0284c7]/20 scale-[1.02]"
                       : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
@@ -359,7 +359,7 @@ export function HomeProgramSimulator() {
             <button
               type="button"
               onClick={() => setStep(3)}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#0284c7] px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#e64747] hover:scale-105"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0284c7] px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#0369a1] hover:scale-105"
             >
               <span>Étape suivante</span>
               <ArrowRight className="h-4 w-4" />
@@ -385,7 +385,7 @@ export function HomeProgramSimulator() {
                   onClick={() => setSelectedZone(zone.id)}
                   className={`group relative flex items-center gap-4 rounded-2xl p-4 text-left transition-all duration-300 border ${
                     isSelected
-                      ? "border-[#0284c7] bg-[#fff8f8] shadow-lg ring-2 ring-[#0284c7]/20 scale-[1.02]"
+                      ? "border-[#0284c7] bg-[#f0f9ff] shadow-lg ring-2 ring-[#0284c7]/20 scale-[1.02]"
                       : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
@@ -416,7 +416,7 @@ export function HomeProgramSimulator() {
             <button
               type="button"
               onClick={() => setStep(4)}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#0284c7] px-7 py-3 text-sm font-bold text-white shadow-xl transition-all hover:bg-[#e64747] hover:scale-105"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0284c7] px-7 py-3 text-sm font-bold text-white shadow-xl transition-all hover:bg-[#0369a1] hover:scale-105"
             >
               <Sparkles className="h-4 w-4" />
               <span>Voir mon bilan recommandé</span>
@@ -482,7 +482,7 @@ export function HomeProgramSimulator() {
                 <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-800">
                   <Link
                     href={`/reservation?service=${recommendation.serviceQuery}&objective=${selectedObjective}`}
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#0284c7] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#e64747] hover:scale-105"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#0284c7] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#0369a1] hover:scale-105"
                   >
                     <span>Réserver mon bilan gratuit</span>
                     <ArrowRight className="h-4 w-4" />

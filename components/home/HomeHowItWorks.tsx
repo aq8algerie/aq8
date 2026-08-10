@@ -34,7 +34,7 @@ export function HomeHowItWorks() {
       {/* Section Header */}
       <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-8 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-md bg-[#fff0f0] px-3 py-1 text-xs font-extrabold uppercase text-[#0284c7]">
+          <div className="inline-flex items-center gap-2 rounded-md bg-[#f0f9ff] px-3 py-1 text-xs font-extrabold uppercase text-[#0284c7]">
             <CheckCircle2 className="h-3.5 w-3.5" />
             Parcours Simple & Rapide
           </div>
@@ -62,7 +62,7 @@ export function HomeHowItWorks() {
                   <span className="flex h-8 w-12 items-center justify-center rounded-lg bg-[#242424] font-display text-xs font-black text-white shadow-sm">
                     {item.step}
                   </span>
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#fff0f0] text-[#0284c7] transition-all duration-300 group-hover:bg-[#0284c7] group-hover:text-white group-hover:scale-110">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#f0f9ff] text-[#0284c7] transition-all duration-300 group-hover:bg-[#0284c7] group-hover:text-white group-hover:scale-110">
                     <Icon className="h-5 w-5" />
                   </div>
                 </div>
@@ -106,7 +106,7 @@ export function HomeHowItWorks() {
           </div>
           <Link
             href="/reservation"
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#0284c7] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:bg-[#e64747] hover:scale-105"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#0284c7] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:bg-[#0369a1] hover:scale-105"
           >
             <span>Réverser maintenant</span>
             <ArrowRight className="h-4 w-4" />

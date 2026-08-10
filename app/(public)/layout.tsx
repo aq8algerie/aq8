@@ -84,7 +84,7 @@ export default function PublicLayout({
                 href="/"
                 className={`rounded-xl px-4 py-2 transition-all duration-200 ${
                   isActive("/")
-                    ? "bg-white text-[#0284c7] shadow-md shadow-rose-500/10 font-extrabold"
+                    ? "bg-white text-[#0284c7] shadow-md shadow-sky-500/10 font-extrabold"
                     : "hover:bg-white/80 hover:text-[#242424]"
                 }`}
               >
@@ -101,7 +101,7 @@ export default function PublicLayout({
                   type="button"
                   className={`flex items-center gap-1.5 px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
                     isActive("/aq8") || isActive("/wonder")
-                      ? "bg-white text-[#0284c7] shadow-md shadow-rose-500/10 font-extrabold"
+                      ? "bg-white text-[#0284c7] shadow-md shadow-sky-500/10 font-extrabold"
                       : "hover:bg-white/80 hover:text-[#242424]"
                   }`}
                   onClick={() => setTechnologyMenuOpen(open => !open)}
@@ -119,7 +119,7 @@ export default function PublicLayout({
                   <Link
                     href="/aq8"
                     onClick={() => setTechnologyMenuOpen(false)}
-                    className="flex items-start gap-3 rounded-xl p-3 hover:bg-[#fff0f0] transition-all group/item"
+                    className="flex items-start gap-3 rounded-xl p-3 hover:bg-[#f0f9ff] transition-all group/item"
                   >
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#0284c7] text-white shadow-md group-hover/item:scale-110 transition-transform">
                       <Zap className="h-4 w-4" />
@@ -160,7 +160,7 @@ export default function PublicLayout({
                 href="/a-propos"
                 className={`rounded-xl px-4 py-2 transition-all duration-200 ${
                   isActive("/a-propos")
-                    ? "bg-white text-[#0284c7] shadow-md shadow-rose-500/10 font-extrabold"
+                    ? "bg-white text-[#0284c7] shadow-md shadow-sky-500/10 font-extrabold"
                     : "hover:bg-white/80 hover:text-[#242424]"
                 }`}
               >
@@ -170,7 +170,7 @@ export default function PublicLayout({
                 href="/centres"
                 className={`rounded-xl px-4 py-2 transition-all duration-200 ${
                   isActive("/centres")
-                    ? "bg-white text-[#0284c7] shadow-md shadow-rose-500/10 font-extrabold"
+                    ? "bg-white text-[#0284c7] shadow-md shadow-sky-500/10 font-extrabold"
                     : "hover:bg-white/80 hover:text-[#242424]"
                 }`}
               >
@@ -180,7 +180,7 @@ export default function PublicLayout({
                 href="/conseils"
                 className={`rounded-xl px-4 py-2 transition-all duration-200 ${
                   isActive("/conseils")
-                    ? "bg-white text-[#0284c7] shadow-md shadow-rose-500/10 font-extrabold"
+                    ? "bg-white text-[#0284c7] shadow-md shadow-sky-500/10 font-extrabold"
                     : "hover:bg-white/80 hover:text-[#242424]"
                 }`}
               >
@@ -190,7 +190,7 @@ export default function PublicLayout({
                 href="/contact"
                 className={`rounded-xl px-4 py-2 transition-all duration-200 ${
                   isActive("/contact")
-                    ? "bg-white text-[#0284c7] shadow-md shadow-rose-500/10 font-extrabold"
+                    ? "bg-white text-[#0284c7] shadow-md shadow-sky-500/10 font-extrabold"
                     : "hover:bg-white/80 hover:text-[#242424]"
                 }`}
               >
@@ -202,14 +202,14 @@ export default function PublicLayout({
             <div className="hidden lg:flex items-center gap-2.5">
               <Link
                 href="/client"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-3 text-xs font-bold text-[#242424] transition-all duration-200 hover:border-[#0284c7] hover:bg-[#fff0f0] hover:text-[#0284c7] shadow-sm"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-3 text-xs font-bold text-[#242424] transition-all duration-200 hover:border-[#0284c7] hover:bg-sky-50 hover:text-[#0284c7] shadow-sm"
               >
                 <User className="h-4 w-4 text-[#0284c7]" />
                 <span>Mon Espace</span>
               </Link>
               <Link
                 href="/reservation"
-                className="group relative inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0284c7] to-[#e63e3e] px-5 py-3 text-xs font-bold text-white shadow-lg shadow-[#0284c7]/25 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#0284c7]/35 active:scale-[0.98]"
+                className="group relative inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0284c7] to-[#06b6d4] px-5 py-3 text-xs font-bold text-white shadow-lg shadow-[#0284c7]/25 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#0284c7]/35 active:scale-[0.98]"
               >
                 <Calendar className="h-4 w-4 transition-transform group-hover:scale-110" />
                 <span>Réserver</span>
@@ -268,7 +268,7 @@ export default function PublicLayout({
             <Link
               href="/reservation"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0284c7] to-[#e63e3e] px-4 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0284c7]/20"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0284c7] to-[#06b6d4] px-4 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0284c7]/20"
             >
               <Calendar className="h-4 w-4" />
               Réserver une séance
@@ -288,7 +288,7 @@ export default function PublicLayout({
                   href={link.id}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`w-full text-left px-3.5 py-2.5 rounded-xl flex items-center gap-2.5 transition-colors ${
-                    isActive(link.id) ? "bg-[#fff0f0] text-[#0284c7]" : "text-slate-700 hover:bg-slate-50"
+                    isActive(link.id) ? "bg-[#f0f9ff] text-[#0284c7]" : "text-slate-700 hover:bg-slate-50"
                   }`}
                 >
                   {link.id === "/login" && <ShieldCheck className="h-4 w-4 text-[#0284c7]" />}

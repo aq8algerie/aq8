@@ -22,7 +22,7 @@ export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {
     return (
       <section className="rounded-2xl border border-slate-200/80 bg-white px-6 py-12 text-center shadow-lg sm:px-10">
         <div className="mx-auto max-w-xl space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#fff0f0] px-3 py-1 text-xs font-bold text-[#0284c7]">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#f0f9ff] px-3 py-1 text-xs font-bold text-[#0284c7]">
             <MapPin className="h-3.5 w-3.5" />
             Réseau National AQ8
           </div>
@@ -40,7 +40,7 @@ export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {
       {/* Section Header */}
       <div className="flex flex-col justify-between gap-5 border-b border-slate-200/80 pb-8 sm:flex-row sm:items-end">
         <div className="max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-md bg-[#fff0f0] px-3 py-1 text-xs font-extrabold uppercase text-[#0284c7]">
+          <div className="inline-flex items-center gap-2 rounded-md bg-[#f0f9ff] px-3 py-1 text-xs font-extrabold uppercase text-[#0284c7]">
             <MapPin className="h-3.5 w-3.5" />
             Réseau Officiel Algérie
           </div>
