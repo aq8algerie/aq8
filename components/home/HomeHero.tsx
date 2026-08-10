@@ -86,13 +86,13 @@ export function HomeHero({ centerCount }: HomeHeroProps) {
 
             {/* Floating Glassmorphism Badge Top Left (Positionné plus haut au-dessus de l'image) */}
             <div className="absolute -top-8 left-0 sm:-top-12 sm:-left-8 lg:-left-14 z-20 flex items-center gap-2.5 sm:gap-3 rounded-xl sm:rounded-2xl border border-white/20 bg-black/70 p-2.5 sm:p-3.5 shadow-2xl backdrop-blur-md">
-              <div className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br from-[#ff5757] to-[#d93838] text-white shadow-md">
+              <div className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br from-[#0284c7] to-[#d93838] text-white shadow-md">
                 <Zap className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1">
                   <span className="text-xs sm:text-sm font-bold text-white truncate">AQ8 EMS Pro</span>
-                  <Sparkles className="h-3.5 w-3.5 shrink-0 text-[#ff7777]" />
+                  <Sparkles className="h-3.5 w-3.5 shrink-0 text-[#38bdf8]" />
                 </div>
                 <span className="block text-[10px] sm:text-xs font-medium text-slate-300 truncate">350 muscles stimulés</span>
               </div>

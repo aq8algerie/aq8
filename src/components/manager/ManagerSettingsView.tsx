@@ -192,11 +192,11 @@ export function ManagerSettingsView({
     <div id="manager-settings-view" className="space-y-6">
       {/* Luxury Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1e1e1e] via-[#2a2a2a] to-[#121212] p-6 text-white shadow-xl border border-slate-800">
-        <div className="absolute top-0 right-0 h-64 w-64 translate-x-12 -translate-y-12 rounded-full bg-[#ff5757]/10 blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 h-64 w-64 translate-x-12 -translate-y-12 rounded-full bg-[#0284c7]/10 blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-widest text-[#ff8080] backdrop-blur-md">
-              <Settings className="h-3.5 w-3.5 text-[#ff5757]" />
+              <Settings className="h-3.5 w-3.5 text-[#0284c7]" />
               Centre & Configuration CRM
             </div>
             <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
@@ -236,7 +236,7 @@ export function ManagerSettingsView({
                 }`}
               >
                 <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
-                  isActive ? 'bg-[#ff5757] text-white shadow-sm' : 'bg-slate-100 text-slate-500'
+                  isActive ? 'bg-[#0284c7] text-white shadow-sm' : 'bg-slate-100 text-slate-500'
                 }`}>
                   <Icon className="h-5 w-5" />
                 </span>
@@ -279,7 +279,7 @@ export function ManagerSettingsView({
               type="button"
               onClick={handleSaveProfile}
               disabled={savingProfile}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#353535] px-4 py-2 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#ff5757] disabled:opacity-60 cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#353535] px-4 py-2 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#0284c7] disabled:opacity-60 cursor-pointer"
             >
               <Save className="h-3.5 w-3.5" />
               {savingProfile ? 'Enregistrement...' : 'Enregistrer les infos'}
@@ -295,7 +295,7 @@ export function ManagerSettingsView({
                 type="tel"
                 value={profile.phone}
                 onChange={(event) => updateProfile('phone', event.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-[#ff5757] focus:bg-white"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-[#0284c7] focus:bg-white"
               />
             </label>
 
@@ -305,7 +305,7 @@ export function ManagerSettingsView({
                 type="email"
                 value={profile.email}
                 onChange={(event) => updateProfile('email', event.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-[#ff5757] focus:bg-white"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-[#0284c7] focus:bg-white"
               />
             </label>
 
@@ -315,7 +315,7 @@ export function ManagerSettingsView({
                 type="text"
                 value={profile.address}
                 onChange={(event) => updateProfile('address', event.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-[#ff5757] focus:bg-white"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-[#0284c7] focus:bg-white"
               />
             </label>
 
@@ -330,7 +330,7 @@ export function ManagerSettingsView({
                     'inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-[11px] font-bold shadow-sm transition',
                     uploadingImage || savingProfile
                       ? 'bg-slate-100 text-slate-400'
-                      : 'bg-[#ff5757] text-white hover:bg-[#e94949] cursor-pointer',
+                      : 'bg-[#0284c7] text-white hover:bg-[#0369a1] cursor-pointer',
                   ].join(' ')}
                 >
                   {uploadingImage ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UploadCloud className="h-3.5 w-3.5" />}
@@ -373,7 +373,7 @@ export function ManagerSettingsView({
                     }}
                     aria-label="URL de l'image publique du centre"
                     placeholder="URL générée après upload Storage"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-[#ff5757] focus:bg-white"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-[#0284c7] focus:bg-white"
                   />
                   <div className="flex flex-col gap-2 text-[10px] font-semibold text-slate-400 sm:flex-row sm:items-center sm:justify-between">
                     <span className="truncate">{'gs://aq8algerie-4f675.firebasestorage.app/centers/' + currentCenter.id + '/public/'}</span>
@@ -382,7 +382,7 @@ export function ManagerSettingsView({
                         href={profile.imageUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 font-bold text-[#ff5757] hover:text-[#e94949]"
+                        className="inline-flex items-center gap-1 font-bold text-[#0284c7] hover:text-[#0369a1]"
                       >
                         Ouvrir <ExternalLink className="h-3 w-3" />
                       </a>
@@ -392,7 +392,7 @@ export function ManagerSettingsView({
                   {uploadingImage && (
                     <div className="h-2 overflow-hidden rounded-full bg-slate-100">
                       <div
-                        className="h-full rounded-full bg-[#ff5757] transition-all"
+                        className="h-full rounded-full bg-[#0284c7] transition-all"
                         style={{ width: imageUploadProgress + '%' }}
                       />
                     </div>
@@ -419,7 +419,7 @@ export function ManagerSettingsView({
                 type="text"
                 value={profile.schedule}
                 onChange={(event) => updateProfile('schedule', event.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-[#ff5757] focus:bg-white"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-[#0284c7] focus:bg-white"
               />
             </label>
 
@@ -429,7 +429,7 @@ export function ManagerSettingsView({
                 value={profile.description}
                 onChange={(event) => updateProfile('description', event.target.value)}
                 rows={4}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold leading-relaxed text-slate-800 outline-none focus:border-[#ff5757] focus:bg-white resize-none"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold leading-relaxed text-slate-800 outline-none focus:border-[#0284c7] focus:bg-white resize-none"
               />
             </label>
           </div>
@@ -440,7 +440,7 @@ export function ManagerSettingsView({
         <section id="manager-settings-personalization-panel" className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs space-y-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#ff5757]/10 text-[#ff5757]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0284c7]/10 text-[#0284c7]">
                 <FileText className="h-5 w-5" />
               </div>
               <div>
@@ -454,7 +454,7 @@ export function ManagerSettingsView({
               type="button"
               onClick={handleSaveProfile}
               disabled={savingProfile}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#353535] px-4 py-2 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#ff5757] disabled:opacity-60 cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#353535] px-4 py-2 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#0284c7] disabled:opacity-60 cursor-pointer"
             >
               <Save className="h-3.5 w-3.5" />
               {savingProfile ? 'Enregistrement...' : 'Enregistrer'}
@@ -470,7 +470,7 @@ export function ManagerSettingsView({
                 value={profile.importantNotesText}
                 onChange={(event) => updateProfile('importantNotesText', event.target.value)}
                 rows={7}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold leading-relaxed text-slate-800 outline-none focus:border-[#ff5757] focus:bg-white resize-none"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold leading-relaxed text-slate-800 outline-none focus:border-[#0284c7] focus:bg-white resize-none"
               />
             </label>
 
@@ -480,7 +480,7 @@ export function ManagerSettingsView({
                 value={profile.equipmentText}
                 onChange={(event) => updateProfile('equipmentText', event.target.value)}
                 rows={7}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold leading-relaxed text-slate-800 outline-none focus:border-[#ff5757] focus:bg-white resize-none"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold leading-relaxed text-slate-800 outline-none focus:border-[#0284c7] focus:bg-white resize-none"
               />
             </label>
 
@@ -490,7 +490,7 @@ export function ManagerSettingsView({
                 value={profile.menHoursText}
                 onChange={(event) => updateProfile('menHoursText', event.target.value)}
                 rows={5}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold leading-relaxed text-slate-800 outline-none focus:border-[#ff5757] focus:bg-white resize-none"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold leading-relaxed text-slate-800 outline-none focus:border-[#0284c7] focus:bg-white resize-none"
               />
             </label>
 
@@ -500,7 +500,7 @@ export function ManagerSettingsView({
                 value={profile.womenHoursText}
                 onChange={(event) => updateProfile('womenHoursText', event.target.value)}
                 rows={5}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold leading-relaxed text-slate-800 outline-none focus:border-[#ff5757] focus:bg-white resize-none"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold leading-relaxed text-slate-800 outline-none focus:border-[#0284c7] focus:bg-white resize-none"
               />
             </label>
 
@@ -510,7 +510,7 @@ export function ManagerSettingsView({
                 value={profile.cancellationRule}
                 onChange={(event) => updateProfile('cancellationRule', event.target.value)}
                 rows={4}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold leading-relaxed text-slate-800 outline-none focus:border-[#ff5757] focus:bg-white resize-none"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold leading-relaxed text-slate-800 outline-none focus:border-[#0284c7] focus:bg-white resize-none"
               />
             </label>
           </div>

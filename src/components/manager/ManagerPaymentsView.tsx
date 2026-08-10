@@ -150,7 +150,7 @@ export function ManagerPaymentsView({
           <button
             id="btn-payments-log"
             onClick={onLogPaymentClick}
-            className="px-3.5 py-1.5 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl transition-premium text-xs flex items-center justify-center gap-1 cursor-pointer shadow-xs"
+            className="px-3.5 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-white rounded-xl transition-premium text-xs flex items-center justify-center gap-1 cursor-pointer shadow-xs"
           >
             <Plus className="h-4 w-4" /> Enregistrer un encaissement
           </button>
@@ -163,7 +163,7 @@ export function ManagerPaymentsView({
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Rechercher client, reçu, forfait..."
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#ff5757] focus:bg-white"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#0284c7] focus:bg-white"
             />
           </label>
 
@@ -172,7 +172,7 @@ export function ManagerPaymentsView({
             <select
               value={methodFilter}
               onChange={(event) => setMethodFilter(event.target.value as PaymentMethodFilter)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#ff5757] focus:bg-white appearance-none"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#0284c7] focus:bg-white appearance-none"
             >
               <option value="all">Tous modes</option>
               <option value="cash">Espèces</option>
@@ -187,7 +187,7 @@ export function ManagerPaymentsView({
             <select
               value={packageFilter}
               onChange={(event) => setPackageFilter(event.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#ff5757] focus:bg-white appearance-none"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#0284c7] focus:bg-white appearance-none"
             >
               <option value="all">Tous forfaits</option>
               {packages.map(pack => (
@@ -201,7 +201,7 @@ export function ManagerPaymentsView({
             <select
               value={dateFilter}
               onChange={(event) => setDateFilter(event.target.value as PaymentDateFilter)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#ff5757] focus:bg-white appearance-none"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#0284c7] focus:bg-white appearance-none"
             >
               <option value="all">Toutes dates</option>
               <option value="today">Aujourd'hui</option>
@@ -216,7 +216,7 @@ export function ManagerPaymentsView({
             <select
               value={listPageSize}
               onChange={(event) => setListPageSize(Number(event.target.value) as PaymentPageSize)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#ff5757] focus:bg-white appearance-none"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#0284c7] focus:bg-white appearance-none"
             >
               {PAGE_SIZE_OPTIONS.map(size => (
                 <option key={size} value={size}>{size} / page</option>
@@ -339,7 +339,7 @@ export function ManagerPaymentsView({
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="font-mono font-bold text-sm text-[#ff5757] whitespace-nowrap">
+                  <span className="font-mono font-bold text-sm text-[#0284c7] whitespace-nowrap">
                     {amount.toLocaleString('fr-DZ')} DZD
                   </span>
                   <button
@@ -421,7 +421,7 @@ export function ManagerPaymentsView({
                 <div className="space-y-2">
                   <div className="flex justify-between font-bold text-slate-800 text-[11px] pb-1.5 gap-3">
                     <span>REÇU DE PAIEMENT N°</span>
-                    <span className="font-mono text-[#ff5757] text-right">{safeText(selectedReceiptPayment.receiptNumber) || `REC-${selectedReceiptPayment.id.slice(-6)}`}</span>
+                    <span className="font-mono text-[#0284c7] text-right">{safeText(selectedReceiptPayment.receiptNumber) || `REC-${selectedReceiptPayment.id.slice(-6)}`}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-200/50 py-1 font-medium gap-3">
                     <span className="text-slate-400">Date d'émission :</span>
@@ -442,8 +442,8 @@ export function ManagerPaymentsView({
                 </div>
 
                 {/* Amount Paid block */}
-                <div className="p-3 bg-[#ff5757]/5 border border-[#ff5757]/15 rounded-xl flex justify-between items-center gap-3">
-                  <span className="font-bold text-[#ff5757] uppercase text-[10px] tracking-wide">Montant Total Réglé</span>
+                <div className="p-3 bg-[#0284c7]/5 border border-[#0284c7]/15 rounded-xl flex justify-between items-center gap-3">
+                  <span className="font-bold text-[#0284c7] uppercase text-[10px] tracking-wide">Montant Total Réglé</span>
                   <span className="font-mono font-black text-slate-800 text-sm whitespace-nowrap">{receiptAmount.toLocaleString('fr-DZ')} DZD</span>
                 </div>
 

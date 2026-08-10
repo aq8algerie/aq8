@@ -108,7 +108,7 @@ export default async function CenterDetailPage({ params }: PageProps) {
 
             <Link
               href="/centres"
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-[#353535] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#ff5757]"
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-[#353535] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#0284c7]"
             >
               Voir tous les centres
               <ArrowRight className="h-4 w-4" />
@@ -145,7 +145,7 @@ export default async function CenterDetailPage({ params }: PageProps) {
           <div className="relative z-10 grid gap-10 px-6 py-14 sm:px-10 lg:grid-cols-12 lg:px-14 lg:py-20">
             <div className="space-y-7 lg:col-span-8">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#ff5757]/30 bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757] backdrop-blur-sm">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#0284c7]/30 bg-[#0284c7]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#0284c7] backdrop-blur-sm">
                   <MapPin className="h-3.5 w-3.5" />
                   AQ8 {center.city}
                 </span>
@@ -175,13 +175,13 @@ export default async function CenterDetailPage({ params }: PageProps) {
 
               <div className="grid gap-3 text-sm font-medium text-slate-300 sm:grid-cols-2">
                 <div className="flex items-start gap-2 rounded-md border border-white/10 bg-white/[0.06] p-4">
-                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#ff5757]" />
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#0284c7]" />
                   <span>{center.address}</span>
                 </div>
 
                 {center.phone && (
                   <div className="flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.06] p-4">
-                    <Phone className="h-4 w-4 shrink-0 text-[#ff5757]" />
+                    <Phone className="h-4 w-4 shrink-0 text-[#0284c7]" />
                     <span>{center.phone}</span>
                   </div>
                 )}
@@ -190,7 +190,7 @@ export default async function CenterDetailPage({ params }: PageProps) {
               <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap">
                 <a
                   href="#booking-form-section"
-                  className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff5757] px-6 py-3 text-sm font-bold text-white transition-all hover:bg-[#e94949]"
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-[#0284c7] px-6 py-3 text-sm font-bold text-white transition-all hover:bg-[#0369a1]"
                 >
                   <Calendar className="h-4 w-4" />
                   Réserver une séance
@@ -200,7 +200,7 @@ export default async function CenterDetailPage({ params }: PageProps) {
                   href="#contact-cta-section"
                   className="inline-flex items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-white/15"
                 >
-                  <MessageCircle className="h-4 w-4 text-[#ff5757]" />
+                  <MessageCircle className="h-4 w-4 text-[#0284c7]" />
                   Contacter le centre
                 </a>
               </div>
@@ -214,7 +214,7 @@ export default async function CenterDetailPage({ params }: PageProps) {
             {/* Local SEO */}
             <section className="rounded-lg border border-slate-100 bg-white p-6 sm:p-8">
               <div className="space-y-4">
-                <span className="inline-flex items-center gap-2 rounded-full bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
+                <span className="inline-flex items-center gap-2 rounded-full bg-[#0284c7]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#0284c7]">
                   <Sparkles className="h-3.5 w-3.5" />
                   Centre AQ8 à {center.city}
                 </span>
@@ -246,9 +246,9 @@ export default async function CenterDetailPage({ params }: PageProps) {
             {/* Important notes */}
             {center.importantNotes && center.importantNotes.length > 0 && (
               <section className="rounded-lg border border-slate-200 bg-[linear-gradient(135deg,#fcfcfd_0%,#ffffff_100%)] p-6 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 left-0 h-full w-[4px] bg-[#ff5757]" />
+                <div className="absolute top-0 left-0 h-full w-[4px] bg-[#0284c7]" />
                 <div className="mb-5 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#ff5757]/10 text-[#ff5757] shadow-inner">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#0284c7]/10 text-[#0284c7] shadow-inner">
                     <Info className="h-5 w-5" />
                   </div>
 
@@ -263,7 +263,7 @@ export default async function CenterDetailPage({ params }: PageProps) {
                       key={`${note}-${index}`}
                       className="flex items-start gap-3 rounded-md border border-slate-100 bg-white/70 p-4 shadow-sm"
                     >
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#ff5757]" />
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#0284c7]" />
                       <p className="text-sm font-medium leading-relaxed text-slate-600">
                         {note}
                       </p>
@@ -291,7 +291,7 @@ export default async function CenterDetailPage({ params }: PageProps) {
                     <h3 className="text-sm font-bold uppercase text-[#353535]">
                       Horaires hommes
                     </h3>
-                    <span className="rounded-full bg-[#ff5757]/10 px-2 py-1 text-[10px] font-bold uppercase text-[#ff5757]">
+                    <span className="rounded-full bg-[#0284c7]/10 px-2 py-1 text-[10px] font-bold uppercase text-[#0284c7]">
                       Homme
                     </span>
                   </div>
@@ -303,7 +303,7 @@ export default async function CenterDetailPage({ params }: PageProps) {
                           key={time}
                           className="flex items-center gap-2 text-sm font-semibold text-slate-700"
                         >
-                          <Clock className="h-4 w-4 text-[#ff5757]" />
+                          <Clock className="h-4 w-4 text-[#0284c7]" />
                           <span>{time}</span>
                         </div>
                       ))}
@@ -332,7 +332,7 @@ export default async function CenterDetailPage({ params }: PageProps) {
                           key={time}
                           className="flex items-center gap-2 text-sm font-semibold text-slate-700"
                         >
-                          <Clock className="h-4 w-4 text-[#ff5757]" />
+                          <Clock className="h-4 w-4 text-[#0284c7]" />
                           <span>{time}</span>
                         </div>
                       ))}
@@ -361,9 +361,9 @@ export default async function CenterDetailPage({ params }: PageProps) {
                 {center.services.map((service) => (
                   <article
                     key={service}
-                    className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition-premium hover:border-[#ff5757]/30 hover:shadow-md"
+                    className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition-premium hover:border-[#0284c7]/30 hover:shadow-md"
                   >
-                    <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-md bg-[#ff5757]/10 text-[#ff5757] shadow-inner">
+                    <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-md bg-[#0284c7]/10 text-[#0284c7] shadow-inner">
                       <CheckCircle2 className="h-5 w-5" />
                     </div>
 
@@ -419,9 +419,9 @@ export default async function CenterDetailPage({ params }: PageProps) {
 
             {/* Cancellation */}
             <section className="rounded-lg border border-rose-100 bg-rose-50/40 p-6 relative overflow-hidden shadow-sm">
-              <div className="absolute top-0 left-0 w-[4px] h-full bg-[#ff5757]" />
+              <div className="absolute top-0 left-0 w-[4px] h-full bg-[#0284c7]" />
               <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#ff5757]/10 text-[#ff5757] shadow-inner">
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#0284c7]/10 text-[#0284c7] shadow-inner">
                   <ShieldAlert className="h-5 w-5" />
                 </div>
 
@@ -436,7 +436,7 @@ export default async function CenterDetailPage({ params }: PageProps) {
                     "Si vous ne pouvez pas assister à votre séance, merci d’annuler votre rendez-vous au moins 1 heure à l’avance."}
                 </p>
 
-                <p className="rounded-md border border-[#ff5757]/10 bg-[#ff5757]/5 p-4 font-semibold text-[#ff5757]">
+                <p className="rounded-md border border-[#0284c7]/10 bg-[#0284c7]/5 p-4 font-semibold text-[#0284c7]">
                   En cas d’absence non annulée dans les délais, un crédit peut
                   être déduit du forfait en cours.
                 </p>
@@ -469,7 +469,7 @@ export default async function CenterDetailPage({ params }: PageProps) {
           <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
             <div className="space-y-5">
               <div className="space-y-2">
-                <span className="text-xs font-bold uppercase text-[#ff5757]">
+                <span className="text-xs font-bold uppercase text-[#0284c7]">
                   Contact rapide
                 </span>
 
@@ -485,20 +485,20 @@ export default async function CenterDetailPage({ params }: PageProps) {
 
               <div className="space-y-3 text-sm text-slate-300">
                 <div className="flex items-start gap-3">
-                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#ff5757]" />
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#0284c7]" />
                   <span>{center.address}</span>
                 </div>
 
                 {center.phone && (
                   <div className="flex items-center gap-3">
-                    <Phone className="h-4 w-4 shrink-0 text-[#ff5757]" />
+                    <Phone className="h-4 w-4 shrink-0 text-[#0284c7]" />
                     <span className="font-bold">{center.phone}</span>
                   </div>
                 )}
 
                 {center.email && (
                   <div className="flex items-center gap-3">
-                    <Mail className="h-4 w-4 shrink-0 text-[#ff5757]" />
+                    <Mail className="h-4 w-4 shrink-0 text-[#0284c7]" />
                     <span>{center.email}</span>
                   </div>
                 )}
@@ -507,7 +507,7 @@ export default async function CenterDetailPage({ params }: PageProps) {
               <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap">
                 <a
                   href="#booking-form-section"
-                  className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff5757] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#e94949]"
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-[#0284c7] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#0369a1]"
                 >
                   <Calendar className="h-4 w-4" />
                   Réserver ma séance

@@ -6,7 +6,7 @@ export default function manifest() {
     start_url: "/crm",
     display: "standalone",
     background_color: "#111115",
-    theme_color: "#ff5757",
+    theme_color: "#0284c7",
     orientation: "portrait-primary",
     icons: [
       {

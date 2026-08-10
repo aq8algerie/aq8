@@ -170,7 +170,7 @@ export function MeasurementModal({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl cursor-pointer"
+              className="px-4 py-2 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-white rounded-xl cursor-pointer"
             >
               Enregistrer
             </button>

@@ -43,13 +43,13 @@ export function ActivePackageCard({
                   </div>
                   <div className="flex items-center justify-between text-xs pt-1">
                     <span className="text-slate-500 font-medium">Séances restantes:</span>
-                    <span className="font-mono font-bold text-sm text-[#ff5757]">{sessionsRemaining} / {cp.totalSessions}</span>
+                    <span className="font-mono font-bold text-sm text-[#0284c7]">{sessionsRemaining} / {cp.totalSessions}</span>
                   </div>
                   {/* Visual progress bar */}
                   <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
                     <div 
                       style={{ width: `${(sessionsRemaining / cp.totalSessions) * 100}%` }} 
-                      className="bg-[#ff5757] h-full transition-all"
+                      className="bg-[#0284c7] h-full transition-all"
                     ></div>
                   </div>
                 </div>
@@ -66,7 +66,7 @@ export function ActivePackageCard({
       <button
         id="btn-assign-package"
         onClick={onAssignClick}
-        className="w-full mt-4 py-2.5 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-xs text-white rounded-xl transition-premium flex items-center justify-center gap-1 cursor-pointer"
+        className="w-full mt-4 py-2.5 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-xs text-white rounded-xl transition-premium flex items-center justify-center gap-1 cursor-pointer"
       >
         <Plus className="h-4 w-4" /> Affecter un forfait
       </button>

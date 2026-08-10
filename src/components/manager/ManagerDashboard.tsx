@@ -357,7 +357,7 @@ export function ManagerDashboard({
           value={filteredMeasurementsCount}
           icon={Scale}
           iconBgClass="bg-rose-50 text-rose-500"
-          iconColorClass="text-[#ff5757]"
+          iconColorClass="text-[#0284c7]"
           trend={{ text: `${measurementsThisMonth} nouveau(x) ce mois`, isPositive: true }}
           borderLeftClass="border-l-4 border-l-rose-500"
         />
@@ -478,8 +478,8 @@ export function ManagerDashboard({
       <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 bg-[#ff5757]/10 rounded-lg flex items-center justify-center">
-              <Activity className="h-4 w-4 text-[#ff5757]" />
+            <div className="h-7 w-7 bg-[#0284c7]/10 rounded-lg flex items-center justify-center">
+              <Activity className="h-4 w-4 text-[#0284c7]" />
             </div>
             <div>
               <h3 className="font-bold font-display text-slate-800 text-xs uppercase tracking-wider">Résumé de la Journée</h3>
@@ -489,7 +489,7 @@ export function ManagerDashboard({
           <button
             type="button"
             onClick={() => onOpenTab('schedule')}
-            className="self-start sm:self-auto text-xs text-[#ff5757] font-semibold hover:underline cursor-pointer"
+            className="self-start sm:self-auto text-xs text-[#0284c7] font-semibold hover:underline cursor-pointer"
           >
             Ouvrir le planning →
           </button>
@@ -518,14 +518,14 @@ export function ManagerDashboard({
           </div>
 
           {/* Taux d'avancement */}
-          <div className="bg-[#ff5757]/5 rounded-xl p-3 text-center border border-[#ff5757]/15 relative overflow-hidden">
-            <span className="text-[9px] font-bold text-[#ff5757] uppercase tracking-wider block mb-1">Avancement</span>
-            <span className="text-2xl font-black font-mono text-[#ff5757]">{todayCompletionRate}%</span>
-            <span className="text-[10px] font-semibold text-[#ff5757]/70 block mt-0.5">taux du jour</span>
+          <div className="bg-[#0284c7]/5 rounded-xl p-3 text-center border border-[#0284c7]/15 relative overflow-hidden">
+            <span className="text-[9px] font-bold text-[#0284c7] uppercase tracking-wider block mb-1">Avancement</span>
+            <span className="text-2xl font-black font-mono text-[#0284c7]">{todayCompletionRate}%</span>
+            <span className="text-[10px] font-semibold text-[#0284c7]/70 block mt-0.5">taux du jour</span>
             {/* Thin progress underline */}
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#ff5757]/10">
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#0284c7]/10">
               <div
-                className="h-full bg-[#ff5757] transition-all duration-700"
+                className="h-full bg-[#0284c7] transition-all duration-700"
                 style={{ width: `${todayCompletionRate}%` }}
               />
             </div>
@@ -584,7 +584,7 @@ export function ManagerDashboard({
         {/* Middle: AQ8 vs Wonder Breakdown Card */}
         <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-xs space-y-4">
           <div className="flex items-center gap-2">
-            <Layers className="h-4 w-4 text-[#ff5757]" />
+            <Layers className="h-4 w-4 text-[#0284c7]" />
             <h4 className="font-bold font-display text-slate-800 text-xs uppercase tracking-wider">Séances par Technologie</h4>
           </div>
 
@@ -597,7 +597,7 @@ export function ManagerDashboard({
                   <span className="font-mono text-slate-800">{aq8SessionsCount} séances ({aq8SubPercent}%)</span>
                 </div>
                 <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div style={{ width: `${aq8SubPercent}%` }} className="h-full bg-[#ff5757] rounded-full transition-all duration-500"></div>
+                  <div style={{ width: `${aq8SubPercent}%` }} className="h-full bg-[#0284c7] rounded-full transition-all duration-500"></div>
                 </div>
               </div>
 
@@ -640,7 +640,7 @@ export function ManagerDashboard({
                 key: 'aq8',
                 label: 'AQ8 EMS',
                 metric: monthToDateOccupancy.aq8,
-                stroke: '#ff5757',
+                stroke: '#0284c7',
                 panelClass: 'bg-rose-50/20 border-rose-100/30',
               },
               {
@@ -746,7 +746,7 @@ export function ManagerDashboard({
                           animate={{ height: `${count > 0 ? heightPct : 4}%` }}
                           transition={{ duration: 0.8, ease: "easeOut" }}
                           className={`w-full rounded-t-md ${
-                            count > 0 ? 'bg-gradient-to-t from-[#353535] to-[#ff5757] group-hover:to-rose-400' : 'bg-slate-200/50'
+                            count > 0 ? 'bg-gradient-to-t from-[#353535] to-[#0284c7] group-hover:to-rose-400' : 'bg-slate-200/50'
                           }`}
                         ></motion.div>
                         {/* Hover Tooltip */}
@@ -761,7 +761,7 @@ export function ManagerDashboard({
               </div>
               <div className="flex justify-center items-center gap-4 text-[10px] text-slate-400 font-medium">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 bg-[#ff5757] rounded-sm"></div>
+                  <div className="w-3 h-3 bg-[#0284c7] rounded-sm"></div>
                   <span>Densité d'affluence active</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -788,7 +788,7 @@ export function ManagerDashboard({
                         initial={{ width: 0 }}
                         animate={{ width: `${count > 0 ? pct : 1}%` }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="h-full bg-gradient-to-r from-slate-700 to-[#ff5757]"
+                        className="h-full bg-gradient-to-r from-slate-700 to-[#0284c7]"
                       ></motion.div>
                     </div>
                   </div>
@@ -810,7 +810,7 @@ export function ManagerDashboard({
                         initial={{ height: 0 }}
                         animate={{ height: `${count > 0 ? pct : 4}%` }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="w-full bg-[#ff5757] rounded-full"
+                        className="w-full bg-[#0284c7] rounded-full"
                       ></motion.div>
                     </div>
                     <span className="text-[10px] font-bold text-slate-400 font-mono">{count}</span>
@@ -860,8 +860,8 @@ export function ManagerDashboard({
                       <svg className="w-full h-full" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
                         <defs>
                           <linearGradient id="localAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#ff5757" stopOpacity="0.3" />
-                            <stop offset="100%" stopColor="#ff5757" stopOpacity="0.0" />
+                            <stop offset="0%" stopColor="#0284c7" stopOpacity="0.3" />
+                            <stop offset="100%" stopColor="#0284c7" stopOpacity="0.0" />
                           </linearGradient>
                           {/* Glowing effect filter */}
                           <filter id="localGlow" x="-20%" y="-20%" width="140%" height="140%">
@@ -900,7 +900,7 @@ export function ManagerDashboard({
                         <motion.path
                           d={linePath}
                           fill="none"
-                          stroke="#ff5757"
+                          stroke="#0284c7"
                           strokeWidth="3"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -917,8 +917,8 @@ export function ManagerDashboard({
                               cx={p.x}
                               cy={p.y}
                               r={hoveredManagerRevenuePoint === i ? "6" : "4"}
-                              fill={hoveredManagerRevenuePoint === i ? "#ff5757" : "white"}
-                              stroke="#ff5757"
+                              fill={hoveredManagerRevenuePoint === i ? "#0284c7" : "white"}
+                              stroke="#0284c7"
                               strokeWidth="2"
                               style={{ transition: "all 0.15s ease" }}
                             />
@@ -945,7 +945,7 @@ export function ManagerDashboard({
                           }}
                         >
                           <span className="text-[8px] text-slate-400 font-sans block uppercase font-bold">{trendData[hoveredManagerRevenuePoint].label}</span>
-                          <span className="text-xs font-bold text-[#ff5757]">{trendData[hoveredManagerRevenuePoint].value.toLocaleString()} DZD</span>
+                          <span className="text-xs font-bold text-[#0284c7]">{trendData[hoveredManagerRevenuePoint].value.toLocaleString()} DZD</span>
                         </div>
                       )}
                     </div>
@@ -979,7 +979,7 @@ export function ManagerDashboard({
             </div>
             <button
               onClick={() => onOpenTab('schedule')}
-              className="text-xs text-[#ff5757] font-semibold hover:underline cursor-pointer"
+              className="text-xs text-[#0284c7] font-semibold hover:underline cursor-pointer"
             >
               Planning →
             </button>
@@ -1047,7 +1047,7 @@ export function ManagerDashboard({
               <p>Aucune séance planifiée pour aujourd'hui.</p>
               <button
                 onClick={onBookAppointmentClick}
-                className="text-[#ff5757] font-semibold hover:underline cursor-pointer"
+                className="text-[#0284c7] font-semibold hover:underline cursor-pointer"
               >
                 Planifier un rendez-vous maintenant
               </button>

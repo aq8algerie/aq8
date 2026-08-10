@@ -31,7 +31,7 @@ export function SuperAdminTabs({ activeTab, onTabChange }: SuperAdminTabsProps) 
             role="tab"
             aria-selected={activeTab === tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold whitespace-nowrap transition-premium border-b-2 -mb-px ${activeTab === tab.id ? 'border-[#ff5757] text-[#ff5757]' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+            className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold whitespace-nowrap transition-premium border-b-2 -mb-px ${activeTab === tab.id ? 'border-[#0284c7] text-[#0284c7]' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
           >
             <Icon className="h-4 w-4" /> {tab.label}
           </button>

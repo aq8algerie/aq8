@@ -49,7 +49,7 @@ export function WeekScheduleView({
           <div
             key={dateStr}
             className={`bg-white rounded-2xl border p-4 flex flex-col min-h-[400px] ${
-              isToday ? 'border-[#ff5757] ring-1 ring-[#ff5757]/15 bg-[#ff5757]/2' : 'border-slate-100'
+              isToday ? 'border-[#0284c7] ring-1 ring-[#0284c7]/15 bg-[#0284c7]/2' : 'border-slate-100'
             }`}
           >
             <div className="border-b border-slate-100 pb-2 mb-3 text-center">
@@ -57,7 +57,7 @@ export function WeekScheduleView({
                 {dayDate.toLocaleDateString('fr-FR', { weekday: 'short' })}
               </span>
               <span className={`text-base font-bold rounded-full w-8 h-8 inline-flex items-center justify-center font-display ${
-                isToday ? 'bg-[#ff5757] text-white' : 'text-slate-800'
+                isToday ? 'bg-[#0284c7] text-white' : 'text-slate-800'
               }`}>
                 {dayDate.getDate()}
               </span>
@@ -76,15 +76,15 @@ export function WeekScheduleView({
                       key={apt.id}
                       className={`p-2.5 rounded-xl border text-[11px] relative group transition ${
                         isSelected
-                          ? 'bg-[#ff5757]/5 border-[#ff5757]'
+                          ? 'bg-[#0284c7]/5 border-[#0284c7]'
                           : 'bg-slate-50 border-slate-100/70 hover:bg-white hover:border-slate-200 hover:shadow-xs'
                       }`}
                     >
                       <button
                         onClick={() => onToggleSelectOne(apt.id)}
-                        className="absolute top-1.5 right-1.5 text-slate-400 hover:text-[#ff5757] opacity-60 hover:opacity-100 cursor-pointer"
+                        className="absolute top-1.5 right-1.5 text-slate-400 hover:text-[#0284c7] opacity-60 hover:opacity-100 cursor-pointer"
                       >
-                        {isSelected ? <CheckSquare className="h-3.5 w-3.5 text-[#ff5757]" /> : <Square className="h-3.5 w-3.5" />}
+                        {isSelected ? <CheckSquare className="h-3.5 w-3.5 text-[#0284c7]" /> : <Square className="h-3.5 w-3.5" />}
                       </button>
 
                       <span className="font-mono font-bold text-slate-500 block mb-0.5">{hourPart}</span>

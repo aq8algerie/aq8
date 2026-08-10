@@ -188,7 +188,7 @@ export function PaymentsPanel({
             </span>
             <span className="text-[9px] font-bold text-slate-400 block">Montant brut historique</span>
           </div>
-          <div className="h-10 w-10 bg-[#ff5757]/15 rounded-2xl flex items-center justify-center text-[#ff5757]">
+          <div className="h-10 w-10 bg-[#0284c7]/15 rounded-2xl flex items-center justify-center text-[#0284c7]">
             <DollarSign className="h-5 w-5" />
           </div>
         </div>
@@ -255,7 +255,7 @@ export function PaymentsPanel({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Chercher client, reçu..."
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#ff5757] focus:bg-white"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#0284c7] focus:bg-white"
             />
           </label>
 
@@ -265,7 +265,7 @@ export function PaymentsPanel({
             <select
               value={centerFilter}
               onChange={(e) => setCenterFilter(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#ff5757] focus:bg-white appearance-none"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#0284c7] focus:bg-white appearance-none"
             >
               <option value="all">Tous les centres</option>
               {centers.map(c => (
@@ -280,7 +280,7 @@ export function PaymentsPanel({
             <select
               value={monthFilter}
               onChange={(e) => setMonthFilter(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#ff5757] focus:bg-white appearance-none"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#0284c7] focus:bg-white appearance-none"
             >
               <option value="all">Tous les mois</option>
               {Object.entries(monthLabels).map(([num, name]) => (
@@ -294,7 +294,7 @@ export function PaymentsPanel({
             <select
               value={yearFilter}
               onChange={(e) => setYearFilter(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#ff5757] focus:bg-white"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#0284c7] focus:bg-white"
             >
               <option value="all">Toutes années</option>
               <option value="2026">2026</option>
@@ -308,7 +308,7 @@ export function PaymentsPanel({
             <select
               value={methodFilter}
               onChange={(e) => setMethodFilter(e.target.value as PaymentMethodFilter)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#ff5757] focus:bg-white appearance-none"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#0284c7] focus:bg-white appearance-none"
             >
               <option value="all">Tous modes</option>
               <option value="cash">Espèces</option>
@@ -323,7 +323,7 @@ export function PaymentsPanel({
             <select
               value={listPageSize}
               onChange={(e) => setListPageSize(Number(e.target.value) as PaymentPageSize)}
-              className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#ff5757] focus:bg-white font-mono"
+              className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#0284c7] focus:bg-white font-mono"
             >
               {PAGE_SIZE_OPTIONS.map(size => (
                 <option key={size} value={size}>{size}/page</option>
@@ -373,7 +373,7 @@ export function PaymentsPanel({
                   <tr key={pay.id} className="hover:bg-slate-50/40 transition-colors">
                     {/* Center badge */}
                     <td className="p-4">
-                      <span className="inline-block bg-[#ff5757]/10 text-[#ff5757] px-2 py-0.5 rounded-md font-bold uppercase text-[9px] tracking-wide">
+                      <span className="inline-block bg-[#0284c7]/10 text-[#0284c7] px-2 py-0.5 rounded-md font-bold uppercase text-[9px] tracking-wide">
                         {center?.name || 'Inconnu'}
                       </span>
                     </td>
@@ -461,7 +461,7 @@ export function PaymentsPanel({
                 <div className="space-y-2">
                   <div className="flex justify-between font-bold text-slate-800 text-[11px] pb-1.5 gap-3">
                     <span>REÇU DE PAIEMENT N°</span>
-                    <span className="font-mono text-[#ff5757] text-right">
+                    <span className="font-mono text-[#0284c7] text-right">
                       {safeText(selectedReceiptPayment.receiptNumber) || `REC-${selectedReceiptPayment.id.slice(-6)}`}
                     </span>
                   </div>
@@ -486,8 +486,8 @@ export function PaymentsPanel({
                 </div>
 
                 {/* Amount Paid block */}
-                <div className="p-3 bg-[#ff5757]/5 border border-[#ff5757]/15 rounded-xl flex justify-between items-center gap-3">
-                  <span className="font-bold text-[#ff5757] uppercase text-[10px] tracking-wide">Montant Total Réglé</span>
+                <div className="p-3 bg-[#0284c7]/5 border border-[#0284c7]/15 rounded-xl flex justify-between items-center gap-3">
+                  <span className="font-bold text-[#0284c7] uppercase text-[10px] tracking-wide">Montant Total Réglé</span>
                   <span className="font-mono font-black text-slate-800 text-sm whitespace-nowrap">{receiptAmount.toLocaleString('fr-DZ')} DZD</span>
                 </div>
 

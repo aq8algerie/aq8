@@ -33,11 +33,11 @@ export function HomeWhyChoose() {
       <div className="grid gap-8 lg:grid-cols-12 lg:items-stretch">
         {/* Left Bento Banner */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#242424] via-[#1a1a1a] to-[#2b1717] p-8 text-white shadow-xl lg:col-span-4 flex flex-col justify-between">
-          <div className="pointer-events-none absolute -right-12 -top-12 h-64 w-64 rounded-full bg-[#ff5757]/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-12 -top-12 h-64 w-64 rounded-full bg-[#0284c7]/20 blur-3xl" />
           
           <div className="relative z-10 space-y-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white backdrop-blur-md">
-              <Trophy className="h-4 w-4 text-[#ff7777]" />
+              <Trophy className="h-4 w-4 text-[#38bdf8]" />
               <span>L'Excellence AQ8</span>
             </div>
 
@@ -52,7 +52,7 @@ export function HomeWhyChoose() {
 
           <div className="relative z-10 pt-8 border-t border-white/10 mt-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#ff5757] text-white shadow-md">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0284c7] text-white shadow-md">
                 <Zap className="h-5 w-5" />
               </div>
               <div>
@@ -70,11 +70,11 @@ export function HomeWhyChoose() {
             return (
               <article
                 key={feature.title}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[#ff5757]/40 hover:shadow-xl sm:p-7"
+                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[#0284c7]/40 hover:shadow-xl sm:p-7"
               >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#fff0f0] text-[#ff5757] shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:bg-[#ff5757] group-hover:text-white">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#fff0f0] text-[#0284c7] shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:bg-[#0284c7] group-hover:text-white">
                       <Icon className="h-6 w-6" />
                     </div>
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-700">

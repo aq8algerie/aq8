@@ -15,7 +15,7 @@ function getServiceLabel(service: string) {
 }
 
 function getServiceClass(service: string) {
-  if (service.toLowerCase() === "aq8") return "bg-[#ff5757]/10 text-[#ff5757] border border-[#ff5757]/20";
+  if (service.toLowerCase() === "aq8") return "bg-[#0284c7]/10 text-[#0284c7] border border-[#0284c7]/20";
   if (service.toLowerCase() === "wonder") return "bg-emerald-50 text-emerald-700 border border-emerald-200";
   return "bg-slate-100 text-slate-600";
 }
@@ -114,7 +114,7 @@ export function CentresList({ centers }: CentresListProps) {
       <div className="rounded-2xl border border-slate-200 bg-white p-5 lg:p-6 space-y-5 shadow-xs">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ff5757]/10 text-[#ff5757]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0284c7]/10 text-[#0284c7]">
               <Filter className="h-5 w-5" />
             </div>
             <div>
@@ -146,7 +146,7 @@ export function CentresList({ centers }: CentresListProps) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Nom du centre, ville, adresse..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#ff5757]/20 focus:border-[#ff5757] text-slate-800 bg-slate-50/50"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] text-slate-800 bg-slate-50/50"
             />
           </div>
 
@@ -155,7 +155,7 @@ export function CentresList({ centers }: CentresListProps) {
             <select
               value={selectedWilaya}
               onChange={(e) => setSelectedWilaya(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#ff5757]/20 focus:border-[#ff5757] text-slate-800 bg-slate-50/50 cursor-pointer font-bold"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] text-slate-800 bg-slate-50/50 cursor-pointer font-bold"
             >
               <option value="all">Toutes les wilayas</option>
               {wilayas.filter(w => w !== "all").map(w => (
@@ -169,7 +169,7 @@ export function CentresList({ centers }: CentresListProps) {
             <select
               value={selectedService}
               onChange={(e) => setSelectedService(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#ff5757]/20 focus:border-[#ff5757] text-slate-800 bg-slate-50/50 cursor-pointer font-bold"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] text-slate-800 bg-slate-50/50 cursor-pointer font-bold"
             >
               <option value="all">Toutes les technologies</option>
               <option value="aq8">AQ8 EMS (Électrostimulation)</option>
@@ -182,7 +182,7 @@ export function CentresList({ centers }: CentresListProps) {
             <select
               value={selectedAudience}
               onChange={(e) => setSelectedAudience(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#ff5757]/20 focus:border-[#ff5757] text-slate-800 bg-slate-50/50 cursor-pointer font-bold"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] text-slate-800 bg-slate-50/50 cursor-pointer font-bold"
             >
               <option value="all">Tous les créneaux & accès</option>
               <option value="women">Centres & Créneaux Femmes</option>
@@ -236,7 +236,7 @@ export function CentresList({ centers }: CentresListProps) {
                     <div className="space-y-2">
                       <h3 className="font-display text-xl font-bold leading-snug text-[#242424]">{center.name}</h3>
                       <p className="flex items-start gap-2 text-xs font-medium leading-relaxed text-slate-600">
-                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#ff5757]" />
+                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#0284c7]" />
                         <span>{center.address}</span>
                       </p>
                     </div>
@@ -252,18 +252,18 @@ export function CentresList({ centers }: CentresListProps) {
                     <div className="space-y-2 border-t border-slate-100 pt-4 text-xs font-medium leading-relaxed text-slate-600">
                       {center.schedule && (
                         <div className="flex items-start gap-2">
-                          <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#ff5757]" />
+                          <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#0284c7]" />
                           <span>{center.schedule}</span>
                         </div>
                       )}
                       {center.phone && (
                         <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 shrink-0 text-[#ff5757]" />
+                          <Phone className="h-4 w-4 shrink-0 text-[#0284c7]" />
                           <span className="font-bold text-slate-700">{center.phone}</span>
                         </div>
                       )}
                       <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 shrink-0 text-[#ff5757]" />
+                        <Users className="h-4 w-4 shrink-0 text-[#0284c7]" />
                         <span className="font-bold text-slate-700">{getAudienceLabel(center)}</span>
                       </div>
                     </div>
@@ -272,7 +272,7 @@ export function CentresList({ centers }: CentresListProps) {
                   <Link
                     href={"/centres/" + center.slug}
                     aria-label={"Découvrir et réserver au centre AQ8 " + center.name}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#242424] px-5 py-3.5 text-xs font-bold text-white transition-premium hover:bg-[#ff5757] shadow-sm cursor-pointer mt-2"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#242424] px-5 py-3.5 text-xs font-bold text-white transition-premium hover:bg-[#0284c7] shadow-sm cursor-pointer mt-2"
                   >
                     Détails et réservation
                     <ArrowRight className="h-4 w-4" />

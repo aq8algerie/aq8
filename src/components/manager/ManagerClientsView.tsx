@@ -232,7 +232,7 @@ export function ManagerClientsView({
         onClick={() => toggleClientSelection(client.id)}
         className={`inline-flex items-center justify-center rounded-lg transition cursor-pointer ${
           compact ? 'h-8 w-8' : 'h-9 w-9'
-        } ${selected ? 'bg-[#ff5757] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-700'}`}
+        } ${selected ? 'bg-[#0284c7] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-700'}`}
         aria-label={selected ? 'Retirer de la selection' : 'Selectionner le client'}
       >
         {selected ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
@@ -308,7 +308,7 @@ export function ManagerClientsView({
             <button
               type="button"
               onClick={() => setViewMode('grid')}
-              className={`rounded-lg p-1.5 transition-all cursor-pointer ${viewMode === 'grid' ? 'bg-white text-[#ff5757] shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+              className={`rounded-lg p-1.5 transition-all cursor-pointer ${viewMode === 'grid' ? 'bg-white text-[#0284c7] shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
               title="Vue grille"
             >
               <LayoutGrid className="h-4 w-4" />
@@ -316,7 +316,7 @@ export function ManagerClientsView({
             <button
               type="button"
               onClick={() => setViewMode('list')}
-              className={`rounded-lg p-1.5 transition-all cursor-pointer ${viewMode === 'list' ? 'bg-white text-[#ff5757] shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+              className={`rounded-lg p-1.5 transition-all cursor-pointer ${viewMode === 'list' ? 'bg-white text-[#0284c7] shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
               title="Vue liste"
             >
               <List className="h-4 w-4" />
@@ -327,7 +327,7 @@ export function ManagerClientsView({
             id="btn-register-client"
             type="button"
             onClick={onRegisterClientClick}
-            className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#ff5757] px-3.5 py-1.5 text-xs font-semibold text-white transition-premium hover:bg-[#e04646] sm:flex-initial cursor-pointer"
+            className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#0284c7] px-3.5 py-1.5 text-xs font-semibold text-white transition-premium hover:bg-[#0369a1] sm:flex-initial cursor-pointer"
           >
             <Plus className="h-4 w-4" /> Enregistrer un client
           </button>
@@ -335,7 +335,7 @@ export function ManagerClientsView({
       </div>
 
       <div className="space-y-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-xs">
-        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 focus-within:border-[#ff5757]">
+        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 focus-within:border-[#0284c7]">
           <Search className="h-4 w-4 text-slate-400" />
           <input
             id="client-list-search"
@@ -391,7 +391,7 @@ export function ManagerClientsView({
       <div className="flex flex-col gap-2 rounded-2xl border border-slate-100 bg-white p-3 shadow-xs sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-600">
           <button type="button" onClick={toggleAllVisible} className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-2 transition hover:bg-slate-200 cursor-pointer">
-            {allVisibleSelected ? <CheckSquare className="h-4 w-4 text-[#ff5757]" /> : <Square className="h-4 w-4 text-slate-400" />}
+            {allVisibleSelected ? <CheckSquare className="h-4 w-4 text-[#0284c7]" /> : <Square className="h-4 w-4 text-slate-400" />}
             {allVisibleSelected ? 'Deselectionner la vue' : 'Selectionner la vue'}
           </button>
           <span className="inline-flex items-center gap-1 rounded-xl bg-slate-50 px-3 py-2 text-slate-500">
@@ -496,8 +496,8 @@ export function ManagerClientsView({
                 <thead className="border-b border-slate-100 bg-slate-50 text-[10px] font-semibold uppercase text-slate-400">
                   <tr>
                     <th className="w-12 p-4">
-                      <button type="button" onClick={toggleAllVisible} className="text-slate-400 transition hover:text-[#ff5757] cursor-pointer" aria-label="Selectionner les clients visibles">
-                        {allVisibleSelected ? <CheckSquare className="h-4 w-4 text-[#ff5757]" /> : <Square className="h-4 w-4" />}
+                      <button type="button" onClick={toggleAllVisible} className="text-slate-400 transition hover:text-[#0284c7] cursor-pointer" aria-label="Selectionner les clients visibles">
+                        {allVisibleSelected ? <CheckSquare className="h-4 w-4 text-[#0284c7]" /> : <Square className="h-4 w-4" />}
                       </button>
                     </th>
                     <th className="p-4">Adherent</th>

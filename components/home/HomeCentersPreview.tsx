@@ -22,7 +22,7 @@ export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {
     return (
       <section className="rounded-2xl border border-slate-200/80 bg-white px-6 py-12 text-center shadow-lg sm:px-10">
         <div className="mx-auto max-w-xl space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#fff0f0] px-3 py-1 text-xs font-bold text-[#ff5757]">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#fff0f0] px-3 py-1 text-xs font-bold text-[#0284c7]">
             <MapPin className="h-3.5 w-3.5" />
             Réseau National AQ8
           </div>
@@ -40,7 +40,7 @@ export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {
       {/* Section Header */}
       <div className="flex flex-col justify-between gap-5 border-b border-slate-200/80 pb-8 sm:flex-row sm:items-end">
         <div className="max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-md bg-[#fff0f0] px-3 py-1 text-xs font-extrabold uppercase text-[#ff5757]">
+          <div className="inline-flex items-center gap-2 rounded-md bg-[#fff0f0] px-3 py-1 text-xs font-extrabold uppercase text-[#0284c7]">
             <MapPin className="h-3.5 w-3.5" />
             Réseau Officiel Algérie
           </div>
@@ -55,7 +55,7 @@ export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {
         <Link
           href="/centres"
           aria-label="Voir la liste complète des centres AQ8 en Algérie"
-          className="inline-flex shrink-0 items-center justify-center gap-2.5 rounded-xl bg-[#242424] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:bg-[#ff5757] hover:scale-[1.02]"
+          className="inline-flex shrink-0 items-center justify-center gap-2.5 rounded-xl bg-[#242424] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:bg-[#0284c7] hover:scale-[1.02]"
         >
           <span>Tous nos centres</span>
           <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-extrabold">{centers.length}</span>
@@ -68,7 +68,7 @@ export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {
         {previewCenters.map((center) => (
           <article
             key={center.id}
-            className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md transition-all duration-500 hover:-translate-y-1.5 hover:border-[#ff5757]/40 hover:shadow-xl"
+            className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md transition-all duration-500 hover:-translate-y-1.5 hover:border-[#0284c7]/40 hover:shadow-xl"
           >
             <div>
               {/* Center Cover Image */}
@@ -83,7 +83,7 @@ export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {
 
                 {/* City Tag Badge Top Left */}
                 <div className="absolute top-4 left-4 flex items-center gap-1.5 rounded-lg bg-black/60 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md">
-                  <MapPin className="h-3.5 w-3.5 text-[#ff5757]" />
+                  <MapPin className="h-3.5 w-3.5 text-[#0284c7]" />
                   <span>{center.city}</span>
                 </div>
 
@@ -109,12 +109,12 @@ export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {
 
                 <div className="space-y-2 border-t border-slate-100 pt-4 text-xs font-semibold text-slate-700">
                   <div className="flex items-center gap-2 text-slate-800">
-                    <Users className="h-4 w-4 shrink-0 text-[#ff5757]" />
+                    <Users className="h-4 w-4 shrink-0 text-[#0284c7]" />
                     <span>{getCenterAudienceLabel(center)}</span>
                   </div>
                   {center.schedule && (
                     <div className="flex items-start gap-2 text-slate-600">
-                      <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#ff5757]" />
+                      <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#0284c7]" />
                       <span className="line-clamp-1">{center.schedule}</span>
                     </div>
                   )}
@@ -127,7 +127,7 @@ export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {
               <Link
                 href={`/centres/${center.slug}`}
                 aria-label={`Découvrir le centre AQ8 de ${center.name}`}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white py-3 px-4 text-sm font-bold text-[#242424] transition-all duration-300 hover:border-[#ff5757] hover:bg-[#ff5757] hover:text-white"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white py-3 px-4 text-sm font-bold text-[#242424] transition-all duration-300 hover:border-[#0284c7] hover:bg-[#0284c7] hover:text-white"
               >
                 <span>Fiche du centre & Réservation</span>
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

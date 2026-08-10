@@ -39,7 +39,7 @@ export default async function LegalNoticePage() {
   return (
     <div className="mx-auto w-full max-w-6xl pb-12 sm:pb-16">
       <header className="border-b border-slate-200 py-8 sm:py-12">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase text-[#ff5757]">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase text-[#0284c7]">
           <Scale className="h-4 w-4" aria-hidden="true" />
           Informations juridiques
         </div>
@@ -66,7 +66,7 @@ export default async function LegalNoticePage() {
                 <li key={section.id}>
                   <a
                     href={"#" + section.id}
-                    className="block border-l-2 border-transparent py-2 pl-4 text-sm font-semibold text-slate-600 transition hover:border-[#ff5757] hover:text-[#242424]"
+                    className="block border-l-2 border-transparent py-2 pl-4 text-sm font-semibold text-slate-600 transition hover:border-[#0284c7] hover:text-[#242424]"
                   >
                     {section.label}
                   </a>
@@ -125,7 +125,7 @@ export default async function LegalNoticePage() {
                   href="https://firebase.google.com/terms/"
                   target="_blank"
                   rel="noreferrer"
-                  className="font-bold text-[#242424] underline decoration-slate-300 underline-offset-4 hover:text-[#ff5757]"
+                  className="font-bold text-[#242424] underline decoration-slate-300 underline-offset-4 hover:text-[#0284c7]"
                 >
                   Firebase
                 </a>
@@ -194,7 +194,7 @@ export default async function LegalNoticePage() {
                 Adressez votre demande à{" "}
                 <a
                   href={"mailto:" + email}
-                  className="font-bold text-[#242424] underline decoration-slate-300 underline-offset-4 hover:text-[#ff5757]"
+                  className="font-bold text-[#242424] underline decoration-slate-300 underline-offset-4 hover:text-[#0284c7]"
                 >
                   {email}
                 </a>
@@ -206,7 +206,7 @@ export default async function LegalNoticePage() {
                   href="https://www.joradp.dz/FTP/jo-francais/2018/F2018034.pdf"
                   target="_blank"
                   rel="noreferrer"
-                  className="font-bold text-[#242424] underline decoration-slate-300 underline-offset-4 hover:text-[#ff5757]"
+                  className="font-bold text-[#242424] underline decoration-slate-300 underline-offset-4 hover:text-[#0284c7]"
                 >
                   Consulter le texte officiel de la loi n° 18-07
                 </a>
@@ -237,7 +237,7 @@ export default async function LegalNoticePage() {
                   href="https://firebase.google.com/terms/data-processing-terms/"
                   target="_blank"
                   rel="noreferrer"
-                  className="font-bold text-[#242424] underline decoration-slate-300 underline-offset-4 hover:text-[#ff5757]"
+                  className="font-bold text-[#242424] underline decoration-slate-300 underline-offset-4 hover:text-[#0284c7]"
                 >
                   conditions de traitement des données Firebase
                 </a>
@@ -258,7 +258,7 @@ export default async function LegalNoticePage() {
                 Une question sur ces mentions ?{" "}
                 <Link
                   href="/contact"
-                  className="font-bold text-[#242424] underline decoration-slate-300 underline-offset-4 hover:text-[#ff5757]"
+                  className="font-bold text-[#242424] underline decoration-slate-300 underline-offset-4 hover:text-[#0284c7]"
                 >
                   Contacter AQ8 Algérie
                 </Link>
@@ -287,7 +287,7 @@ function SectionTitle({
         <Icon className="h-4 w-4" aria-hidden="true" />
       </span>
       <div>
-        <p className="text-[11px] font-extrabold uppercase text-[#ff5757]">{number}</p>
+        <p className="text-[11px] font-extrabold uppercase text-[#0284c7]">{number}</p>
         <h2 className="font-display text-xl font-black text-[#242424] sm:text-2xl">{title}</h2>
       </div>
     </div>
@@ -307,7 +307,7 @@ function ContactLine({
 }) {
   const content = (
     <>
-      <Icon className="mt-1 h-4 w-4 shrink-0 text-[#ff5757]" aria-hidden="true" />
+      <Icon className="mt-1 h-4 w-4 shrink-0 text-[#0284c7]" aria-hidden="true" />
       <span>
         <span className="block text-xs font-extrabold uppercase text-slate-400">{label}</span>
         <span className="font-semibold text-[#242424]">{value}</span>
@@ -316,7 +316,7 @@ function ContactLine({
   );
 
   return href ? (
-    <a href={href} className="flex min-w-0 gap-3 hover:text-[#ff5757]">
+    <a href={href} className="flex min-w-0 gap-3 hover:text-[#0284c7]">
       {content}
     </a>
   ) : (

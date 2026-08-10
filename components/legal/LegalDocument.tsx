@@ -25,7 +25,7 @@ export function LegalDocument({
   return (
     <div className="mx-auto w-full max-w-6xl pb-12 sm:pb-16">
       <header className="border-b border-slate-200 py-8 sm:py-12">
-        <p className="text-xs font-bold uppercase text-[#ff5757]">{eyebrow}</p>
+        <p className="text-xs font-bold uppercase text-[#0284c7]">{eyebrow}</p>
         <h1 className="mt-4 font-display text-3xl font-black text-[#242424] sm:text-4xl">
           {title}
         </h1>
@@ -48,7 +48,7 @@ export function LegalDocument({
                 <li key={section.id}>
                   <a
                     href={"#" + section.id}
-                    className="block border-l-2 border-transparent py-2 pl-4 text-sm font-semibold text-slate-600 transition hover:border-[#ff5757] hover:text-[#242424]"
+                    className="block border-l-2 border-transparent py-2 pl-4 text-sm font-semibold text-slate-600 transition hover:border-[#0284c7] hover:text-[#242424]"
                   >
                     {section.label}
                   </a>
@@ -76,7 +76,7 @@ export function LegalDocument({
                     <Icon className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <div>
-                    <p className="text-[11px] font-extrabold uppercase text-[#ff5757]">
+                    <p className="text-[11px] font-extrabold uppercase text-[#0284c7]">
                       {String(index + 1).padStart(2, "0")}
                     </p>
                     <h2 className="font-display text-xl font-black text-[#242424] sm:text-2xl">
@@ -112,4 +112,4 @@ export function LegalAlert({
 }
 
 export const legalLinkClass =
-  "font-bold text-[#242424] underline decoration-slate-300 underline-offset-4 hover:text-[#ff5757]";
+  "font-bold text-[#242424] underline decoration-slate-300 underline-offset-4 hover:text-[#0284c7]";

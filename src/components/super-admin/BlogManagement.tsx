@@ -407,7 +407,7 @@ export function BlogManagement({ centers }: { centers: Center[] }) {
 
       <section className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="mb-2 flex items-center gap-2 text-[10px] font-extrabold uppercase text-[#ff5757]">
+          <div className="mb-2 flex items-center gap-2 text-[10px] font-extrabold uppercase text-[#0284c7]">
             <Sparkles className="h-3.5 w-3.5" />
             Pôle éditorial
           </div>
@@ -419,7 +419,7 @@ export function BlogManagement({ centers }: { centers: Center[] }) {
         <button
           type="button"
           onClick={() => openNewEditor()}
-          className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff5757] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#e94949]"
+          className="inline-flex items-center justify-center gap-2 rounded-md bg-[#0284c7] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#0369a1]"
         >
           <Plus className="h-4 w-4" />
           Nouvelle publication
@@ -456,13 +456,13 @@ export function BlogManagement({ centers }: { centers: Center[] }) {
               value={search}
               onChange={event => setSearch(event.target.value)}
               placeholder="Rechercher un contenu"
-              className="h-10 w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 text-xs font-medium outline-none transition focus:border-[#ff5757]"
+              className="h-10 w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 text-xs font-medium outline-none transition focus:border-[#0284c7]"
             />
           </label>
           <select
             value={statusFilter}
             onChange={event => setStatusFilter(event.target.value as StatusFilter)}
-            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 outline-none focus:border-[#ff5757]"
+            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 outline-none focus:border-[#0284c7]"
           >
             <option value="all">Tous les statuts</option>
             <option value="published">Publiés</option>
@@ -473,7 +473,7 @@ export function BlogManagement({ centers }: { centers: Center[] }) {
           <select
             value={typeFilter}
             onChange={event => setTypeFilter(event.target.value as TypeFilter)}
-            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 outline-none focus:border-[#ff5757]"
+            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 outline-none focus:border-[#0284c7]"
           >
             <option value="all">Tous les formats</option>
             {BLOG_PUBLICATION_TYPES.map(type => (
@@ -491,12 +491,12 @@ export function BlogManagement({ centers }: { centers: Center[] }) {
 
         {loading ? (
           <div className="flex min-h-48 items-center justify-center gap-2 border border-slate-200 bg-white text-xs font-semibold text-slate-500">
-            <Loader2 className="h-4 w-4 animate-spin text-[#ff5757]" />
+            <Loader2 className="h-4 w-4 animate-spin text-[#0284c7]" />
             Chargement de la rédaction...
           </div>
         ) : filteredPosts.length === 0 ? (
           <div className="flex min-h-56 flex-col items-center justify-center border border-dashed border-slate-300 bg-white px-6 text-center">
-            <BookOpen className="mb-4 h-9 w-9 text-[#ff5757]" />
+            <BookOpen className="mb-4 h-9 w-9 text-[#0284c7]" />
             <h3 className="font-display text-base font-bold text-[#242424]">
               {posts.length === 0 ? 'Votre espace éditorial est prêt' : 'Aucun contenu ne correspond aux filtres'}
             </h3>
@@ -506,7 +506,7 @@ export function BlogManagement({ centers }: { centers: Center[] }) {
                 : 'Modifiez la recherche ou les filtres.'}
             </p>
             {posts.length === 0 && (
-              <button type="button" onClick={() => openNewEditor()} className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-[#ff5757]">
+              <button type="button" onClick={() => openNewEditor()} className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-[#0284c7]">
                 <Plus className="h-4 w-4" />
                 Créer une publication
               </button>
@@ -544,12 +544,12 @@ export function BlogManagement({ centers }: { centers: Center[] }) {
                         <div className="mt-1 flex items-center gap-1.5 text-[9px] text-slate-400">
                           <Clock3 className="h-3 w-3" />
                           {post.readingTimeMinutes} min
-                          {post.featured && <span className="font-bold text-[#ff5757]">• À la une</span>}
+                          {post.featured && <span className="font-bold text-[#0284c7]">• À la une</span>}
                         </div>
                       </div>
                     </div>
                     <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-600">
-                      <TypeIcon className="h-3.5 w-3.5 text-[#ff5757]" />
+                      <TypeIcon className="h-3.5 w-3.5 text-[#0284c7]" />
                       {getBlogPublicationTypeLabel(post.publicationType)}
                     </span>
                     <span className={'w-fit rounded-full border px-2.5 py-1 text-[9px] font-extrabold ' + statusClasses(post.status)}>
@@ -563,7 +563,7 @@ export function BlogManagement({ centers }: { centers: Center[] }) {
                           target="_blank"
                           rel="noreferrer"
                           title="Voir sur le site public"
-                          className="rounded-md p-2 text-slate-400 transition hover:bg-white hover:text-[#ff5757]"
+                          className="rounded-md p-2 text-slate-400 transition hover:bg-white hover:text-[#0284c7]"
                         >
                           <ExternalLink className="h-4 w-4" />
                         </a>
@@ -652,7 +652,7 @@ export function BlogManagement({ centers }: { centers: Center[] }) {
                 onClick={() => void savePublication(primaryStatus)}
                 disabled={busy || !readyForPublication}
                 title={readyForPublication ? (willSchedule ? 'Programmer la publication' : 'Publier maintenant') : 'Complétez la checklist'}
-                className="inline-flex min-w-24 items-center justify-center gap-2 rounded-md bg-[#ff5757] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#e94949] disabled:cursor-not-allowed disabled:opacity-45 sm:min-w-28 sm:px-4"
+                className="inline-flex min-w-24 items-center justify-center gap-2 rounded-md bg-[#0284c7] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#0369a1] disabled:cursor-not-allowed disabled:opacity-45 sm:min-w-28 sm:px-4"
               >
                 {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 {willSchedule ? 'Planifier' : 'Publier'}
@@ -686,7 +686,7 @@ export function BlogManagement({ centers }: { centers: Center[] }) {
                     <div className="flex aspect-[16/6] items-center justify-center bg-slate-100"><ImageIcon className="h-8 w-8 text-slate-300" /></div>
                   )}
                   <div className="px-5 py-8 sm:px-10">
-                    <div className="mb-4 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase text-[#ff5757]">
+                    <div className="mb-4 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase text-[#0284c7]">
                       <span>{getBlogPublicationTypeLabel(draft.publicationType)}</span>
                       <span className="text-slate-300">•</span>
                       <span>{getBlogCategoryLabel(draft.category)}</span>

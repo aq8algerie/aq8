@@ -61,7 +61,7 @@ export function PendingBookingRequestsPanel({
                   </span>
                 )}
                 <span className="flex items-center gap-1 font-semibold text-slate-600">
-                  <Calendar className="h-3 w-3 text-[#ff5757]" />
+                  <Calendar className="h-3 w-3 text-[#0284c7]" />
                   {new Date(request.bookingDate).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'long' })} à {request.bookingTime}
                 </span>
                 <span className="text-slate-400 text-[10px]">

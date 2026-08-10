@@ -33,7 +33,7 @@ export default async function ReservationPage() {
         {/* Hero */}
         <section className="relative overflow-hidden rounded-lg bg-[#353535] px-6 py-14 text-center text-white sm:px-10 lg:px-14">
           <div className="relative z-10 mx-auto max-w-3xl space-y-6">
-            <span className="inline-flex items-center justify-center gap-2 rounded-full border border-[#ff5757]/30 bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
+            <span className="inline-flex items-center justify-center gap-2 rounded-full border border-[#0284c7]/30 bg-[#0284c7]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#0284c7]">
               <Calendar className="h-3.5 w-3.5 animate-pulse" />
               Réservation globale
             </span>
@@ -56,7 +56,7 @@ export default async function ReservationPage() {
           {/* Left Column (Info / Value props) */}
           <div className="space-y-6 lg:col-span-4">
             <div className="rounded-lg border border-slate-100 bg-slate-50 p-6 space-y-6">
-              <span className="inline-flex items-center gap-2 rounded-full bg-[#ff5757]/10 px-3 py-1 text-xs font-bold uppercase text-[#ff5757]">
+              <span className="inline-flex items-center gap-2 rounded-full bg-[#0284c7]/10 px-3 py-1 text-xs font-bold uppercase text-[#0284c7]">
                 <Sparkles className="h-3.5 w-3.5" />
                 Comment ça marche ?
               </span>
@@ -90,7 +90,7 @@ export default async function ReservationPage() {
 
             {/* Quick reminder card */}
             <div className="rounded-lg border border-slate-200 bg-[linear-gradient(135deg,#fcfcfd_0%,#ffffff_100%)] p-6 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 left-0 h-full w-[4px] bg-[#ff5757]" />
+              <div className="absolute top-0 left-0 h-full w-[4px] bg-[#0284c7]" />
               <div className="space-y-3">
                 <span className="inline-flex items-center gap-2 rounded-full bg-amber-400/10 border border-amber-400/20 px-3 py-1 text-xs font-bold uppercase text-amber-600">
                   <Clock className="h-3.5 w-3.5" />

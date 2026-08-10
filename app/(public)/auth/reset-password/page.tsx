@@ -83,7 +83,7 @@ function ResetPasswordForm() {
         
         {/* Header Branding */}
         <div className="text-center space-y-2">
-          <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[#ff5757]/10 text-[#ff5757] mb-2 shadow-xs">
+          <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0284c7]/10 text-[#0284c7] mb-2 shadow-xs">
             <ShieldCheck className="h-7 w-7" />
           </div>
           <h1 className="text-2xl font-black font-display text-slate-900 tracking-tight">
@@ -96,7 +96,7 @@ function ResetPasswordForm() {
 
         {verifying ? (
           <div className="py-8 text-center space-y-3">
-            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-3 border-[#ff5757] border-t-transparent" />
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-3 border-[#0284c7] border-t-transparent" />
             <p className="text-xs font-semibold text-slate-600">Vérification de la clé de sécurité...</p>
           </div>
         ) : success ? (
@@ -127,7 +127,7 @@ function ResetPasswordForm() {
             <div className="text-center pt-2">
               <Link
                 href="/crm"
-                className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-[#ff5757] transition"
+                className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-[#0284c7] transition"
               >
                 <ArrowLeft className="h-4 w-4" /> Demander un nouveau lien depuis le CRM
               </Link>
@@ -150,7 +150,7 @@ function ResetPasswordForm() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Minimum 8 caractères"
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757] text-xs font-mono pr-10"
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7] text-xs font-mono pr-10"
                 />
                 <button
                   type="button"
@@ -170,14 +170,14 @@ function ResetPasswordForm() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Répétez le nouveau mot de passe"
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757] text-xs font-mono"
+                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7] text-xs font-mono"
               />
             </div>
 
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-3 bg-[#ff5757] hover:bg-[#e03030] text-white font-extrabold rounded-xl shadow-md transition disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2 text-xs"
+              className="w-full py-3 bg-[#0284c7] hover:bg-[#0369a1] text-white font-extrabold rounded-xl shadow-md transition disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2 text-xs"
             >
               {submitting ? (
                 <>
@@ -202,7 +202,7 @@ export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
       <div className="min-h-[80vh] flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#ff5757] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#0284c7] border-t-transparent" />
       </div>
     }>
       <ResetPasswordForm />

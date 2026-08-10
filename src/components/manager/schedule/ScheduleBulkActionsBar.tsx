@@ -32,7 +32,7 @@ export function ScheduleBulkActionsBar({
       className="bg-[#353535] text-white p-3 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl border border-slate-700/50"
     >
       <div className="flex items-center gap-2 text-xs">
-        <span className="p-1 bg-white/10 rounded-lg text-[#ff5757]">
+        <span className="p-1 bg-white/10 rounded-lg text-[#0284c7]">
           <Sparkles className="h-4 w-4" />
         </span>
         <span className="font-bold">

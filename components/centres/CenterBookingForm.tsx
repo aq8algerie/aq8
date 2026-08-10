@@ -389,7 +389,7 @@ export function CenterBookingForm({
           <button
             type="button"
             onClick={() => setSuccessMsg("")}
-            className="w-full rounded-md bg-[#353535] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#ff5757] cursor-pointer"
+            className="w-full rounded-md bg-[#353535] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#0284c7] cursor-pointer"
           >
             Réserver un autre créneau
           </button>
@@ -458,7 +458,7 @@ export function CenterBookingForm({
           <div className="mb-5 rounded-md border border-slate-100 bg-slate-50 p-4 text-sm">
             <div className="flex items-center justify-between gap-3">
               <span className="font-bold text-slate-700">Capacité par heure</span>
-              <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#ff5757]">
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#0284c7]">
                 {capacitySummary}
               </span>
             </div>
@@ -485,7 +485,7 @@ export function CenterBookingForm({
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="Amira"
                   disabled={isLoading}
-                  className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+                  className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#0284c7] focus:bg-white disabled:opacity-60"
                 />
               </div>
               <div className="space-y-1.5">
@@ -497,7 +497,7 @@ export function CenterBookingForm({
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Cherif"
                   disabled={isLoading}
-                  className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+                  className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#0284c7] focus:bg-white disabled:opacity-60"
                 />
               </div>
             </div>
@@ -511,7 +511,7 @@ export function CenterBookingForm({
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="0550 11 22 33"
                 disabled={isLoading}
-                className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+                className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#0284c7] focus:bg-white disabled:opacity-60"
               />
             </div>
 
@@ -523,7 +523,7 @@ export function CenterBookingForm({
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="amira@email.com"
                 disabled={isLoading}
-                className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+                className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#0284c7] focus:bg-white disabled:opacity-60"
               />
             </div>
 
@@ -730,9 +730,9 @@ export function CenterBookingForm({
             <p className="text-xs font-medium leading-relaxed text-slate-500 text-center">
               Votre réservation bloque immédiatement une place disponible et la confirme en direct dans l'agenda.
               En envoyant cette réservation, vous reconnaissez avoir pris connaissance des{" "}
-              <a href="/conditions-generales-de-vente" className="font-bold text-slate-700 underline underline-offset-2 hover:text-[#ff5757]">CGV</a>
+              <a href="/conditions-generales-de-vente" className="font-bold text-slate-700 underline underline-offset-2 hover:text-[#0284c7]">CGV</a>
               {" "}et de la{" "}
-              <a href="/politique-de-confidentialite" className="font-bold text-slate-700 underline underline-offset-2 hover:text-[#ff5757]">politique de confidentialité</a>.
+              <a href="/politique-de-confidentialite" className="font-bold text-slate-700 underline underline-offset-2 hover:text-[#0284c7]">politique de confidentialité</a>.
               Aucun paiement n'est requis en ligne.
             </p>
           </form>

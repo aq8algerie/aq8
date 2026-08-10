@@ -48,7 +48,7 @@ export function StatsPanel({
                             cy="18"
                             r="15.915"
                             fill="none"
-                            stroke="#ff5757"
+                            stroke="#0284c7"
                             strokeWidth="3.5"
                             strokeDasharray={`${aq8Percent} ${wonderPercent}`}
                             initial={{ strokeDashoffset: 125 }}
@@ -75,7 +75,7 @@ export function StatsPanel({
                       </motion.div>
                       <div className="space-y-2 text-xs">
                         <div className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                          <div className="w-3 h-3 bg-[#ff5757] rounded-sm shrink-0"></div>
+                          <div className="w-3 h-3 bg-[#0284c7] rounded-sm shrink-0"></div>
                           <div>
                             <span className="text-slate-600 font-medium block">AQ8 Électrostimulation (EMS)</span>
                             <span className="font-bold font-mono text-slate-800 text-xs">{aq8ClientsCount} membres ({aq8Percent}%)</span>
@@ -158,7 +158,7 @@ export function StatsPanel({
                             cy="25"
                             r={radius}
                             fill="none"
-                            stroke="#ff5757"
+                            stroke="#0284c7"
                             strokeWidth="3.5"
                             strokeDasharray={circ}
                             initial={{ strokeDashoffset: circ }}
@@ -243,14 +243,14 @@ export function StatsPanel({
                       <div key={d.name} className="space-y-1 text-xs">
                         <div className="flex justify-between items-center font-bold">
                           <span className="text-[#353535]">{d.name}</span>
-                          <span className="font-mono text-[#ff5757]">{d.revenue.toLocaleString()} DZD</span>
+                          <span className="font-mono text-[#0284c7]">{d.revenue.toLocaleString()} DZD</span>
                         </div>
                         <div className="h-4 w-full bg-slate-50 rounded-lg overflow-hidden border border-slate-100/50">
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${d.revenue > 0 ? widthPct : 2}%` }}
                             transition={{ duration: 0.8, ease: "easeOut" }}
-                            className="h-full bg-gradient-to-r from-slate-700 to-[#ff5757] rounded-lg"
+                            className="h-full bg-gradient-to-r from-slate-700 to-[#0284c7] rounded-lg"
                           ></motion.div>
                         </div>
                       </div>

@@ -793,7 +793,7 @@ export function SuperAdminViews({
                     onClick={() => setCenterModalTab(tab.id as any)}
                     className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                       centerModalTab === tab.id
-                        ? 'bg-white text-[#ff5757] shadow-xs border border-slate-100'
+                        ? 'bg-white text-[#0284c7] shadow-xs border border-slate-100'
                         : 'text-slate-500 hover:text-slate-800'
                     }`}
                   >
@@ -815,7 +815,7 @@ export function SuperAdminViews({
                       <label className="font-semibold text-slate-600 block">Nom du Centre *</label>
                       <input
                         type="text" required value={centerName} onChange={(e) => setCenterName(e.target.value)}
-                        placeholder="AQ8 Sidi Yahia" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757]"
+                        placeholder="AQ8 Sidi Yahia" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7]"
                       />
                     </div>
                     <div className="space-y-1">
@@ -837,7 +837,7 @@ export function SuperAdminViews({
                     <label className="font-semibold text-slate-600 block">Adresse Complète *</label>
                     <input
                       type="text" required value={centerAddress} onChange={(e) => setCenterAddress(e.target.value)}
-                      placeholder="Avenue Sidi Yahia, Hydra, Alger" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757]"
+                      placeholder="Avenue Sidi Yahia, Hydra, Alger" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7]"
                     />
                   </div>
 
@@ -846,14 +846,14 @@ export function SuperAdminViews({
                       <label className="font-semibold text-slate-600 block">Téléphone Direct *</label>
                       <input
                         type="text" required value={centerPhone} onChange={(e) => setCenterPhone(e.target.value)}
-                        placeholder="+213 795 12 84 09" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757]"
+                        placeholder="+213 795 12 84 09" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7]"
                       />
                     </div>
                     <div className="space-y-1">
                       <label className="font-semibold text-slate-600 block">E-mail Professionnel *</label>
                       <input
                         type="email" required value={centerEmail} onChange={(e) => setCenterEmail(e.target.value)}
-                        placeholder="sidiyahia@aq8algerie.com" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757]"
+                        placeholder="sidiyahia@aq8algerie.com" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7]"
                       />
                     </div>
                   </div>
@@ -862,7 +862,7 @@ export function SuperAdminViews({
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="font-semibold text-slate-600 block">Photo du Centre</label>
-                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#ff5757] hover:bg-[#e04646] text-white font-bold text-[11px] rounded-xl cursor-pointer transition shadow-xs">
+                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] text-white font-bold text-[11px] rounded-xl cursor-pointer transition shadow-xs">
                         {uploadingCenterImg ? (
                           <>
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -894,7 +894,7 @@ export function SuperAdminViews({
                       <div className="sm:col-span-2 space-y-1.5">
                         <input
                           type="text" value={centerImg} onChange={(e) => setCenterImg(e.target.value)}
-                          placeholder="URL de l'image ou téléversez votre fichier" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757]"
+                          placeholder="URL de l'image ou téléversez votre fichier" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7]"
                         />
                         {/* Image Presets Selector */}
                         <div className="flex gap-2 flex-wrap">
@@ -928,14 +928,14 @@ export function SuperAdminViews({
                     <textarea
                       rows={3} value={centerDesc} onChange={(e) => setCenterDesc(e.target.value)}
                       placeholder="Le studio premium AQ8 d'Alger..."
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757]"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7]"
                     ></textarea>
                   </div>
 
                   {/* Manager & Access Credentials Section */}
                   <div className="p-4 bg-slate-50 border border-slate-200/50 rounded-2xl space-y-3">
                     <div className="flex items-center gap-2 border-b border-slate-200/60 pb-2">
-                      <Users className="h-4 w-4 text-[#ff5757]" />
+                      <Users className="h-4 w-4 text-[#0284c7]" />
                       <span className="font-bold text-slate-800 text-xs uppercase tracking-wider">Gérant & Accès CRM du Centre</span>
                     </div>
                     
@@ -944,14 +944,14 @@ export function SuperAdminViews({
                         <label className="font-semibold text-slate-600 block">Nom complet du Gérant *</label>
                         <input
                           type="text" required value={mgrName} onChange={(e) => setMgrName(e.target.value)}
-                          placeholder="Amel Mansouri" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-[#ff5757]"
+                          placeholder="Amel Mansouri" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-[#0284c7]"
                         />
                       </div>
                       <div className="space-y-1">
                         <label className="font-semibold text-slate-600 block">E-mail d'Accès (Login) *</label>
                         <input
                           type="email" required value={mgrEmail} onChange={(e) => setMgrEmail(e.target.value)}
-                          placeholder="amel@aq8algerie.com" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-[#ff5757]"
+                          placeholder="amel@aq8algerie.com" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-[#0284c7]"
                         />
                       </div>
                     </div>
@@ -974,7 +974,7 @@ export function SuperAdminViews({
                     <label className="font-semibold text-slate-600 block">Horaires d'Ouverture Généraux *</label>
                     <input
                       type="text" required value={centerSchedule} onChange={(e) => setCenterSchedule(e.target.value)}
-                      placeholder="Samedi - Jeudi: 08:00 - 20:00 | Vendredi: Fermé" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757]"
+                      placeholder="Samedi - Jeudi: 08:00 - 20:00 | Vendredi: Fermé" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7]"
                     />
                   </div>
 
@@ -1075,7 +1075,7 @@ export function SuperAdminViews({
                     <span className="font-bold text-slate-700 block">Prestations Offertes</span>
                     <div className="flex gap-6 font-semibold text-slate-600">
                       <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" checked={centerHasAq8} onChange={(e) => setCenterHasAq8(e.target.checked)} className="accent-[#ff5757] h-4 w-4" />
+                        <input type="checkbox" checked={centerHasAq8} onChange={(e) => setCenterHasAq8(e.target.checked)} className="accent-[#0284c7] h-4 w-4" />
                         <span>AQ8 EMS (Électrostimulation)</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
@@ -1150,7 +1150,7 @@ export function SuperAdminViews({
                                     setCenterCustomActiveServices(centerCustomActiveServices.filter(id => id !== srv.id));
                                   }
                                 }}
-                                className="accent-[#ff5757] h-3.5 w-3.5"
+                                className="accent-[#0284c7] h-3.5 w-3.5"
                               />
                               <span className={`font-semibold text-slate-700 truncate text-[11px] ${!isActive && 'line-through text-slate-400'}`}>
                                 {srv.name} ({srv.duration} min)
@@ -1203,7 +1203,7 @@ export function SuperAdminViews({
                                     setCenterCustomActivePackages(centerCustomActivePackages.filter(id => id !== pkg.id));
                                   }
                                 }}
-                                className="accent-[#ff5757] h-3.5 w-3.5"
+                                className="accent-[#0284c7] h-3.5 w-3.5"
                               />
                               <span className={`font-semibold text-slate-700 truncate text-[11px] ${!isActive && 'line-through text-slate-400'}`}>
                                 {pkg.name} ({pkg.sessionsCount} s.)
@@ -1258,7 +1258,7 @@ export function SuperAdminViews({
                     <textarea
                       rows={2} value={centerCancellationRule} onChange={(e) => setCenterCancellationRule(e.target.value)}
                       placeholder="Ex: Les séances doivent être annulées 24 heures à l'avance."
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757]"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7]"
                     ></textarea>
                   </div>
 
@@ -1315,7 +1315,7 @@ export function SuperAdminViews({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl shadow-sm hover:shadow-md transition cursor-pointer"
+                  className="px-5 py-2 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-white rounded-xl shadow-sm hover:shadow-md transition cursor-pointer"
                 >
                   Enregistrer
                 </button>
@@ -1381,7 +1381,7 @@ export function SuperAdminViews({
 
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <button type="button" disabled={managerAccessBusy} onClick={() => setShowManagerModal(false)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-semibold disabled:opacity-50">Annuler</button>
-                <button type="submit" disabled={managerAccessBusy} className="inline-flex min-w-28 items-center justify-center gap-2 px-4 py-2 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl disabled:cursor-wait disabled:opacity-60">
+                <button type="submit" disabled={managerAccessBusy} className="inline-flex min-w-28 items-center justify-center gap-2 px-4 py-2 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-white rounded-xl disabled:cursor-wait disabled:opacity-60">
                   {managerAccessBusy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   {managerAccessBusy ? 'Sécurisation...' : 'Enregistrer'}
                 </button>
@@ -1443,7 +1443,7 @@ export function SuperAdminViews({
 
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <button type="button" onClick={() => setShowServiceModal(false)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-semibold">Annuler</button>
-                <button type="submit" className="px-4 py-2 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl">Enregistrer</button>
+                <button type="submit" className="px-4 py-2 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-white rounded-xl">Enregistrer</button>
               </div>
             </form>
           </div>

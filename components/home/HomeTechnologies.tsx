@@ -11,7 +11,7 @@ const technologies = [
     alt: "Séance AQ8 EMS active en centre en Algérie",
     icon: Zap,
     badge: "Brûle-graisses & Renforcement",
-    badgeColor: "bg-[#ff5757] text-white",
+    badgeColor: "bg-[#0284c7] text-white",
     description: "Une technologie d'électrostimulation globale sollicitant simultanément 350 muscles. En seulement 20 minutes, combinez travail cardiovasculaire et contraction musculaire profonde.",
     points: [
       { icon: Flame, text: "Consommation calorique élevée" },
@@ -46,7 +46,7 @@ export function HomeTechnologies() {
       {/* Section Header */}
       <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-8 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-md bg-[#fff0f0] px-3 py-1 text-xs font-extrabold uppercase text-[#ff5757]">
+          <div className="inline-flex items-center gap-2 rounded-md bg-[#fff0f0] px-3 py-1 text-xs font-extrabold uppercase text-[#0284c7]">
             <Sparkles className="h-3.5 w-3.5" />
             Technologies Exclusives AQ8
           </div>
@@ -66,7 +66,7 @@ export function HomeTechnologies() {
           return (
             <article
               key={technology.title}
-              className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-lg transition-all duration-500 hover:-translate-y-1.5 hover:border-[#ff5757]/40 hover:shadow-2xl"
+              className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-lg transition-all duration-500 hover:-translate-y-1.5 hover:border-[#0284c7]/40 hover:shadow-2xl"
             >
               {/* Card Image Cover Header */}
               <div className="relative h-72 w-full overflow-hidden bg-slate-900">
@@ -99,7 +99,7 @@ export function HomeTechnologies() {
                       {technology.subtitle}
                     </p>
                   </div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/90 text-[#242424] shadow-md backdrop-blur transition-transform duration-300 group-hover:scale-110 group-hover:bg-[#ff5757] group-hover:text-white">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/90 text-[#242424] shadow-md backdrop-blur transition-transform duration-300 group-hover:scale-110 group-hover:bg-[#0284c7] group-hover:text-white">
                     <Icon className="h-6 w-6" />
                   </div>
                 </div>
@@ -117,7 +117,7 @@ export function HomeTechnologies() {
                     const PointIcon = point.icon;
                     return (
                       <div key={point.text} className="flex items-center gap-2 rounded-lg bg-slate-50 p-2.5 text-xs font-bold text-slate-800">
-                        <PointIcon className="h-4 w-4 shrink-0 text-[#ff5757]" />
+                        <PointIcon className="h-4 w-4 shrink-0 text-[#0284c7]" />
                         <span>{point.text}</span>
                       </div>
                     );
@@ -129,7 +129,7 @@ export function HomeTechnologies() {
                   <Link
                     href={technology.href}
                     aria-label={`Découvrir la technologie ${technology.title}`}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white py-3 px-5 text-sm font-bold text-[#242424] transition-all duration-300 hover:border-[#ff5757] hover:bg-[#ff5757] hover:text-white hover:shadow-md"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white py-3 px-5 text-sm font-bold text-[#242424] transition-all duration-300 hover:border-[#0284c7] hover:bg-[#0284c7] hover:text-white hover:shadow-md"
                   >
                     <span>En savoir plus sur {technology.title}</span>
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -152,7 +152,7 @@ export function HomeTechnologies() {
           </div>
           <Link
             href="/reservation"
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#ff5757] px-5 py-3 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:bg-[#e64747] hover:scale-105"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#0284c7] px-5 py-3 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:bg-[#e64747] hover:scale-105"
           >
             <span>Réserver un bilan gratuit</span>
             <ArrowRight className="h-4 w-4" />

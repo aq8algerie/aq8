@@ -30,10 +30,10 @@ export function SettingsPanel({ settings, onSave }: SettingsPanelProps) {
   return (
     <div className="max-w-2xl space-y-5">
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1e1e1e] via-[#2d2d2d] to-[#141414] p-6 text-white shadow-xl border border-slate-800">
-        <div className="absolute top-0 right-0 h-48 w-48 translate-x-10 -translate-y-10 rounded-full bg-[#ff5757]/15 blur-2xl pointer-events-none" />
+        <div className="absolute top-0 right-0 h-48 w-48 translate-x-10 -translate-y-10 rounded-full bg-[#0284c7]/15 blur-2xl pointer-events-none" />
         <div className="relative z-10 space-y-2">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-[#ff8080] backdrop-blur-md">
-            <Sliders className="h-3.5 w-3.5 text-[#ff5757]" />
+            <Sliders className="h-3.5 w-3.5 text-[#0284c7]" />
             Configuration Globale Super Admin
           </div>
           <h3 className="font-display text-xl font-black tracking-tight text-white sm:text-2xl">
@@ -57,45 +57,45 @@ export function SettingsPanel({ settings, onSave }: SettingsPanelProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 block inline-flex items-center gap-1.5">
-                <Mail className="h-3.5 w-3.5 text-[#ff5757]" /> E-mail Général de Contact
+                <Mail className="h-3.5 w-3.5 text-[#0284c7]" /> E-mail Général de Contact
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 font-semibold focus:outline-none focus:border-[#ff5757] focus:bg-white focus:ring-2 focus:ring-[#ff5757]/10 transition-all"
+                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 font-semibold focus:outline-none focus:border-[#0284c7] focus:bg-white focus:ring-2 focus:ring-[#0284c7]/10 transition-all"
               />
             </div>
 
             <div className="space-y-1.5">
               <label className="font-bold text-slate-700 block inline-flex items-center gap-1.5">
-                <Phone className="h-3.5 w-3.5 text-[#ff5757]" /> Téléphone Siège National
+                <Phone className="h-3.5 w-3.5 text-[#0284c7]" /> Téléphone Siège National
               </label>
               <input
                 type="text"
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 font-semibold focus:outline-none focus:border-[#ff5757] focus:bg-white focus:ring-2 focus:ring-[#ff5757]/10 transition-all"
+                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 font-semibold focus:outline-none focus:border-[#0284c7] focus:bg-white focus:ring-2 focus:ring-[#0284c7]/10 transition-all"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
             <label className="font-bold text-slate-700 block inline-flex items-center gap-1.5">
-              <Building2 className="h-3.5 w-3.5 text-[#ff5757]" /> Adresse Centrale Siège
+              <Building2 className="h-3.5 w-3.5 text-[#0284c7]" /> Adresse Centrale Siège
             </label>
             <input
               type="text"
               value={address}
               onChange={(event) => setAddress(event.target.value)}
-              className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 font-semibold focus:outline-none focus:border-[#ff5757] focus:bg-white focus:ring-2 focus:ring-[#ff5757]/10 transition-all"
+              className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 font-semibold focus:outline-none focus:border-[#0284c7] focus:bg-white focus:ring-2 focus:ring-[#0284c7]/10 transition-all"
             />
           </div>
 
           <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-rose-50/30 border border-slate-200/80 flex items-center justify-between gap-4">
             <div className="space-y-1">
               <span className="font-extrabold text-slate-900 block text-xs flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-[#ff5757]" /> Offre Découverte
+                <Sparkles className="h-3.5 w-3.5 text-[#0284c7]" /> Offre Découverte
               </span>
               <span className="text-[11px] text-slate-500 font-medium leading-relaxed block">
                 Affiche l'appel à l'action pour la séance découverte sur le site vitrine.
@@ -108,13 +108,13 @@ export function SettingsPanel({ settings, onSave }: SettingsPanelProps) {
                 onChange={(event) => setPromoEnabled(event.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#ff5757]" />
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0284c7]" />
             </label>
           </div>
 
           <button
             type="submit"
-            className="w-full sm:w-auto px-6 py-3 bg-[#242424] hover:bg-[#ff5757] font-black text-white rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full sm:w-auto px-6 py-3 bg-[#242424] hover:bg-[#0284c7] font-black text-white rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
           >
             <Save className="h-4 w-4" /> Enregistrer les paramètres
           </button>

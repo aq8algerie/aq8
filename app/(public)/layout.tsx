@@ -53,7 +53,7 @@ export default function PublicLayout({
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white font-sans selection:bg-[#ff5757] selection:text-white">
+    <div className="min-h-screen flex flex-col bg-white font-sans selection:bg-[#0284c7] selection:text-white">
       {/* --- SITE PUBLIC HEADER --- */}
       <header
         className={`sticky top-0 z-50 w-full transition-all duration-300 ${
@@ -84,7 +84,7 @@ export default function PublicLayout({
                 href="/"
                 className={`rounded-xl px-4 py-2 transition-all duration-200 ${
                   isActive("/")
-                    ? "bg-white text-[#ff5757] shadow-md shadow-rose-500/10 font-extrabold"
+                    ? "bg-white text-[#0284c7] shadow-md shadow-rose-500/10 font-extrabold"
                     : "hover:bg-white/80 hover:text-[#242424]"
                 }`}
               >
@@ -101,13 +101,13 @@ export default function PublicLayout({
                   type="button"
                   className={`flex items-center gap-1.5 px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
                     isActive("/aq8") || isActive("/wonder")
-                      ? "bg-white text-[#ff5757] shadow-md shadow-rose-500/10 font-extrabold"
+                      ? "bg-white text-[#0284c7] shadow-md shadow-rose-500/10 font-extrabold"
                       : "hover:bg-white/80 hover:text-[#242424]"
                   }`}
                   onClick={() => setTechnologyMenuOpen(open => !open)}
                 >
                   <span>Nos Technologies</span>
-                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${technologyMenuOpen ? "rotate-180 text-[#ff5757]" : ""}`} />
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${technologyMenuOpen ? "rotate-180 text-[#0284c7]" : ""}`} />
                 </button>
 
                 {/* Dropdown Menu Card */}
@@ -121,11 +121,11 @@ export default function PublicLayout({
                     onClick={() => setTechnologyMenuOpen(false)}
                     className="flex items-start gap-3 rounded-xl p-3 hover:bg-[#fff0f0] transition-all group/item"
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#ff5757] text-white shadow-md group-hover/item:scale-110 transition-transform">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#0284c7] text-white shadow-md group-hover/item:scale-110 transition-transform">
                       <Zap className="h-4 w-4" />
                     </div>
                     <div>
-                      <span className="block font-display text-sm font-black text-[#242424] group-hover/item:text-[#ff5757]">
+                      <span className="block font-display text-sm font-black text-[#242424] group-hover/item:text-[#0284c7]">
                         AQ8 EMS
                       </span>
                       <span className="block text-[11px] font-medium text-slate-500">
@@ -142,10 +142,10 @@ export default function PublicLayout({
                     className="flex items-start gap-3 rounded-xl p-3 hover:bg-slate-50 transition-all group/item"
                   >
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#242424] text-white shadow-md group-hover/item:scale-110 transition-transform">
-                      <Target className="h-4 w-4 text-[#ff7777]" />
+                      <Target className="h-4 w-4 text-[#38bdf8]" />
                     </div>
                     <div>
-                      <span className="block font-display text-sm font-black text-[#242424] group-hover/item:text-[#ff5757]">
+                      <span className="block font-display text-sm font-black text-[#242424] group-hover/item:text-[#0284c7]">
                         Wonder Axion
                       </span>
                       <span className="block text-[11px] font-medium text-slate-500">
@@ -160,7 +160,7 @@ export default function PublicLayout({
                 href="/a-propos"
                 className={`rounded-xl px-4 py-2 transition-all duration-200 ${
                   isActive("/a-propos")
-                    ? "bg-white text-[#ff5757] shadow-md shadow-rose-500/10 font-extrabold"
+                    ? "bg-white text-[#0284c7] shadow-md shadow-rose-500/10 font-extrabold"
                     : "hover:bg-white/80 hover:text-[#242424]"
                 }`}
               >
@@ -170,7 +170,7 @@ export default function PublicLayout({
                 href="/centres"
                 className={`rounded-xl px-4 py-2 transition-all duration-200 ${
                   isActive("/centres")
-                    ? "bg-white text-[#ff5757] shadow-md shadow-rose-500/10 font-extrabold"
+                    ? "bg-white text-[#0284c7] shadow-md shadow-rose-500/10 font-extrabold"
                     : "hover:bg-white/80 hover:text-[#242424]"
                 }`}
               >
@@ -180,7 +180,7 @@ export default function PublicLayout({
                 href="/conseils"
                 className={`rounded-xl px-4 py-2 transition-all duration-200 ${
                   isActive("/conseils")
-                    ? "bg-white text-[#ff5757] shadow-md shadow-rose-500/10 font-extrabold"
+                    ? "bg-white text-[#0284c7] shadow-md shadow-rose-500/10 font-extrabold"
                     : "hover:bg-white/80 hover:text-[#242424]"
                 }`}
               >
@@ -190,7 +190,7 @@ export default function PublicLayout({
                 href="/contact"
                 className={`rounded-xl px-4 py-2 transition-all duration-200 ${
                   isActive("/contact")
-                    ? "bg-white text-[#ff5757] shadow-md shadow-rose-500/10 font-extrabold"
+                    ? "bg-white text-[#0284c7] shadow-md shadow-rose-500/10 font-extrabold"
                     : "hover:bg-white/80 hover:text-[#242424]"
                 }`}
               >
@@ -202,14 +202,14 @@ export default function PublicLayout({
             <div className="hidden lg:flex items-center gap-2.5">
               <Link
                 href="/client"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-3 text-xs font-bold text-[#242424] transition-all duration-200 hover:border-[#ff5757] hover:bg-[#fff0f0] hover:text-[#ff5757] shadow-sm"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-3 text-xs font-bold text-[#242424] transition-all duration-200 hover:border-[#0284c7] hover:bg-[#fff0f0] hover:text-[#0284c7] shadow-sm"
               >
-                <User className="h-4 w-4 text-[#ff5757]" />
+                <User className="h-4 w-4 text-[#0284c7]" />
                 <span>Mon Espace</span>
               </Link>
               <Link
                 href="/reservation"
-                className="group relative inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5757] to-[#e63e3e] px-5 py-3 text-xs font-bold text-white shadow-lg shadow-[#ff5757]/25 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#ff5757]/35 active:scale-[0.98]"
+                className="group relative inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0284c7] to-[#e63e3e] px-5 py-3 text-xs font-bold text-white shadow-lg shadow-[#0284c7]/25 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#0284c7]/35 active:scale-[0.98]"
               >
                 <Calendar className="h-4 w-4 transition-transform group-hover:scale-110" />
                 <span>Réserver</span>
@@ -230,12 +230,12 @@ export default function PublicLayout({
                 href="/client"
                 className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#242424] shadow-sm"
               >
-                <User className="h-3.5 w-3.5 text-[#ff5757]" />
+                <User className="h-3.5 w-3.5 text-[#0284c7]" />
                 <span>Espace</span>
               </Link>
               <Link
                 href="/reservation"
-                className="inline-flex items-center gap-1 rounded-xl bg-[#ff5757] px-3.5 py-2 text-xs font-bold text-white shadow-sm"
+                className="inline-flex items-center gap-1 rounded-xl bg-[#0284c7] px-3.5 py-2 text-xs font-bold text-white shadow-sm"
               >
                 <Calendar className="h-3.5 w-3.5" />
                 <span>Réserver</span>
@@ -262,13 +262,13 @@ export default function PublicLayout({
               onClick={() => setMobileMenuOpen(false)}
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-[#242424]"
             >
-              <User className="h-4 w-4 text-[#ff5757]" />
+              <User className="h-4 w-4 text-[#0284c7]" />
               Mon Espace Adhérent (RDV & Mensurations)
             </Link>
             <Link
               href="/reservation"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5757] to-[#e63e3e] px-4 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#ff5757]/20"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0284c7] to-[#e63e3e] px-4 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0284c7]/20"
             >
               <Calendar className="h-4 w-4" />
               Réserver une séance
@@ -288,11 +288,11 @@ export default function PublicLayout({
                   href={link.id}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`w-full text-left px-3.5 py-2.5 rounded-xl flex items-center gap-2.5 transition-colors ${
-                    isActive(link.id) ? "bg-[#fff0f0] text-[#ff5757]" : "text-slate-700 hover:bg-slate-50"
+                    isActive(link.id) ? "bg-[#fff0f0] text-[#0284c7]" : "text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  {link.id === "/login" && <ShieldCheck className="h-4 w-4 text-[#ff5757]" />}
-                  {link.id === "/conseils" && <BookOpen className="h-4 w-4 text-[#ff5757]" />}
+                  {link.id === "/login" && <ShieldCheck className="h-4 w-4 text-[#0284c7]" />}
+                  {link.id === "/conseils" && <BookOpen className="h-4 w-4 text-[#0284c7]" />}
                   <span>{link.label}</span>
                 </Link>
               ))}
@@ -307,17 +307,17 @@ export default function PublicLayout({
                   href="/aq8"
                   onClick={() => setMobileMenuOpen(false)}
                   className={`rounded-xl p-2.5 block text-center ${
-                    isActive("/aq8") ? "bg-white text-[#ff5757] shadow-sm font-black" : "bg-white/60 text-slate-800"
+                    isActive("/aq8") ? "bg-white text-[#0284c7] shadow-sm font-black" : "bg-white/60 text-slate-800"
                   }`}
                 >
-                  <Zap className="h-4 w-4 text-[#ff5757] mx-auto mb-1" />
+                  <Zap className="h-4 w-4 text-[#0284c7] mx-auto mb-1" />
                   AQ8 EMS
                 </Link>
                 <Link
                   href="/wonder"
                   onClick={() => setMobileMenuOpen(false)}
                   className={`rounded-xl p-2.5 block text-center ${
-                    isActive("/wonder") ? "bg-white text-[#ff5757] shadow-sm font-black" : "bg-white/60 text-slate-800"
+                    isActive("/wonder") ? "bg-white text-[#0284c7] shadow-sm font-black" : "bg-white/60 text-slate-800"
                   }`}
                 >
                   <Target className="h-4 w-4 text-[#242424] mx-auto mb-1" />
@@ -357,7 +357,7 @@ export default function PublicLayout({
           <div className="space-y-4 text-xs">
             <h4 className="font-display text-sm font-bold text-white">Navigation & Info</h4>
             <ul className="space-y-2.5 text-slate-400">
-              <li><Link href="/client" className="hover:text-white transition text-[#ff7777] font-bold">Mon Espace Adhérent</Link></li>
+              <li><Link href="/client" className="hover:text-white transition text-[#38bdf8] font-bold">Mon Espace Adhérent</Link></li>
               <li><Link href="/aq8" className="hover:text-white transition">AQ8 EMS active</Link></li>
               <li><Link href="/wonder" className="hover:text-white transition">Wonder Axion</Link></li>
               <li><Link href="/conseils" className="hover:text-white transition">Conseils & actualités</Link></li>
@@ -385,10 +385,10 @@ export default function PublicLayout({
           <div className="space-y-4 text-xs">
             <h4 className="font-display text-sm font-bold text-white">Contact & Assistance</h4>
             <p className="text-slate-400 leading-relaxed flex items-start gap-2">
-              <MapPin className="h-4 w-4 text-[#ff7777] shrink-0 mt-0.5" />
+              <MapPin className="h-4 w-4 text-[#38bdf8] shrink-0 mt-0.5" />
               <span>{settings?.addressAlgérie || "12 Rue des Glycines, Hydra, Alger"}</span>
             </p>
-            <p className="text-slate-400 flex items-center gap-2 font-bold text-[#ff7777]">
+            <p className="text-slate-400 flex items-center gap-2 font-bold text-[#38bdf8]">
               <Phone className="h-4 w-4 shrink-0" />
               <span>{settings?.contactPhone || "+213 795 12 84 09"}</span>
             </p>

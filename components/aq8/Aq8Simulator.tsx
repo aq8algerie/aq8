@@ -42,7 +42,7 @@ export function Aq8Simulator() {
 
       <div className="relative z-10 space-y-8 sm:space-y-10">
         <div className="max-w-2xl space-y-3">
-          <span className="inline-flex items-center gap-2 rounded-full border border-[#ff5757]/30 bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[#0284c7]/30 bg-[#0284c7]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#0284c7]">
             <Sliders className="h-3.5 w-3.5" />
             Simulation visuelle
           </span>
@@ -76,7 +76,7 @@ export function Aq8Simulator() {
                     onClick={() => setMuscleZone(zone.id)}
                     className={`rounded-md px-2.5 py-2.5 text-[11px] xs:text-xs font-bold transition-premium ${
                       muscleZone === zone.id
-                        ? "bg-[#ff5757] text-white shadow-md shadow-[#ff5757]/20"
+                        ? "bg-[#0284c7] text-white shadow-md shadow-[#0284c7]/20"
                         : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
                     }`}
                   >
@@ -89,7 +89,7 @@ export function Aq8Simulator() {
             <div className="space-y-3">
               <div className="flex justify-between gap-4 text-xs font-bold text-slate-300">
                 <span>Fréquence</span>
-                <span className="text-[#ff5757] transition-all">
+                <span className="text-[#0284c7] transition-all">
                   {frequency} Hz · {getFrequencyLabel(frequency)}
                 </span>
               </div>
@@ -100,7 +100,7 @@ export function Aq8Simulator() {
                 max="100"
                 value={frequency}
                 onChange={(event) => setFrequency(Number(event.target.value))}
-                className="w-full accent-[#ff5757] cursor-pointer transition-all duration-200"
+                className="w-full accent-[#0284c7] cursor-pointer transition-all duration-200"
                 aria-label="Fréquence d’impulsion"
               />
 
@@ -149,8 +149,8 @@ export function Aq8Simulator() {
 
           {/* Visual */}
           <div className="lg:col-span-7">
-            <div className="relative overflow-hidden rounded-lg border border-white/10 bg-slate-950/80 backdrop-blur-md p-4 xs:p-6 shadow-[0_0_30px_rgba(255,87,87,0.12)]">
-              <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#ff5757]/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="relative overflow-hidden rounded-lg border border-white/10 bg-slate-950/80 backdrop-blur-md p-4 xs:p-6 shadow-[0_0_30px_rgba(2, 132, 199,0.12)]">
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#0284c7]/10 rounded-full blur-2xl pointer-events-none" />
               <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-amber-400/5 rounded-full blur-2xl pointer-events-none" />
 
               <div className="relative z-10 flex min-h-[280px] xs:min-h-[320px] flex-col items-center justify-center gap-6 xs:gap-8">
@@ -177,9 +177,9 @@ export function Aq8Simulator() {
                       style={{
                         height: intensity === 0 ? "12%" : `${height}%`,
                         animationDelay: `${index * 80}ms`,
-                        filter: intensity > 0 ? `drop-shadow(0 0 5px ${intensity > 60 ? '#fcd34d' : '#ff5757'})` : 'none',
+                        filter: intensity > 0 ? `drop-shadow(0 0 5px ${intensity > 60 ? '#fcd34d' : '#0284c7'})` : 'none',
                       }}
-                      className="w-2 xs:w-2.5 sm:w-3 md:w-4 rounded-t bg-gradient-to-t from-[#ff5757] to-amber-300 transition-all duration-300 motion-safe:animate-pulse"
+                      className="w-2 xs:w-2.5 sm:w-3 md:w-4 rounded-t bg-gradient-to-t from-[#0284c7] to-amber-300 transition-all duration-300 motion-safe:animate-pulse"
                     />
                   ))}
                 </div>

@@ -106,7 +106,7 @@ export function AuditLogPanel({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
         <div>
           <h3 className="text-base font-bold text-slate-800 font-display flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-[#ff5757]" />
+            <ShieldCheck className="h-5 w-5 text-[#0284c7]" />
             Journal d'Audit & Sécurité CRM
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">Historique et traçabilité en temps réel de toutes les opérations effectuées sur le réseau AQ8 Algérie.</p>
@@ -121,7 +121,7 @@ export function AuditLogPanel({
             <Download className="h-3.5 w-3.5" />
             Exporter CSV ({filteredLogs.length})
           </button>
-          <div className="flex items-center gap-2 text-xs font-bold text-[#ff5757] bg-[#ff5757]/10 px-3 py-2 rounded-xl">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#0284c7] bg-[#0284c7]/10 px-3 py-2 rounded-xl">
             <span className="h-2 w-2 bg-emerald-500 rounded-full animate-ping"></span>
             <span>Flux temps réel</span>
           </div>
@@ -180,14 +180,14 @@ export function AuditLogPanel({
             placeholder="Rechercher par gérant, détail, action..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#ff5757] text-slate-700 bg-slate-50/50"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#0284c7] text-slate-700 bg-slate-50/50"
           />
         </div>
 
         <select
           value={centerId}
           onChange={(e) => setCenterId(e.target.value)}
-          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#ff5757] text-slate-700 bg-slate-50/50 cursor-pointer"
+          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#0284c7] text-slate-700 bg-slate-50/50 cursor-pointer"
         >
           <option value="">Tous les centres ({centers.length})</option>
           {centers.map(c => (
@@ -198,7 +198,7 @@ export function AuditLogPanel({
         <select
           value={actionCategory}
           onChange={(e) => setActionCategory(e.target.value)}
-          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#ff5757] text-slate-700 bg-slate-50/50 cursor-pointer"
+          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#0284c7] text-slate-700 bg-slate-50/50 cursor-pointer"
         >
           <option value="">Toutes les catégories d'actions</option>
           <option value="client">Fiches Clients & Mensurations</option>
@@ -213,7 +213,7 @@ export function AuditLogPanel({
             type="date"
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#ff5757] text-slate-700 bg-slate-50/50 cursor-pointer"
+            className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#0284c7] text-slate-700 bg-slate-50/50 cursor-pointer"
           />
           {hasActiveFilters && (
             <button
@@ -231,7 +231,7 @@ export function AuditLogPanel({
       {/* LOGS TABLE */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-12 space-y-3">
-          <div className="h-8 w-8 border-4 border-slate-100 border-t-[#ff5757] rounded-full animate-spin"></div>
+          <div className="h-8 w-8 border-4 border-slate-100 border-t-[#0284c7] rounded-full animate-spin"></div>
           <span className="text-xs text-slate-400 font-semibold">Chargement du journal d'audit...</span>
         </div>
       ) : filteredLogs.length === 0 ? (

@@ -36,7 +36,7 @@ export function ManagerMeasurementsView({
         <button
           id="btn-measurements-log"
           onClick={onLogMeasurementClick}
-          className="px-3.5 py-1.5 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl transition-premium text-xs flex items-center gap-1 cursor-pointer"
+          className="px-3.5 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-white rounded-xl transition-premium text-xs flex items-center gap-1 cursor-pointer"
         >
           <Plus className="h-4 w-4" /> Loguer des mensurations
         </button>
@@ -105,7 +105,7 @@ export function ManagerMeasurementsView({
                     </h4>
                     <span className="text-[11px] font-mono text-slate-500 block mt-1">Bilan du: {meas.date}</span>
                   </div>
-                  <span className="text-sm font-bold font-mono text-[#ff5757] bg-[#ff5757]/10 px-2.5 py-1 rounded-xl">
+                  <span className="text-sm font-bold font-mono text-[#0284c7] bg-[#0284c7]/10 px-2.5 py-1 rounded-xl">
                     {meas.weight} kg
                   </span>
                 </div>

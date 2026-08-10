@@ -85,7 +85,7 @@ export default async function PrivacyPolicyPage() {
       content: (
         <>
           <p>Selon votre utilisation du service, les catégories suivantes peuvent être traitées :</p>
-          <ul className="list-disc space-y-2 pl-5 marker:text-[#ff5757]">
+          <ul className="list-disc space-y-2 pl-5 marker:text-[#0284c7]">
             <li><strong className="text-[#242424]">Identité et contact :</strong> nom, prénom, téléphone, e-mail et date de naissance lorsqu’elle est renseignée.</li>
             <li><strong className="text-[#242424]">Réservation :</strong> centre, technologie, date, heure, statut, demandes et échanges associés.</li>
             <li><strong className="text-[#242424]">Suivi client :</strong> historique des séances, forfaits, crédits restants, objectifs et notes d’accompagnement.</li>
@@ -115,7 +115,7 @@ export default async function PrivacyPolicyPage() {
             recueillies que lorsqu’elles sont utiles à la sécurité de la prestation,
             avec l’accord approprié de la personne concernée et un accès strictement limité.
           </p>
-          <div className="border-l-4 border-[#ff5757] bg-rose-50 px-4 py-4 text-rose-950">
+          <div className="border-l-4 border-[#0284c7] bg-rose-50 px-4 py-4 text-rose-950">
             <p className="font-extrabold">Important</p>
             <p className="mt-1">
               Les formulaires publics de réservation et de contact ne demandent pas
@@ -133,7 +133,7 @@ export default async function PrivacyPolicyPage() {
       title: "Pourquoi ces données sont utilisées",
       icon: FileText,
       content: (
-        <ul className="list-disc space-y-2 pl-5 marker:text-[#ff5757]">
+        <ul className="list-disc space-y-2 pl-5 marker:text-[#0284c7]">
           <li>recevoir, examiner et confirmer les demandes de réservation ;</li>
           <li>organiser les capacités d’accueil et le planning de chaque centre ;</li>
           <li>gérer les clients, séances, forfaits, crédits, paiements et reçus ;</li>
@@ -158,7 +158,7 @@ export default async function PrivacyPolicyPage() {
             lorsque cette copie est activée, à l’administration du réseau.
           </p>
           <p>Les principaux prestataires techniques sont :</p>
-          <ul className="list-disc space-y-2 pl-5 marker:text-[#ff5757]">
+          <ul className="list-disc space-y-2 pl-5 marker:text-[#0284c7]">
             <li>
               <a className={legalLinkClass} href="https://firebase.google.com/support/privacy" target="_blank" rel="noreferrer">Google Firebase</a>
               {" "}: authentification, base de données, stockage et hébergement ;

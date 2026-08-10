@@ -107,7 +107,7 @@ function calculateRecommendation(
           "Résultats mesurables dès les 4 premières semaines",
           "Accompagnement et bilan corporel personnalisé avec un coach certifié",
         ],
-        gradient: "from-[#242424] via-[#2d2d2d] to-[#ff5757]/20",
+        gradient: "from-[#242424] via-[#2d2d2d] to-[#0284c7]/20",
         image: "/images/prestations/wonder-ems.webp",
       };
     }
@@ -208,12 +208,12 @@ export function HomeProgramSimulator() {
   return (
     <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xl sm:p-10 lg:p-12">
       {/* Background Subtle Accent Gradients */}
-      <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[#ff5757]/10 blur-3xl" />
+      <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[#0284c7]/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-slate-900/5 blur-3xl" />
 
       {/* Header Info */}
       <div className="relative z-10 mx-auto max-w-3xl text-center space-y-3">
-        <div className="inline-flex items-center gap-2 rounded-full border border-[#ff5757]/20 bg-[#fff0f0] px-4 py-1.5 text-xs font-extrabold uppercase text-[#ff5757] shadow-sm">
+        <div className="inline-flex items-center gap-2 rounded-full border border-[#0284c7]/20 bg-[#fff0f0] px-4 py-1.5 text-xs font-extrabold uppercase text-[#0284c7] shadow-sm">
           <Sparkles className="h-4 w-4" />
           Bilan Interactif Gratuit
         </div>
@@ -227,14 +227,14 @@ export function HomeProgramSimulator() {
         {/* Stepper Progress Bar */}
         <div className="pt-4 max-w-md mx-auto">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-2 px-1">
-            <span className={step >= 1 ? "text-[#ff5757]" : ""}>1. Objectif</span>
-            <span className={step >= 2 ? "text-[#ff5757]" : ""}>2. Fréquence</span>
-            <span className={step >= 3 ? "text-[#ff5757]" : ""}>3. Zone</span>
-            <span className={step === 4 ? "text-[#ff5757]" : ""}>4. Résultat</span>
+            <span className={step >= 1 ? "text-[#0284c7]" : ""}>1. Objectif</span>
+            <span className={step >= 2 ? "text-[#0284c7]" : ""}>2. Fréquence</span>
+            <span className={step >= 3 ? "text-[#0284c7]" : ""}>3. Zone</span>
+            <span className={step === 4 ? "text-[#0284c7]" : ""}>4. Résultat</span>
           </div>
           <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-[#ff6b6b] to-[#ff5757] transition-all duration-500"
+              className="h-full bg-gradient-to-r from-[#38bdf8] to-[#0284c7] transition-all duration-500"
               style={{ width: `${(step / 4) * 100}%` }}
             />
           </div>
@@ -258,7 +258,7 @@ export function HomeProgramSimulator() {
                   onClick={() => setSelectedObjective(obj.id)}
                   className={`group relative flex flex-col justify-between rounded-2xl p-5 text-left transition-all duration-300 border ${
                     isSelected
-                      ? "border-[#ff5757] bg-[#fff8f8] shadow-lg ring-2 ring-[#ff5757]/20 scale-[1.02]"
+                      ? "border-[#0284c7] bg-[#fff8f8] shadow-lg ring-2 ring-[#0284c7]/20 scale-[1.02]"
                       : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80"
                   }`}
                 >
@@ -266,7 +266,7 @@ export function HomeProgramSimulator() {
                     <div className="flex items-center justify-between">
                       <div
                         className={`flex h-11 w-11 items-center justify-center rounded-xl transition-colors ${
-                          isSelected ? "bg-[#ff5757] text-white" : "bg-slate-100 text-slate-700 group-hover:bg-slate-200"
+                          isSelected ? "bg-[#0284c7] text-white" : "bg-slate-100 text-slate-700 group-hover:bg-slate-200"
                         }`}
                       >
                         <Icon className="h-5 w-5" />
@@ -286,7 +286,7 @@ export function HomeProgramSimulator() {
                     </div>
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs font-bold text-[#ff5757]">
+                  <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs font-bold text-[#0284c7]">
                     <span>Sélectionner</span>
                     <ChevronRight className={`h-4 w-4 transition-transform ${isSelected ? "translate-x-1" : ""}`} />
                   </div>
@@ -299,7 +299,7 @@ export function HomeProgramSimulator() {
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#ff5757] px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#e64747] hover:scale-105"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0284c7] px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#e64747] hover:scale-105"
             >
               <span>Étape suivante</span>
               <ArrowRight className="h-4 w-4" />
@@ -324,17 +324,17 @@ export function HomeProgramSimulator() {
                   onClick={() => setSelectedFrequency(freq.id)}
                   className={`group relative flex flex-col justify-between rounded-2xl p-5 text-center transition-all duration-300 border ${
                     isSelected
-                      ? "border-[#ff5757] bg-[#fff8f8] shadow-lg ring-2 ring-[#ff5757]/20 scale-[1.02]"
+                      ? "border-[#0284c7] bg-[#fff8f8] shadow-lg ring-2 ring-[#0284c7]/20 scale-[1.02]"
                       : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
                   {freq.popular && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#ff5757] px-3 py-0.5 text-[10px] font-extrabold text-white uppercase shadow-md">
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#0284c7] px-3 py-0.5 text-[10px] font-extrabold text-white uppercase shadow-md">
                       Populaire
                     </span>
                   )}
                   <div className="space-y-2 pt-1">
-                    <Clock className={`mx-auto h-7 w-7 ${isSelected ? "text-[#ff5757]" : "text-slate-400"}`} />
+                    <Clock className={`mx-auto h-7 w-7 ${isSelected ? "text-[#0284c7]" : "text-slate-400"}`} />
                     <h4 className="font-display text-sm font-bold text-[#242424]">
                       {freq.label}
                     </h4>
@@ -359,7 +359,7 @@ export function HomeProgramSimulator() {
             <button
               type="button"
               onClick={() => setStep(3)}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#ff5757] px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#e64747] hover:scale-105"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0284c7] px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#e64747] hover:scale-105"
             >
               <span>Étape suivante</span>
               <ArrowRight className="h-4 w-4" />
@@ -385,13 +385,13 @@ export function HomeProgramSimulator() {
                   onClick={() => setSelectedZone(zone.id)}
                   className={`group relative flex items-center gap-4 rounded-2xl p-4 text-left transition-all duration-300 border ${
                     isSelected
-                      ? "border-[#ff5757] bg-[#fff8f8] shadow-lg ring-2 ring-[#ff5757]/20 scale-[1.02]"
+                      ? "border-[#0284c7] bg-[#fff8f8] shadow-lg ring-2 ring-[#0284c7]/20 scale-[1.02]"
                       : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
                   <div
                     className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                      isSelected ? "bg-[#ff5757] text-white" : "bg-slate-100 text-slate-700"
+                      isSelected ? "bg-[#0284c7] text-white" : "bg-slate-100 text-slate-700"
                     }`}
                   >
                     <Icon className="h-5 w-5" />
@@ -416,7 +416,7 @@ export function HomeProgramSimulator() {
             <button
               type="button"
               onClick={() => setStep(4)}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#ff5757] px-7 py-3 text-sm font-bold text-white shadow-xl transition-all hover:bg-[#e64747] hover:scale-105"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0284c7] px-7 py-3 text-sm font-bold text-white shadow-xl transition-all hover:bg-[#e64747] hover:scale-105"
             >
               <Sparkles className="h-4 w-4" />
               <span>Voir mon bilan recommandé</span>
@@ -433,7 +433,7 @@ export function HomeProgramSimulator() {
               {/* Left Details */}
               <div className="p-6 sm:p-8 lg:col-span-7 space-y-6">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#ff5757] px-3 py-1 text-xs font-black uppercase text-white shadow-md">
+                  <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#0284c7] px-3 py-1 text-xs font-black uppercase text-white shadow-md">
                     <Award className="h-3.5 w-3.5" />
                     {recommendation.badge}
                   </span>
@@ -464,7 +464,7 @@ export function HomeProgramSimulator() {
                   </div>
                   <div className="rounded-xl bg-white/5 p-3 border border-white/10">
                     <span className="block text-[11px] font-semibold text-slate-400 uppercase">Fréquence conseillée</span>
-                    <span className="block text-xs font-bold text-[#ff7777] mt-0.5">{recommendation.weeklyFreq}</span>
+                    <span className="block text-xs font-bold text-[#38bdf8] mt-0.5">{recommendation.weeklyFreq}</span>
                   </div>
                 </div>
 
@@ -472,7 +472,7 @@ export function HomeProgramSimulator() {
                 <div className="space-y-2.5 pt-2">
                   {recommendation.highlights.map((item, idx) => (
                     <div key={idx} className="flex items-start gap-2.5 text-xs font-medium text-slate-200">
-                      <CheckCircle2 className="h-4 w-4 shrink-0 text-[#ff5757] mt-0.5" />
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-[#0284c7] mt-0.5" />
                       <span>{item}</span>
                     </div>
                   ))}
@@ -482,7 +482,7 @@ export function HomeProgramSimulator() {
                 <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-800">
                   <Link
                     href={`/reservation?service=${recommendation.serviceQuery}&objective=${selectedObjective}`}
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#ff5757] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#e64747] hover:scale-105"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#0284c7] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#e64747] hover:scale-105"
                   >
                     <span>Réserver mon bilan gratuit</span>
                     <ArrowRight className="h-4 w-4" />

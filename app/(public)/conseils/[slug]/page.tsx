@@ -192,13 +192,13 @@ export default async function BlogArticlePage({ params }: PageProps) {
       )}
 
       <header className="mx-auto max-w-4xl pt-4 text-center sm:pt-8">
-        <Link href="/conseils" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 transition hover:border-[#ff5757] hover:text-[#ff5757] shadow-sm">
+        <Link href="/conseils" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 transition hover:border-[#0284c7] hover:text-[#0284c7] shadow-sm">
           <ArrowLeft className="h-4 w-4" />
           <span>Magazine & Expertise AQ8</span>
         </Link>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-2.5 text-xs font-extrabold uppercase">
-          <span className="rounded-full bg-rose-50 px-4 py-1.5 text-[#ff5757]">
+          <span className="rounded-full bg-rose-50 px-4 py-1.5 text-[#0284c7]">
             {getBlogPublicationTypeLabel(post.publicationType)}
           </span>
           <span className="rounded-full bg-slate-100 px-4 py-1.5 text-slate-600">
@@ -215,15 +215,15 @@ export default async function BlogArticlePage({ params }: PageProps) {
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-xs font-semibold text-slate-500 border-y border-slate-100 py-4">
-          <span className="inline-flex items-center gap-2"><UserRound className="h-4 w-4 text-[#ff5757]" />{post.authorName}</span>
-          <span className="inline-flex items-center gap-2"><CalendarDays className="h-4 w-4 text-[#ff5757]" />{formatDate(post.publishedAt || post.scheduledAt)}</span>
+          <span className="inline-flex items-center gap-2"><UserRound className="h-4 w-4 text-[#0284c7]" />{post.authorName}</span>
+          <span className="inline-flex items-center gap-2"><CalendarDays className="h-4 w-4 text-[#0284c7]" />{formatDate(post.publishedAt || post.scheduledAt)}</span>
           <span className="inline-flex items-center gap-2"><Clock3 className="h-4 w-4 text-amber-500" />{post.readingTimeMinutes} min de lecture</span>
         </div>
 
         {(timing || post.location) && (
           <div className="mx-auto mt-6 flex max-w-2xl flex-wrap items-center justify-center gap-4 rounded-2xl bg-gradient-to-r from-[#1c1c20] to-[#2b2b32] px-6 py-4 text-xs font-bold text-white shadow-lg">
             {timing && <span className="inline-flex items-center gap-2"><CalendarDays className="h-4 w-4 text-amber-400" />{timing}</span>}
-            {post.location && <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4 text-[#ff7777]" />{post.location}</span>}
+            {post.location && <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4 text-[#38bdf8]" />{post.location}</span>}
           </div>
         )}
       </header>
@@ -237,7 +237,7 @@ export default async function BlogArticlePage({ params }: PageProps) {
           <div className="sticky top-28 space-y-8 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
             {headings.length > 0 && (
               <nav aria-label="Sommaire">
-                <span className="text-[11px] font-black uppercase text-[#ff5757] tracking-wider">Dans cet article</span>
+                <span className="text-[11px] font-black uppercase text-[#0284c7] tracking-wider">Dans cet article</span>
                 <ul className="mt-4 space-y-3 border-l-2 border-slate-100 pl-4 text-xs font-semibold">
                   {headings.map(heading => {
                     const id = (heading.text || "")
@@ -248,7 +248,7 @@ export default async function BlogArticlePage({ params }: PageProps) {
                       .replace(/^-+|-+$/g, "");
                     return (
                       <li key={heading.id}>
-                        <a href={"#" + id} className="text-slate-500 transition hover:text-[#ff5757]">
+                        <a href={"#" + id} className="text-slate-500 transition hover:text-[#0284c7]">
                           {heading.text}
                         </a>
                       </li>
@@ -271,7 +271,7 @@ export default async function BlogArticlePage({ params }: PageProps) {
 
           {post.ctaLabel && post.ctaUrl && (
             <aside className="mt-12 overflow-hidden rounded-3xl bg-gradient-to-r from-[#18181c] to-[#292930] p-8 sm:p-10 text-white shadow-2xl border border-white/10">
-              <span className="text-xs font-black uppercase text-[#ff7777] tracking-wider">
+              <span className="text-xs font-black uppercase text-[#38bdf8] tracking-wider">
                 {getBlogPublicationTypeLabel(post.publicationType)}
               </span>
               <h2 className="mt-2 font-display text-2xl font-bold sm:text-3xl">{post.title}</h2>
@@ -281,7 +281,7 @@ export default async function BlogArticlePage({ params }: PageProps) {
                 {...(post.ctaUrl.startsWith("https://")
                   ? { target: "_blank", rel: "noopener noreferrer" }
                   : {})}
-                className="mt-6 inline-flex items-center gap-2.5 rounded-2xl bg-[#ff5757] px-7 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#ff5757]/30 transition hover:bg-[#e94949]"
+                className="mt-6 inline-flex items-center gap-2.5 rounded-2xl bg-[#0284c7] px-7 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0284c7]/30 transition hover:bg-[#0369a1]"
               >
                 <span>{post.ctaLabel}</span>
                 <ArrowRight className="h-4 w-4" />
@@ -290,7 +290,7 @@ export default async function BlogArticlePage({ params }: PageProps) {
           )}
 
           <aside className="mt-10 flex items-start gap-4 rounded-3xl border border-slate-200 bg-slate-50/80 p-6">
-            <ShieldCheck className="mt-0.5 h-6 w-6 shrink-0 text-[#ff5757]" />
+            <ShieldCheck className="mt-0.5 h-6 w-6 shrink-0 text-[#0284c7]" />
             <div>
               <h2 className="text-sm font-bold text-[#242424]">Information médicale & responsabilité</h2>
               <p className="mt-1 text-xs leading-relaxed text-slate-600 font-medium">
@@ -313,10 +313,10 @@ export default async function BlogArticlePage({ params }: PageProps) {
         <section className="mx-auto mt-20 max-w-6xl border-t border-slate-200 pt-12">
           <div className="flex items-end justify-between gap-5">
             <div>
-              <span className="text-xs font-black uppercase text-[#ff5757] tracking-wider">À découvrir aussi</span>
+              <span className="text-xs font-black uppercase text-[#0284c7] tracking-wider">À découvrir aussi</span>
               <h2 className="mt-1 font-display text-2xl font-bold text-[#242424] sm:text-3xl">Autres publications du Magazine</h2>
             </div>
-            <Link href="/conseils" className="hidden items-center gap-2 text-xs font-bold text-[#242424] transition hover:text-[#ff5757] sm:inline-flex">
+            <Link href="/conseils" className="hidden items-center gap-2 text-xs font-bold text-[#242424] transition hover:text-[#0284c7] sm:inline-flex">
               <span>Tout voir</span> <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -327,8 +327,8 @@ export default async function BlogArticlePage({ params }: PageProps) {
                   <img src={item.coverImageUrl} alt={item.coverImageAlt} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" />
                 </div>
                 <div className="p-6">
-                  <span className="text-[10px] font-black uppercase text-[#ff5757]">{getBlogPublicationTypeLabel(item.publicationType)}</span>
-                  <h3 className="mt-2 line-clamp-2 font-display text-lg font-bold leading-snug text-[#242424] transition group-hover:text-[#ff5757]">{item.title}</h3>
+                  <span className="text-[10px] font-black uppercase text-[#0284c7]">{getBlogPublicationTypeLabel(item.publicationType)}</span>
+                  <h3 className="mt-2 line-clamp-2 font-display text-lg font-bold leading-snug text-[#242424] transition group-hover:text-[#0284c7]">{item.title}</h3>
                 </div>
               </Link>
             ))}

@@ -55,13 +55,13 @@ export function ManagerTabs({
             }}
             className={`relative flex items-center gap-1.5 px-3.5 py-3 text-xs font-semibold whitespace-nowrap transition-premium border-b-2 -mb-px cursor-pointer ${
               activeTab === tab.id
-                ? 'border-[#ff5757] text-[#ff5757]'
+                ? 'border-[#0284c7] text-[#0284c7]'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
             <tab.icon className="h-4 w-4" /> {tab.label}
             {badgeCount > 0 && (
-              <span className="ml-0.5 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-[#ff5757] text-white text-[9px] font-black leading-none animate-pulse">
+              <span className="ml-0.5 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-[#0284c7] text-white text-[9px] font-black leading-none animate-pulse">
                 {badgeCount > 99 ? '99+' : badgeCount}
               </span>
             )}

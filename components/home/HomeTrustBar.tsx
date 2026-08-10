@@ -41,7 +41,7 @@ export function HomeTrustBar() {
                   index !== 0 ? "border-t border-slate-100 pt-5 sm:border-t-0 sm:pt-0 md:border-l md:border-slate-100 md:pl-6 lg:pl-8" : ""
                 }`}
               >
-                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-[#fff0f0] text-[#ff5757] shadow-sm transition-transform duration-300 hover:scale-110">
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-[#fff0f0] text-[#0284c7] shadow-sm transition-transform duration-300 hover:scale-110">
                   <Icon className="h-5 w-5" />
                 </div>
                 <div className="flex items-baseline gap-1.5">

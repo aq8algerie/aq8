@@ -90,7 +90,7 @@ export function SuperAdminDashboard({
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Adhérents AQ8 (EMS)</span>
                 <div className="flex items-center justify-between mt-1">
                   <span className="text-2xl font-bold font-display text-slate-800">{aq8ClientsCount}</span>
-                  <div className="p-2 bg-rose-50 dark:bg-rose-500/10 text-[#ff5757] rounded-lg"><Award className="h-4 w-4" /></div>
+                  <div className="p-2 bg-rose-50 dark:bg-rose-500/10 text-[#0284c7] rounded-lg"><Award className="h-4 w-4" /></div>
                 </div>
               </div>
               <div className="mt-2 text-[10px] font-semibold text-slate-400">Adhérents avec forfait AQ8 ou mixte</div>
@@ -179,8 +179,8 @@ export function SuperAdminDashboard({
                           <svg className="w-full h-full" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
                             <defs>
                               <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#ff5757" stopOpacity="0.3" />
-                                <stop offset="100%" stopColor="#ff5757" stopOpacity="0.0" />
+                                <stop offset="0%" stopColor="#0284c7" stopOpacity="0.3" />
+                                <stop offset="100%" stopColor="#0284c7" stopOpacity="0.0" />
                               </linearGradient>
                               {/* Glowing effect filter */}
                               <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
@@ -210,7 +210,7 @@ export function SuperAdminDashboard({
                             <path d={areaPath} fill="url(#areaGrad)" />
 
                             {/* Line path with Glow filter */}
-                            <path d={linePath} fill="none" stroke="#ff5757" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" filter="url(#glow)" />
+                            <path d={linePath} fill="none" stroke="#0284c7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" filter="url(#glow)" />
 
                             {/* Interactive dots and hover hitboxes */}
                             {points.map((p, i) => (
@@ -219,8 +219,8 @@ export function SuperAdminDashboard({
                                   cx={p.x}
                                   cy={p.y}
                                   r={hoveredRevenuePoint === i ? "6" : "4"}
-                                  fill={hoveredRevenuePoint === i ? "#ff5757" : "white"}
-                                  stroke="#ff5757"
+                                  fill={hoveredRevenuePoint === i ? "#0284c7" : "white"}
+                                  stroke="#0284c7"
                                   strokeWidth="2"
                                   style={{ transition: "all 0.15s ease" }}
                                 />
@@ -247,7 +247,7 @@ export function SuperAdminDashboard({
                               }}
                             >
                               <span className="text-[8px] text-slate-400 font-sans block uppercase font-bold">{trendData[hoveredRevenuePoint].label}</span>
-                              <span className="text-xs font-bold text-[#ff5757]">{trendData[hoveredRevenuePoint].value.toLocaleString()} DZD</span>
+                              <span className="text-xs font-bold text-[#0284c7]">{trendData[hoveredRevenuePoint].value.toLocaleString()} DZD</span>
                             </div>
                           )}
                         </div>
@@ -273,7 +273,7 @@ export function SuperAdminDashboard({
                         <div className="w-full bg-slate-100 rounded-t-lg relative flex items-end h-40">
                           <div
                             style={{ height: `${pct || 4}%` }}
-                            className="w-full bg-gradient-to-t from-[#353535] to-[#ff5757] rounded-t-lg transition-all duration-500 group-hover:to-rose-400"
+                            className="w-full bg-gradient-to-t from-[#353535] to-[#0284c7] rounded-t-lg transition-all duration-500 group-hover:to-rose-400"
                           ></div>
                           {/* Tooltip on hover */}
                           <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] px-1.5 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-mono z-10 font-bold">

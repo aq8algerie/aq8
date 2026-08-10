@@ -345,7 +345,7 @@ export function ManagerBookingsView({
             <button
               id="btn-bookings-new-rdv"
               onClick={onBookAppointmentClick}
-              className="px-3.5 py-2 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl transition-premium text-xs flex items-center gap-1 cursor-pointer shadow-xs"
+              className="px-3.5 py-2 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-white rounded-xl transition-premium text-xs flex items-center gap-1 cursor-pointer shadow-xs"
             >
               <Plus className="h-4 w-4" /> Nouveau RDV
             </button>
@@ -482,7 +482,7 @@ export function ManagerBookingsView({
           className="bg-[#353535] text-white p-3.5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl border border-slate-700/50"
         >
           <div className="flex items-center gap-2">
-            <span className="p-1 bg-white/10 rounded-lg text-[#ff5757]">
+            <span className="p-1 bg-white/10 rounded-lg text-[#0284c7]">
               <Sparkles className="h-4 w-4" />
             </span>
             <span className="text-xs font-bold">
@@ -525,7 +525,7 @@ export function ManagerBookingsView({
                   <th className="p-4 w-12 text-center">
                     <button
                       onClick={handleToggleSelectAll}
-                      className="text-slate-400 hover:text-[#ff5757] transition-colors cursor-pointer"
+                      className="text-slate-400 hover:text-[#0284c7] transition-colors cursor-pointer"
                     >
                       {(() => {
                         const pageIds = paginatedAppointments.map(a => a.id);
@@ -554,16 +554,16 @@ export function ManagerBookingsView({
                       <tr
                         key={apt.id}
                         className={`hover:bg-slate-50/50 transition-colors ${
-                          isSelected ? 'bg-[#ff5757]/5' : ''
+                          isSelected ? 'bg-[#0284c7]/5' : ''
                         }`}
                       >
                         {/* Checkbox select */}
                         <td className="p-4 text-center">
                           <button
                             onClick={() => handleToggleSelectOne(apt.id)}
-                            className="text-slate-400 hover:text-[#ff5757] cursor-pointer"
+                            className="text-slate-400 hover:text-[#0284c7] cursor-pointer"
                           >
-                            {isSelected ? <CheckSquare className="h-4 w-4 text-[#ff5757]" /> : <Square className="h-4 w-4" />}
+                            {isSelected ? <CheckSquare className="h-4 w-4 text-[#0284c7]" /> : <Square className="h-4 w-4" />}
                           </button>
                         </td>
 
@@ -738,16 +738,16 @@ export function ManagerBookingsView({
                     key={apt.id}
                     className={`bg-white rounded-2xl p-5 border transition-all relative ${
                       isSelected
-                        ? 'border-[#ff5757] shadow-md ring-1 ring-[#ff5757]/30 bg-[#ff5757]/2'
+                        ? 'border-[#0284c7] shadow-md ring-1 ring-[#0284c7]/30 bg-[#0284c7]/2'
                         : 'border-slate-100 shadow-xs hover:shadow-md hover:border-slate-200'
                     }`}
                   >
                     {/* Top corner multi-select toggle */}
                     <button
                       onClick={() => handleToggleSelectOne(apt.id)}
-                      className="absolute top-4 right-4 text-slate-400 hover:text-[#ff5757] cursor-pointer"
+                      className="absolute top-4 right-4 text-slate-400 hover:text-[#0284c7] cursor-pointer"
                     >
-                      {isSelected ? <CheckSquare className="h-5 w-5 text-[#ff5757]" /> : <Square className="h-5 w-5" />}
+                      {isSelected ? <CheckSquare className="h-5 w-5 text-[#0284c7]" /> : <Square className="h-5 w-5" />}
                     </button>
 
                     {/* Card Content */}
@@ -877,7 +877,7 @@ export function ManagerBookingsView({
           >
             <div className="p-4 sm:p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-[#ff5757]" />
+                <Calendar className="h-4 w-4 text-[#0284c7]" />
                 <h4 className="font-bold text-slate-800 text-sm font-display">Détails de la Réservation</h4>
               </div>
               <button
@@ -1005,7 +1005,7 @@ export function ManagerBookingsView({
           >
             <div className="p-4 sm:p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <div className="flex items-center gap-2">
-                <Edit2 className="h-4 w-4 text-[#ff5757]" />
+                <Edit2 className="h-4 w-4 text-[#0284c7]" />
                 <h4 className="font-bold text-slate-800 text-sm font-display">Modifier la Réservation</h4>
               </div>
               <button
@@ -1104,7 +1104,7 @@ export function ManagerBookingsView({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#ff5757] hover:bg-[#e04646] text-white font-bold rounded-xl shadow-xs transition cursor-pointer"
+                  className="px-4 py-2 bg-[#0284c7] hover:bg-[#0369a1] text-white font-bold rounded-xl shadow-xs transition cursor-pointer"
                 >
                   Enregistrer
                 </button>

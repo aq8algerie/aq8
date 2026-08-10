@@ -47,7 +47,7 @@ export function WonderCycle() {
 
       <div className="relative z-10 grid gap-10 lg:grid-cols-12 lg:items-center">
         <div className="space-y-6 lg:col-span-5">
-          <span className="inline-flex items-center gap-2 rounded-full bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
+          <span className="inline-flex items-center gap-2 rounded-full bg-[#0284c7]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#0284c7]">
             <Flame className="h-3.5 w-3.5" />
             Cycle Wonder
           </span>
@@ -102,7 +102,7 @@ export function WonderCycle() {
                   onClick={() => setSessionStage(key)}
                   className={`rounded-md px-1.5 py-2.5 xs:px-3 xs:py-3 text-[10px] xs:text-xs font-bold transition-premium ${
                     sessionStage === key
-                      ? "bg-[#ff5757] text-white shadow-md shadow-[#ff5757]/20"
+                      ? "bg-[#0284c7] text-white shadow-md shadow-[#0284c7]/20"
                       : "bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                   }`}
                 >
@@ -113,14 +113,14 @@ export function WonderCycle() {
 
             <div className="rounded-lg border border-slate-100 bg-white p-4 xs:p-6 shadow-premium transition-premium hover:shadow-[0_20px_50px_rgba(0,0,0,0.03)]" aria-live="polite">
               <div className="flex flex-col gap-4 xs:gap-6 sm:flex-row sm:items-start">
-                <div className="flex h-12 w-12 xs:h-14 xs:w-14 shrink-0 items-center justify-center rounded-md bg-[#ff5757]/10 text-[#ff5757] shadow-inner transition-transform duration-500 hover:rotate-12">
+                <div className="flex h-12 w-12 xs:h-14 xs:w-14 shrink-0 items-center justify-center rounded-md bg-[#0284c7]/10 text-[#0284c7] shadow-inner transition-transform duration-500 hover:rotate-12">
                   <ActiveIcon className="h-6 w-6" />
                 </div>
 
                 <div className="flex-1 space-y-4">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-xs font-bold uppercase text-[#ff5757]">
+                      <p className="text-xs font-bold uppercase text-[#0284c7]">
                         {activeStage.label}
                       </p>
 
@@ -129,7 +129,7 @@ export function WonderCycle() {
                       </h3>
                     </div>
 
-                    <span className="w-fit rounded-full bg-[#ff5757]/10 px-3 py-1 text-[10px] font-bold uppercase text-[#ff5757] animate-pulse-subtle">
+                    <span className="w-fit rounded-full bg-[#0284c7]/10 px-3 py-1 text-[10px] font-bold uppercase text-[#0284c7] animate-pulse-subtle">
                       {activeStage.speed}
                     </span>
                   </div>
@@ -140,7 +140,7 @@ export function WonderCycle() {
 
                   <div className="rounded-md border border-slate-100 bg-slate-50 p-4">
                     <div className="flex items-center gap-3">
-                      <Target className="h-5 w-5 text-[#ff5757]" />
+                      <Target className="h-5 w-5 text-[#0284c7]" />
                       <div>
                         <p className="text-xs font-bold uppercase text-slate-500">
                           Zone sélectionnée

@@ -39,7 +39,7 @@ export function CentersManagement({
                   type="button"
                   onClick={() => setCentersViewMode('grid')}
                   className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                    centersViewMode === 'grid' ? 'bg-white text-[#ff5757] shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                    centersViewMode === 'grid' ? 'bg-white text-[#0284c7] shadow-xs' : 'text-slate-500 hover:text-slate-800'
                   }`}
                   title="Vue Grille"
                 >
@@ -49,7 +49,7 @@ export function CentersManagement({
                   type="button"
                   onClick={() => setCentersViewMode('list')}
                   className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                    centersViewMode === 'list' ? 'bg-white text-[#ff5757] shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                    centersViewMode === 'list' ? 'bg-white text-[#0284c7] shadow-xs' : 'text-slate-500 hover:text-slate-800'
                   }`}
                   title="Vue Liste"
                 >
@@ -61,7 +61,7 @@ export function CentersManagement({
               <button
                 type="button"
                 onClick={() => onAddCenter()}
-                className="flex-1 sm:flex-initial px-3.5 py-1.5 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-xs text-white rounded-xl transition-premium flex items-center justify-center gap-1 cursor-pointer"
+                className="flex-1 sm:flex-initial px-3.5 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-xs text-white rounded-xl transition-premium flex items-center justify-center gap-1 cursor-pointer"
               >
                 <Plus className="h-4 w-4" /> Nouveau Centre
               </button>
@@ -121,7 +121,7 @@ export function CentersManagement({
                             <span className="text-slate-400 uppercase tracking-wider">Services</span>
                             <div className="flex gap-1">
                               {center.services.map(s => (
-                                <span key={s} className={`px-1.5 py-0.5 rounded-sm uppercase ${s === 'aq8' ? 'bg-[#ff5757]/10 text-[#ff5757]' : 'bg-amber-500/10 text-amber-600'}`}>
+                                <span key={s} className={`px-1.5 py-0.5 rounded-sm uppercase ${s === 'aq8' ? 'bg-[#0284c7]/10 text-[#0284c7]' : 'bg-amber-500/10 text-amber-600'}`}>
                                   {s}
                                 </span>
                               ))}
@@ -231,7 +231,7 @@ export function CentersManagement({
                                   <td className="p-4">
                                     <div className="flex gap-1">
                                       {center.services.map(s => (
-                                        <span key={s} className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase ${s === 'aq8' ? 'bg-[#ff5757]/15 text-[#ff5757]' : 'bg-amber-500/15 text-amber-600'}`}>
+                                        <span key={s} className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase ${s === 'aq8' ? 'bg-[#0284c7]/15 text-[#0284c7]' : 'bg-amber-500/15 text-amber-600'}`}>
                                           {s}
                                         </span>
                                       ))}

@@ -361,7 +361,7 @@ export default function CrmPage() {
                   setCrmCenterId(null);
                   setLoggedManagerName("Karim Benchikh (Super Admin)");
                 }}
-                className={`hidden md:inline-flex px-2.5 py-1 rounded-md text-[10px] transition ${crmRole === "super_admin" ? "bg-[#ff5757] text-white font-bold shadow-sm" : "bg-white/10 text-slate-300 hover:bg-white/15"}`}
+                className={`hidden md:inline-flex px-2.5 py-1 rounded-md text-[10px] transition ${crmRole === "super_admin" ? "bg-[#0284c7] text-white font-bold shadow-sm" : "bg-white/10 text-slate-300 hover:bg-white/15"}`}
               >
                 Super Admin
               </button>
@@ -388,7 +388,7 @@ export default function CrmPage() {
 
           {crmRole === "center_manager" && (
             <span className="hidden sm:inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-200">
-              <Building className="h-3.5 w-3.5 text-[#ff5757]" />
+              <Building className="h-3.5 w-3.5 text-[#0284c7]" />
               {currentCrmCenter?.name || "Centre assigné"}
             </span>
           )}
@@ -406,7 +406,7 @@ export default function CrmPage() {
             className="ml-2 p-1 text-slate-400 hover:text-white transition cursor-pointer"
             title="Se déconnecter"
           >
-            <LogOut className="h-4 w-4 text-[#ff5757]" />
+            <LogOut className="h-4 w-4 text-[#0284c7]" />
           </button>
         </div>
       </div>
@@ -434,7 +434,7 @@ export default function CrmPage() {
                 {crmRole === "super_admin" ? "Super Admin" : "Manager de Centre"}
               </span>
               {crmRole === "center_manager" && (
-                <span className="inline-block bg-[#ff5757]/15 text-[#ff5757] px-2 py-0.5 mt-1 rounded-sm font-bold uppercase text-[9px]">
+                <span className="inline-block bg-[#0284c7]/15 text-[#0284c7] px-2 py-0.5 mt-1 rounded-sm font-bold uppercase text-[9px]">
                   {centers.find(c => c.id === crmCenterId)?.name || "AQ8 Centre"}
                 </span>
               )}
@@ -466,7 +466,7 @@ export default function CrmPage() {
                       }}
                       className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-premium text-xs font-bold cursor-pointer text-left ${
                         isActive
-                          ? "bg-[#ff5757] text-white shadow-md shadow-[#ff5757]/20 font-extrabold"
+                          ? "bg-[#0284c7] text-white shadow-md shadow-[#0284c7]/20 font-extrabold"
                           : "text-slate-400 hover:bg-white/5 hover:text-white"
                       }`}
                     >
@@ -498,7 +498,7 @@ export default function CrmPage() {
                       }}
                       className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-premium text-xs font-bold cursor-pointer text-left ${
                         isActive
-                          ? "bg-[#ff5757] text-white shadow-md shadow-[#ff5757]/20 font-extrabold"
+                          ? "bg-[#0284c7] text-white shadow-md shadow-[#0284c7]/20 font-extrabold"
                           : "text-slate-400 hover:bg-white/5 hover:text-white"
                       }`}
                     >

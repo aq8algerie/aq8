@@ -159,7 +159,7 @@ export function AppointmentModal({
             <button
               type="submit"
               disabled={allowedHours.length === 0}
-              className="px-4 py-2 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-white rounded-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Planifier
             </button>

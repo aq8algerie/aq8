@@ -109,7 +109,7 @@ export default async function TermsOfSalePage() {
       icon: CalendarCheck,
       content: (
         <>
-          <ol className="list-decimal space-y-2 pl-5 marker:font-extrabold marker:text-[#ff5757]">
+          <ol className="list-decimal space-y-2 pl-5 marker:font-extrabold marker:text-[#0284c7]">
             <li>le client choisit un centre, une technologie, une date et une heure ;</li>
             <li>un récapitulatif lui permet de vérifier les informations saisies ;</li>
             <li>l’envoi de la demande bloque provisoirement une place selon la capacité disponible ;</li>

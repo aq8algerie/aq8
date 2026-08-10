@@ -23,7 +23,7 @@ export function MeasurementChart({
     <div id="client-measurement-chart" className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
       <div className="flex justify-between items-center">
         <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1">
-          <TrendingDown className="h-4 w-4 text-[#ff5757]" /> Évolution de la Masse Grasse vs Poids
+          <TrendingDown className="h-4 w-4 text-[#0284c7]" /> Évolution de la Masse Grasse vs Poids
         </h4>
         <button
           id="btn-fiche-log-measurements"
@@ -63,10 +63,10 @@ export function MeasurementChart({
 
                 return (
                   <>
-                    <path d={pathD} fill="none" stroke="#ff5757" strokeWidth="3" />
+                    <path d={pathD} fill="none" stroke="#0284c7" strokeWidth="3" />
                     {points.map((p, i) => (
                       <g key={i}>
-                        <circle cx={p.x} cy={p.y} r="5" fill="#ff5757" stroke="white" strokeWidth="1.5" />
+                        <circle cx={p.x} cy={p.y} r="5" fill="#0284c7" stroke="white" strokeWidth="1.5" />
                         <text x={p.x} y={p.y - 10} textAnchor="middle" className="text-[10px] font-mono font-bold fill-slate-700">{p.val} kg</text>
                         <text x={p.x} y="145" textAnchor="middle" className="text-[8px] font-mono fill-slate-400">{p.date.slice(5)}</text>
                       </g>
@@ -81,7 +81,7 @@ export function MeasurementChart({
       ) : sortedMeas.length === 1 ? (
         <div className="bg-slate-900 text-white rounded-2xl p-4 space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-extrabold uppercase text-[#ff7777] text-[10px]">1er Bilan Enregistré</span>
+            <span className="font-extrabold uppercase text-[#38bdf8] text-[10px]">1er Bilan Enregistré</span>
             <span className="font-mono text-[10px] text-slate-300">{sortedMeas[0].date}</span>
           </div>
           <div className="flex items-baseline justify-between pt-1">

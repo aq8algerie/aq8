@@ -138,7 +138,7 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
         <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
           <div>
             <h4 className="font-bold text-slate-800 text-sm font-display flex items-center gap-1.5">
-              <Sparkles className="h-4 w-4 text-[#ff5757]" /> {mode === 'edit' ? 'Modifier la fiche adhérent' : 'Fiche nouvel adhérent'}
+              <Sparkles className="h-4 w-4 text-[#0284c7]" /> {mode === 'edit' ? 'Modifier la fiche adhérent' : 'Fiche nouvel adhérent'}
             </h4>
             <p className="text-[10px] text-slate-400 font-medium">{mode === 'edit' ? 'Mettez à jour les informations du membre.' : 'Configurez le profil complet du membre.'}</p>
           </div>
@@ -151,7 +151,7 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
             type="button"
             onClick={() => setActiveTab('general')}
             className={`flex-1 py-3 text-center text-[10px] uppercase tracking-wider font-bold transition-all border-b-2 flex items-center justify-center gap-1 cursor-pointer ${
-              activeTab === 'general' ? 'border-[#ff5757] text-[#ff5757]' : 'border-transparent text-slate-500 hover:text-slate-800'
+              activeTab === 'general' ? 'border-[#0284c7] text-[#0284c7]' : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
             <User className="h-3.5 w-3.5" /> Général
@@ -160,7 +160,7 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
             type="button"
             onClick={() => setActiveTab('profile')}
             className={`flex-1 py-3 text-center text-[10px] uppercase tracking-wider font-bold transition-all border-b-2 flex items-center justify-center gap-1 cursor-pointer ${
-              activeTab === 'profile' ? 'border-[#ff5757] text-[#ff5757]' : 'border-transparent text-slate-500 hover:text-slate-800'
+              activeTab === 'profile' ? 'border-[#0284c7] text-[#0284c7]' : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
             <Activity className="h-3.5 w-3.5" /> Objectifs & Profil
@@ -169,7 +169,7 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
             type="button"
             onClick={() => setActiveTab('health')}
             className={`flex-1 py-3 text-center text-[10px] uppercase tracking-wider font-bold transition-all border-b-2 flex items-center justify-center gap-1 cursor-pointer ${
-              activeTab === 'health' ? 'border-[#ff5757] text-[#ff5757]' : 'border-transparent text-slate-500 hover:text-slate-800'
+              activeTab === 'health' ? 'border-[#0284c7] text-[#0284c7]' : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
             <ShieldAlert className="h-3.5 w-3.5" /> Santé / Urgence
@@ -216,7 +216,7 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="Selma"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757] text-slate-800 font-semibold"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7] text-slate-800 font-semibold"
                   />
                 </div>
                 <div className="space-y-1">
@@ -227,7 +227,7 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Messaoudi"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757] text-slate-800 font-semibold"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7] text-slate-800 font-semibold"
                   />
                 </div>
               </div>
@@ -241,7 +241,7 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="0550 99 88 77"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757] font-mono"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7] font-mono"
                   />
                 </div>
                 <div className="space-y-1">
@@ -249,7 +249,7 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
                   <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value as 'H' | 'F')}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757]"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7]"
                   >
                     <option value="F">Femme</option>
                     <option value="H">Homme</option>
@@ -264,7 +264,7 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="selma.m@gmail.com"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757] font-mono"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7] font-mono"
                 />
               </div>
 
@@ -275,7 +275,7 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
                     type="date"
                     value={dob}
                     onChange={(e) => setDob(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757]"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7]"
                   />
                 </div>
                 <div className="space-y-1">
@@ -285,7 +285,7 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
                     value={profession}
                     onChange={(e) => setProfession(e.target.value)}
                     placeholder="Ingénieur, Médecin, Étudiant..."
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757]"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7]"
                   />
                 </div>
               </div>
@@ -297,7 +297,7 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
                   value={avatarUrl}
                   onChange={(e) => setAvatarUrl(e.target.value)}
                   placeholder="https://images.unsplash.com/photo-..."
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757]"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7]"
                 />
               </div>
             </div>
@@ -316,7 +316,7 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
                       onClick={() => setBloodType(type)}
                       className={`px-3 py-1.5 rounded-lg border font-bold font-mono transition-all text-[10px] cursor-pointer ${
                         bloodType === type
-                          ? 'bg-[#ff5757] border-[#ff5757] text-white'
+                          ? 'bg-[#0284c7] border-[#0284c7] text-white'
                           : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
                       }`}
                     >
@@ -338,12 +338,12 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
                         onClick={() => handleGoalToggle(goal)}
                         className={`px-3 py-2 rounded-xl border text-left transition-premium font-semibold flex items-center justify-between text-[10px] cursor-pointer ${
                           isSelected
-                            ? 'bg-[#ff5757]/10 border-[#ff5757] text-[#ff5757]'
+                            ? 'bg-[#0284c7]/10 border-[#0284c7] text-[#0284c7]'
                             : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100/70'
                         }`}
                       >
                         <span>{goal}</span>
-                        {isSelected && <Heart className="h-3 w-3 fill-[#ff5757] text-[#ff5757]" />}
+                        {isSelected && <Heart className="h-3 w-3 fill-[#0284c7] text-[#0284c7]" />}
                       </button>
                     );
                   })}
@@ -357,7 +357,7 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="ex: douleurs genou gauche, préfère les entraînements le matin..."
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#ff5757]"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7]"
                 ></textarea>
               </div>
             </div>
@@ -446,7 +446,7 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="px-6 py-2 bg-[#ff5757] hover:bg-[#e04646] text-white font-bold rounded-xl cursor-pointer transition-premium shadow-md shadow-red-100"
+                className="px-6 py-2 bg-[#0284c7] hover:bg-[#0369a1] text-white font-bold rounded-xl cursor-pointer transition-premium shadow-md shadow-red-100"
               >
                 {mode === 'edit' ? 'Enregistrer les modifications' : "Enregistrer l'adhérent"}
               </button>

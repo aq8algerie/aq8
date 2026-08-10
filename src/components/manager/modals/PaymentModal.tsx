@@ -156,7 +156,7 @@ export function PaymentModal({
               id="chk-auto-activate"
               checked={autoActivatePackage}
               onChange={(e) => setAutoActivatePackage(e.target.checked)}
-              className="h-4 w-4 text-[#ff5757] border-slate-300 rounded focus:ring-[#ff5757]"
+              className="h-4 w-4 text-[#0284c7] border-slate-300 rounded focus:ring-[#0284c7]"
             />
             <label htmlFor="chk-auto-activate" className="font-medium text-slate-700 select-none cursor-pointer">
               Activer automatiquement le forfait pour cet adhérent
@@ -175,7 +175,7 @@ export function PaymentModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl cursor-pointer disabled:cursor-wait disabled:opacity-70"
+              className="px-4 py-2 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-white rounded-xl cursor-pointer disabled:cursor-wait disabled:opacity-70"
             >
               {isSubmitting ? 'Enregistrement sécurisé...' : 'Enregistrer le paiement'}
             </button>

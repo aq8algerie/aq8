@@ -95,13 +95,13 @@ export function ScheduleToolbar({
               className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 font-semibold text-slate-700 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition shadow-xs"
               title="Exporter le planning au format CSV (Excel)"
             >
-              <Download className="h-4 w-4 text-[#ff5757]" /> Exporter
+              <Download className="h-4 w-4 text-[#0284c7]" /> Exporter
             </button>
           )}
           <button
             id="btn-schedule-add-rdv"
             onClick={onBookAppointmentClick}
-            className="px-3.5 py-2 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl text-xs flex items-center gap-1 cursor-pointer transition shadow-xs"
+            className="px-3.5 py-2 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-white rounded-xl text-xs flex items-center gap-1 cursor-pointer transition shadow-xs"
           >
             <Plus className="h-4 w-4" /> Réserver Créneau
           </button>
@@ -137,7 +137,7 @@ export function ScheduleToolbar({
           </div>
 
           <div className="flex items-center gap-1.5 text-xs text-[#353535]">
-            <Calendar className="h-4 w-4 text-[#ff5757]" />
+            <Calendar className="h-4 w-4 text-[#0284c7]" />
             <span className="font-bold font-display">
               {viewType === 'day' && (
                 <span>

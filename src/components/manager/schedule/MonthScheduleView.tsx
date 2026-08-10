@@ -52,14 +52,14 @@ export function MonthScheduleView({
               onClick={() => onOpenDay(date)}
               className={`min-h-[90px] p-2 border rounded-xl flex flex-col justify-between transition cursor-pointer ${
                 isToday
-                  ? 'border-[#ff5757] bg-[#ff5757]/2 hover:bg-[#ff5757]/5'
+                  ? 'border-[#0284c7] bg-[#0284c7]/2 hover:bg-[#0284c7]/5'
                   : isCurrentMonth
                     ? 'border-slate-100 hover:border-slate-200 hover:bg-slate-50/50'
                     : 'border-slate-50 opacity-40 hover:opacity-70'
               }`}
             >
               <span className={`text-[11px] font-bold self-end w-5 h-5 flex items-center justify-center rounded-full ${
-                isToday ? 'bg-[#ff5757] text-white' : 'text-slate-500'
+                isToday ? 'bg-[#0284c7] text-white' : 'text-slate-500'
               }`}>
                 {date.getDate()}
               </span>

@@ -29,7 +29,7 @@ export function HomeLatestArticles({ posts }: { posts: BlogPost[] }) {
     <section aria-labelledby="latest-articles-title" className="space-y-10 sm:space-y-12">
       <div className="grid gap-6 border-b border-slate-200 pb-7 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <div className="max-w-3xl">
-          <p className="inline-flex items-center gap-2 text-sm font-bold text-[#ff5757]">
+          <p className="inline-flex items-center gap-2 text-sm font-bold text-[#0284c7]">
             <span className="grid h-8 w-8 place-items-center rounded-md bg-[#fff0f0]">
               <BookOpen className="h-4 w-4" aria-hidden="true" />
             </span>
@@ -47,7 +47,7 @@ export function HomeLatestArticles({ posts }: { posts: BlogPost[] }) {
         </div>
         <Link
           href="/conseils"
-          className="inline-flex w-fit items-center gap-2 rounded-md bg-[#242424] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#ff5757] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5757] focus-visible:ring-offset-2"
+          className="inline-flex w-fit items-center gap-2 rounded-md bg-[#242424] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#0284c7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-2"
         >
           {"D\u00e9couvrir le magazine"}
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -64,18 +64,18 @@ export function HomeLatestArticles({ posts }: { posts: BlogPost[] }) {
               loading="lazy"
             />
             <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-md bg-white px-3 py-2 text-[10px] font-extrabold uppercase text-[#242424] shadow-sm sm:left-6 sm:top-6">
-              <Sparkles className="h-3.5 w-3.5 text-[#ff5757]" aria-hidden="true" />
+              <Sparkles className="h-3.5 w-3.5 text-[#0284c7]" aria-hidden="true" />
               {"\u00c0 la une"}
             </span>
           </div>
 
           <div className="flex min-w-0 flex-col justify-center p-6 sm:p-9 lg:p-10">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[10px] font-extrabold uppercase">
-              <span className="text-[#ff7777]">{getBlogPublicationTypeLabel(primaryPost.publicationType)}</span>
+              <span className="text-[#38bdf8]">{getBlogPublicationTypeLabel(primaryPost.publicationType)}</span>
               <span className="h-1 w-1 rounded-full bg-slate-600" aria-hidden="true" />
               <span className="text-slate-400">{getBlogCategoryLabel(primaryPost.category)}</span>
             </div>
-            <h3 className="mt-4 font-display text-2xl font-bold leading-tight text-white transition group-hover:text-[#ff7777] sm:text-3xl lg:text-4xl">
+            <h3 className="mt-4 font-display text-2xl font-bold leading-tight text-white transition group-hover:text-[#38bdf8] sm:text-3xl lg:text-4xl">
               {primaryPost.title}
             </h3>
             <p className="mt-4 line-clamp-4 text-sm font-medium leading-7 text-slate-300 sm:text-base">
@@ -115,10 +115,10 @@ export function HomeLatestArticles({ posts }: { posts: BlogPost[] }) {
                   />
                 </div>
                 <div className="flex min-w-0 flex-col justify-center p-5 sm:p-6">
-                  <span className="text-[10px] font-extrabold uppercase text-[#ff5757]">
+                  <span className="text-[10px] font-extrabold uppercase text-[#0284c7]">
                     {getBlogPublicationTypeLabel(post.publicationType)}
                   </span>
-                  <h3 className="mt-2 line-clamp-3 font-display text-lg font-bold leading-snug text-[#242424] transition group-hover:text-[#ff5757]">
+                  <h3 className="mt-2 line-clamp-3 font-display text-lg font-bold leading-snug text-[#242424] transition group-hover:text-[#0284c7]">
                     {post.title}
                   </h3>
                   <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-semibold text-slate-400">

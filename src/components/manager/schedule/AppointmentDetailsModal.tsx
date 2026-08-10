@@ -43,7 +43,7 @@ export function AppointmentDetailsModal({
       >
         <div className="p-4 sm:p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
           <div className="flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-[#ff5757]" />
+            <CalendarDays className="h-4 w-4 text-[#0284c7]" />
             <h4 className="font-bold text-slate-800 text-sm font-display">Détails de la Séance</h4>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer">

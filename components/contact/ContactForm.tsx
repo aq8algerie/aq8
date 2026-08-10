@@ -117,7 +117,7 @@ export function ContactForm({ centers }: ContactFormProps) {
           <button
             type="button"
             onClick={() => setSubmitted(false)}
-            className="mt-3 rounded-md bg-[#353535] px-6 py-3 text-sm font-bold text-white transition-all hover:bg-[#ff5757] cursor-pointer"
+            className="mt-3 rounded-md bg-[#353535] px-6 py-3 text-sm font-bold text-white transition-all hover:bg-[#0284c7] cursor-pointer"
           >
             Envoyer un autre message
           </button>
@@ -129,7 +129,7 @@ export function ContactForm({ centers }: ContactFormProps) {
   return (
     <section className="rounded-lg border border-slate-100 bg-white p-6 sm:p-8">
       <div className="mb-6 space-y-3">
-        <span className="text-xs font-bold uppercase text-[#ff5757]">
+        <span className="text-xs font-bold uppercase text-[#0284c7]">
           Formulaire de contact
         </span>
 
@@ -160,7 +160,7 @@ export function ContactForm({ centers }: ContactFormProps) {
             onChange={(e) => setName(e.target.value)}
             placeholder="Yacine Gherbi"
             disabled={isLoading}
-            className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+            className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#0284c7] focus:bg-white disabled:opacity-60"
           />
         </div>
 
@@ -174,7 +174,7 @@ export function ContactForm({ centers }: ContactFormProps) {
               onChange={(e) => setPhone(e.target.value)}
               placeholder="0660 44 88 99"
               disabled={isLoading}
-              className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+              className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#0284c7] focus:bg-white disabled:opacity-60"
             />
           </div>
 
@@ -186,7 +186,7 @@ export function ContactForm({ centers }: ContactFormProps) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="yacine@email.com"
               disabled={isLoading}
-              className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+              className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#0284c7] focus:bg-white disabled:opacity-60"
             />
           </div>
         </div>
@@ -198,7 +198,7 @@ export function ContactForm({ centers }: ContactFormProps) {
               value={requestType}
               onChange={(e) => setRequestType(e.target.value as RequestType)}
               disabled={isLoading}
-              className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+              className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#0284c7] focus:bg-white disabled:opacity-60"
             >
               {requestTypes.map((type) => (
                 <option key={type.value} value={type.value}>
@@ -214,7 +214,7 @@ export function ContactForm({ centers }: ContactFormProps) {
               value={selectedCenter}
               onChange={(e) => setSelectedCenter(e.target.value)}
               disabled={isLoading}
-              className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+              className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#0284c7] focus:bg-white disabled:opacity-60"
             >
               <option value="general">Demande générale</option>
               {centers.map((center) => (
@@ -234,13 +234,13 @@ export function ContactForm({ centers }: ContactFormProps) {
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Bonjour, j'aimerais avoir plus d'informations sur..."
             disabled={isLoading}
-            className="w-full resize-none rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#ff5757] focus:bg-white disabled:opacity-60"
+            className="w-full resize-none rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-slate-900 outline-none transition-all focus:border-[#0284c7] focus:bg-white disabled:opacity-60"
           />
         </div>
 
         <p className="text-center text-xs font-medium leading-relaxed text-slate-500">
           Les informations envoyées servent uniquement à traiter votre demande. Consultez notre{" "}
-          <a href="/politique-de-confidentialite" className="font-bold text-slate-700 underline underline-offset-2 hover:text-[#ff5757]">
+          <a href="/politique-de-confidentialite" className="font-bold text-slate-700 underline underline-offset-2 hover:text-[#0284c7]">
             politique de confidentialité
           </a>.
         </p>
@@ -248,7 +248,7 @@ export function ContactForm({ centers }: ContactFormProps) {
         <button
           type="submit"
           disabled={isLoading}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#ff5757] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#e94949] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#0284c7] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#0369a1] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <>

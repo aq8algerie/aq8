@@ -50,7 +50,7 @@ export function HorizontalGridScheduleView({
               {timelineHours.map(hour => (
                 <th key={hour} className="p-3 border-r border-slate-100 text-center w-28">
                   <div className="flex flex-col items-center gap-0.5">
-                    <Clock className="h-3 w-3 text-[#ff5757]" />
+                    <Clock className="h-3 w-3 text-[#0284c7]" />
                     <span className="font-mono font-bold text-slate-700">{hour}</span>
                   </div>
                 </th>
@@ -63,9 +63,9 @@ export function HorizontalGridScheduleView({
               const isToday = dateStr === getTodayDateString();
 
               return (
-                <tr key={dateStr} className={`group ${isToday ? 'bg-[#ff5757]/2' : 'hover:bg-slate-50/20'}`}>
+                <tr key={dateStr} className={`group ${isToday ? 'bg-[#0284c7]/2' : 'hover:bg-slate-50/20'}`}>
                   <td className={`p-4 border-r border-slate-100 font-bold bg-white sticky left-0 z-10 shadow-sm ${
-                    isToday ? 'text-[#ff5757]' : 'text-[#353535]'
+                    isToday ? 'text-[#0284c7]' : 'text-[#353535]'
                   }`}>
                     <div className="space-y-0.5">
                       <span className="text-[10px] uppercase font-bold text-slate-400 block">
@@ -93,15 +93,15 @@ export function HorizontalGridScheduleView({
                                   key={appointment.id}
                                   className={`p-2 rounded-xl border text-[10px] transition-all relative ${
                                     isSelected
-                                      ? 'bg-[#ff5757]/10 border-[#ff5757]'
+                                      ? 'bg-[#0284c7]/10 border-[#0284c7]'
                                       : 'bg-slate-50 border-slate-100/80 hover:border-slate-300'
                                   }`}
                                 >
                                   <button
                                     onClick={() => onToggleSelectOne(appointment.id)}
-                                    className="absolute top-1 right-1 text-slate-400 hover:text-[#ff5757] cursor-pointer"
+                                    className="absolute top-1 right-1 text-slate-400 hover:text-[#0284c7] cursor-pointer"
                                   >
-                                    {isSelected ? <CheckSquare className="h-3 w-3 text-[#ff5757]" /> : <Square className="h-3 w-3" />}
+                                    {isSelected ? <CheckSquare className="h-3 w-3 text-[#0284c7]" /> : <Square className="h-3 w-3" />}
                                   </button>
 
                                   <span className="font-mono font-extrabold text-slate-500 block text-[9px]">{exactTime}</span>

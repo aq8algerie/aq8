@@ -48,7 +48,7 @@ export function ManagersManagement({
               type="button"
               onClick={() => setManagersViewMode('grid')}
               className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                managersViewMode === 'grid' ? 'bg-white text-[#ff5757] shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                managersViewMode === 'grid' ? 'bg-white text-[#0284c7] shadow-xs' : 'text-slate-500 hover:text-slate-800'
               }`}
               title="Vue Grille"
             >
@@ -58,7 +58,7 @@ export function ManagersManagement({
               type="button"
               onClick={() => setManagersViewMode('list')}
               className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                managersViewMode === 'list' ? 'bg-white text-[#ff5757] shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                managersViewMode === 'list' ? 'bg-white text-[#0284c7] shadow-xs' : 'text-slate-500 hover:text-slate-800'
               }`}
               title="Vue Liste"
             >
@@ -70,7 +70,7 @@ export function ManagersManagement({
           <button
             type="button"
             onClick={() => onAddManager()}
-            className="flex-1 sm:flex-initial px-4 py-2 bg-[#ff5757] hover:bg-[#e04646] font-bold text-xs text-white rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+            className="flex-1 sm:flex-initial px-4 py-2 bg-[#0284c7] hover:bg-[#0369a1] font-bold text-xs text-white rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <Plus className="h-4 w-4" /> Nouveau Manager
           </button>
@@ -125,7 +125,7 @@ export function ManagersManagement({
                         return (
                           <div key={mgr.email} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between space-y-4 group relative overflow-hidden">
                             {/* Accent line on hover */}
-                            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#ff5757] to-amber-500 transform -translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#0284c7] to-amber-500 transform -translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
 
                             <div className="space-y-3">
                               {/* Profile Header */}
@@ -145,7 +145,7 @@ export function ManagersManagement({
                                 <div className="flex gap-1.5 flex-wrap">
                                   {mgr.centersList.map(c => (
                                     <span key={c.id} className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded-lg text-[10px] font-bold border border-slate-150">
-                                      <Building className="h-3 w-3 text-[#ff5757]" />
+                                      <Building className="h-3 w-3 text-[#0284c7]" />
                                       {c.name} ({c.city})
                                     </span>
                                   ))}

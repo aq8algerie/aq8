@@ -32,7 +32,7 @@ export function ManagerPackagesView({
         <button
           id="btn-packages-assign"
           onClick={onAssignPackageClick}
-          className="px-3.5 py-1.5 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl transition-premium text-xs flex items-center gap-1 cursor-pointer"
+          className="px-3.5 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-white rounded-xl transition-premium text-xs flex items-center gap-1 cursor-pointer"
         >
           <Plus className="h-4 w-4" /> Affecter un forfait
         </button>
@@ -62,7 +62,7 @@ export function ManagerPackagesView({
                         {cl ? `${cl.firstName} ${cl.lastName}` : 'Adhérent inconnu'}
                       </td>
                       <td className="p-4 font-medium">{pack?.name || 'Forfait'}</td>
-                      <td className="p-4 font-mono font-bold text-[#ff5757]">
+                      <td className="p-4 font-mono font-bold text-[#0284c7]">
                         {cp.sessionsRemaining} / {cp.totalSessions}
                       </td>
                       <td className="p-4 text-slate-500 font-mono">{cp.purchaseDate}</td>
@@ -112,7 +112,7 @@ export function ManagerPackagesView({
                 <div className="flex justify-between items-center border-t border-slate-50 pt-2.5 text-xs">
                   <span className="text-[11px] text-slate-500">Affecté le {cp.purchaseDate}</span>
                   <div className="font-mono font-bold text-xs">
-                    Séances: <span className="text-[#ff5757]">{cp.sessionsRemaining} / {cp.totalSessions}</span>
+                    Séances: <span className="text-[#0284c7]">{cp.sessionsRemaining} / {cp.totalSessions}</span>
                   </div>
                 </div>
               </div>

@@ -108,7 +108,7 @@ export function PackageAssignModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 bg-[#ff5757] hover:bg-[#e04646] font-semibold text-white rounded-xl cursor-pointer disabled:cursor-wait disabled:opacity-70"
+              className="px-4 py-2 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-white rounded-xl cursor-pointer disabled:cursor-wait disabled:opacity-70"
             >
               {isSubmitting ? 'Activation sécurisée...' : "Confirmer l'affectation"}
             </button>

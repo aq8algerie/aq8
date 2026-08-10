@@ -74,7 +74,7 @@ export function FaqInteractiveView() {
     <div className="space-y-10 py-2">
       {/* HERO / HEADER SECTION */}
       <div className="text-center max-w-3xl mx-auto space-y-4">
-        <div className="inline-flex items-center gap-2 rounded-full border border-rose-100 bg-rose-50/70 px-4 py-1.5 text-xs font-bold text-[#ff5757]">
+        <div className="inline-flex items-center gap-2 rounded-full border border-rose-100 bg-rose-50/70 px-4 py-1.5 text-xs font-bold text-[#0284c7]">
           <HelpCircle className="h-4 w-4" />
           Foire Aux Questions AQ8 Algérie
         </div>
@@ -97,7 +97,7 @@ export function FaqInteractiveView() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher une question (ex: tenue, contre-indication, durée, tarif)..."
-            className="w-full pl-12 pr-10 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-medium text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#ff5757]/30 focus:border-[#ff5757] transition"
+            className="w-full pl-12 pr-10 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-medium text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0284c7]/30 focus:border-[#0284c7] transition"
           />
           {search && (
             <button
@@ -123,7 +123,7 @@ export function FaqInteractiveView() {
                 onClick={() => setSelectedCategory(cat.id)}
                 className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-[#ff5757] text-white shadow-md shadow-[#ff5757]/20 scale-105'
+                    ? 'bg-[#0284c7] text-white shadow-md shadow-[#0284c7]/20 scale-105'
                     : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                 }`}
               >
@@ -143,7 +143,7 @@ export function FaqInteractiveView() {
             <span> dans cette catégorie</span>
           )}
           {search && (
-            <span> pour « <span className="font-bold text-[#ff5757]">{search}</span> »</span>
+            <span> pour « <span className="font-bold text-[#0284c7]">{search}</span> »</span>
           )}
         </div>
 
@@ -151,7 +151,7 @@ export function FaqInteractiveView() {
           <button
             type="button"
             onClick={expandAll}
-            className="text-slate-600 hover:text-[#ff5757] font-bold transition cursor-pointer"
+            className="text-slate-600 hover:text-[#0284c7] font-bold transition cursor-pointer"
           >
             Tout déplier
           </button>
@@ -159,7 +159,7 @@ export function FaqInteractiveView() {
           <button
             type="button"
             onClick={collapseAll}
-            className="text-slate-600 hover:text-[#ff5757] font-bold transition cursor-pointer"
+            className="text-slate-600 hover:text-[#0284c7] font-bold transition cursor-pointer"
           >
             Tout replier
           </button>
@@ -190,7 +190,7 @@ export function FaqInteractiveView() {
                 key={faq.id}
                 className={`bg-white rounded-2xl border transition-all duration-300 overflow-hidden ${
                   isOpen
-                    ? 'border-[#ff5757]/40 shadow-md shadow-[#ff5757]/5 ring-1 ring-[#ff5757]/20'
+                    ? 'border-[#0284c7]/40 shadow-md shadow-[#0284c7]/5 ring-1 ring-[#0284c7]/20'
                     : 'border-slate-200 hover:border-slate-300 shadow-xs'
                 }`}
               >
@@ -201,7 +201,7 @@ export function FaqInteractiveView() {
                 >
                   <div className="flex items-center gap-3">
                     {faq.popular && (
-                      <span className="shrink-0 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-100 text-[#ff5757] text-[10px] font-black uppercase tracking-wider">
+                      <span className="shrink-0 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-100 text-[#0284c7] text-[10px] font-black uppercase tracking-wider">
                         Populaire
                       </span>
                     )}
@@ -211,7 +211,7 @@ export function FaqInteractiveView() {
                   </div>
                   <ChevronDown
                     className={`h-5 w-5 shrink-0 text-slate-400 transition-transform duration-300 ${
-                      isOpen ? 'rotate-180 text-[#ff5757]' : ''
+                      isOpen ? 'rotate-180 text-[#0284c7]' : ''
                     }`}
                   />
                 </button>
@@ -250,12 +250,12 @@ export function FaqInteractiveView() {
             href="/centres"
             className="inline-flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-3 text-xs font-bold text-white transition cursor-pointer"
           >
-            <MapPin className="h-4 w-4 text-[#ff5757]" />
+            <MapPin className="h-4 w-4 text-[#0284c7]" />
             Nos Centres
           </Link>
           <Link
             href="/reservation"
-            className="inline-flex items-center gap-2 rounded-xl bg-[#ff5757] hover:bg-[#e94949] px-5 py-3 text-xs font-bold text-white shadow-lg shadow-[#ff5757]/30 transition cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] px-5 py-3 text-xs font-bold text-white shadow-lg shadow-[#0284c7]/30 transition cursor-pointer"
           >
             Réserver une séance
             <ArrowRight className="h-4 w-4" />

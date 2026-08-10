@@ -199,7 +199,7 @@ export function ManagerBookingSettingsPanel({
     <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs space-y-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#ff5757]/10 text-[#ff5757]">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0284c7]/10 text-[#0284c7]">
             <CalendarClock className="h-5 w-5" />
           </div>
           <div>
@@ -222,7 +222,7 @@ export function ManagerBookingSettingsPanel({
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#ff5757] px-4 py-2 text-[11px] font-bold text-white shadow-sm shadow-[#ff5757]/20 transition hover:bg-[#e94949] disabled:opacity-60 cursor-pointer"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-[#0284c7] px-4 py-2 text-[11px] font-bold text-white shadow-sm shadow-[#0284c7]/20 transition hover:bg-[#0369a1] disabled:opacity-60 cursor-pointer"
           >
             <Save className="h-3.5 w-3.5" />
             {saving ? 'Enregistrement...' : 'Enregistrer'}
@@ -239,7 +239,7 @@ export function ManagerBookingSettingsPanel({
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
           <div className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase text-slate-500">
-            <Zap className="h-3.5 w-3.5 text-[#ff5757]" /> AQ8 par heure
+            <Zap className="h-3.5 w-3.5 text-[#0284c7]" /> AQ8 par heure
           </div>
           <input
             type="number"
@@ -247,7 +247,7 @@ export function ManagerBookingSettingsPanel({
             max={20}
             value={capacity.aq8}
             onChange={(event) => updateCapacity('aq8', event.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono text-sm font-bold text-slate-800 outline-none focus:border-[#ff5757]"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono text-sm font-bold text-slate-800 outline-none focus:border-[#0284c7]"
           />
         </div>
         <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
@@ -260,7 +260,7 @@ export function ManagerBookingSettingsPanel({
             max={20}
             value={capacity.wonder}
             onChange={(event) => updateCapacity('wonder', event.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono text-sm font-bold text-slate-800 outline-none focus:border-[#ff5757]"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono text-sm font-bold text-slate-800 outline-none focus:border-[#0284c7]"
           />
         </div>
         <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
@@ -283,7 +283,7 @@ export function ManagerBookingSettingsPanel({
                     type="checkbox"
                     checked={isOpen}
                     onChange={(event) => setDayOpen(day.key, event.target.checked)}
-                    className="h-4 w-4 accent-[#ff5757]"
+                    className="h-4 w-4 accent-[#0284c7]"
                   />
                   {day.label}
                 </label>
@@ -300,7 +300,7 @@ export function ManagerBookingSettingsPanel({
                           <select
                             value={range.start}
                             onChange={(event) => updateRange(day.key, index, { start: event.target.value })}
-                            className="rounded-lg border border-slate-200 bg-white px-2 py-2 font-mono text-[11px] font-bold text-slate-700 outline-none focus:border-[#ff5757]"
+                            className="rounded-lg border border-slate-200 bg-white px-2 py-2 font-mono text-[11px] font-bold text-slate-700 outline-none focus:border-[#0284c7]"
                           >
                             {START_OPTIONS.map(option => (
                               <option key={option} value={option}>{option}</option>
@@ -309,7 +309,7 @@ export function ManagerBookingSettingsPanel({
                           <select
                             value={range.end}
                             onChange={(event) => updateRange(day.key, index, { end: event.target.value })}
-                            className="rounded-lg border border-slate-200 bg-white px-2 py-2 font-mono text-[11px] font-bold text-slate-700 outline-none focus:border-[#ff5757]"
+                            className="rounded-lg border border-slate-200 bg-white px-2 py-2 font-mono text-[11px] font-bold text-slate-700 outline-none focus:border-[#0284c7]"
                           >
                             {TIME_OPTIONS.filter(option => minutes(option) > minutes(range.start)).map(option => (
                               <option key={option} value={option}>{option}</option>

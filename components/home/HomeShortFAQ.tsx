@@ -26,7 +26,7 @@ export function HomeShortFAQ() {
       {/* Section Header */}
       <div className="flex flex-col justify-between gap-5 border-b border-slate-200/80 pb-8 sm:flex-row sm:items-end">
         <div className="max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-md bg-[#fff0f0] px-3 py-1 text-xs font-extrabold uppercase text-[#ff5757]">
+          <div className="inline-flex items-center gap-2 rounded-md bg-[#fff0f0] px-3 py-1 text-xs font-extrabold uppercase text-[#0284c7]">
             <HelpCircle className="h-3.5 w-3.5" />
             Vos Questions Fréquentes
           </div>
@@ -38,7 +38,7 @@ export function HomeShortFAQ() {
         <Link
           href="/faq"
           aria-label="Consulter toutes les questions fréquentes FAQ"
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-[#242424] transition-all duration-300 hover:border-[#ff5757] hover:text-[#ff5757]"
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-[#242424] transition-all duration-300 hover:border-[#0284c7] hover:text-[#0284c7]"
         >
           <span>Voir toute la FAQ</span>
           <ArrowRight className="h-4 w-4" />
@@ -50,14 +50,14 @@ export function HomeShortFAQ() {
         {faqs.map((faq, index) => (
           <article
             key={faq.q}
-            className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[#ff5757]/40 hover:shadow-xl sm:p-7"
+            className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[#0284c7]/40 hover:shadow-xl sm:p-7"
           >
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="rounded-md bg-[#fff0f0] px-2.5 py-1 text-[11px] font-extrabold uppercase text-[#ff5757]">
+                <span className="rounded-md bg-[#fff0f0] px-2.5 py-1 text-[11px] font-extrabold uppercase text-[#0284c7]">
                   Question 0{index + 1}
                 </span>
-                <Sparkles className="h-4 w-4 text-slate-300 transition-colors group-hover:text-[#ff7777]" />
+                <Sparkles className="h-4 w-4 text-slate-300 transition-colors group-hover:text-[#38bdf8]" />
               </div>
 
               <h3 className="font-display text-base font-bold tracking-tight text-[#242424] sm:text-lg">

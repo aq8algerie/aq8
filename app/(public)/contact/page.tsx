@@ -47,7 +47,7 @@ export default async function ContactPage() {
         <section className="relative overflow-hidden rounded-lg bg-[#353535] px-6 py-14 text-center text-white sm:px-10 lg:px-14">
 
           <div className="relative z-10 mx-auto max-w-3xl space-y-6">
-            <span className="inline-flex items-center justify-center gap-2 rounded-full border border-[#ff5757]/30 bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
+            <span className="inline-flex items-center justify-center gap-2 rounded-full border border-[#0284c7]/30 bg-[#0284c7]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#0284c7]">
               <MessageCircle className="h-3.5 w-3.5" />
               Contact AQ8 Algérie
             </span>
@@ -68,7 +68,7 @@ export default async function ContactPage() {
               <Link
                 href="/centres"
                 aria-label="Voir les centres AQ8 en Algérie"
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff5757] px-6 py-3 text-sm font-bold text-white transition-all hover:bg-[#e94949]"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#0284c7] px-6 py-3 text-sm font-bold text-white transition-all hover:bg-[#0369a1]"
               >
                 Voir les centres
                 <ArrowRight className="h-4 w-4" />
@@ -81,7 +81,7 @@ export default async function ContactPage() {
                 aria-label="Contacter AQ8 Algérie sur WhatsApp"
                 className="inline-flex items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-white/15"
               >
-                <MessageCircle className="h-4 w-4 text-[#ff5757]" />
+                <MessageCircle className="h-4 w-4 text-[#0284c7]" />
                 WhatsApp
               </a>
             </div>
@@ -96,7 +96,7 @@ export default async function ContactPage() {
 
               <div className="relative z-10 space-y-6">
                 <div className="space-y-2">
-                  <span className="text-xs font-bold uppercase text-[#ff5757]">
+                  <span className="text-xs font-bold uppercase text-[#0284c7]">
                     Coordonnées générales
                   </span>
 
@@ -112,7 +112,7 @@ export default async function ContactPage() {
 
                 <div className="space-y-4 text-sm text-slate-200">
                   <div className="flex gap-3">
-                    <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#ff5757]" />
+                    <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#0284c7]" />
                     <div>
                       <span className="block text-xs font-bold uppercase text-slate-400">
                         Adresse
@@ -124,14 +124,14 @@ export default async function ContactPage() {
                   </div>
 
                   <div className="flex gap-3">
-                    <Phone className="mt-0.5 h-5 w-5 shrink-0 text-[#ff5757]" />
+                    <Phone className="mt-0.5 h-5 w-5 shrink-0 text-[#0284c7]" />
                     <div>
                       <span className="block text-xs font-bold uppercase text-slate-400">
                         Téléphone
                       </span>
                       <a
                         href={`tel:${contactInfo.phone}`}
-                        className="font-semibold text-slate-200 transition-colors hover:text-[#ff5757]"
+                        className="font-semibold text-slate-200 transition-colors hover:text-[#0284c7]"
                       >
                         {contactInfo.phone}
                       </a>
@@ -139,14 +139,14 @@ export default async function ContactPage() {
                   </div>
 
                   <div className="flex gap-3">
-                    <Mail className="mt-0.5 h-5 w-5 shrink-0 text-[#ff5757]" />
+                    <Mail className="mt-0.5 h-5 w-5 shrink-0 text-[#0284c7]" />
                     <div>
                       <span className="block text-xs font-bold uppercase text-slate-400">
                         E-mail
                       </span>
                       <a
                         href={`mailto:${contactInfo.email}`}
-                        className="font-medium text-slate-200 transition-colors hover:text-[#ff5757]"
+                        className="font-medium text-slate-200 transition-colors hover:text-[#0284c7]"
                       >
                         {contactInfo.email}
                       </a>
@@ -179,7 +179,7 @@ export default async function ContactPage() {
             {/* Centers shortcut */}
             <div className="rounded-lg border border-slate-100 bg-slate-50 p-6">
               <div className="space-y-3">
-                <span className="inline-flex items-center gap-2 rounded-full bg-[#ff5757]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#ff5757]">
+                <span className="inline-flex items-center gap-2 rounded-full bg-[#0284c7]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#0284c7]">
                   <Sparkles className="h-3.5 w-3.5" />
                   Centres AQ8
                 </span>
@@ -196,7 +196,7 @@ export default async function ContactPage() {
 
                 <Link
                   href="/centres"
-                  className="inline-flex items-center justify-center gap-2 rounded-md bg-[#353535] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#ff5757]"
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-[#353535] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#0284c7]"
                 >
                   Voir les centres
                   <ArrowRight className="h-4 w-4" />

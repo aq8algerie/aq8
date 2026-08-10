@@ -36,7 +36,7 @@ export type CrmEmailNotificationPayload =
   | { type: 'payment_recorded'; centerId: string; paymentId: string; clientPackageId?: string };
 
 const BRAND_NAME = 'AQ8 Algérie';
-const BRAND_COLOR = '#ff5757';
+const BRAND_COLOR = '#0284c7';
 const DARK_COLOR = '#242424';
 
 function getEmailConfig() {

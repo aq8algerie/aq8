@@ -92,16 +92,16 @@ export function DayScheduleView({
                       key={apt.id}
                       className={`p-4 rounded-xl border transition-all flex flex-col md:flex-row md:items-center justify-between gap-3 ${
                         isSelected
-                          ? 'bg-[#ff5757]/5 border-[#ff5757] shadow-sm'
+                          ? 'bg-[#0284c7]/5 border-[#0284c7] shadow-sm'
                           : 'bg-slate-50/50 border-slate-100 hover:bg-slate-50 hover:border-slate-200'
                       }`}
                     >
                       <div className="flex items-start gap-3">
                         <button
                           onClick={() => onToggleSelectOne(apt.id)}
-                          className="text-slate-400 hover:text-[#ff5757] pt-0.5 cursor-pointer"
+                          className="text-slate-400 hover:text-[#0284c7] pt-0.5 cursor-pointer"
                         >
-                          {isSelected ? <CheckSquare className="h-4.5 w-4.5 text-[#ff5757]" /> : <Square className="h-4.5 w-4.5" />}
+                          {isSelected ? <CheckSquare className="h-4.5 w-4.5 text-[#0284c7]" /> : <Square className="h-4.5 w-4.5" />}
                         </button>
                         <div className="space-y-1">
                           <div className="font-bold text-[#353535] flex items-center gap-1.5">

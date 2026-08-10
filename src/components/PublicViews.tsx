@@ -47,7 +47,7 @@ export function PublicAbout() {
       <SeoJsonLd type="faq" />
       <section className="grid gap-10 border-b border-slate-200 pb-12 lg:grid-cols-12 lg:items-end">
         <div className="space-y-5 lg:col-span-8">
-          <p className="inline-flex items-center gap-2 text-sm font-bold text-[#ff5757]"><CheckCircle className="h-4 w-4" />À propos</p>
+          <p className="inline-flex items-center gap-2 text-sm font-bold text-[#0284c7]"><CheckCircle className="h-4 w-4" />À propos</p>
           <h1 className="font-display text-4xl font-bold leading-tight text-[#242424] sm:text-5xl">AQ8 Algérie, une expérience technologique claire et encadrée.</h1>
           <p className="max-w-2xl text-sm font-medium leading-relaxed text-slate-600 sm:text-base">AQ8 Algérie accompagne ses clients avec des technologies EMS et Wonder, des centres de proximité et une réservation pensée pour être simple, fiable et rassurante.</p>
         </div>
@@ -62,7 +62,7 @@ export function PublicAbout() {
           const Icon = pillar.icon;
           return (
             <article key={pillar.title} className="rounded-lg border border-slate-200 bg-white p-6">
-              <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-md bg-slate-100 text-[#ff5757]"><Icon className="h-5 w-5" /></div>
+              <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-md bg-slate-100 text-[#0284c7]"><Icon className="h-5 w-5" /></div>
               <h2 className="font-display text-lg font-bold text-[#242424]">{pillar.title}</h2>
               <p className="mt-2 text-sm font-medium leading-relaxed text-slate-600">{pillar.desc}</p>
             </article>
@@ -72,27 +72,27 @@ export function PublicAbout() {
 
       <section className="grid gap-8 rounded-lg border border-slate-200 bg-[#242424] p-6 text-white sm:p-8 lg:grid-cols-12 lg:items-center">
         <div className="space-y-4 lg:col-span-8">
-          <p className="inline-flex items-center gap-2 text-sm font-bold text-[#ff5757]"><CheckCircle className="h-4 w-4" />Notre promesse</p>
+          <p className="inline-flex items-center gap-2 text-sm font-bold text-[#0284c7]"><CheckCircle className="h-4 w-4" />Notre promesse</p>
           <h2 className="font-display text-3xl font-bold leading-tight sm:text-4xl">Rendre la réservation et le suivi plus simples pour chaque client.</h2>
           <p className="text-sm font-medium leading-relaxed text-white/70 sm:text-base">Le site public permet de découvrir les technologies, comparer les centres, consulter les informations pratiques et envoyer une demande de réservation au centre choisi.</p>
         </div>
         <div className="lg:col-span-4 lg:text-right">
-          <a href="/centres" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ff5757] px-6 py-3 text-sm font-bold text-white transition-premium hover:bg-[#e94949]">Voir nos centres<ArrowRight className="h-4 w-4" /></a>
+          <a href="/centres" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#0284c7] px-6 py-3 text-sm font-bold text-white transition-premium hover:bg-[#0369a1]">Voir nos centres<ArrowRight className="h-4 w-4" /></a>
         </div>
       </section>
 
       <section id="faq" className="mx-auto max-w-4xl scroll-mt-24 space-y-6">
         <div className="space-y-3 text-center">
-          <p className="inline-flex items-center justify-center gap-2 text-sm font-bold text-[#ff5757]"><HelpCircle className="h-4 w-4" />Questions fréquentes</p>
+          <p className="inline-flex items-center justify-center gap-2 text-sm font-bold text-[#0284c7]"><HelpCircle className="h-4 w-4" />Questions fréquentes</p>
           <h2 className="font-display text-3xl font-bold leading-tight text-[#242424]">Les réponses essentielles avant votre première séance.</h2>
           <p className="mx-auto max-w-2xl text-sm font-medium leading-relaxed text-slate-600 sm:text-base">Horaires, réservation, équipements et précautions peuvent varier selon le centre choisi. Cette section rassemble les informations générales les plus utiles.</p>
         </div>
         <div className="space-y-4">
           {faqItems.map((item, index) => (
-            <details key={item.question} className="group rounded-lg border border-slate-200 bg-white p-5 sm:p-6 transition-premium hover:border-[#ff5757]/30 hover:shadow-sm" open={index === 0}>
+            <details key={item.question} className="group rounded-lg border border-slate-200 bg-white p-5 sm:p-6 transition-premium hover:border-[#0284c7]/30 hover:shadow-sm" open={index === 0}>
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-left outline-none">
-                <h3 className="font-display text-base font-bold text-[#242424] group-open:text-[#ff5757] transition-colors sm:text-lg">{item.question}</h3>
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-50 text-[#ff5757] transition-all group-open:bg-[#ff5757] group-open:text-white group-open:rotate-45">+</span>
+                <h3 className="font-display text-base font-bold text-[#242424] group-open:text-[#0284c7] transition-colors sm:text-lg">{item.question}</h3>
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-50 text-[#0284c7] transition-all group-open:bg-[#0284c7] group-open:text-white group-open:rotate-45">+</span>
               </summary>
               <p className="mt-4 max-w-3xl text-sm font-medium leading-relaxed text-slate-600 border-t border-slate-100 pt-4 sm:text-base">{item.answer}</p>
             </details>

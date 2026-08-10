@@ -70,7 +70,7 @@ export function ManagerServicesView({
               type="button"
               onClick={() => switchViewMode('grid')}
               className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === 'grid' ? 'bg-white text-[#ff5757] shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                viewMode === 'grid' ? 'bg-white text-[#0284c7] shadow-xs' : 'text-slate-500 hover:text-slate-800'
               }`}
               title="Vue Grille"
             >
@@ -80,7 +80,7 @@ export function ManagerServicesView({
               type="button"
               onClick={() => switchViewMode('list')}
               className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === 'list' ? 'bg-white text-[#ff5757] shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                viewMode === 'list' ? 'bg-white text-[#0284c7] shadow-xs' : 'text-slate-500 hover:text-slate-800'
               }`}
               title="Vue Liste"
             >
@@ -97,7 +97,7 @@ export function ManagerServicesView({
           onClick={() => switchSection('services')}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeSection === 'services'
-              ? 'bg-white text-[#ff5757] shadow-xs'
+              ? 'bg-white text-[#0284c7] shadow-xs'
               : 'text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -137,7 +137,7 @@ export function ManagerServicesView({
                     <div className="flex justify-between items-start">
                       <span className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wide ${
                         srv.type === 'aq8'
-                          ? 'bg-[#ff5757]/10 text-[#ff5757]'
+                          ? 'bg-[#0284c7]/10 text-[#0284c7]'
                           : 'bg-amber-500/10 text-amber-600'
                       }`}>
                         {srv.type === 'aq8' ? '⚡ AQ8 EMS' : '✨ Wonder'}
@@ -152,7 +152,7 @@ export function ManagerServicesView({
                   </div>
 
                   <div className="pt-3 border-t border-slate-50 flex items-center justify-between">
-                    <span className="font-mono font-bold text-xs text-[#ff5757]">
+                    <span className="font-mono font-bold text-xs text-[#0284c7]">
                       {formatDZD(srv.price)}
                     </span>
                     <span className="flex items-center gap-0.5 text-[9px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
@@ -170,7 +170,7 @@ export function ManagerServicesView({
                     <div className="flex justify-between items-start">
                       <span className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wide ${
                         pkg.type === 'aq8'
-                          ? 'bg-[#ff5757]/10 text-[#ff5757]'
+                          ? 'bg-[#0284c7]/10 text-[#0284c7]'
                           : pkg.type === 'wonder'
                           ? 'bg-amber-500/10 text-amber-600'
                           : 'bg-slate-200/80 text-slate-700'
@@ -250,7 +250,7 @@ export function ManagerServicesView({
                           <td className="p-4">
                             <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
                               item.type === 'aq8'
-                                ? 'bg-[#ff5757]/10 text-[#ff5757]'
+                                ? 'bg-[#0284c7]/10 text-[#0284c7]'
                                 : item.type === 'wonder'
                                 ? 'bg-amber-500/10 text-amber-600'
                                 : 'bg-slate-200/80 text-slate-700'

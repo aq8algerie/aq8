@@ -50,7 +50,7 @@ export function EditAppointmentModal({
       >
         <div className="p-4 sm:p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
           <div className="flex items-center gap-2">
-            <Edit2 className="h-4 w-4 text-[#ff5757]" />
+            <Edit2 className="h-4 w-4 text-[#0284c7]" />
             <h4 className="font-bold text-slate-800 text-sm font-display">Modifier la Réservation</h4>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer">
@@ -148,7 +148,7 @@ export function EditAppointmentModal({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-[#ff5757] hover:bg-[#e04646] text-white font-bold rounded-xl transition cursor-pointer"
+              className="px-4 py-2 bg-[#0284c7] hover:bg-[#0369a1] text-white font-bold rounded-xl transition cursor-pointer"
             >
               Enregistrer
             </button>

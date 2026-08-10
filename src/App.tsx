@@ -537,7 +537,7 @@ export default function App() {
   const canUseCrmRoleSwitcher = isDevToolsEnabled && crmRole === 'super_admin';
 
   return (
-    <div className="min-h-screen flex flex-col bg-white selection:bg-[#ff5757]/20 selection:text-[#242424]">
+    <div className="min-h-screen flex flex-col bg-white selection:bg-[#0284c7]/20 selection:text-[#242424]">
 
       {/* --- SITE PUBLIC HEADER / NAVIGATION BAR --- */}
       {currentRoute !== 'crm' && (
@@ -561,7 +561,7 @@ export default function App() {
             <nav className="hidden md:flex items-center gap-1 text-sm font-semibold text-slate-600">
               <button
                 onClick={() => navigate('home')}
-                className={`rounded-md px-3 py-2 transition-premium ${currentRoute === 'home' ? 'text-[#ff5757]' : 'hover:bg-slate-50 hover:text-[#242424]'}`}
+                className={`rounded-md px-3 py-2 transition-premium ${currentRoute === 'home' ? 'text-[#0284c7]' : 'hover:bg-slate-50 hover:text-[#242424]'}`}
               >
                 Accueil
               </button>
@@ -569,7 +569,7 @@ export default function App() {
               <div className="group relative">
                 <button
                   type="button"
-                  className={`flex items-center gap-1 rounded-md px-3 py-2 transition-premium ${currentRoute === 'aq8' || currentRoute === 'wonder' ? 'text-[#ff5757]' : 'hover:bg-slate-50 hover:text-[#242424]'}`}
+                  className={`flex items-center gap-1 rounded-md px-3 py-2 transition-premium ${currentRoute === 'aq8' || currentRoute === 'wonder' ? 'text-[#0284c7]' : 'hover:bg-slate-50 hover:text-[#242424]'}`}
                   aria-haspopup="menu"
                 >
                   Technologie
@@ -585,7 +585,7 @@ export default function App() {
                       key={link.id}
                       type="button"
                       onClick={() => navigate(link.id)}
-                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition-premium ${currentRoute === link.id ? 'bg-rose-50 text-[#ff5757]' : 'text-slate-600 hover:bg-slate-50 hover:text-[#353535]'}`}
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition-premium ${currentRoute === link.id ? 'bg-rose-50 text-[#0284c7]' : 'text-slate-600 hover:bg-slate-50 hover:text-[#353535]'}`}
                     >
                       {link.label}
                       <ChevronDown className="h-3.5 w-3.5 -rotate-90 text-slate-300" />
@@ -602,7 +602,7 @@ export default function App() {
                 <button
                   key={link.id}
                   onClick={() => navigate(link.id)}
-                  className={`rounded-md px-3 py-2 transition-premium ${currentRoute === link.id ? 'text-[#ff5757]' : 'hover:bg-slate-50 hover:text-[#242424]'}`}
+                  className={`rounded-md px-3 py-2 transition-premium ${currentRoute === link.id ? 'text-[#0284c7]' : 'hover:bg-slate-50 hover:text-[#242424]'}`}
                 >
                   {link.label}
                 </button>
@@ -613,7 +613,7 @@ export default function App() {
             <div className="hidden md:flex items-center gap-2">
               <button
                 onClick={handlePublicReservationClick}
-                className="inline-flex items-center gap-2 rounded-md bg-[#ff5757] px-4 py-2.5 text-xs font-bold text-white transition-premium hover:bg-[#e94949] cursor-pointer"
+                className="inline-flex items-center gap-2 rounded-md bg-[#0284c7] px-4 py-2.5 text-xs font-bold text-white transition-premium hover:bg-[#0369a1] cursor-pointer"
               >
                 <Calendar className="h-4 w-4" />
                 R&eacute;server
@@ -622,7 +622,7 @@ export default function App() {
                 onClick={() => navigate('login')}
                 className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-[#242424] transition-premium hover:border-[#242424] cursor-pointer"
               >
-                <ShieldCheck className="h-4 w-4 text-[#ff5757]" /> Acces CRM
+                <ShieldCheck className="h-4 w-4 text-[#0284c7]" /> Acces CRM
               </button>
             </div>
 
@@ -642,7 +642,7 @@ export default function App() {
             <div className="md:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-4 space-y-2 text-xs font-bold">
               <button
                 onClick={handlePublicReservationClick}
-                className="mb-1 flex w-full items-center justify-center gap-2 rounded-xl bg-[#ff5757] px-4 py-3 text-sm font-extrabold text-white shadow-md shadow-[#ff5757]/20 transition-premium hover:bg-[#e94949]"
+                className="mb-1 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0284c7] px-4 py-3 text-sm font-extrabold text-white shadow-md shadow-[#0284c7]/20 transition-premium hover:bg-[#0369a1]"
               >
                 <Calendar className="h-4 w-4" />
                 R&eacute;server une s&eacute;ance
@@ -660,9 +660,9 @@ export default function App() {
                     setMobileMenuOpen(false);
                     navigate(link.id);
                   }}
-                  className={`w-full text-left px-3 py-2.5 rounded-lg flex items-center gap-2 ${currentRoute === link.id ? 'bg-rose-50 text-[#ff5757]' : 'text-slate-600 hover:bg-slate-50'}`}
+                  className={`w-full text-left px-3 py-2.5 rounded-lg flex items-center gap-2 ${currentRoute === link.id ? 'bg-rose-50 text-[#0284c7]' : 'text-slate-600 hover:bg-slate-50'}`}
                 >
-                  {link.id === 'login' && <ShieldCheck className="h-4 w-4 text-[#ff5757]" />}
+                  {link.id === 'login' && <ShieldCheck className="h-4 w-4 text-[#0284c7]" />}
                   {link.label}
                 </button>
               ))}
@@ -679,7 +679,7 @@ export default function App() {
                       setMobileMenuOpen(false);
                       navigate(link.id);
                     }}
-                    className={`w-full rounded-xl px-3 py-2.5 text-left ${currentRoute === link.id ? 'bg-white text-[#ff5757] shadow-sm' : 'text-slate-600 hover:bg-white'}`}
+                    className={`w-full rounded-xl px-3 py-2.5 text-left ${currentRoute === link.id ? 'bg-white text-[#0284c7] shadow-sm' : 'text-slate-600 hover:bg-white'}`}
                   >
                     {link.label}
                   </button>
@@ -788,7 +788,7 @@ export default function App() {
                         setCrmCenterId(null);
                         setLoggedManagerName('Karim Benchikh (Super Admin)');
                       }}
-                      className={`px-2.5 py-1 rounded-md text-[10px] transition ${crmRole === 'super_admin' ? 'bg-[#ff5757] text-white font-bold shadow-sm' : 'bg-white/10 text-slate-300 hover:bg-white/15'}`}
+                      className={`px-2.5 py-1 rounded-md text-[10px] transition ${crmRole === 'super_admin' ? 'bg-[#0284c7] text-white font-bold shadow-sm' : 'bg-white/10 text-slate-300 hover:bg-white/15'}`}
                     >
                       Super Admin
                     </button>
@@ -815,7 +815,7 @@ export default function App() {
 
                 {crmRole === 'center_manager' && (
                   <span className="hidden sm:inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-200">
-                    <Building className="h-3.5 w-3.5 text-[#ff5757]" />
+                    <Building className="h-3.5 w-3.5 text-[#0284c7]" />
                     {currentCrmCenter?.name || 'Centre assigne'}
                   </span>
                 )}
@@ -833,7 +833,7 @@ export default function App() {
                   className="ml-2 p-1 text-slate-400 hover:text-white transition"
                   title="Retourner au site public"
                 >
-                  <LogOut className="h-4 w-4 text-[#ff5757]" />
+                  <LogOut className="h-4 w-4 text-[#0284c7]" />
                 </button>
               </div>
             </div>
@@ -862,7 +862,7 @@ export default function App() {
                       {crmRole === 'super_admin' ? 'Super Admin' : 'Manager de Centre'}
                     </span>
                     {crmRole === 'center_manager' && (
-                      <span className="inline-block bg-[#ff5757]/15 text-[#ff5757] px-2 py-0.5 mt-1 rounded-sm font-bold uppercase text-[9px]">
+                      <span className="inline-block bg-[#0284c7]/15 text-[#0284c7] px-2 py-0.5 mt-1 rounded-sm font-bold uppercase text-[9px]">
                         {centers.find(c => c.id === crmCenterId)?.name || 'AQ8 Centre'}
                       </span>
                     )}
@@ -893,7 +893,7 @@ export default function App() {
                             }}
                             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-premium text-xs font-bold cursor-pointer text-left ${
                               isActive
-                                ? 'bg-[#ff5757] text-white shadow-md shadow-[#ff5757]/20 font-extrabold'
+                                ? 'bg-[#0284c7] text-white shadow-md shadow-[#0284c7]/20 font-extrabold'
                                 : 'text-slate-400 hover:bg-white/5 hover:text-white'
                             }`}
                           >
@@ -925,7 +925,7 @@ export default function App() {
                             }}
                             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-premium text-xs font-bold cursor-pointer text-left ${
                               isActive
-                                ? 'bg-[#ff5757] text-white shadow-md shadow-[#ff5757]/20 font-extrabold'
+                                ? 'bg-[#0284c7] text-white shadow-md shadow-[#0284c7]/20 font-extrabold'
                                 : 'text-slate-400 hover:bg-white/5 hover:text-white'
                             }`}
                           >
@@ -942,7 +942,7 @@ export default function App() {
               <div className="space-y-4 pt-5 border-t border-white/5 text-xs font-semibold">
                 <button
                   onClick={handleLogout}
-                  className="w-full py-2 px-3 bg-[#ff5757] hover:bg-[#ff4444] text-white rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-[#ff5757]/10"
+                  className="w-full py-2 px-3 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-[#0284c7]/10"
                 >
                   <LogOut className="h-3.5 w-3.5" /> Quitter le CRM
                 </button>
@@ -1057,10 +1057,10 @@ export default function App() {
             <div className="space-y-4 text-xs">
               <h4 className="font-display text-sm font-bold text-white">Contact</h4>
               <p className="text-slate-400 leading-relaxed flex items-start gap-1.5">
-                <MapPin className="h-4 w-4 text-[#ff5757] shrink-0 mt-0.5" />
+                <MapPin className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
                 {settings?.addressAlgérie || '12 Rue des Glycines, Hydra, Alger'}
               </p>
-              <p className="text-slate-400 flex items-center gap-1.5 font-bold text-[#ff5757]">
+              <p className="text-slate-400 flex items-center gap-1.5 font-bold text-[#0284c7]">
                 <Phone className="h-4 w-4 shrink-0" /> {settings?.contactPhone || '+213 795 12 84 09'}
               </p>
             </div>

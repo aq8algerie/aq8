@@ -115,7 +115,7 @@ export function ClientPortalClient() {
       <div className="mx-auto max-w-md space-y-8 py-6">
         {/* Header Title */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#ff5757]/20 bg-[#fff0f0] px-4 py-1.5 text-xs font-extrabold uppercase text-[#ff5757] shadow-sm">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#0284c7]/20 bg-[#fff0f0] px-4 py-1.5 text-xs font-extrabold uppercase text-[#0284c7] shadow-sm">
             <User className="h-4 w-4" />
             Espace Adhérent AQ8
           </div>
@@ -129,7 +129,7 @@ export function ClientPortalClient() {
 
         {/* Login Box */}
         <div className="rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 h-[4px] w-full bg-gradient-to-r from-[#ff5757] to-[#242424]" />
+          <div className="absolute top-0 left-0 h-[4px] w-full bg-gradient-to-r from-[#0284c7] to-[#242424]" />
 
           {loginError && (
             <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-semibold text-rose-800 flex items-start gap-2.5">
@@ -152,7 +152,7 @@ export function ClientPortalClient() {
                   onChange={(e) => setPhoneInput(e.target.value)}
                   placeholder="0795 12 84 09"
                   disabled={isLoggingIn}
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-[#ff5757] focus:bg-white focus:ring-2 focus:ring-[#ff5757]/20 disabled:opacity-60"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-[#0284c7] focus:bg-white focus:ring-2 focus:ring-[#0284c7]/20 disabled:opacity-60"
                 />
               </div>
             </div>
@@ -160,7 +160,7 @@ export function ClientPortalClient() {
             <button
               type="submit"
               disabled={isLoggingIn || !phoneInput.trim()}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#ff5757] py-3.5 px-5 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#e64747] hover:scale-[1.02] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#0284c7] py-3.5 px-5 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#e64747] hover:scale-[1.02] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isLoggingIn ? (
                 <>
@@ -183,9 +183,9 @@ export function ClientPortalClient() {
             </p>
             <Link
               href="/reservation"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-4 text-xs font-bold text-[#242424] transition hover:border-[#ff5757] hover:bg-[#fff0f0] hover:text-[#ff5757]"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-4 text-xs font-bold text-[#242424] transition hover:border-[#0284c7] hover:bg-[#fff0f0] hover:text-[#0284c7]"
             >
-              <Calendar className="h-3.5 w-3.5 text-[#ff5757]" />
+              <Calendar className="h-3.5 w-3.5 text-[#0284c7]" />
               Réserver ma 1ère séance en direct
             </Link>
           </div>
@@ -208,10 +208,10 @@ export function ClientPortalClient() {
     <div className="space-y-8 py-4">
       {/* Top Banner Profile Summary */}
       <div className="relative overflow-hidden rounded-3xl bg-slate-900 p-6 sm:p-8 text-white shadow-2xl">
-        <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-[#ff5757]/15 blur-3xl" />
+        <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-[#0284c7]/15 blur-3xl" />
         <div className="relative z-10 flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#ff5757] font-display text-2xl font-black text-white shadow-lg">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#0284c7] font-display text-2xl font-black text-white shadow-lg">
               {(clientData.firstName || "A")[0].toUpperCase()}
             </div>
             <div className="space-y-1">
@@ -226,7 +226,7 @@ export function ClientPortalClient() {
               </h1>
               <p className="text-xs font-medium text-slate-300 flex items-center gap-3">
                 <span className="flex items-center gap-1">
-                  <Phone className="h-3.5 w-3.5 text-[#ff7777]" />
+                  <Phone className="h-3.5 w-3.5 text-[#38bdf8]" />
                   {clientData.phone}
                 </span>
                 {clientData.centerName && (
@@ -241,7 +241,7 @@ export function ClientPortalClient() {
           <div className="flex items-center gap-3">
             <Link
               href="/reservation"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#ff5757] px-4 py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-[#e64747] hover:scale-105"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0284c7] px-4 py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-[#e64747] hover:scale-105"
             >
               <Calendar className="h-4 w-4" />
               Réserver un créneau
@@ -272,7 +272,7 @@ export function ClientPortalClient() {
 
           <div className="rounded-2xl bg-white/5 p-3.5 border border-white/10">
             <span className="block text-[11px] font-semibold text-slate-400 uppercase">Dernier Poids</span>
-            <span className="block text-xl font-black text-[#ff7777] mt-1">
+            <span className="block text-xl font-black text-[#38bdf8] mt-1">
               {latestMeasurement?.weight ? `${latestMeasurement.weight} kg` : "Non saisi"}
             </span>
           </div>
@@ -300,7 +300,7 @@ export function ClientPortalClient() {
             onClick={() => setActiveTab(tab.id)}
             className={`pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${
               activeTab === tab.id
-                ? "border-[#ff5757] text-[#ff5757]"
+                ? "border-[#0284c7] text-[#0284c7]"
                 : "border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300"
             }`}
           >
@@ -319,7 +319,7 @@ export function ClientPortalClient() {
             <button
               type="button"
               onClick={() => fetchClientPortalData(clientData.phone)}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#ff5757] transition"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#0284c7] transition"
             >
               <RefreshCw className="h-3.5 w-3.5" />
               Actualiser
@@ -339,7 +339,7 @@ export function ClientPortalClient() {
               </div>
               <Link
                 href="/reservation"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#ff5757] px-5 py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-[#e64747]"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#0284c7] px-5 py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-[#e64747]"
               >
                 <Calendar className="h-4 w-4" />
                 Réserver ma 1ère séance
@@ -356,11 +356,11 @@ export function ClientPortalClient() {
                 return (
                   <div
                     key={appt.id}
-                    className="group relative flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-[#ff5757]/40 hover:shadow-md"
+                    className="group relative flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-[#0284c7]/40 hover:shadow-md"
                   >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="rounded-lg bg-[#fff0f0] px-2.5 py-1 text-xs font-black text-[#ff5757] uppercase">
+                        <span className="rounded-lg bg-[#fff0f0] px-2.5 py-1 text-xs font-black text-[#0284c7] uppercase">
                           {serviceLabel}
                         </span>
                         <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
@@ -375,7 +375,7 @@ export function ClientPortalClient() {
                         <h4 className="font-display text-base font-bold text-[#242424]">
                           {dateStr ? new Date(dateStr).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : "Date non précisée"}
                         </h4>
-                        <p className="text-xs font-bold text-[#ff5757] flex items-center gap-1 mt-0.5">
+                        <p className="text-xs font-bold text-[#0284c7] flex items-center gap-1 mt-0.5">
                           <Clock className="h-3.5 w-3.5" />
                           {timeStr || "Heure à confirmer"}
                         </p>
@@ -390,7 +390,7 @@ export function ClientPortalClient() {
 
                     <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500">
                       <span>Réf: #{String(appt.id).slice(-6)}</span>
-                      <span className="text-[#ff5757]">Rendez-vous garanti</span>
+                      <span className="text-[#0284c7]">Rendez-vous garanti</span>
                     </div>
                   </div>
                 );
@@ -429,7 +429,7 @@ export function ClientPortalClient() {
                     <span className="font-display text-xs font-bold text-slate-800">
                       Relevé du {m.date || m.createdAt ? new Date(m.date || m.createdAt).toLocaleDateString('fr-FR') : `Fiche #${idx + 1}`}
                     </span>
-                    <span className="rounded-md bg-[#ff5757] px-2 py-0.5 text-xs font-black text-white">
+                    <span className="rounded-md bg-[#0284c7] px-2 py-0.5 text-xs font-black text-white">
                       {m.weight ? `${m.weight} kg` : "Poids non saisi"}
                     </span>
                   </div>
@@ -468,7 +468,7 @@ export function ClientPortalClient() {
                     {m.muscleMass && (
                       <div className="rounded-xl bg-slate-50 p-2.5">
                         <span className="block text-[10px] text-slate-400 uppercase">Masse musculaire</span>
-                        <span className="block text-[#ff5757] font-bold mt-0.5">{m.muscleMass} %</span>
+                        <span className="block text-[#0284c7] font-bold mt-0.5">{m.muscleMass} %</span>
                       </div>
                     )}
                   </div>
@@ -515,7 +515,7 @@ export function ClientPortalClient() {
                     <span className="block text-[11px] text-slate-400">{p.date || "Date récente"}</span>
                   </div>
                   <div className="text-right">
-                    <span className="block font-black text-[#ff5757]">{p.amount ? `${p.amount} DZD` : "Payé en centre"}</span>
+                    <span className="block font-black text-[#0284c7]">{p.amount ? `${p.amount} DZD` : "Payé en centre"}</span>
                     <span className="block text-[10px] text-emerald-600 font-bold uppercase">Règlement validé</span>
                   </div>
                 </div>

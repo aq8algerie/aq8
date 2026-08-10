@@ -50,7 +50,7 @@ export function BlogArticleContent({
             <div key={block.id} className="rounded-2xl border border-slate-100 bg-slate-50/70 p-6 space-y-3">
               {(block.items || []).map((item, index) => (
                 <div key={`${block.id}-${index}`} className="flex items-start gap-3 text-base leading-relaxed text-slate-700">
-                  <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-[#ff5757]" />
+                  <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-[#0284c7]" />
                   <span className="font-medium">{item}</span>
                 </div>
               ))}
@@ -62,9 +62,9 @@ export function BlogArticleContent({
           return (
             <blockquote
               key={block.id}
-              className="relative overflow-hidden rounded-2xl border-l-4 border-[#ff5757] bg-gradient-to-r from-rose-50/70 to-slate-50 p-6 text-lg font-semibold leading-relaxed text-[#242424] shadow-sm"
+              className="relative overflow-hidden rounded-2xl border-l-4 border-[#0284c7] bg-gradient-to-r from-rose-50/70 to-slate-50 p-6 text-lg font-semibold leading-relaxed text-[#242424] shadow-sm"
             >
-              <Quote className="mb-2 h-6 w-6 text-[#ff5757] opacity-80" />
+              <Quote className="mb-2 h-6 w-6 text-[#0284c7] opacity-80" />
               <span dangerouslySetInnerHTML={{ __html: block.text || '' }} />
             </blockquote>
           );
@@ -76,8 +76,8 @@ export function BlogArticleContent({
               key={block.id}
               className="flex items-start gap-4 rounded-2xl border border-rose-200/80 bg-rose-50/60 p-6 text-sm font-medium leading-relaxed text-slate-800 shadow-sm"
             >
-              <Info className="mt-0.5 h-6 w-6 shrink-0 text-[#ff5757]" />
-              <p className="text-base [&_a]:text-[#ff5757] [&_a]:font-semibold [&_a]:underline [&_a]:underline-offset-2 [&_a:hover]:text-rose-700"
+              <Info className="mt-0.5 h-6 w-6 shrink-0 text-[#0284c7]" />
+              <p className="text-base [&_a]:text-[#0284c7] [&_a]:font-semibold [&_a]:underline [&_a]:underline-offset-2 [&_a:hover]:text-rose-700"
                 dangerouslySetInnerHTML={{ __html: block.text || '' }}
               />
             </aside>
@@ -107,7 +107,7 @@ export function BlogArticleContent({
         return (
           <p
             key={block.id}
-            className="whitespace-pre-line text-base sm:text-lg leading-relaxed text-slate-700 font-normal [&_a]:text-[#ff5757] [&_a]:font-semibold [&_a]:underline [&_a]:underline-offset-2 [&_a:hover]:text-rose-700 [&_a]:transition-colors"
+            className="whitespace-pre-line text-base sm:text-lg leading-relaxed text-slate-700 font-normal [&_a]:text-[#0284c7] [&_a]:font-semibold [&_a]:underline [&_a]:underline-offset-2 [&_a:hover]:text-rose-700 [&_a]:transition-colors"
             dangerouslySetInnerHTML={{ __html: block.text || '' }}
           />
         );

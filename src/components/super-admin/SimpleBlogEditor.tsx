@@ -130,11 +130,11 @@ export function SimpleBlogEditor({
                   aria-pressed={selected}
                   className={'flex min-h-20 flex-col items-start justify-between rounded-md border p-3 text-left transition ' + (
                     selected
-                      ? 'border-[#ff5757] bg-rose-50 text-[#242424]'
+                      ? 'border-[#0284c7] bg-rose-50 text-[#242424]'
                       : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
                   )}
                 >
-                  <Icon className={'h-4 w-4 ' + (selected ? 'text-[#ff5757]' : 'text-slate-400')} />
+                  <Icon className={'h-4 w-4 ' + (selected ? 'text-[#0284c7]' : 'text-slate-400')} />
                   <span className="text-xs font-bold">{type.label}</span>
                 </button>
               );
@@ -195,7 +195,7 @@ export function SimpleBlogEditor({
                 type="datetime-local"
                 value={toLocalDateTimeValue(draft.startsAt)}
                 onChange={event => onDraftChange('startsAt', event.target.value || null)}
-                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold normal-case text-slate-700 outline-none focus:border-[#ff5757]"
+                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold normal-case text-slate-700 outline-none focus:border-[#0284c7]"
               />
             </label>
             <label className="space-y-2 text-[10px] font-extrabold uppercase text-slate-400">
@@ -204,7 +204,7 @@ export function SimpleBlogEditor({
                 type="datetime-local"
                 value={toLocalDateTimeValue(draft.endsAt)}
                 onChange={event => onDraftChange('endsAt', event.target.value || null)}
-                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold normal-case text-slate-700 outline-none focus:border-[#ff5757]"
+                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold normal-case text-slate-700 outline-none focus:border-[#0284c7]"
               />
             </label>
             <label className="space-y-2 text-[10px] font-extrabold uppercase text-slate-400 sm:col-span-2">
@@ -213,7 +213,7 @@ export function SimpleBlogEditor({
                 value={draft.location}
                 onChange={event => onDraftChange('location', event.target.value)}
                 placeholder={draft.publicationType === 'event' ? 'Ex. Centre AQ8 Draria' : 'Ex. Tous les centres AQ8'}
-                className="h-10 w-full rounded-md border border-slate-200 px-3 text-xs font-medium normal-case text-slate-700 outline-none focus:border-[#ff5757]"
+                className="h-10 w-full rounded-md border border-slate-200 px-3 text-xs font-medium normal-case text-slate-700 outline-none focus:border-[#0284c7]"
               />
             </label>
           </section>
@@ -228,7 +228,7 @@ export function SimpleBlogEditor({
             <button
               type="button"
               onClick={() => onAddBlock('paragraph')}
-              className="inline-flex items-center gap-1.5 rounded-md bg-[#242424] px-3 py-2 text-[10px] font-bold text-white transition hover:bg-[#ff5757]"
+              className="inline-flex items-center gap-1.5 rounded-md bg-[#242424] px-3 py-2 text-[10px] font-bold text-white transition hover:bg-[#0284c7]"
             >
               <Plus className="h-3.5 w-3.5" />
               Ajouter du texte
@@ -305,10 +305,10 @@ export function SimpleBlogEditor({
                     {block.imageUrl ? (
                       <img src={block.imageUrl} alt="" className="aspect-[16/8] w-full rounded-md bg-slate-100 object-cover" />
                     ) : (
-                      <label className="flex aspect-[16/6] cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 transition hover:border-[#ff5757]">
+                      <label className="flex aspect-[16/6] cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 transition hover:border-[#0284c7]">
                         {uploading === block.id
-                          ? <Loader2 className="h-5 w-5 animate-spin text-[#ff5757]" />
-                          : <UploadCloud className="h-5 w-5 text-[#ff5757]" />}
+                          ? <Loader2 className="h-5 w-5 animate-spin text-[#0284c7]" />
+                          : <UploadCloud className="h-5 w-5 text-[#0284c7]" />}
                         <span className="mt-2 text-[10px] font-bold text-slate-600">Ajouter une image</span>
                         <input
                           type="file"
@@ -319,7 +319,7 @@ export function SimpleBlogEditor({
                       </label>
                     )}
                     {block.imageUrl && (
-                      <label className="inline-flex cursor-pointer items-center gap-1.5 text-[10px] font-bold text-[#ff5757]">
+                      <label className="inline-flex cursor-pointer items-center gap-1.5 text-[10px] font-bold text-[#0284c7]">
                         <UploadCloud className="h-3.5 w-3.5" />
                         Remplacer
                         <input
@@ -337,7 +337,7 @@ export function SimpleBlogEditor({
                         imageAlt: block.imageAlt || event.target.value,
                       })}
                       placeholder="Légende facultative"
-                      className="w-full rounded-md border border-slate-200 px-3 py-2 text-xs outline-none focus:border-[#ff5757]"
+                      className="w-full rounded-md border border-slate-200 px-3 py-2 text-xs outline-none focus:border-[#0284c7]"
                     />
                   </div>
                 ) : (
@@ -374,7 +374,7 @@ export function SimpleBlogEditor({
                   key={action.type}
                   type="button"
                   onClick={() => onAddBlock(action.type)}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-600 transition hover:border-[#ff5757]/40 hover:text-[#ff5757]"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-600 transition hover:border-[#0284c7]/40 hover:text-[#0284c7]"
                 >
                   <Icon className="h-3.5 w-3.5" />
                   {action.label}
@@ -396,11 +396,11 @@ export function SimpleBlogEditor({
             <button
               type="button"
               onClick={() => coverInputRef.current?.click()}
-              className="flex aspect-[16/10] w-full flex-col items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 transition hover:border-[#ff5757]"
+              className="flex aspect-[16/10] w-full flex-col items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 transition hover:border-[#0284c7]"
             >
               {uploading === 'cover'
-                ? <Loader2 className="h-5 w-5 animate-spin text-[#ff5757]" />
-                : <ImageIcon className="h-5 w-5 text-[#ff5757]" />}
+                ? <Loader2 className="h-5 w-5 animate-spin text-[#0284c7]" />
+                : <ImageIcon className="h-5 w-5 text-[#0284c7]" />}
               <span className="mt-2 text-[10px] font-bold text-slate-600">Choisir une image</span>
             </button>
           )}
@@ -415,7 +415,7 @@ export function SimpleBlogEditor({
             <button
               type="button"
               onClick={() => coverInputRef.current?.click()}
-              className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold text-[#ff5757]"
+              className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold text-[#0284c7]"
             >
               <UploadCloud className="h-3.5 w-3.5" />
               Remplacer
@@ -428,7 +428,7 @@ export function SimpleBlogEditor({
           <select
             value={draft.category}
             onChange={event => onDraftChange('category', event.target.value as BlogPostDraft['category'])}
-            className="w-full rounded-md border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-[#ff5757]"
+            className="w-full rounded-md border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-[#0284c7]"
           >
             {BLOG_CATEGORIES.map(category => (
               <option key={category.id} value={category.id}>{category.label}</option>
@@ -440,7 +440,7 @@ export function SimpleBlogEditor({
               type="checkbox"
               checked={draft.featured}
               onChange={event => onDraftChange('featured', event.target.checked)}
-              className="h-4 w-4 accent-[#ff5757]"
+              className="h-4 w-4 accent-[#0284c7]"
             />
           </label>
         </section>
@@ -449,7 +449,7 @@ export function SimpleBlogEditor({
           <div className="flex items-center justify-between gap-3">
             <label className="text-[10px] font-extrabold uppercase text-slate-400">Centres concernés</label>
             {draft.targetCenterIds.length > 0 && (
-              <button type="button" onClick={() => onDraftChange('targetCenterIds', [])} className="text-[9px] font-bold text-[#ff5757]">
+              <button type="button" onClick={() => onDraftChange('targetCenterIds', [])} className="text-[9px] font-bold text-[#0284c7]">
                 Tout le réseau
               </button>
             )}
@@ -464,7 +464,7 @@ export function SimpleBlogEditor({
                   type="checkbox"
                   checked={draft.targetCenterIds.includes(center.id)}
                   onChange={() => toggleCenter(center.id)}
-                  className="h-3.5 w-3.5 accent-[#ff5757]"
+                  className="h-3.5 w-3.5 accent-[#0284c7]"
                 />
                 <span className="min-w-0 truncate text-[10px] font-semibold text-slate-600">{center.name}</span>
               </label>
@@ -478,13 +478,13 @@ export function SimpleBlogEditor({
             value={draft.ctaLabel}
             onChange={event => onDraftChange('ctaLabel', event.target.value)}
             placeholder={publication.defaultCtaLabel}
-            className="h-9 w-full rounded-md border border-slate-200 px-3 text-xs font-semibold outline-none focus:border-[#ff5757]"
+            className="h-9 w-full rounded-md border border-slate-200 px-3 text-xs font-semibold outline-none focus:border-[#0284c7]"
           />
           <input
             value={draft.ctaUrl}
             onChange={event => onDraftChange('ctaUrl', event.target.value)}
             placeholder="/reservation"
-            className="h-9 w-full rounded-md border border-slate-200 px-3 text-xs font-medium outline-none focus:border-[#ff5757]"
+            className="h-9 w-full rounded-md border border-slate-200 px-3 text-xs font-medium outline-none focus:border-[#0284c7]"
           />
         </section>
 
@@ -494,7 +494,7 @@ export function SimpleBlogEditor({
             type="datetime-local"
             value={toLocalDateTimeValue(draft.scheduledAt)}
             onChange={event => onDraftChange('scheduledAt', event.target.value || null)}
-            className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-[#ff5757]"
+            className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-[#0284c7]"
           />
           <p className="text-[9px] leading-4 text-slate-400">
             Laissez vide pour publier immédiatement.
