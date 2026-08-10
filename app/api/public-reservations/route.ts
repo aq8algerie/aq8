@@ -286,6 +286,8 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
       requestId: requestRef.id,
     }, transactionCenter);
 
+    const appointmentRef = db.collection('appointments').doc(requestRef.id);
+
     transaction.set(requestRef, {
       centerId: data.centerId,
       centerName: transactionCenter.name,
@@ -296,10 +298,32 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
       service: data.service,
       bookingDate: data.bookingDate,
       bookingTime: data.bookingTime,
-      status: 'pending',
+      status: 'confirmed',
       createdAt,
       reservedAt: createdAt,
     });
+
+    transaction.set(appointmentRef, {
+      id: requestRef.id,
+      centerId: data.centerId,
+      centerName: transactionCenter.name,
+      clientId: '',
+      clientFirstName: data.firstName,
+      clientLastName: data.lastName,
+      clientPhone: data.phone,
+      clientEmail: data.email,
+      serviceId: service.id,
+      serviceName: service.name || (serviceType === 'aq8' ? 'AQ8 EMS' : 'Wonder Axion'),
+      serviceType: serviceType,
+      bookingDate: data.bookingDate,
+      bookingTime: data.bookingTime,
+      dateTime: `${data.bookingDate}T${data.bookingTime}`,
+      status: 'confirmed',
+      createdAt,
+      updatedAt: createdAt,
+      createdSource: 'web_public',
+    });
+
     transaction.set(slotRef, nextSlot);
     transaction.set(publicSlotRef, buildPublicBookingSlot(nextSlot));
   });

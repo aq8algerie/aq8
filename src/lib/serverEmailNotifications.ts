@@ -346,19 +346,19 @@ export async function sendPublicReservationNotifications(params: {
   ];
 
   const adminTemplate = emailLayout({
-    eyebrow: 'Nouvelle pré-réservation',
-    title: 'Un client vient de pré-réserver un créneau.',
-    intro: 'La demande est disponible dans le CRM du centre. Le créneau est bloqué en attente de validation par le manager.',
+    eyebrow: 'Nouvelle réservation web',
+    title: 'Une nouvelle réservation vient d\'être enregistrée.',
+    intro: 'La réservation est confirmée automatiquement et intégrée immédiatement dans le planning du centre.',
     rows,
-    cta: { label: 'Ouvrir les pré-réservations', href: `${config.appUrl}/crm` },
+    cta: { label: 'Consulter l\'agenda CRM', href: `${config.appUrl}/crm` },
   });
 
   const clientTemplate = emailLayout({
-    eyebrow: 'Pré-réservation reçue',
-    title: `Bonjour ${input.firstName}, votre créneau est bien pré-réservé.`,
-    intro: "L'équipe du centre va vérifier le planning et vous recontactera pour confirmer définitivement le rendez-vous.",
+    eyebrow: 'Réservation confirmée',
+    title: `Bonjour ${input.firstName}, votre séance est bien confirmée !`,
+    intro: "Votre créneau d'entraînement est immédiatement réservé et enregistré dans le planning du centre AQ8.",
     rows,
-    note: "La confirmation finale reste faite par l'équipe du centre après vérification du planning et du paiement.",
+    note: "En cas d'imprévu ou de modification d'horaire, merci d'en informer le centre au moins 24h à l'avance.",
   });
 
   const centerTo = centerRecipients(center);
@@ -366,19 +366,19 @@ export async function sendPublicReservationNotifications(params: {
     sendEmail({
       to: centerTo,
       replyTo: input.email || config.replyTo,
-      subject: `Nouvelle pré-réservation AQ8 - ${center.name} - ${shortRef}`,
+      subject: `Nouvelle réservation confirmée - ${center.name} - ${shortRef}`,
       ...adminTemplate,
     }),
     sendEmail({
       to: adminRecipients(centerTo),
       replyTo: input.email || config.replyTo,
-      subject: `Copie admin - Nouvelle pré-réservation AQ8 - ${center.name} - ${shortRef}`,
+      subject: `Copie admin - Réservation web confirmée - ${center.name} - ${shortRef}`,
       ...adminTemplate,
     }),
     sendEmail({
       to: uniqueEmails([input.email]),
       replyTo: center.email || config.replyTo,
-      subject: `Votre pré-réservation AQ8 - ${center.name} - ${shortRef}`,
+      subject: `Votre séance AQ8 est confirmée - ${center.name} - ${shortRef}`,
       ...clientTemplate,
     }),
   ]);
