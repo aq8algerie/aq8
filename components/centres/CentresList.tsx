@@ -21,11 +21,11 @@ function getServiceClass(service: string) {
 }
 
 function getAudienceLabel(center: Center) {
-  if (center.status?.toLowerCase().includes("femmes uniquement")) {
+  if (center.status?.toLowerCase().includes("femmes uniquement") || center.slug === "ouled-fayet") {
     return "Femmes uniquement";
   }
-  const hasWomenHours = (center.womenHours?.length ?? 0) > 0;
-  const hasMenHours = (center.menHours?.length ?? 0) > 0;
+  const hasWomenHours = (center.womenHours?.length ?? 0) > 0 && center.womenHours?.some(h => !h.toLowerCase().includes("indisponible"));
+  const hasMenHours = (center.menHours?.length ?? 0) > 0 && center.menHours?.some(h => !h.toLowerCase().includes("indisponible"));
   if (hasWomenHours && hasMenHours) return "Créneaux hommes & femmes";
   if (hasWomenHours) return "Créneaux femmes";
   if (hasMenHours) return "Créneaux hommes";

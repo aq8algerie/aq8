@@ -69,7 +69,7 @@ export const INITIAL_CENTERS: Center[] = [
       'Il peut y avoir un décalage de votre rendez-vous dû au fuseau horaire, mais l’heure que vous avez sélectionnée est la bonne et reste confirmée.',
       '⚠️🚨 IMPORTANT : Vous devez absolument recevoir votre reçu de paiement pour valider votre paiement directement à notre centre.'
     ],
-    menHours: ['Indisponible - Centre réservé aux Femmes'],
+    menHours: [],
     womenHours: ['10h => 19h (Dimanche - Jeudi)', '10h => 16h (Samedi)'],
     equipment: [
       'Un tee shirt manches longues et d’un bas fin en coton',

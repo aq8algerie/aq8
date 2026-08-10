@@ -7,12 +7,15 @@ interface HomeCentersPreviewProps {
 }
 
 function getCenterAudienceLabel(center: Center) {
-  const hasWomenHours = (center.womenHours?.length ?? 0) > 0;
-  const hasMenHours = (center.menHours?.length ?? 0) > 0;
+  if (center.status?.toLowerCase().includes("femmes uniquement") || center.slug === "ouled-fayet") {
+    return "Réservé Femmes";
+  }
+  const hasWomenHours = (center.womenHours?.length ?? 0) > 0 && center.womenHours?.some(h => !h.toLowerCase().includes("indisponible"));
+  const hasMenHours = (center.menHours?.length ?? 0) > 0 && center.menHours?.some(h => !h.toLowerCase().includes("indisponible"));
   if (hasWomenHours && hasMenHours) return "Créneaux Hommes & Femmes";
   if (hasWomenHours) return "Réservé Femmes";
   if (hasMenHours) return "Réservé Hommes";
-  return "Horaires flexibles";
+  return "Horaires Adaptés";
 }
 
 export function HomeCentersPreview({ centers }: HomeCentersPreviewProps) {

@@ -296,9 +296,9 @@ export default async function CenterDetailPage({ params }: PageProps) {
                     </span>
                   </div>
 
-                  {center.menHours && center.menHours.length > 0 ? (
+                  {center.menHours && center.menHours.filter(t => !t.toLowerCase().includes("indisponible")).length > 0 ? (
                     <div className="space-y-2">
-                      {center.menHours.map((time) => (
+                      {center.menHours.filter(t => !t.toLowerCase().includes("indisponible")).map((time) => (
                         <div
                           key={time}
                           className="flex items-center gap-2 text-sm font-semibold text-slate-700"
@@ -309,8 +309,8 @@ export default async function CenterDetailPage({ params }: PageProps) {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm font-medium italic text-slate-400">
-                      Aucun créneau spécifique défini.
+                    <p className="text-sm font-medium italic text-purple-700 bg-purple-50 p-3 rounded-lg border border-purple-100">
+                      Indisponible — Centre réservé exclusivement aux Femmes.
                     </p>
                   )}
                 </div>
