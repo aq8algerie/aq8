@@ -218,16 +218,12 @@ export default async function TermsOfSalePage() {
       content: (
         <>
           <p>
-            La règle d’annulation propre au centre est affichée sur sa page et peut être
-            rappelée dans l’e-mail de confirmation. Le client doit prévenir le centre dans
-            le délai annoncé. À défaut de règle particulière communiquée, une annulation
-            au moins une heure avant la séance est attendue.
+            La règle d’annulation propre au centre est affichée sur sa page et rappelée lors de la réservation. Le client doit prévenir le centre dans
+            le délai annoncé. Toute annulation de séance doit être effectuée au moins 24 heures à l’avance.
           </p>
           <p>
-            Une absence ou une annulation hors délai peut entraîner la déduction d’un crédit
-            lorsque cette conséquence a été portée à la connaissance du client. Aucun crédit
+            Si la séance n’est pas annulée au moins 24 heures à l’avance, elle sera automatiquement déduite du forfait en cours. Aucun crédit
             ne doit être déduit lorsque le centre annule la séance ou ne peut pas l’exécuter.
-            Le centre peut proposer un nouveau créneau équivalent.
           </p>
         </>
       ),

@@ -68,7 +68,7 @@ export function ActivePackageCard({
         onClick={onAssignClick}
         className="w-full mt-4 py-2.5 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-xs text-white rounded-xl transition-premium flex items-center justify-center gap-1 cursor-pointer"
       >
-        <Plus className="h-4 w-4" /> Affecter un forfait
+        <Plus className="h-4 w-4" /> Ajouter un paiement / Forfait
       </button>
     </div>
   );

@@ -30,7 +30,7 @@ export function MeasurementChart({
           onClick={onLogMeasurementClick}
           className="px-2.5 py-1 text-[11px] bg-[#353535] text-white font-semibold rounded-lg hover:bg-slate-800 transition-premium flex items-center gap-1 cursor-pointer"
         >
-          <Plus className="h-3 w-3" /> Loguer mensurations
+          <Plus className="h-3 w-3" /> Ajouter mensurations
         </button>
       </div>
 
@@ -98,7 +98,7 @@ export function MeasurementChart({
         <div className="h-44 bg-slate-50 border border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 text-xs p-4 text-center">
           <Scale className="h-8 w-8 mb-2 stroke-1" />
           <p>Pas encore de mensurations loguées pour cet adhérent.</p>
-          <p className="text-[10px] text-slate-400 mt-1">Cliquez sur Loguer mensurations ci-dessus pour saisir le 1er bilan.</p>
+          <p className="text-[10px] text-slate-400 mt-1">Cliquez sur Ajouter mensurations ci-dessus pour saisir le 1er bilan.</p>
         </div>
       )}
     </div>

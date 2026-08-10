@@ -58,7 +58,7 @@ export function PackageAssignModal({
     <div id="modal-package-assign" className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-slate-200">
         <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-          <h4 className="font-bold text-slate-800 text-sm font-display">Affecter un Forfait Adhérent</h4>
+          <h4 className="font-bold text-slate-800 text-sm font-display">Ajouter un Paiement / Forfait Adhérent</h4>
           <button type="button" onClick={onClose} disabled={isSubmitting} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">✕</button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs">
@@ -110,7 +110,7 @@ export function PackageAssignModal({
               disabled={isSubmitting}
               className="px-4 py-2 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-white rounded-xl cursor-pointer disabled:cursor-wait disabled:opacity-70"
             >
-              {isSubmitting ? 'Activation sécurisée...' : "Confirmer l'affectation"}
+              {isSubmitting ? 'Validation...' : "Ajouter le paiement & activer"}
             </button>
           </div>
         </form>

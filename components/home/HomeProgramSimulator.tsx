@@ -94,17 +94,17 @@ function calculateRecommendation(
   if (objective === "sculpting" || zone === "abs" || zone === "glutes") {
     if (objective === "express") {
       return {
-        techTitle: "Cure Dual Tech (AQ8 EMS + Wonder Axion)",
+        techTitle: "Cure Alternée Dual Tech (AQ8 EMS + Wonder Axion)",
         badge: "Recommandation Ultime",
         matchScore: 99,
         serviceQuery: "all",
-        tagline: "L'alliance parfaite de l'effort actif et du travail électromagnétique ciblé",
-        durationPerSession: "20 min EMS + 25 min Wonder Axion",
-        weeklyFreq: frequency === "3x" ? "3 séances / semaine" : "2 séances / semaine",
-        description: "Bénéficiez du meilleur des deux mondes : l'AQ8 EMS pour la dépense calorique et le métabolisme global, associé à Wonder Axion pour galber intensément les zones rebelles.",
+        tagline: "L'alliance de l'effort active et de l'onde électromagnétique sur jours séparés",
+        durationPerSession: "20 min EMS (Jour A) / 25 min Wonder (Jour B)",
+        weeklyFreq: frequency === "3x" ? "3 séances / semaine (jours alternés)" : "2 séances / semaine (jours alternés)",
+        description: "Bénéficiez du meilleur des deux technologies sur des jours distincts : l'AQ8 EMS pour la dépense calorique et le métabolisme global, et Wonder Axion lors d'un autre jour pour galber intensément les zones cibléss.",
         highlights: [
-          "Dépense calorique globale + 52 000 contractions ciblées",
-          "Résultats mesurables dès les 4 premières semaines",
+          "Respect du temps de récupération musculaire obligatoire",
+          "AQ8 EMS et Wonder Axion réalisés strictement sur des jours séparés",
           "Accompagnement et bilan corporel personnalisé avec un coach certifié",
         ],
         gradient: "from-[#242424] via-[#2d2d2d] to-[#0284c7]/20",
@@ -153,17 +153,17 @@ function calculateRecommendation(
   // Default: Weightloss or General
   if (objective === "express") {
     return {
-      techTitle: "Cure Combinée Dual Tech AQ8",
+      techTitle: "Cure Alternée Dual Tech AQ8 & Wonder",
       badge: "Super Match 99%",
       matchScore: 99,
       serviceQuery: "all",
-      tagline: "Transformation corporelle rapide et synergie maximale",
-      durationPerSession: "45 minutes combinées",
-      weeklyFreq: "2 à 3 séances / semaine",
-      description: "Combinez la puissance du coaching dynamique AQ8 EMS avec la définition musculaire profonde Wonder Axion pour un changement de silhouette visible et durable.",
+      tagline: "Transformation corporelle rapide sur jours alternés",
+      durationPerSession: "20 min EMS ou 25 min Wonder (jamais le même jour)",
+      weeklyFreq: "2 à 3 séances / semaine (jours alternés)",
+      description: "Combinez la puissance du coaching dynamique AQ8 EMS avec la définition musculaire profonde Wonder Axion lors de jours séparés pour respecter la sécurité et la récupération physiologique.",
       highlights: [
+        "Jours d'entraînement strictement séparés pour votre sécurité",
         "Dépense énergétique maximale & métabolisme stimulé",
-        "Sculpting ciblé sur les zones réfractaires",
         "Suivi de mensurations hebdomadaire en centre",
       ],
       gradient: "from-[#242424] to-[#1e293b]",

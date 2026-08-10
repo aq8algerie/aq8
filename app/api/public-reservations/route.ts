@@ -274,6 +274,24 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
     const transactionCenter = { id: transactionCenterSnapshot.id, ...(transactionCenterSnapshot.data() as Omit<Center, 'id'>) } as Center;
     reservedCenter = transactionCenter;
 
+    // Medical safety rule: Strictly forbid AQ8 + Wonder on the same date for the same client
+    const existingSameDayAppointments = await transaction.get(
+      db.collection('appointments')
+        .where('clientPhone', '==', data.phone)
+        .where('bookingDate', '==', data.bookingDate)
+    );
+    if (!existingSameDayAppointments.empty) {
+      const hasOtherServiceType = existingSameDayAppointments.docs.some(doc => {
+        const apptData = doc.data();
+        return apptData.serviceType && apptData.serviceType !== serviceType && apptData.status !== 'cancelled';
+      });
+      if (hasOtherServiceType) {
+        throw new PublicReservationError(
+          "Sécurité Médicale : Il est strictement interdit d'effectuer une séance d'AQ8 EMS et une séance de Wonder Axion le même jour. Veuillez réserver sur deux dates séparées."
+        );
+      }
+    }
+
     const slotSnapshot = await transaction.get(slotRef);
     const slot = await normalizeAdminSlot(transaction, db, slotSnapshot, data.centerId, dateTime, createdAt, transactionCenter);
     const entryId = `request-${requestRef.id}`;

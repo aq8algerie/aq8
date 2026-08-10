@@ -243,10 +243,10 @@ export function ClientProfileView({
           <div className="h-10 w-10 shrink-0 rounded-xl bg-rose-50 text-[#0284c7] flex items-center justify-center">
             <Scale className="h-5 w-5" />
           </div>
-          <div>
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Mensurations Loguées</span>
-            <span className="text-base font-black font-display text-[#0284c7]">{clientMeas.length} enregistrées ➔</span>
-          </div>
+            <div>
+              <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Mensurations Enregistrées</span>
+              <span className="text-base font-black font-display text-[#0284c7]">{clientMeas.length} enregistrées ➔</span>
+            </div>
         </div>
 
         <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-xs flex items-center gap-3">
@@ -416,7 +416,7 @@ export function ClientProfileView({
               onClick={onLogMeasurement}
               className="inline-flex items-center gap-2 rounded-2xl bg-[#0284c7] px-5 py-3 text-xs font-extrabold text-white shadow-md transition hover:bg-[#0369a1] cursor-pointer w-fit"
             >
-              <Scale className="h-4 w-4" /> Loguer des mensurations
+              <Scale className="h-4 w-4" /> Ajouter mensurations
             </button>
           </div>
 
@@ -425,7 +425,7 @@ export function ClientProfileView({
             {/* Table Column */}
             <div className="lg:col-span-7 bg-white rounded-3xl p-6 border border-slate-100 shadow-xs space-y-4">
               <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                <Scale className="h-4 w-4 text-[#0284c7]" /> Tableau des Mensurations Loguées ({clientMeas.length})
+                <Scale className="h-4 w-4 text-[#0284c7]" /> Tableau des Mensurations Ajoutées ({clientMeas.length})
               </h4>
 
               {clientMeas.length > 0 ? (

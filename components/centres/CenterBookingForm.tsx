@@ -465,6 +465,10 @@ export function CenterBookingForm({
             <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500">
               Les disponibilités se mettent à jour automatiquement selon les réservations déjà prises et les demandes en attente.
             </p>
+            <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[11px] font-semibold text-amber-900">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-amber-700 mt-0.5" />
+              <span><strong>Consigne de sécurité :</strong> Il est strictement interdit de faire une séance AQ8 EMS et Wonder Axion le même jour. Veuillez réserver sur 2 jours séparés.</span>
+            </div>
           </div>
 
           {errorMsg && (

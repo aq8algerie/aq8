@@ -46,7 +46,7 @@ export const INITIAL_CENTERS: Center[] = [
       'Une paire de baskets propres',
       'Un change pour repartir'
     ],
-    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est important d’annuler au moins 1 heure à l’avance pour éviter que le système ne déduise le crédit de votre forfait en cours. Merci'
+    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est impératif d’annuler au moins 24 heures à l’avance pour éviter que la séance ne soit automatiquement déduite de votre forfait en cours. Merci'
   },
   {
     id: 'center-2',
@@ -76,7 +76,7 @@ export const INITIAL_CENTERS: Center[] = [
       'Une paire de baskets propres',
       'Un change pour repartir'
     ],
-    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est important d’annuler au moins 1 heure à l’avance pour éviter que le système ne déduise le crédit de votre forfait en cours. Merci'
+    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est impératif d’annuler au moins 24 heures à l’avance pour éviter que la séance ne soit automatiquement déduite de votre forfait en cours. Merci'
   },
   {
     id: 'center-3',
@@ -112,7 +112,7 @@ export const INITIAL_CENTERS: Center[] = [
       'Une paire de basket propre',
       'Un change pour repartir'
     ],
-    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est important d’annuler au moins 1 heure à l’avance pour éviter que le système ne déduise le crédit de votre forfait en cours. Merci'
+    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est impératif d’annuler au moins 24 heures à l’avance pour éviter que la séance ne soit automatiquement déduite de votre forfait en cours. Merci'
   },
   {
     id: 'center-4',
@@ -140,7 +140,7 @@ export const INITIAL_CENTERS: Center[] = [
       'Une paire de basket propre',
       'Un change pour repartir'
     ],
-    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est important d’annuler au moins 1 heure à l’avance pour éviter que le système ne déduise le crédit de votre forfait en cours. Merci'
+    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est impératif d’annuler au moins 24 heures à l’avance pour éviter que la séance ne soit automatiquement déduite de votre forfait en cours. Merci'
   },
   {
     id: 'center-5',
@@ -176,7 +176,7 @@ export const INITIAL_CENTERS: Center[] = [
       'Une paire de basket propre',
       'Un change pour repartir'
     ],
-    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est important d’annuler au moins 1 heure à l’avance pour éviter que le système ne déduise le crédit de votre forfait en cours. Merci'
+    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est impératif d’annuler au moins 24 heures à l’avance pour éviter que la séance ne soit automatiquement déduite de votre forfait en cours. Merci'
   },
   {
     id: 'center-6',
@@ -207,7 +207,7 @@ export const INITIAL_CENTERS: Center[] = [
       'Une paire de baskets propres',
       'Un change pour repartir'
     ],
-    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est important d’annuler au moins 1 heure à l’avance pour éviter que le système ne déduise le crédit de votre forfait en cours. Merci',
+    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est impératif d’annuler au moins 24 heures à l’avance pour éviter que la séance ne soit automatiquement déduite de votre forfait en cours. Merci',
     bookingCapacity: { aq8: 2, wonder: 1 },
     bookingHours: {
       '0': [{ start: '08:00', end: '18:00' }],

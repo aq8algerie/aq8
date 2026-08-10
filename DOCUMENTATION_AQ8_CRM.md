@@ -166,12 +166,11 @@ L'onglet **« Fichier Clients »** regroupe tous les membres inscrits dans votre
 
 Dans la fiche d'un client, cliquez sur l'onglet **« Mensurations et suivis »** pour accéder au dossier anatomique :
 
-```
 +-------------------------------------------------------------------------+
 |                    ONGLET : MENSUATIONS ET SUIVIS                       |
 +-------------------------------------------------------------------------+
-|  [ 📏 Loguer de nouvelles mensurations ]                                |
-|                                                                         |
+|  [ 📏 Ajouter mensurations ]                                             |
+|  [ 💳 Ajouter un paiement / Forfait ]                                    |
 |  🏆 CARTE DU DERNIER BILAN                                              |
 |  • Date : 08/08/2026   • Poids : 71.2 kg (-3.3 kg depuis l'origine)     |
 |  • Tour de Taille : 80 cm   • Hanches : 105 cm   • Masse Grasse : 30.1% |
