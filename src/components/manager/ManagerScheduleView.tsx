@@ -439,6 +439,31 @@ export function ManagerScheduleView({
         onAccept={handleAcceptBookingRequest}
         onReject={handleRejectBookingRequest}
       />
+      {/* Mobile Quick Date Bar */}
+      <div className="flex items-center justify-between gap-2 p-2 bg-slate-100/80 rounded-2xl border border-slate-200 shadow-xs sm:hidden">
+        <button
+          type="button"
+          onClick={handleNavPrev}
+          className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-black text-slate-800 shadow-2xs hover:bg-slate-50 active:scale-95 cursor-pointer flex-1"
+        >
+          ‹ Hier
+        </button>
+        <button
+          type="button"
+          onClick={handleNavToday}
+          className="px-4 py-1.5 rounded-xl bg-[#0284c7] text-xs font-black text-white shadow-sm active:scale-95 cursor-pointer flex-1 text-center"
+        >
+          Aujourd'hui
+        </button>
+        <button
+          type="button"
+          onClick={handleNavNext}
+          className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-black text-slate-800 shadow-2xs hover:bg-slate-50 active:scale-95 cursor-pointer flex-1"
+        >
+          Demain ›
+        </button>
+      </div>
+
       <ScheduleToolbar
         viewType={viewType}
         focusedDate={focusedDate}

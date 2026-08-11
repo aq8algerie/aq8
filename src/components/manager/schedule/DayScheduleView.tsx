@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { AlertCircle, CheckCircle2, CheckSquare, Clock, Edit2, Eye, Square, XCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle2, CheckSquare, Clock, Edit2, Eye, PhoneCall, Square, XCircle } from 'lucide-react';
 import { Appointment, Center, Client, Package, Service } from '../../../types';
 import { getSlotAvailability } from '../../../lib/bookingCapacityRules';
 
@@ -116,8 +116,19 @@ export function DayScheduleView({
                             <span className="font-extrabold text-[#0284c7]">{srv?.name || 'Soin'}</span>
                             <span>•</span>
                             <span className="font-mono text-slate-900">{apt.duration} min</span>
-                            <span>•</span>
-                            <span className="font-mono text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{cl?.phone}</span>
+                            {cl?.phone && (
+                              <>
+                                <span>•</span>
+                                <a
+                                  href={`tel:${cl.phone}`}
+                                  className="inline-flex items-center gap-1 font-mono text-slate-900 bg-slate-100 hover:bg-[#0284c7] hover:text-white px-2 py-0.5 rounded border border-slate-200 transition cursor-pointer font-bold shadow-2xs"
+                                  title="Appeler le client"
+                                >
+                                  <PhoneCall className="h-3 w-3 text-[#0284c7] group-hover:text-white" />
+                                  <span>{cl.phone}</span>
+                                </a>
+                              </>
+                            )}
                           </div>
                           {apt.notes && (
                             <p className="text-xs text-amber-900 bg-amber-50 border border-amber-200 px-2 py-1 rounded font-semibold italic">"{apt.notes}"</p>
