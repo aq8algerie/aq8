@@ -46,11 +46,12 @@ export function HomeHero({ centerCount }: HomeHeroProps) {
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
-                href="/centres"
-                aria-label="Trouver un centre AQ8 près de chez vous"
-                className="inline-flex min-h-12 w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 sm:px-6 py-3.5 text-xs sm:text-sm font-semibold text-white backdrop-blur-md transition-all duration-300 hover:border-white/40 hover:bg-white/12 active:scale-[0.98]"
+                href="/client"
+                aria-label="Accéder directement à l'espace adhérente"
+                className="inline-flex min-h-12 w-full sm:w-auto items-center justify-center gap-2 rounded-2xl border border-[#0284c7]/40 bg-[#0284c7]/15 px-5 sm:px-6 py-3.5 text-xs sm:text-sm font-extrabold text-white backdrop-blur-md transition-all duration-300 hover:bg-[#0284c7]/30 hover:border-[#0284c7] active:scale-[0.98]"
               >
-                <span>Trouver un centre</span>
+                <Sparkles className="h-4 w-4 text-[#38bdf8]" />
+                <span>📱 Mon Espace Cliente</span>
               </Link>
             </div>
 
