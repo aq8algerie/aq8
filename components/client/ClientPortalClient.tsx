@@ -54,10 +54,12 @@ export function ClientPortalClient() {
 
   const normalizePhone = (p: string) => p.replace(/[^0-9]/g, "");
 
-  const fetchClientPortalData = async (targetPhone: string) => {
+  const [requiresPin, setRequiresPin] = useState(false);
+
+  const fetchClientPortalData = async (targetPhone: string, targetPin: string = "") => {
     const cleanPhone = normalizePhone(targetPhone);
     if (!cleanPhone || cleanPhone.length < 8) {
-      setLoginError("Veuillez saisir un numéro de téléphone valide (ex: 0795 12 84 09).");
+      setLoginError("Veuillez saisir un numéro de téléphone valide (ex: 0795 12 84 09 ou +213...).");
       return;
     }
 
@@ -69,17 +71,21 @@ export function ClientPortalClient() {
       const response = await fetch('/api/client-portal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: targetPhone }),
+        body: JSON.stringify({ phone: targetPhone, pin: targetPin }),
       });
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok || data.ok === false) {
+        if (data.requiresPin) {
+          setRequiresPin(true);
+        }
         setLoginError(data.error || "Aucun compte ou rendez-vous trouvé avec ce numéro. Si vous êtes nouveau client, vous pouvez réserver votre 1ère séance ci-dessous.");
         setIsLoggingIn(false);
         setIsLoadingData(false);
         return;
       }
 
+      setRequiresPin(false);
       setClientData(data.client);
       setAppointments(data.appointments || []);
       setMeasurements(data.measurements || []);
@@ -96,7 +102,7 @@ export function ClientPortalClient() {
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchClientPortalData(phoneInput.trim());
+    fetchClientPortalData(phoneInput.trim(), pinInput.trim());
   };
 
   const handleLogout = () => {
@@ -107,6 +113,7 @@ export function ClientPortalClient() {
     setPayments([]);
     setPhoneInput("");
     setPinInput("");
+    setRequiresPin(false);
   };
 
   // IF NOT LOGGED IN: SHOW LOGIN FORM
@@ -117,7 +124,7 @@ export function ClientPortalClient() {
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#0284c7]/20 bg-[#f0f9ff] px-4 py-1.5 text-xs font-extrabold uppercase text-[#0284c7] shadow-sm">
             <User className="h-4 w-4" />
-            Espace Adhérent AQ8
+            Espace Adhérente AQ8
           </div>
           <h1 className="font-display text-3xl font-black text-[#242424]">
             Consultez votre compte
@@ -150,12 +157,37 @@ export function ClientPortalClient() {
                   required
                   value={phoneInput}
                   onChange={(e) => setPhoneInput(e.target.value)}
-                  placeholder="0795 12 84 09"
+                  placeholder="0795 12 84 09 ou +213 795..."
                   disabled={isLoggingIn}
                   className="w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-[#0284c7] focus:bg-white focus:ring-2 focus:ring-[#0284c7]/20 disabled:opacity-60"
                 />
               </div>
+              <p className="text-[11px] font-medium text-slate-500">
+                Formats acceptés : <code>05xx</code>, <code>06xx</code>, <code>07xx</code> ou <code>+213 / +33</code> (espaces et tirets tolérés).
+              </p>
             </div>
+
+            {requiresPin && (
+              <div className="space-y-2 rounded-xl bg-amber-50 p-4 border border-amber-200">
+                <label className="text-xs font-extrabold uppercase tracking-wider text-amber-900 block flex items-center gap-1.5">
+                  <Lock className="h-3.5 w-3.5 text-amber-700" />
+                  Code PIN de Sécurité (4 chiffres) *
+                </label>
+                <input
+                  type="password"
+                  maxLength={4}
+                  required
+                  value={pinInput}
+                  onChange={(e) => setPinInput(e.target.value)}
+                  placeholder="****"
+                  disabled={isLoggingIn}
+                  className="w-full rounded-xl border border-amber-300 bg-white px-4 py-2.5 text-center font-mono text-base font-bold tracking-widest text-slate-900 outline-none transition focus:border-[#0284c7]"
+                />
+                <p className="text-[10px] text-amber-800 font-semibold">
+                  Saisissez le code confidentiel attribué à votre fiche pour sécuriser votre compte.
+                </p>
+              </div>
+            )}
 
             <button
               type="submit"
