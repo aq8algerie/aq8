@@ -46,7 +46,14 @@ export const INITIAL_CENTERS: Center[] = [
       'Une paire de baskets propres',
       'Un change pour repartir'
     ],
-    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est impératif d’annuler au moins 24 heures à l’avance pour éviter que la séance ne soit automatiquement déduite de votre forfait en cours. Merci'
+    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est impératif d’annuler au moins 24 heures à l’avance pour éviter que la séance ne soit automatiquement déduite de votre forfait en cours. Merci',
+    bookingCapacity: { aq8: 3, wonder: 1 },
+    bookingHours: {
+      '0': [{ start: '09:00', end: '14:00' }],
+      '2': [{ start: '09:00', end: '14:00' }],
+      '4': [{ start: '09:00', end: '14:00' }],
+      '6': [{ start: '09:00', end: '14:00' }]
+    }
   },
   {
     id: 'center-2',
@@ -76,7 +83,16 @@ export const INITIAL_CENTERS: Center[] = [
       'Une paire de baskets propres',
       'Un change pour repartir'
     ],
-    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est impératif d’annuler au moins 24 heures à l’avance pour éviter que la séance ne soit automatiquement déduite de votre forfait en cours. Merci'
+    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est impératif d’annuler au moins 24 heures à l’avance pour éviter que la séance ne soit automatiquement déduite de votre forfait en cours. Merci',
+    bookingCapacity: { aq8: 2, wonder: 1 },
+    bookingHours: {
+      '0': [{ start: '10:00', end: '19:00' }],
+      '1': [{ start: '10:00', end: '19:00' }],
+      '2': [{ start: '10:00', end: '19:00' }],
+      '3': [{ start: '10:00', end: '19:00' }],
+      '4': [{ start: '10:00', end: '19:00' }],
+      '6': [{ start: '10:00', end: '16:00' }]
+    }
   },
   {
     id: 'center-3',
@@ -140,7 +156,16 @@ export const INITIAL_CENTERS: Center[] = [
       'Une paire de basket propre',
       'Un change pour repartir'
     ],
-    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est impératif d’annuler au moins 24 heures à l’avance pour éviter que la séance ne soit automatiquement déduite de votre forfait en cours. Merci'
+    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est impératif d’annuler au moins 24 heures à l’avance pour éviter que la séance ne soit automatiquement déduite de votre forfait en cours. Merci',
+    bookingCapacity: { aq8: 2, wonder: 1 },
+    bookingHours: {
+      '0': [{ start: '09:00', end: '23:00' }],
+      '1': [{ start: '09:00', end: '23:00' }],
+      '2': [{ start: '09:00', end: '23:00' }],
+      '3': [{ start: '09:00', end: '23:00' }],
+      '4': [{ start: '09:00', end: '23:00' }],
+      '6': [{ start: '09:00', end: '23:00' }]
+    }
   },
   {
     id: 'center-5',
@@ -176,7 +201,16 @@ export const INITIAL_CENTERS: Center[] = [
       'Une paire de basket propre',
       'Un change pour repartir'
     ],
-    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est impératif d’annuler au moins 24 heures à l’avance pour éviter que la séance ne soit automatiquement déduite de votre forfait en cours. Merci'
+    cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est impératif d’annuler au moins 24 heures à l’avance pour éviter que la séance ne soit automatiquement déduite de votre forfait en cours. Merci',
+    bookingCapacity: { aq8: 3, wonder: 1 },
+    bookingHours: {
+      '0': [{ start: '09:00', end: '21:00' }],
+      '1': [{ start: '09:00', end: '21:00' }],
+      '2': [{ start: '09:00', end: '21:00' }],
+      '3': [{ start: '09:00', end: '21:00' }],
+      '4': [{ start: '09:00', end: '21:00' }],
+      '6': [{ start: '10:00', end: '21:00' }]
+    }
   },
   {
     id: 'center-6',

@@ -5,7 +5,7 @@ export type CenterCapacity = Record<BookingServiceType, number>;
 export type BookingDayKey = '0' | '1' | '2' | '3' | '4' | '5' | '6';
 export type TimeRange = { start: string; end: string };
 export type WeeklyOpeningHours = Partial<Record<BookingDayKey, TimeRange[]>>;
-export type CenterBookingConfig = Pick<Center, 'bookingCapacity' | 'bookingHours'> | null | undefined;
+export type CenterBookingConfig = Partial<Pick<Center, 'id' | 'slug' | 'bookingCapacity' | 'bookingHours'>> | null | undefined;
 
 type DayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -140,8 +140,21 @@ function cloneWeeklyHours(hours: WeeklyOpeningHours): WeeklyOpeningHours {
   return next;
 }
 
+export function resolveCenterProfileKey(identifier: string): string {
+  if (!identifier) return 'center-1';
+  const id = identifier.toLowerCase();
+  if (id === 'center-1' || id.includes('birkhadem')) return 'center-1';
+  if (id === 'center-2' || id.includes('ouled') || id.includes('fayet')) return 'center-2';
+  if (id === 'center-3' || id.includes('blida')) return 'center-3';
+  if (id === 'center-4' || id.includes('tlemcen')) return 'center-4';
+  if (id === 'center-5' || id.includes('sidi') || id.includes('yahia')) return 'center-5';
+  if (id === 'center-6' || id.includes('draria')) return 'center-6';
+  return identifier;
+}
+
 function getDefaultProfile(centerId: string): CenterBookingProfile {
-  return CENTER_BOOKING_PROFILES[centerId] ?? {
+  const resolvedKey = resolveCenterProfileKey(centerId);
+  return CENTER_BOOKING_PROFILES[resolvedKey] ?? CENTER_BOOKING_PROFILES[centerId] ?? {
     capacities: DEFAULT_CAPACITY,
     weeklyHours: DEFAULT_WEEKLY_HOURS,
   };
@@ -191,7 +204,8 @@ export function getDefaultCenterWeeklyOpeningHours(centerId: string): WeeklyOpen
 }
 
 export function getCenterBookingCapacity(centerId: string, center?: CenterBookingConfig): CenterCapacity {
-  const defaults = getDefaultProfile(centerId).capacities;
+  const resolvedId = centerId || center?.id || center?.slug || '';
+  const defaults = getDefaultProfile(resolvedId).capacities;
   const configured = center?.bookingCapacity;
 
   return {
@@ -214,10 +228,13 @@ export function getCenterWeeklyOpeningHours(centerId: string, center?: CenterBoo
         next[key] = ranges;
       }
     }
-    return next;
+    if (Object.keys(next).length > 0) {
+      return next;
+    }
   }
 
-  return getDefaultCenterWeeklyOpeningHours(centerId);
+  const resolvedId = centerId || center?.id || center?.slug || '';
+  return getDefaultCenterWeeklyOpeningHours(resolvedId);
 }
 
 export function getBookingHoursForDate(centerId: string, dateStr: string, center?: CenterBookingConfig): string[] {
