@@ -129,7 +129,12 @@ export function CenterBookingForm({
   }, [propCenterId, propCenterName, propCenterCity, propServices, propCenter, allCenters, selectedCenterId]);
 
   const [liveCenter, setLiveCenter] = useState<any>(undefined);
-  const bookingCenter = liveCenter ?? activeCenter;
+  const bookingCenter = useMemo(() => {
+    if (liveCenter && activeCenter && (liveCenter.id === activeCenter.id || (liveCenter as any).slug === (activeCenter as any).slug)) {
+      return liveCenter;
+    }
+    return activeCenter;
+  }, [liveCenter, activeCenter]);
 
   const resolvedCenterId = bookingCenter?.id || "";
   const resolvedCenterName = bookingCenter?.name || "";
@@ -433,9 +438,12 @@ export function CenterBookingForm({
           <select
             value={selectedCenterId}
             onChange={(e) => {
-              setSelectedCenterId(e.target.value);
+              const newId = e.target.value;
+              setSelectedCenterId(newId);
+              setLiveCenter(undefined);
+              setBookingTime("");
             }}
-            className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#0284c7] focus:bg-white"
+            className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#0284c7] focus:bg-white cursor-pointer"
           >
             <option value="">-- Sélectionner un centre --</option>
             {allCenters.map((item) => (
