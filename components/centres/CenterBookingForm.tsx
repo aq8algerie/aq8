@@ -526,9 +526,9 @@ export function CenterBookingForm({
                 required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="0550 11 22 33"
+                placeholder="0795 12 84 09 ou 0550 11 22 33"
                 disabled={isLoading}
-                className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#0284c7] focus:bg-white disabled:opacity-60"
+                className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 outline-none transition-all focus:border-[#0284c7] focus:bg-white disabled:opacity-60 font-semibold"
               />
             </div>
 
