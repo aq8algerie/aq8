@@ -40,6 +40,7 @@ export function ClientPortalClient() {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [measurements, setMeasurements] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
+  const [clientPackages, setClientPackages] = useState<any[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("appointments");
 
@@ -90,6 +91,7 @@ export function ClientPortalClient() {
       setAppointments(data.appointments || []);
       setMeasurements(data.measurements || []);
       setPayments(data.payments || []);
+      setClientPackages(data.clientPackages || []);
       localStorage.setItem("aq8_client_phone", targetPhone);
     } catch (err) {
       console.error("Error fetching client portal data:", err);
@@ -111,6 +113,7 @@ export function ClientPortalClient() {
     setAppointments([]);
     setMeasurements([]);
     setPayments([]);
+    setClientPackages([]);
     setPhoneInput("");
     setPinInput("");
     setRequiresPin(false);
@@ -228,7 +231,7 @@ export function ClientPortalClient() {
 
   // IF LOGGED IN: SHOW CLIENT DASHBOARD
   const upcomingAppts = appointments.filter(
-    (a) => a.status === "confirmed" || a.status === "pending" || !a.status
+    (a) => a.status === "confirmed" || a.status === "booked" || a.status === "pending" || !a.status
   );
   const pastAppts = appointments.filter(
     (a) => a.status === "completed" || a.status === "cancelled"
@@ -577,34 +580,69 @@ export function ClientPortalClient() {
             </h3>
           </div>
 
-          {payments.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center space-y-3">
-              <CreditCard className="mx-auto h-10 w-10 text-slate-400" />
-              <div className="space-y-1">
-                <h4 className="font-display text-sm font-bold text-slate-800">
-                  Aucun historique de règlement en ligne
-                </h4>
-                <p className="text-xs text-slate-500 max-w-md mx-auto">
-                  Vos paiements sont enregistrés directement auprès de l'accueil de votre centre partenaire lors de vos séances.
-                </p>
+          {/* Subscribed Packages Card Section */}
+          {clientPackages.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="font-display text-xs font-black uppercase tracking-wider text-slate-700">
+                Vos Abonnements & Forfaits Actifs ({clientPackages.length})
+              </h4>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {clientPackages.map((pkg, idx) => (
+                  <div key={pkg.id || idx} className="rounded-2xl border-2 border-[#0284c7]/30 bg-[#0284c7]/5 p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-sm text-slate-900">{pkg.packageName || "Forfait AQ8"}</span>
+                      <span className="rounded-full bg-[#0284c7] px-2.5 py-0.5 text-[10px] font-black text-white uppercase">
+                        {pkg.type === 'aq8' ? 'AQ8 EMS' : pkg.type === 'wonder' ? 'Wonder' : 'Formule'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
+                      <span>Séances restantes :</span>
+                      <span className="font-mono text-sm font-black text-[#0284c7]">{pkg.sessionsRemaining ?? pkg.totalSessions ?? "Disponible"} / {pkg.totalSessions || 10}</span>
+                    </div>
+                    {pkg.expirationDate && (
+                      <p className="text-[10px] font-medium text-slate-500">Valide jusqu'au : {pkg.expirationDate}</p>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {payments.map((p, idx) => (
-                <div key={p.id || idx} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm text-xs font-semibold">
-                  <div>
-                    <span className="block font-bold text-slate-800">{p.packageName || p.description || "Séance / Formule AQ8"}</span>
-                    <span className="block text-[11px] text-slate-400">{p.date || "Date récente"}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="block font-black text-[#0284c7]">{p.amount ? `${p.amount} DZD` : "Payé en centre"}</span>
-                    <span className="block text-[10px] text-emerald-600 font-bold uppercase">Règlement validé</span>
-                  </div>
-                </div>
-              ))}
-            </div>
           )}
+
+          {/* Receipts & Payments History Section */}
+          <div className="space-y-3">
+            <h4 className="font-display text-xs font-black uppercase tracking-wider text-slate-700">
+              Historique des Reçus de Paiement ({payments.length})
+            </h4>
+
+            {payments.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center space-y-3">
+                <CreditCard className="mx-auto h-10 w-10 text-slate-400" />
+                <div className="space-y-1">
+                  <h4 className="font-display text-sm font-bold text-slate-800">
+                    Aucun historique de règlement séparé
+                  </h4>
+                  <p className="text-xs text-slate-500 max-w-md mx-auto">
+                    Vos versements et règlements sont validés directement auprès de l'accueil de votre centre partenaire.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {payments.map((p, idx) => (
+                  <div key={p.id || idx} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm text-xs font-semibold">
+                    <div>
+                      <span className="block font-bold text-slate-800">{p.packageName || p.description || "Séance / Formule AQ8"}</span>
+                      <span className="block text-[11px] text-slate-400">{p.date || p.createdAt || "Date récente"}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="block font-black text-[#0284c7]">{p.amount ? `${p.amount} DZD` : "Payé en centre"}</span>
+                      <span className="block text-[10px] text-emerald-600 font-bold uppercase">Règlement validé</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

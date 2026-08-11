@@ -110,6 +110,15 @@ export async function POST(request: Request) {
         .sort((a: any, b: any) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || ''));
     }
 
+    // 5. Fetch client packages if client exists
+    let clientPackages: any[] = [];
+    if (clientIdToUse) {
+      const pkgSnap = await db.collection('clientPackages').where('clientId', '==', clientIdToUse).get();
+      clientPackages = pkgSnap.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .sort((a: any, b: any) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    }
+
     // Fallback profile if appointments exist but no client profile document
     let resolvedClient: any = foundClient;
     if (!resolvedClient && appointments.length > 0) {
@@ -138,6 +147,7 @@ export async function POST(request: Request) {
       appointments,
       measurements,
       payments,
+      clientPackages,
     });
   } catch (error) {
     console.error('[client-portal] fetch failed:', error);
