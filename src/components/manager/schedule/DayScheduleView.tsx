@@ -68,18 +68,18 @@ export function DayScheduleView({
         const wonderAvailability = getSlotAvailability(centerAppointments, services, centerId, `${dateStr}T${hour}`, 'wonder', undefined, currentCenter);
 
         return (
-          <div key={hour} className="flex gap-4 items-start border-b border-slate-100 pb-3 last:border-0 last:pb-0 text-xs">
-            <div className="shrink-0 w-28 pt-1 space-y-1">
-              <div className="font-mono font-bold text-slate-500 flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5 text-slate-300" />
+          <div key={hour} className="flex gap-4 items-start border-b border-slate-200 pb-4 last:border-0 last:pb-0 text-xs">
+            <div className="shrink-0 w-32 pt-1 space-y-1.5">
+              <div className="font-mono font-extrabold text-sm text-[#0284c7] flex items-center gap-1.5 bg-[#0284c7]/10 px-2.5 py-1 rounded-lg border border-[#0284c7]/20 w-fit">
+                <Clock className="h-4 w-4 text-[#0284c7]" />
                 <span>{hour}</span>
               </div>
-              <div className="flex flex-col gap-1 text-[9px] font-bold">
-                <span className="rounded-md bg-rose-50 px-1.5 py-0.5 text-rose-600">AQ8 {aq8Availability.remaining}/{aq8Availability.capacity}</span>
-                <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-slate-700">Wonder {wonderAvailability.remaining}/{wonderAvailability.capacity}</span>
+              <div className="flex flex-col gap-1 text-[10px] font-black">
+                <span className="rounded-md bg-sky-100 border border-sky-300 px-2 py-0.5 text-sky-900 shadow-xs">AQ8 {aq8Availability.remaining}/{aq8Availability.capacity} dispo</span>
+                <span className="rounded-md bg-slate-800 px-2 py-0.5 text-white shadow-xs">Wonder {wonderAvailability.remaining}/{wonderAvailability.capacity} dispo</span>
               </div>
             </div>
-            <div className="flex-1 space-y-2.5">
+            <div className="flex-1 space-y-3">
               {hourApts.length > 0 ? (
                 hourApts.map(apt => {
                   const cl = centerClients.find(c => c.id === apt.clientId);
@@ -90,10 +90,10 @@ export function DayScheduleView({
                   return (
                     <div
                       key={apt.id}
-                      className={`p-4 rounded-xl border transition-all flex flex-col md:flex-row md:items-center justify-between gap-3 ${
+                      className={`p-4 rounded-xl border-2 transition-all flex flex-col md:flex-row md:items-center justify-between gap-3 ${
                         isSelected
-                          ? 'bg-[#0284c7]/5 border-[#0284c7] shadow-sm'
-                          : 'bg-slate-50/50 border-slate-100 hover:bg-slate-50 hover:border-slate-200'
+                          ? 'bg-[#0284c7]/10 border-[#0284c7] shadow-md ring-2 ring-[#0284c7]/20'
+                          : 'bg-white border-slate-300 hover:border-[#0284c7] hover:shadow-md'
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -101,64 +101,64 @@ export function DayScheduleView({
                           onClick={() => onToggleSelectOne(apt.id)}
                           className="text-slate-400 hover:text-[#0284c7] pt-0.5 cursor-pointer"
                         >
-                          {isSelected ? <CheckSquare className="h-4.5 w-4.5 text-[#0284c7]" /> : <Square className="h-4.5 w-4.5" />}
+                          {isSelected ? <CheckSquare className="h-5 w-5 text-[#0284c7]" /> : <Square className="h-5 w-5 text-slate-400" />}
                         </button>
                         <div className="space-y-1">
-                          <div className="font-bold text-[#353535] flex items-center gap-1.5">
+                          <div className="font-black text-sm text-slate-900 flex items-center gap-2">
                             <span>{cl ? `${cl.firstName} ${cl.lastName}` : 'Adhérent inconnu'}</span>
                             {cl?.gender === 'F' ? (
-                              <span className="w-1.5 h-1.5 rounded-full bg-rose-400" title="Femme"></span>
+                              <span className="px-1.5 py-0.2 rounded-full bg-pink-100 border border-pink-300 text-pink-700 text-[10px] font-bold">Femme</span>
                             ) : cl?.gender === 'H' ? (
-                              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" title="Homme"></span>
+                              <span className="px-1.5 py-0.2 rounded-full bg-blue-100 border border-blue-300 text-blue-700 text-[10px] font-bold">Homme</span>
                             ) : null}
                           </div>
-                          <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                            <span className="font-semibold text-slate-700">{srv?.name || 'Soin'}</span>
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-700 font-bold">
+                            <span className="font-extrabold text-[#0284c7]">{srv?.name || 'Soin'}</span>
                             <span>•</span>
-                            <span className="font-mono">{apt.duration} min</span>
+                            <span className="font-mono text-slate-900">{apt.duration} min</span>
                             <span>•</span>
-                            <span className="font-mono text-slate-400">{cl?.phone}</span>
+                            <span className="font-mono text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{cl?.phone}</span>
                           </div>
                           {apt.notes && (
-                            <p className="text-[10px] text-slate-400 italic font-medium">"{apt.notes}"</p>
+                            <p className="text-xs text-amber-900 bg-amber-50 border border-amber-200 px-2 py-1 rounded font-semibold italic">"{apt.notes}"</p>
                           )}
                         </div>
                       </div>
 
                       <div className="flex items-center gap-3 self-end md:self-auto">
                         {tech && (
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                          <span className={`px-2.5 py-1 rounded-md text-xs font-black shadow-xs ${
                             tech === 'aq8'
-                              ? 'bg-rose-50 text-rose-600 border border-rose-100'
+                              ? 'bg-sky-100 text-sky-900 border border-sky-300'
                               : tech === 'wonder'
-                                ? 'bg-slate-100 text-slate-800'
-                                : 'bg-slate-50 text-slate-500'
+                                ? 'bg-slate-900 text-white'
+                                : 'bg-amber-100 text-amber-900 border border-amber-300'
                           }`}>
                             {tech === 'aq8' ? 'AQ8 EMS' : tech === 'wonder' ? 'Wonder' : 'Mixte'}
                           </span>
                         )}
 
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        <span className={`inline-flex items-center px-3 py-1 rounded-md text-xs font-black shadow-xs ${
                           apt.status === 'completed'
-                            ? 'bg-green-50 text-green-600'
+                            ? 'bg-emerald-600 text-white'
                             : apt.status === 'booked'
-                              ? 'bg-blue-50 text-blue-600'
-                              : 'bg-slate-100 text-slate-400'
+                              ? 'bg-sky-600 text-white'
+                              : 'bg-slate-400 text-white'
                         }`}>
-                          {apt.status === 'completed' ? 'Effectuée' : apt.status === 'booked' ? 'Planifiée' : 'Annulée'}
+                          {apt.status === 'completed' ? '✓ Effectuée' : apt.status === 'booked' ? '📅 Planifiée' : '✕ Annulée'}
                         </span>
 
-                        <div className="flex items-center gap-1 border-l border-slate-200 pl-3">
+                        <div className="flex items-center gap-1 border-l-2 border-slate-200 pl-3">
                           <button
                             onClick={() => onViewAppointment(apt)}
-                            className="p-1 text-slate-400 hover:text-slate-700 rounded hover:bg-slate-100 transition cursor-pointer"
+                            className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition cursor-pointer"
                             title="Voir"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => onEditAppointment(apt)}
-                            className="p-1 text-slate-400 hover:text-slate-700 rounded hover:bg-slate-100 transition cursor-pointer"
+                            className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition cursor-pointer"
                             title="Modifier"
                           >
                             <Edit2 className="h-4 w-4" />
@@ -167,29 +167,28 @@ export function DayScheduleView({
                             <>
                               <button
                                 onClick={() => onCompleteAppointment(apt.id)}
-                                className="p-1 text-green-500 hover:text-green-700 rounded hover:bg-green-50 transition cursor-pointer"
-                                title="Effectuer"
+                                className="p-1.5 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition cursor-pointer"
+                                title="Valider comme Effectuée"
                               >
                                 <CheckCircle2 className="h-4 w-4" />
                               </button>
                               <button
                                 onClick={() => onCancelAppointment(apt.id)}
-                                className="p-1 text-amber-500 hover:text-amber-700 rounded hover:bg-amber-50 transition cursor-pointer"
+                                className="p-1.5 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition cursor-pointer"
                                 title="Annuler"
                               >
                                 <XCircle className="h-4 w-4" />
                               </button>
                             </>
                           )}
-
                         </div>
                       </div>
                     </div>
                   );
                 })
               ) : (
-                <div className="py-2.5 text-slate-300 italic text-[11px] flex items-center gap-1.5">
-                  <span>Créneau disponible</span>
+                <div className="py-2.5 text-slate-400 font-semibold italic text-xs flex items-center gap-2 bg-slate-50/50 px-3 rounded-lg border border-dashed border-slate-200">
+                  <span>Libre — Créneau disponible</span>
                 </div>
               )}
             </div>

@@ -35,12 +35,12 @@ export function MonthScheduleView({
   onOpenDay,
 }: MonthScheduleViewProps) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs space-y-4 overflow-hidden">
-      <div className="grid grid-cols-7 gap-1.5 text-center font-bold text-slate-400 uppercase text-[9px] tracking-wider border-b border-slate-100 pb-2">
+    <div className="bg-white rounded-2xl border-2 border-slate-200 p-5 shadow-xs space-y-4 overflow-hidden">
+      <div className="grid grid-cols-7 gap-1.5 text-center font-black text-slate-800 uppercase text-[10px] tracking-wider border-b-2 border-slate-200 pb-2.5">
         {weekDays.map(day => <span key={day}>{day}</span>)}
       </div>
 
-      <div className="grid grid-cols-7 gap-1.5">
+      <div className="grid grid-cols-7 gap-2">
         {getMonthGrid(focusedDate).map(({ date, isCurrentMonth }, index) => {
           const dateStr = formatDateToYYYYMMDD(date);
           const isToday = dateStr === getTodayDateString();
@@ -50,16 +50,16 @@ export function MonthScheduleView({
             <div
               key={`${dateStr}-${index}`}
               onClick={() => onOpenDay(date)}
-              className={`min-h-[90px] p-2 border rounded-xl flex flex-col justify-between transition cursor-pointer ${
+              className={`min-h-[100px] p-2 border-2 rounded-xl flex flex-col justify-between transition cursor-pointer ${
                 isToday
-                  ? 'border-[#0284c7] bg-[#0284c7]/2 hover:bg-[#0284c7]/5'
+                  ? 'border-[#0284c7] bg-[#0284c7]/10 ring-2 ring-[#0284c7]/20 hover:bg-[#0284c7]/15'
                   : isCurrentMonth
-                    ? 'border-slate-100 hover:border-slate-200 hover:bg-slate-50/50'
-                    : 'border-slate-50 opacity-40 hover:opacity-70'
+                    ? 'border-slate-200 bg-white hover:border-[#0284c7] hover:shadow-sm'
+                    : 'border-slate-100 bg-slate-50/50 opacity-40 hover:opacity-80'
               }`}
             >
-              <span className={`text-[11px] font-bold self-end w-5 h-5 flex items-center justify-center rounded-full ${
-                isToday ? 'bg-[#0284c7] text-white' : 'text-slate-500'
+              <span className={`text-xs font-black self-end w-6 h-6 flex items-center justify-center rounded-full ${
+                isToday ? 'bg-[#0284c7] text-white shadow-sm' : 'text-slate-900 bg-slate-100'
               }`}>
                 {date.getDate()}
               </span>
@@ -75,23 +75,23 @@ export function MonthScheduleView({
                       return (
                         <div
                           key={appointment.id}
-                          className={`px-1.5 py-0.5 text-[9px] font-bold rounded truncate flex items-center gap-1 text-[#353535] ${
+                          className={`px-2 py-0.5 text-[10px] font-black rounded-md truncate flex items-center gap-1.5 shadow-2xs ${
                             appointment.status === 'completed'
-                              ? 'bg-green-50 text-green-700'
+                              ? 'bg-emerald-600 text-white'
                               : appointment.status === 'booked'
-                                ? 'bg-blue-50 text-blue-700'
-                                : 'bg-slate-100 text-slate-400'
+                                ? 'bg-sky-600 text-white'
+                                : 'bg-slate-500 text-white'
                           }`}
                           title={client ? `${hourPart} - ${client.firstName} ${client.lastName} (${service?.name})` : ''}
                         >
-                          <span className="font-mono text-[8px] font-semibold">{hourPart}</span>
+                          <span className="font-mono text-[9px] font-black opacity-90">{hourPart}</span>
                           <span className="truncate">{client ? `${client.firstName} ${client.lastName}` : 'Adhérent'}</span>
                         </div>
                       );
                     })}
 
                     {dayApts.length > 2 && (
-                      <div className="text-[8px] font-bold text-slate-400 text-center uppercase bg-slate-50 py-0.5 rounded border border-slate-100">
+                      <div className="text-[9px] font-black text-slate-900 text-center uppercase bg-slate-100 py-0.5 rounded border border-slate-300">
                         +{dayApts.length - 2} autres RDV
                       </div>
                     )}
