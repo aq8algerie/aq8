@@ -202,10 +202,10 @@ export default function PublicLayout({
             <div className="hidden lg:flex items-center gap-2.5">
               <Link
                 href="/client"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-3 text-xs font-bold text-[#242424] transition-all duration-200 hover:border-[#0284c7] hover:bg-sky-50 hover:text-[#0284c7] shadow-sm"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[#0284c7]/30 bg-[#f0f9ff] px-4 py-3 text-xs font-extrabold text-[#0284c7] transition-all duration-200 hover:bg-[#0284c7] hover:text-white shadow-sm"
               >
-                <User className="h-4 w-4 text-[#0284c7]" />
-                <span>Mon Espace</span>
+                <User className="h-4 w-4" />
+                <span>Mon Espace Cliente</span>
               </Link>
               <Link
                 href="/reservation"
@@ -228,10 +228,10 @@ export default function PublicLayout({
             <div className="flex lg:hidden items-center gap-2">
               <Link
                 href="/client"
-                className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#242424] shadow-sm"
+                className="inline-flex items-center gap-1 rounded-xl border border-[#0284c7]/30 bg-[#f0f9ff] px-3 py-2 text-xs font-extrabold text-[#0284c7] shadow-sm"
               >
-                <User className="h-3.5 w-3.5 text-[#0284c7]" />
-                <span>Espace</span>
+                <User className="h-3.5 w-3.5" />
+                <span>Mon Espace</span>
               </Link>
               <Link
                 href="/reservation"
