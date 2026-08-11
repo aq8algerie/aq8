@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { AlertCircle, Calendar, CheckCircle2, Loader2, Sun, CloudSun, Moon, ShieldCheck, Flame } from "lucide-react";
+import { AlertCircle, Calendar, CheckCircle2, Clock, Loader2, Sun, CloudSun, Moon, ShieldCheck, Flame } from "lucide-react";
 import { collection, doc, onSnapshot, query, where } from "firebase/firestore";
 import { motion } from "motion/react";
 import { db } from "../../src/lib/firebase";
@@ -468,17 +468,20 @@ export function CenterBookingForm({
         </div>
       ) : (
         <>
-          <div className="mb-5 rounded-md border border-slate-100 bg-slate-50 p-4 text-sm">
-            <div className="flex items-center justify-between gap-3">
-              <span className="font-bold text-slate-700">Capacité par heure</span>
-              <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#0284c7]">
-                {capacitySummary}
+          <div className="mb-5 rounded-md border border-slate-100 bg-slate-50 p-4 text-sm space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                <Clock className="h-4 w-4 text-[#0284c7]" />
+                Horaires d'ouverture ({resolvedCenterName})
+              </span>
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#0284c7] shadow-xs">
+                {bookingCenter?.schedule || capacitySummary}
               </span>
             </div>
-            <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500">
-              Les disponibilités se mettent à jour automatiquement selon les réservations déjà prises et les demandes en attente.
+            <p className="text-xs font-medium leading-relaxed text-slate-500">
+              Les créneaux ci-dessous s'arrêtent à l'heure exacte de fermeture du centre sélectionné (ex : 14h pour Birkhadem matin, 19h pour Ouled Fayet, 21h pour Sidi Yahia).
             </p>
-            <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[11px] font-semibold text-amber-900">
+            <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[11px] font-semibold text-amber-900">
               <ShieldCheck className="h-4 w-4 shrink-0 text-amber-700 mt-0.5" />
               <span><strong>Consigne de sécurité :</strong> Il est strictement interdit de faire une séance AQ8 EMS et Wonder Axion le même jour. Veuillez réserver sur 2 jours séparés.</span>
             </div>
