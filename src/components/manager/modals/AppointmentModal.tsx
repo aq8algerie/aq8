@@ -30,8 +30,22 @@ export function AppointmentModal({
   initialDate,
   center
 }: AppointmentModalProps) {
+  // Filtrer les prestations pour exclure "AQ8-EMS coaching privé" et "cure combinée AQ8"
+  const filteredServices = useMemo(() => {
+    return services.filter(s => {
+      const name = s.name.toLowerCase();
+      return !name.includes('coaching privé') && !name.includes('cure combinée');
+    });
+  }, [services]);
+
   const [clientId, setClientId] = useState('');
-  const [serviceId, setServiceId] = useState(services[0]?.id || '');
+  const [serviceId, setServiceId] = useState(() => {
+    const available = services.filter(s => {
+      const name = s.name.toLowerCase();
+      return !name.includes('coaching privé') && !name.includes('cure combinée');
+    });
+    return available[0]?.id || '';
+  });
   const [date, setDate] = useState(initialDate || getTodayDateString());
   const [time, setTime] = useState('10:00');
   const [notes, setNotes] = useState('');
@@ -72,7 +86,7 @@ export function AppointmentModal({
   }, [isDropdownOpen]);
 
   const allowedHours = useMemo(() => getBookingHoursForDate(centerId, date, center), [centerId, date, center]);
-  const selectedServiceType = useMemo(() => getServiceTypeById(services, serviceId), [services, serviceId]);
+  const selectedServiceType = useMemo(() => getServiceTypeById(filteredServices, serviceId), [filteredServices, serviceId]);
 
   useEffect(() => {
     if (allowedHours.length > 0 && !allowedHours.includes(time)) {
@@ -200,7 +214,7 @@ export function AppointmentModal({
               className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none"
               required
             >
-              {services.map(s => (
+              {filteredServices.map(s => (
                 <option key={s.id} value={s.id}>
                   {s.name} ({s.duration} min)
                 </option>
@@ -233,7 +247,7 @@ export function AppointmentModal({
                 )}
                 {allowedHours.map(h => {
                   const availability = selectedServiceType
-                    ? getSlotAvailability(appointments, services, centerId, `${date}T${h}`, selectedServiceType, undefined, center)
+                    ? getSlotAvailability(appointments, filteredServices, centerId, `${date}T${h}`, selectedServiceType, undefined, center)
                     : null;
                   const label = availability
                     ? `${h} - ${availability.remaining}/${availability.capacity} place(s)`

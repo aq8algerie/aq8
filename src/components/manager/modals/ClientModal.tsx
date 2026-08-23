@@ -11,6 +11,7 @@ interface ClientModalProps {
   onClose: () => void;
   initialClient?: Client;
   mode?: 'create' | 'edit';
+  centerId?: string;
   onSubmit: (clientData: {
     firstName: string;
     lastName: string;
@@ -31,7 +32,7 @@ interface ClientModalProps {
 
 type TabId = 'general' | 'profile' | 'health';
 
-export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' }: ClientModalProps) {
+export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create', centerId }: ClientModalProps) {
   const [activeTab, setActiveTab] = useState<TabId>('general');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' } | null>(null);
 
@@ -250,10 +251,16 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create' 
                     value={gender}
                     onChange={(e) => setGender(e.target.value as 'H' | 'F')}
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7]"
+                    disabled={centerId === 'center-2'}
                   >
                     <option value="F">Femme</option>
-                    <option value="H">Homme</option>
+                    {centerId !== 'center-2' && <option value="H">Homme</option>}
                   </select>
+                  {centerId === 'center-2' && (
+                    <span className="text-[10px] text-rose-500 block mt-0.5 font-medium">
+                      Centre réservé exclusivement aux femmes
+                    </span>
+                  )}
                 </div>
               </div>
 

@@ -1038,6 +1038,7 @@ export function CenterManagerViews({
           onSubmit={handleClientSubmit}
           initialClient={editingClient || undefined}
           mode={editingClient ? 'edit' : 'create'}
+          centerId={centerId}
         />
       )}
 

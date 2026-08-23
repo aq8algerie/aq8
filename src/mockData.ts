@@ -405,14 +405,14 @@ export const INITIAL_CLIENTS: Client[] = [
   },
   {
     id: 'cli-4',
-    firstName: 'Fares',
+    firstName: 'Farida',
     lastName: 'Brahimi',
     email: 'f.brahimi@hotmail.com',
     phone: '0555 88 99 00',
     centerId: 'center-2',
     createdAt: '2026-06-12',
-    notes: 'Cadre pressé, préfère les créneaux du soir (19h).',
-    gender: 'H'
+    notes: 'Préfère les créneaux du soir (19h).',
+    gender: 'F'
   },
   {
     id: 'cli-5',
