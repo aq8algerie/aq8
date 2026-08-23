@@ -59,14 +59,30 @@ export function AppointmentModal({
     return clients.find(c => c.id === clientId) || null;
   }, [clients, clientId]);
 
-  // Filtrer les adhérents par nom, prénom ou téléphone
+  // Filtrer les adhérents par nom, prénom (commençant par la saisie) ou téléphone
   const filteredClients = useMemo(() => {
     const query = searchTerm.toLowerCase().trim();
     if (!query) return clients;
+
+    // Si la recherche commence par un chiffre, on filtre par téléphone
+    if (/^\d/.test(query)) {
+      const cleanQuery = query.replace(/\s/g, '');
+      return clients.filter(c => {
+        const phone = c.phone ? c.phone.toLowerCase().replace(/\s/g, '') : '';
+        return phone.includes(cleanQuery);
+      });
+    }
+
+    // Sinon, on filtre par nom/prénom (chaque mot saisi doit être le début d'un des mots du nom de l'adhérent)
+    const queryParts = query.split(/\s+/);
     return clients.filter(c => {
-      const fullName = `${c.firstName} ${c.lastName}`.toLowerCase();
-      const phone = c.phone ? c.phone.toLowerCase() : '';
-      return fullName.includes(query) || phone.includes(query);
+      const firstName = c.firstName.toLowerCase();
+      const lastName = c.lastName.toLowerCase();
+      const nameWords = `${firstName} ${lastName}`.split(/\s+/);
+      
+      return queryParts.every(part => 
+        nameWords.some(word => word.startsWith(part))
+      );
     });
   }, [clients, searchTerm]);
 
