@@ -33,7 +33,7 @@ export function AppointmentModal({
   // Filtrer les prestations pour exclure "AQ8-EMS coaching privé" et "cure combinée AQ8"
   const filteredServices = useMemo(() => {
     return services.filter(s => {
-      const name = s.name.toLowerCase();
+      const name = (s?.name || '').toLowerCase();
       return !name.includes('coaching privé') && !name.includes('cure combinée');
     });
   }, [services]);
@@ -41,7 +41,7 @@ export function AppointmentModal({
   const [clientId, setClientId] = useState('');
   const [serviceId, setServiceId] = useState(() => {
     const available = services.filter(s => {
-      const name = s.name.toLowerCase();
+      const name = (s?.name || '').toLowerCase();
       return !name.includes('coaching privé') && !name.includes('cure combinée');
     });
     return available[0]?.id || '';
@@ -68,7 +68,7 @@ export function AppointmentModal({
     if (/^\d/.test(query)) {
       const cleanQuery = query.replace(/\s/g, '');
       return clients.filter(c => {
-        const phone = c.phone ? c.phone.toLowerCase().replace(/\s/g, '') : '';
+        const phone = c?.phone ? c.phone.toLowerCase().replace(/\s/g, '') : '';
         return phone.includes(cleanQuery);
       });
     }
@@ -76,8 +76,8 @@ export function AppointmentModal({
     // Sinon, on filtre par nom/prénom (chaque mot saisi doit être le début d'un des mots du nom de l'adhérent)
     const queryParts = query.split(/\s+/);
     return clients.filter(c => {
-      const firstName = c.firstName.toLowerCase();
-      const lastName = c.lastName.toLowerCase();
+      const firstName = (c?.firstName || '').toLowerCase();
+      const lastName = (c?.lastName || '').toLowerCase();
       const nameWords = `${firstName} ${lastName}`.split(/\s+/);
       
       return queryParts.every(part => 
