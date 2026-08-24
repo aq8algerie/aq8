@@ -129,7 +129,7 @@ const activePackage: ClientPackage = {
   centerId: 'center-1',
   sessionsRemaining: 2,
   totalSessions: 5,
-  purchaseDate: '2026-07-01',
+  purchaseDate: new Date().toISOString().slice(0, 10), // Dynamique pour éviter l'expiration dans les tests (règle des 45 jours)
   status: 'active'
 };
 
@@ -308,7 +308,7 @@ test('session completion selects a package compatible with the booked technology
     ...activePackage,
     id: 'pkg-client-wonder',
     packageId: 'pkg-wonder',
-    purchaseDate: '2026-07-02',
+    purchaseDate: new Date().toISOString().slice(0, 10),
   };
 
   const selected = findActivePackageForClientAndService(

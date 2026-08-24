@@ -45,8 +45,14 @@ export function getAdminApp(): App {
   return cachedAdminApp;
 }
 
+let cachedDb: Firestore | null = null;
+
 export function getAdminDb(): Firestore {
-  return getFirestore(getAdminApp());
+  if (cachedDb) return cachedDb;
+  const db = getFirestore(getAdminApp());
+  db.settings({ ignoreUndefinedProperties: true });
+  cachedDb = db;
+  return cachedDb;
 }
 
 export function getAdminAuthInstance(): Auth {
