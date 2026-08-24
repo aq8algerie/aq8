@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { User, Activity, ShieldAlert, Sparkles, Heart, AlertTriangle } from 'lucide-react';
+import { User, Activity, ShieldAlert, Sparkles, Heart, AlertTriangle, Lock } from 'lucide-react';
 import { Client } from '../../../types';
 
 interface ClientModalProps {
@@ -27,6 +27,7 @@ interface ClientModalProps {
     medicalConditions?: string;
     sportGoals?: string[];
     avatarUrl?: string;
+    pin?: string;
   }) => void;
 }
 
@@ -41,6 +42,7 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create',
   const [lastName, setLastName] = useState(initialClient?.lastName || '');
   const [phone, setPhone] = useState(initialClient?.phone || '');
   const [email, setEmail] = useState(initialClient?.email || '');
+  const [pin, setPin] = useState(initialClient?.pin || '');
   const [gender, setGender] = useState<'H' | 'F'>(initialClient?.gender || 'F');
   const [dob, setDob] = useState(initialClient?.dob || '');
   const [profession, setProfession] = useState(initialClient?.profession || '');
@@ -127,7 +129,8 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create',
       emergencyContactPhone: emergencyContactPhone.trim() || undefined,
       medicalConditions: medicalConditions.trim() || undefined,
       sportGoals: selectedGoals,
-      avatarUrl: avatarUrl.trim() || undefined
+      avatarUrl: avatarUrl.trim() || undefined,
+      pin: pin.trim() || undefined
     });
   };
 
@@ -264,15 +267,30 @@ export function ClientModal({ onClose, onSubmit, initialClient, mode = 'create',
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="font-semibold text-slate-600 block">Adresse E-mail</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="selma.m@gmail.com"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7] font-mono"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="font-semibold text-slate-600 block">Adresse E-mail</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="selma.m@gmail.com"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7] font-mono"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-semibold text-slate-600 block flex items-center gap-1">
+                    <Lock className="h-3 w-3 text-slate-400 font-bold" /> Code PIN Espace Client (4 chiffres)
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={4}
+                    value={pin}
+                    onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder="Ex: 1234"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#0284c7] font-mono text-center tracking-widest font-bold"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -11,6 +11,7 @@ function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const oobCode = searchParams.get('oobCode');
+  const role = searchParams.get('role');
 
   const [email, setEmail] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState('');
@@ -62,7 +63,7 @@ function ResetPasswordForm() {
       await confirmPasswordReset(auth, oobCode, newPassword);
       setSuccess(true);
       setTimeout(() => {
-        router.push('/crm');
+        router.push(role === 'client' ? '/client' : '/crm');
       }, 3000);
     } catch (err) {
       console.error('[reset-password] confirm error:', err);
@@ -105,14 +106,14 @@ function ResetPasswordForm() {
             <div className="space-y-1">
               <h3 className="text-base font-bold text-emerald-900">Mot de passe réinitialisé !</h3>
               <p className="text-xs text-emerald-700 font-medium">
-                Votre nouveau mot de passe a été enregistré avec succès. Redirection vers le CRM en cours...
+                Votre nouveau mot de passe a été enregistré avec succès. Redirection en cours...
               </p>
             </div>
             <Link
-              href="/crm"
+              href={role === 'client' ? '/client' : '/crm'}
               className="inline-block mt-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition"
             >
-              Se connecter au CRM
+              {role === 'client' ? 'Se connecter à mon espace' : 'Se connecter au CRM'}
             </Link>
           </div>
         ) : error ? (
@@ -126,10 +127,10 @@ function ResetPasswordForm() {
 
             <div className="text-center pt-2">
               <Link
-                href="/crm"
+                href={role === 'client' ? '/client' : '/crm'}
                 className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-[#0284c7] transition"
               >
-                <ArrowLeft className="h-4 w-4" /> Demander un nouveau lien depuis le CRM
+                <ArrowLeft className="h-4 w-4" /> {role === 'client' ? "Retour à l'espace client" : 'Demander un nouveau lien depuis le CRM'}
               </Link>
             </div>
           </div>

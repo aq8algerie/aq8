@@ -23,17 +23,39 @@ import {
   Activity,
   ArrowRight,
   RefreshCw,
+  Mail,
+  Eye,
+  EyeOff,
+  KeyRound,
+  ArrowLeft,
 } from "lucide-react";
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
-import { db } from "../../src/lib/firebase";
+import {
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut,
+  onAuthStateChanged,
+} from "firebase/auth";
+import { auth, db } from "../../src/lib/firebase";
 
 type ActiveTab = "appointments" | "measurements" | "payments";
 
 export function ClientPortalClient() {
-  const [phoneInput, setPhoneInput] = useState("");
-  const [pinInput, setPinInput] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginError, setLoginError] = useState("");
+  const [activeAuthTab, setActiveAuthTab] = useState<"login" | "register">("login");
+  const [authInitialized, setAuthInitialized] = useState(false);
+
+  // Forgot password state
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetSent, setResetSent] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [isResetting, setIsResetting] = useState(false);
 
   // Client Session State
   const [clientData, setClientData] = useState<any | null>(null);
@@ -44,82 +66,197 @@ export function ClientPortalClient() {
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("appointments");
 
-  // Load saved phone session from localStorage
+  // Load Firebase Auth session
   useEffect(() => {
-    const savedPhone = localStorage.getItem("aq8_client_phone");
-    if (savedPhone) {
-      setPhoneInput(savedPhone);
-      fetchClientPortalData(savedPhone);
-    }
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        await fetchClientPortalData(firebaseUser);
+      } else {
+        setClientData(null);
+        setAppointments([]);
+        setMeasurements([]);
+        setPayments([]);
+        setClientPackages([]);
+      }
+      setAuthInitialized(true);
+    });
+    return unsubscribe;
   }, []);
 
-  const normalizePhone = (p: string) => p.replace(/[^0-9]/g, "");
-
-  const [requiresPin, setRequiresPin] = useState(false);
-
-  const fetchClientPortalData = async (targetPhone: string, targetPin: string = "") => {
-    const cleanPhone = normalizePhone(targetPhone);
-    if (!cleanPhone || cleanPhone.length < 8) {
-      setLoginError("Veuillez saisir un numéro de téléphone valide (ex: 0795 12 84 09 ou +213...).");
-      return;
-    }
-
-    setIsLoggingIn(true);
+  const fetchClientPortalData = async (firebaseUser: any) => {
     setIsLoadingData(true);
     setLoginError("");
-
     try {
+      const token = await firebaseUser.getIdToken(true);
       const response = await fetch('/api/client-portal', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: targetPhone, pin: targetPin }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
       });
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok || data.ok === false) {
-        if (data.requiresPin) {
-          setRequiresPin(true);
-        }
-        setLoginError(data.error || "Aucun compte ou rendez-vous trouvé avec ce numéro. Si vous êtes nouveau client, vous pouvez réserver votre 1ère séance ci-dessous.");
-        setIsLoggingIn(false);
-        setIsLoadingData(false);
+        setLoginError(data.error || "Une erreur est survenue lors de l'accès au compte.");
+        await signOut(auth);
+        setClientData(null);
         return;
       }
 
-      setRequiresPin(false);
       setClientData(data.client);
       setAppointments(data.appointments || []);
       setMeasurements(data.measurements || []);
       setPayments(data.payments || []);
       setClientPackages(data.clientPackages || []);
-      localStorage.setItem("aq8_client_phone", targetPhone);
     } catch (err) {
       console.error("Error fetching client portal data:", err);
       setLoginError("Impossible de charger les données du compte. Veuillez réessayer.");
+      await signOut(auth);
+      setClientData(null);
     } finally {
-      setIsLoggingIn(false);
       setIsLoadingData(false);
     }
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    fetchClientPortalData(phoneInput.trim(), pinInput.trim());
+    setIsLoggingIn(true);
+    setLoginError("");
+    try {
+      await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
+    } catch (err: any) {
+      console.error("Login failed:", err);
+      let friendlyError = "Erreur de connexion. Veuillez vérifier vos identifiants.";
+      if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found" || err.code === "auth/invalid-email") {
+        friendlyError = "Adresse e-mail ou mot de passe incorrect.";
+      } else if (err.code === "auth/too-many-requests") {
+        friendlyError = "Trop de tentatives infructueuses. Veuillez patienter un instant.";
+      }
+      setLoginError(friendlyError);
+      setIsLoggingIn(false);
+    }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("aq8_client_phone");
+  const handleGoogleLogin = async () => {
+    setIsLoggingIn(true);
+    setLoginError("");
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      await signInWithPopup(auth, provider);
+    } catch (err: any) {
+      console.error("Google login failed:", err);
+      if (err.code !== "auth/popup-closed-by-user") {
+        setLoginError(getFriendlyAuthError(err, "Impossible de se connecter avec Google."));
+      }
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      setLoginError("Les mots de passe ne correspondent pas.");
+      return;
+    }
+    if (password.length < 8) {
+      setLoginError("Le mot de passe doit contenir au moins 8 caractères.");
+      return;
+    }
+    setIsLoggingIn(true);
+    setLoginError("");
+    try {
+      const res = await fetch("/api/client-portal/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.ok === false) {
+        setLoginError(data.error || "Une erreur est survenue lors de la création du compte.");
+        setIsLoggingIn(false);
+        return;
+      }
+      
+      // Auto login after successful registration
+      await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
+    } catch (err) {
+      console.error("Registration failed:", err);
+      setLoginError("Une erreur est survenue lors de l'inscription. Veuillez réessayer.");
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handlePasswordResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError(null);
+    const trimmed = resetEmail.trim().toLowerCase();
+    if (!trimmed) {
+      setResetError("Veuillez saisir votre adresse e-mail.");
+      return;
+    }
+    setIsResetting(true);
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: trimmed }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.error || "Impossible d'envoyer l'e-mail de réinitialisation.");
+      }
+
+      setResetSent(true);
+    } catch (err) {
+      console.error("Reset password failed:", err);
+      setResetError(err instanceof Error ? err.message : "Une erreur est survenue. Veuillez réessayer.");
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
     setClientData(null);
     setAppointments([]);
     setMeasurements([]);
     setPayments([]);
     setClientPackages([]);
-    setPhoneInput("");
-    setPinInput("");
-    setRequiresPin(false);
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setShowForgotPassword(false);
   };
 
-  // IF NOT LOGGED IN: SHOW LOGIN FORM
+  const getFriendlyAuthError = (error: unknown, fallback: string) => {
+    const code = typeof error === 'object' && error && 'code' in error
+      ? String((error as { code?: unknown }).code)
+      : '';
+    const message = error instanceof Error ? error.message : fallback;
+
+    if (code.includes('popup-closed-by-user')) return 'Connexion Google annulée.';
+    if (code.includes('popup-blocked')) return 'La fenêtre Google a été bloquée. Autorisez les popups.';
+    if (code.includes('operation-not-allowed')) return "La connexion Google n'est pas encore activée.";
+    if (code.includes('account-exists-with-different-credential')) {
+      return 'Un compte existe déjà avec cet e-mail via une autre méthode.';
+    }
+    return message;
+  };
+
+  // SHOW LOADING SCREEN UNTIL AUTH STATE IS DETERMINED
+  if (!authInitialized || (auth.currentUser && isLoadingData)) {
+    return (
+      <div className="mx-auto max-w-md py-20 text-center space-y-3">
+        <Loader2 className="h-8 w-8 animate-spin text-[#0284c7] mx-auto" />
+        <p className="text-xs font-semibold text-slate-500">Chargement de votre espace client...</p>
+      </div>
+    );
+  }
+
+  // IF NOT LOGGED IN: SHOW LOGIN / SIGN UP FORM
   if (!clientData) {
     return (
       <div className="mx-auto max-w-md space-y-8 py-6">
@@ -133,83 +270,297 @@ export function ClientPortalClient() {
             Consultez votre compte
           </h1>
           <p className="text-xs sm:text-sm font-medium text-slate-600 leading-relaxed">
-            Entrez votre numéro de téléphone pour accéder à vos rendez-vous, l'historique de vos mensurations et l'état de vos paiements.
+            Connectez-vous ou créez votre compte pour accéder à vos rendez-vous, l'historique de vos mensurations et l'état de vos forfaits.
           </p>
         </div>
 
-        {/* Login Box */}
+        {/* Auth Panel Box */}
         <div className="rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-xl relative overflow-hidden">
           <div className="absolute top-0 left-0 h-[4px] w-full bg-gradient-to-r from-[#0284c7] to-[#242424]" />
 
-          {loginError && (
-            <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-semibold text-rose-800 flex items-start gap-2.5">
-              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-600" />
-              <span>{loginError}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleLoginSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <label className="text-xs font-extrabold uppercase tracking-wider text-slate-700 block">
-                Numéro de Téléphone *
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                <input
-                  type="tel"
-                  required
-                  value={phoneInput}
-                  onChange={(e) => setPhoneInput(e.target.value)}
-                  placeholder="0795 12 84 09 ou +213 795..."
-                  disabled={isLoggingIn}
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-[#0284c7] focus:bg-white focus:ring-2 focus:ring-[#0284c7]/20 disabled:opacity-60"
-                />
+          {/* ─── FORGOT PASSWORD SUB-PANEL ─── */}
+          {showForgotPassword ? (
+            <div className="space-y-5 text-xs">
+              <div className="flex items-center gap-2 mb-2">
+                <KeyRound className="h-5 w-5 text-[#0284c7]" />
+                <h2 className="text-base font-bold text-slate-800">Mot de passe oublié</h2>
               </div>
-              <p className="text-[11px] font-medium text-slate-500">
-                Formats acceptés : <code>05xx</code>, <code>06xx</code>, <code>07xx</code> ou <code>+213 / +33</code> (espaces et tirets tolérés).
+              <p className="text-slate-500 leading-relaxed font-medium">
+                Saisissez votre e-mail pour recevoir un lien de réinitialisation.
               </p>
-            </div>
 
-            {requiresPin && (
-              <div className="space-y-2 rounded-xl bg-amber-50 p-4 border border-amber-200">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-amber-900 block flex items-center gap-1.5">
-                  <Lock className="h-3.5 w-3.5 text-amber-700" />
-                  Code PIN de Sécurité (4 chiffres) *
-                </label>
-                <input
-                  type="password"
-                  maxLength={4}
-                  required
-                  value={pinInput}
-                  onChange={(e) => setPinInput(e.target.value)}
-                  placeholder="****"
-                  disabled={isLoggingIn}
-                  className="w-full rounded-xl border border-amber-300 bg-white px-4 py-2.5 text-center font-mono text-base font-bold tracking-widest text-slate-900 outline-none transition focus:border-[#0284c7]"
-                />
-                <p className="text-[10px] text-amber-800 font-semibold">
-                  Saisissez le code confidentiel attribué à votre fiche pour sécuriser votre compte.
-                </p>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={isLoggingIn || !phoneInput.trim()}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#0284c7] py-3.5 px-5 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#0369a1] hover:scale-[1.02] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {isLoggingIn ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Vérification du compte...
-                </>
+              {resetSent ? (
+                <div className="flex flex-col items-center gap-4 py-4 text-center">
+                  <div className="h-14 w-14 bg-emerald-50 rounded-full flex items-center justify-center">
+                    <CheckCircle2 className="h-7 w-7 text-emerald-500" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-bold text-slate-800 text-sm">E-mail envoyé !</p>
+                    <p className="text-slate-500 leading-relaxed">
+                      Si l’adresse correspond à un compte actif, vous recevrez un lien de réinitialisation dans quelques instants.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setShowForgotPassword(false); setResetSent(false); setResetEmail(""); setResetError(null); }}
+                    className="flex items-center gap-1.5 text-xs font-bold text-[#0284c7] hover:text-[#0369a1] transition-colors cursor-pointer"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" /> Retour à la connexion
+                  </button>
+                </div>
               ) : (
                 <>
-                  <User className="h-4 w-4" />
-                  Accéder à Mon Espace
+                  {resetError && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium">
+                      {resetError}
+                    </div>
+                  )}
+
+                  <form onSubmit={handlePasswordResetSubmit} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="font-semibold text-slate-600 block">E-mail</label>
+                      <div className="relative">
+                        <Mail className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                        <input
+                          type="email"
+                          required
+                          value={resetEmail}
+                          onChange={(e) => { setResetEmail(e.target.value); setResetError(null); }}
+                          placeholder="votre.email@gmail.com"
+                          className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50/70 text-slate-900 focus:outline-none focus:border-[#0284c7] text-xs font-bold"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isResetting}
+                      className="w-full py-3 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-white rounded-xl shadow-md transition-premium text-center flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed text-xs"
+                    >
+                      {isResetting && <Loader2 className="h-4 w-4 animate-spin" />}
+                      Envoyer le lien de réinitialisation
+                    </button>
+                  </form>
+
+                  <button
+                    type="button"
+                    onClick={() => { setShowForgotPassword(false); setResetError(null); setResetEmail(""); }}
+                    className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer pt-1"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" /> Retour à la connexion
+                  </button>
                 </>
               )}
-            </button>
-          </form>
+            </div>
+          ) : (
+            <>
+              {/* TABS SWITCHER */}
+              <div className="flex border-b border-slate-100 mb-6">
+                <button
+                  type="button"
+                  onClick={() => { setActiveAuthTab("login"); setLoginError(""); }}
+                  className={`flex-1 pb-3 text-center text-xs font-extrabold uppercase tracking-wider transition-colors border-b-2 cursor-pointer ${
+                    activeAuthTab === "login"
+                      ? "border-[#0284c7] text-[#0284c7]"
+                      : "border-transparent text-slate-400 hover:text-slate-600"
+                  }`}
+                >
+                  Se Connecter
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setActiveAuthTab("register"); setLoginError(""); }}
+                  className={`flex-1 pb-3 text-center text-xs font-extrabold uppercase tracking-wider transition-colors border-b-2 cursor-pointer ${
+                    activeAuthTab === "register"
+                      ? "border-[#0284c7] text-[#0284c7]"
+                      : "border-transparent text-slate-400 hover:text-slate-600"
+                  }`}
+                >
+                  Créer un Compte
+                </button>
+              </div>
+
+              {loginError && (
+                <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-semibold text-rose-800 flex items-start gap-2.5">
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-600" />
+                  <span>{loginError}</span>
+                </div>
+              )}
+
+              {/* ─── EMAIL/PASSWORD LOGIN FORM ─── */}
+              {activeAuthTab === "login" ? (
+                <form onSubmit={handleEmailLogin} className="space-y-4 text-xs">
+                  <div className="space-y-1.5">
+                    <label className="font-semibold text-slate-600 block">Adresse E-mail</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => { setEmail(e.target.value); setLoginError(""); }}
+                        placeholder="nom.prenom@gmail.com"
+                        disabled={isLoggingIn}
+                        className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50/70 text-slate-900 focus:outline-none focus:border-[#0284c7] text-xs font-bold disabled:opacity-60"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <label className="font-semibold text-slate-600">Mot de passe</label>
+                      <button
+                        type="button"
+                        onClick={() => { setShowForgotPassword(true); setLoginError(""); }}
+                        className="text-[11px] font-bold text-[#0284c7] hover:text-[#0369a1] transition-colors cursor-pointer"
+                      >
+                        Mot de passe oublié ?
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        value={password}
+                        onChange={(e) => { setPassword(e.target.value); setLoginError(""); }}
+                        placeholder="************"
+                        disabled={isLoggingIn}
+                        className="w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-xl bg-slate-50/70 text-slate-900 focus:outline-none focus:border-[#0284c7] text-xs font-bold disabled:opacity-60 font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(prev => !prev)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 transition hover:bg-white hover:text-slate-700 cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoggingIn}
+                    className="w-full py-3.5 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-white rounded-xl shadow-md transition-premium text-center flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {isLoggingIn ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Connexion en cours...
+                      </>
+                    ) : (
+                      <>
+                        <User className="h-4 w-4" />
+                        Accéder à Mon Espace
+                      </>
+                    )}
+                  </button>
+                </form>
+              ) : (
+                /* ─── EMAIL/PASSWORD REGISTRATION FORM ─── */
+                <form onSubmit={handleRegister} className="space-y-4 text-xs">
+                  <p className="text-[11px] font-medium text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    💡 <strong>Important</strong> : Saisissez l'e-mail que vous avez fourni lors de votre inscription au centre pour lier votre compte.
+                  </p>
+
+                  <div className="space-y-1.5">
+                    <label className="font-semibold text-slate-600 block">Adresse E-mail</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => { setEmail(e.target.value); setLoginError(""); }}
+                        placeholder="nom.prenom@gmail.com"
+                        disabled={isLoggingIn}
+                        className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50/70 text-slate-900 focus:outline-none focus:border-[#0284c7] text-xs font-bold disabled:opacity-60"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-semibold text-slate-600 block">Choisissez un mot de passe</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        value={password}
+                        onChange={(e) => { setPassword(e.target.value); setLoginError(""); }}
+                        placeholder="Minimum 8 caractères"
+                        disabled={isLoggingIn}
+                        className="w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-xl bg-slate-50/70 text-slate-900 focus:outline-none focus:border-[#0284c7] text-xs font-bold disabled:opacity-60 font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(prev => !prev)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 transition hover:bg-white hover:text-slate-700 cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-semibold text-slate-600 block">Confirmer le mot de passe</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        value={confirmPassword}
+                        onChange={(e) => { setConfirmPassword(e.target.value); setLoginError(""); }}
+                        placeholder="Confirmez votre mot de passe"
+                        disabled={isLoggingIn}
+                        className="w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-xl bg-slate-50/70 text-slate-900 focus:outline-none focus:border-[#0284c7] text-xs font-bold disabled:opacity-60 font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoggingIn}
+                    className="w-full py-3.5 bg-[#0284c7] hover:bg-[#0369a1] font-semibold text-white rounded-xl shadow-md transition-premium text-center flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {isLoggingIn ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Création du compte...
+                      </>
+                    ) : (
+                      <>
+                        <User className="h-4 w-4" />
+                        Créer mon Compte
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
+
+              {/* OR DIVIDER */}
+              <div className="flex items-center gap-3 my-5">
+                <div className="h-px flex-1 bg-slate-100" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">ou</span>
+                <div className="h-px flex-1 bg-slate-100" />
+              </div>
+
+              {/* GOOGLE SIGN IN BUTTON */}
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={isLoggingIn}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-extrabold text-slate-700 shadow-xs transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2.5"
+              >
+                {isLoggingIn ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-[#0284c7]" />
+                ) : (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-black text-[#4285f4]">G</span>
+                )}
+                {activeAuthTab === "login" ? "Continuer avec Google" : "S'inscrire avec Google"}
+              </button>
+            </>
+          )}
 
           {/* Quick Info Footer */}
           <div className="mt-6 pt-6 border-t border-slate-100 text-center space-y-3">

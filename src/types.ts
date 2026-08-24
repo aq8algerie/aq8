@@ -76,6 +76,7 @@ export interface Client {
   medicalConditions?: string;
   sportGoals?: string[];
   avatarUrl?: string;
+  pin?: string;
 }
 
 export type AppointmentStatus = 'booked' | 'completed' | 'cancelled';

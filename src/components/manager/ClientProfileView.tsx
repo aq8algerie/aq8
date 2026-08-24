@@ -21,6 +21,7 @@ import {
   PhoneCall,
   Scale,
   Zap,
+  Lock,
 } from 'lucide-react';
 import { Client, Appointment, Service, ClientPackage, Package, Measurement } from '../../types';
 import { ActivePackageCard } from './cards/ActivePackageCard';
@@ -282,9 +283,18 @@ export function ClientProfileView({
                     <span className="text-slate-400 font-semibold">Profession :</span>
                     <span className="font-semibold text-slate-700 truncate max-w-[150px]">{client.profession || '-'}</span>
                   </div>
-                  <div className="flex justify-between items-center py-1">
+                  <div className="flex justify-between items-center py-1 border-b border-slate-200/50">
                     <span className="text-slate-400 font-semibold">Groupe Sanguin :</span>
                     <span className="font-bold text-[#0284c7] font-mono">{client.bloodType || '-'}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-400 font-semibold">Code PIN Espace Client :</span>
+                    <span className={`font-bold font-mono flex items-center gap-1 ${
+                      client.pin ? 'text-[#0284c7]' : 'text-amber-600'
+                    }`}>
+                      <Lock className="h-3.5 w-3.5 shrink-0" />
+                      {client.pin || 'Non configuré (non sécurisé)'}
+                    </span>
                   </div>
                 </div>
 

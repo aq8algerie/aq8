@@ -93,6 +93,7 @@ function normalizeClientInput(
       ? input.sportGoals.slice(0, 20).map(goal => requiredText(goal, 'Objectif', 120))
       : [],
     avatarUrl: optionalText(input.avatarUrl, 500),
+    pin: optionalText(input.pin, 10) || null,
   };
 }
 
