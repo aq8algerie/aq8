@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getAdminAuthInstance, getAdminDb } from '@/src/lib/serverFirebaseAdmin';
 
+import { calculateClientGamification } from '@/src/lib/gamification';
+
 export async function POST(request: Request) {
   try {
     const authorization = request.headers.get('authorization') || '';
@@ -84,13 +86,18 @@ export async function POST(request: Request) {
       .map(doc => ({ id: doc.id, ...doc.data() }))
       .sort((a: any, b: any) => (b.createdAt || '').localeCompare(a.createdAt || ''));
 
+    // 6. Calculate Gamification Stats
+    const gamificationStats = calculateClientGamification(appointments, measurements);
+    const clientWithGamification = { ...foundClient, gamificationStats };
+
     return NextResponse.json({
       ok: true,
-      client: foundClient,
+      client: clientWithGamification,
       appointments,
       measurements,
       payments,
       clientPackages,
+      gamificationStats,
     });
   } catch (error) {
     console.error('[client-portal] fetch failed:', error);

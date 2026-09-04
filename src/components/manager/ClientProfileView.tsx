@@ -28,6 +28,8 @@ import { ActivePackageCard } from './cards/ActivePackageCard';
 import { MeasurementChart } from './cards/MeasurementChart';
 import { formatDateTime } from '../../lib/centerManagerUtils';
 
+import { calculateClientGamification } from '../../lib/gamification';
+
 interface ClientProfileViewProps {
   client: Client;
   appointments: Appointment[];
@@ -57,6 +59,9 @@ export function ClientProfileView({
   const clientMeas = (measurements || []).filter(m =>
     m && m.clientId && String(m.clientId).trim().toLowerCase() === String(client.id).trim().toLowerCase()
   );
+
+  // Calculate Gamification Stats for CRM Manager
+  const gamification = calculateClientGamification(clientApts, clientMeas);
 
   // Calculate age if DOB exists
   const calculateAge = (dobString?: string) => {
@@ -106,6 +111,19 @@ export function ClientProfileView({
                 <h2 className="text-2xl font-black font-display text-white tracking-tight">
                   {client.firstName} {client.lastName}
                 </h2>
+
+                {/* Gamification Level Badge */}
+                <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 uppercase tracking-wider flex items-center gap-1">
+                  <Award className="h-3 w-3 text-amber-400" />
+                  {gamification.levelTitle}
+                </span>
+
+                {gamification.bestStreakWeeks > 0 && (
+                  <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 uppercase tracking-wider flex items-center gap-1">
+                    <Zap className="h-3 w-3 text-rose-400" />
+                    Streak {gamification.bestStreakWeeks} sem. 🔥
+                  </span>
+                )}
 
                 {client.gender && (
                   <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${

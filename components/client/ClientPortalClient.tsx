@@ -28,6 +28,14 @@ import {
   EyeOff,
   KeyRound,
   ArrowLeft,
+  Flame,
+  Trophy,
+  Zap,
+  Shield,
+  Crown,
+  Target,
+  Gift,
+  Star,
 } from "lucide-react";
 import {
   signInWithEmailAndPassword,
@@ -37,8 +45,9 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { auth, db } from "../../src/lib/firebase";
+import { calculateClientGamification } from "../../src/lib/gamification";
 
-type ActiveTab = "appointments" | "measurements" | "payments";
+type ActiveTab = "appointments" | "measurements" | "payments" | "gamification";
 
 export function ClientPortalClient() {
   const [email, setEmail] = useState("");
@@ -588,7 +597,8 @@ export function ClientPortalClient() {
     (a) => a.status === "completed" || a.status === "cancelled"
   );
 
-  const latestMeasurement = measurements[0];
+  // Calculate Gamification Stats
+  const gamificationStats = clientData?.gamificationStats || calculateClientGamification(appointments, measurements);
   const activeCenterName = clientData.centerName || localStorage.getItem("aq8_client_center") || "AQ8 Ouled Fayet";
 
   const handleCenterChange = (newCenterName: string) => {
@@ -665,30 +675,34 @@ export function ClientPortalClient() {
           </div>
         </div>
 
-        {/* Quick Stats Grid */}
+        {/* Quick Stats Grid with Gamification Badge & Streaks */}
         <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 border-t border-slate-800 pt-6">
           <div className="rounded-2xl bg-white/5 p-3.5 border border-white/10">
-            <span className="block text-[11px] font-semibold text-slate-400 uppercase">Séances à venir</span>
-            <span className="block text-xl font-black text-[#38bdf8] mt-1">{upcomingAppts.length}</span>
-          </div>
-
-          <div className="rounded-2xl bg-white/5 p-3.5 border border-white/10">
-            <span className="block text-[11px] font-semibold text-slate-400 uppercase">Séances effectuées</span>
-            <span className="block text-xl font-black text-emerald-400 mt-1">{pastAppts.length}</span>
-          </div>
-
-          <div className="rounded-2xl bg-white/5 p-3.5 border border-white/10">
-            <span className="block text-[11px] font-semibold text-slate-400 uppercase">Dernier Poids</span>
-            <span className="block text-xl font-black text-white mt-1">
-              {latestMeasurement?.weight ? `${latestMeasurement.weight} kg` : "En attente"}
+            <span className="block text-[11px] font-semibold text-slate-400 uppercase">Niveau Adhérente</span>
+            <span className="block text-base font-black text-amber-400 mt-1 flex items-center gap-1.5">
+              <Trophy className="h-4 w-4 text-amber-400" />
+              {gamificationStats.levelTitle}
             </span>
           </div>
 
           <div className="rounded-2xl bg-white/5 p-3.5 border border-white/10">
-            <span className="block text-[11px] font-semibold text-slate-400 uppercase">Statut Compte</span>
-            <span className="block text-sm font-bold text-emerald-400 mt-1 flex items-center gap-1">
-              <ShieldCheck className="h-4 w-4" />
-              Actif & Validé
+            <span className="block text-[11px] font-semibold text-slate-400 uppercase">Streak Régularité</span>
+            <span className="block text-base font-black text-rose-400 mt-1 flex items-center gap-1.5">
+              <Flame className="h-4 w-4 text-rose-500 animate-bounce" />
+              {gamificationStats.bestStreakWeeks} Sem. 🔥
+            </span>
+          </div>
+
+          <div className="rounded-2xl bg-white/5 p-3.5 border border-white/10">
+            <span className="block text-[11px] font-semibold text-slate-400 uppercase">Séances Effectuées</span>
+            <span className="block text-xl font-black text-emerald-400 mt-1">{gamificationStats.totalCompletedSessions}</span>
+          </div>
+
+          <div className="rounded-2xl bg-white/5 p-3.5 border border-white/10">
+            <span className="block text-[11px] font-semibold text-slate-400 uppercase">Badges Débloqués</span>
+            <span className="block text-xl font-black text-[#38bdf8] mt-1 flex items-center gap-1">
+              <Award className="h-4 w-4" />
+              {gamificationStats.badges.filter((b: any) => b.isUnlocked).length} / {gamificationStats.badges.length}
             </span>
           </div>
         </div>
@@ -700,6 +714,7 @@ export function ClientPortalClient() {
           { id: "appointments" as ActiveTab, label: "📅 Mes Séances", count: appointments.length },
           { id: "measurements" as ActiveTab, label: "📏 Suivi & Mensurations", count: measurements.length },
           { id: "payments" as ActiveTab, label: "💳 Paiements & Forfaits", count: payments.length },
+          { id: "gamification" as ActiveTab, label: "🏆 AQ8 Club & Badges", count: gamificationStats.badges.filter(b => b.isUnlocked).length },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -993,6 +1008,213 @@ export function ClientPortalClient() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: GAMIFICATION & AQ8 CLUB */}
+      {activeTab === "gamification" && (
+        <div className="space-y-8">
+          {/* Header Card: Level & XP Progress */}
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-[#0284c7] p-6 sm:p-8 text-white shadow-xl">
+            <div className="absolute right-0 top-0 h-48 w-48 rounded-full bg-amber-400/10 blur-3xl" />
+
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-amber-400 text-slate-950 font-black shadow-lg ring-4 ring-amber-400/20">
+                  <Trophy className="h-8 w-8" />
+                </div>
+                <div className="space-y-1">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/20 px-3 py-0.5 text-[11px] font-extrabold text-amber-300 border border-amber-400/30">
+                    <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+                    Membre Club AQ8
+                  </span>
+                  <h3 className="font-display text-2xl font-black">
+                    {gamificationStats.levelTitle}
+                  </h3>
+                  <p className="text-xs text-slate-300">
+                    Total de {gamificationStats.totalCompletedSessions} séance(s) EMS complétée(s)
+                  </p>
+                </div>
+              </div>
+
+              {/* Bonus Sessions Reward Alert */}
+              <div className="rounded-2xl bg-white/10 border border-white/20 p-4 backdrop-blur-md max-w-sm space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-amber-300">
+                  <span className="flex items-center gap-1.5">
+                    <Gift className="h-4 w-4 text-amber-400" />
+                    Séance Bonus Régularité
+                  </span>
+                  <span className="bg-amber-400/20 px-2 py-0.5 rounded text-[10px]">
+                    {gamificationStats.earnedBonusSessions} Gagnée(s) 🎉
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-200 leading-relaxed font-medium">
+                  {gamificationStats.earnedBonusSessions > 0
+                    ? `Bravo ! Vous avez obtenu ${gamificationStats.earnedBonusSessions} séance(s) offerte(s) grâce à vos streaks de régularité.`
+                    : "Maintenez 2 séances par semaine pendant 1 mois pour débloquer 1 séance bonus gratuite !"}
+                </p>
+              </div>
+            </div>
+
+            {/* XP Progress Bar */}
+            <div className="mt-6 pt-6 border-t border-white/15 space-y-2">
+              <div className="flex justify-between text-xs font-bold text-slate-200">
+                <span>Progression du Niveau</span>
+                <span>{gamificationStats.progressToNextLevel}% ({gamificationStats.totalCompletedSessions} / {gamificationStats.nextLevelSessionTarget} séances)</span>
+              </div>
+              <div className="h-3 w-full bg-slate-950/60 rounded-full overflow-hidden p-0.5 border border-white/10">
+                <div
+                  className="h-full bg-gradient-to-r from-amber-400 to-[#38bdf8] rounded-full transition-all duration-700"
+                  style={{ width: `${gamificationStats.progressToNextLevel}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Regularity Streak Banner */}
+          <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-md">
+                <Flame className="h-6 w-6 animate-pulse" />
+              </div>
+              <div className="space-y-0.5">
+                <h4 className="font-display text-sm font-extrabold text-slate-900">
+                  Streak de Régularité : {gamificationStats.bestStreakWeeks} Semaines Consécutives
+                </h4>
+                <p className="text-xs text-slate-600 font-medium">
+                  Objectif : Effectuer au moins 2 séances EMS par semaine.
+                </p>
+              </div>
+            </div>
+
+            <Link
+              href="/reservation"
+              className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-extrabold text-white shadow-md hover:bg-rose-700 transition"
+            >
+              <Calendar className="h-4 w-4" />
+              Planifier mes 2 séances
+            </Link>
+          </div>
+
+          {/* Badges Grid */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+              <h4 className="font-display text-base font-bold text-[#242424] flex items-center gap-2">
+                <Award className="h-5 w-5 text-[#0284c7]" />
+                Vos Badges & Trophées AQ8 ({gamificationStats.badges.filter((b: any) => b.isUnlocked).length} / {gamificationStats.badges.length})
+              </h4>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {gamificationStats.badges.map((badge: any) => {
+                const isUnlocked = badge.isUnlocked;
+
+                return (
+                  <div
+                    key={badge.id}
+                    className={`relative rounded-2xl p-5 border transition-all duration-300 flex flex-col justify-between space-y-4 ${
+                      isUnlocked
+                        ? "bg-white border-amber-300 shadow-md ring-2 ring-amber-400/20"
+                        : "bg-slate-50 border-slate-200 opacity-75"
+                    }`}
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div
+                          className={`h-12 w-12 rounded-2xl flex items-center justify-center font-bold text-xl shadow-xs ${
+                            isUnlocked
+                              ? "bg-gradient-to-br from-amber-400 to-amber-500 text-slate-950 shadow-amber-300/50"
+                              : "bg-slate-200 text-slate-400"
+                          }`}
+                        >
+                          {badge.iconName === 'Award' && <Award className="h-6 w-6" />}
+                          {badge.iconName === 'Flame' && <Flame className="h-6 w-6" />}
+                          {badge.iconName === 'Zap' && <Zap className="h-6 w-6" />}
+                          {badge.iconName === 'Shield' && <Shield className="h-6 w-6" />}
+                          {badge.iconName === 'Scale' && <Scale className="h-6 w-6" />}
+                          {badge.iconName === 'Crown' && <Crown className="h-6 w-6" />}
+                        </div>
+
+                        {isUnlocked ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-black text-emerald-800 border border-emerald-200">
+                            <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                            Débloqué
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-200 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">
+                            <Lock className="h-3 w-3" />
+                            Verrouillé
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="space-y-1">
+                        <h5 className="font-display text-sm font-extrabold text-slate-900">
+                          {badge.title}
+                        </h5>
+                        <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                          {badge.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Badge Progress or Unlocked Status Footer */}
+                    <div className="pt-3 border-t border-slate-100 text-[11px] font-semibold">
+                      {isUnlocked ? (
+                        <span className="text-amber-700 font-bold flex items-center gap-1">
+                          <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                          Accompli ! {badge.unlockedAt ? `• ${new Date(badge.unlockedAt).toLocaleDateString('fr-FR')}` : ''}
+                        </span>
+                      ) : (
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between text-slate-600 text-[10px] font-extrabold">
+                            <span>Progression</span>
+                            <span>{badge.currentCount} / {badge.requiredCount}</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-[#0284c7] rounded-full"
+                              style={{ width: `${Math.min(100, (badge.currentCount / badge.requiredCount) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Active Challenges Widget */}
+          <div className="rounded-3xl border border-slate-200 bg-slate-900 p-6 text-white space-y-4">
+            <div className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-amber-400" />
+              <h4 className="font-display text-base font-extrabold">
+                Défis du Mois AQ8 Algérie
+              </h4>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold">
+              <div className="rounded-2xl bg-white/5 border border-white/10 p-4 space-y-2">
+                <div className="flex justify-between items-center text-amber-400">
+                  <span className="font-black uppercase tracking-wider text-[10px]">Défi 1 • Assiduité</span>
+                  <span className="bg-amber-400/20 px-2 py-0.5 rounded text-[10px] text-amber-300 font-bold">+100 XP</span>
+                </div>
+                <h5 className="text-sm font-bold text-white">Effectuer 2 séances EMS cette semaine</h5>
+                <p className="text-slate-400 text-[11px]">Conservez votre streak de régularité et accélérez vos résultats physique.</p>
+              </div>
+
+              <div className="rounded-2xl bg-white/5 border border-white/10 p-4 space-y-2">
+                <div className="flex justify-between items-center text-[#38bdf8]">
+                  <span className="font-black uppercase tracking-wider text-[10px]">Défi 2 • Suivi Santé</span>
+                  <span className="bg-[#38bdf8]/20 px-2 py-0.5 rounded text-[10px] text-[#38bdf8] font-bold">Badge Spécial</span>
+                </div>
+                <h5 className="text-sm font-bold text-white">Réaliser une pesée / mensurations avec votre coach</h5>
+                <p className="text-slate-400 text-[11px]">Demandez votre bilan corporel lors de votre prochaine visite en centre.</p>
+              </div>
+            </div>
           </div>
         </div>
       )}

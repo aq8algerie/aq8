@@ -3,8 +3,9 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AlertCircle, Calendar, CheckCircle2, Clock, Loader2, Sun, CloudSun, Moon, ShieldCheck, Flame } from "lucide-react";
 import { collection, doc, onSnapshot, query, where } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 import { motion } from "motion/react";
-import { db } from "../../src/lib/firebase";
+import { auth, db } from "../../src/lib/firebase";
 import { Center } from "../../src/types";
 import {
   getBookingMinimumDate,
@@ -160,6 +161,43 @@ export function CenterBookingForm({
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isPreFilledFromAccount, setIsPreFilledFromAccount] = useState(false);
+  const [authedClientName, setAuthedClientName] = useState("");
+
+  // Auto-prefill client information if user is logged in
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const token = await firebaseUser.getIdToken();
+          const res = await fetch("/api/client-portal", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            }
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.client) {
+            if (data.client.firstName) setFirstName(data.client.firstName);
+            if (data.client.lastName) setLastName(data.client.lastName);
+            if (data.client.phone) setPhone(data.client.phone);
+            if (data.client.email) setEmail(data.client.email);
+            if (data.client.centerId && !propCenterId) {
+              setSelectedCenterId(data.client.centerId);
+            }
+            setAuthedClientName(`${data.client.firstName} ${data.client.lastName}`.trim());
+            setIsPreFilledFromAccount(true);
+          } else if (firebaseUser.email) {
+            setEmail(prev => prev || firebaseUser.email || "");
+          }
+        } catch (err) {
+          console.warn("Could not auto-prefill booking form:", err);
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, [propCenterId]);
 
   const selectedServiceType = useMemo(() => getServiceType(service), [service]);
   const hours = useMemo(() => {
@@ -499,6 +537,20 @@ export function CenterBookingForm({
             <div className="mb-4 rounded-md border border-rose-100 bg-rose-50 p-3 text-sm font-semibold text-rose-700 flex items-start gap-2">
               <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
               {errorMsg}
+            </div>
+          )}
+
+          {isPreFilledFromAccount && (
+            <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/90 p-3.5 text-xs text-emerald-900 flex items-start gap-2.5 shadow-xs">
+              <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-extrabold text-emerald-950 text-xs">
+                  Bonjour {authedClientName || 'chère adhérente'} !
+                </p>
+                <p className="font-medium text-emerald-800 text-[11px] mt-0.5 leading-relaxed">
+                  Vos coordonnées (Prénom, Nom, Téléphone, E-mail) ont été <strong>automatiquement pré-remplies</strong> depuis votre espace adhérent AQ8.
+                </p>
+              </div>
             </div>
           )}
 

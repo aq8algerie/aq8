@@ -15,8 +15,13 @@ import {
   Zap,
   Target,
   Sparkles,
-  User
+  User,
+  Trophy,
+  LogOut,
+  Flame,
 } from "lucide-react";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "@/src/lib/firebase";
 import { useData } from "@/components/context/DataProvider";
 import { getPublicCenters } from "@/src/lib/centerVisibility";
 
@@ -30,8 +35,41 @@ export default function PublicLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [technologyMenuOpen, setTechnologyMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [clientData, setClientData] = useState<any | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
   const publicCenters = useMemo(() => getPublicCenters(centers), [centers]);
+
+  // Track Firebase Client Session for Personalized Header Journey
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const token = await firebaseUser.getIdToken();
+          const res = await fetch("/api/client-portal", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            }
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.client) {
+            setClientData(data.client);
+          } else {
+            setClientData(null);
+          }
+        } catch (err) {
+          console.warn("Header client portal fetch error:", err);
+          setClientData(null);
+        }
+      } else {
+        setClientData(null);
+      }
+      setAuthChecked(true);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -77,15 +115,15 @@ export default function PublicLayout({
               />
             </Link>
 
-            {/* Sublimated Central Desktop Navigation Pills */}
-            <nav className="hidden lg:flex items-center gap-1 text-xs font-bold text-slate-700 bg-slate-100/70 p-1.5 rounded-2xl border border-slate-200/60 shadow-inner">
+            {/* Sleek Central Desktop Navigation */}
+            <nav className="hidden lg:flex items-center gap-1.5 text-xs font-semibold text-slate-600">
               {/* Home Link */}
               <Link
                 href="/"
-                className={`rounded-xl px-4 py-2 transition-all duration-200 ${
+                className={`rounded-xl px-3.5 py-2 transition-all ${
                   isActive("/")
-                    ? "bg-white text-[#0284c7] shadow-md shadow-sky-500/10 font-extrabold"
-                    : "hover:bg-white/80 hover:text-[#242424]"
+                    ? "bg-[#f0f9ff] text-[#0284c7] font-extrabold"
+                    : "hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
                 Accueil
@@ -99,15 +137,15 @@ export default function PublicLayout({
               >
                 <button
                   type="button"
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
                     isActive("/aq8") || isActive("/wonder")
-                      ? "bg-white text-[#0284c7] shadow-md shadow-sky-500/10 font-extrabold"
-                      : "hover:bg-white/80 hover:text-[#242424]"
+                      ? "bg-[#f0f9ff] text-[#0284c7] font-extrabold"
+                      : "hover:bg-slate-50 hover:text-slate-900"
                   }`}
                   onClick={() => setTechnologyMenuOpen(open => !open)}
                 >
                   <span>Nos Technologies</span>
-                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${technologyMenuOpen ? "rotate-180 text-[#0284c7]" : ""}`} />
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${technologyMenuOpen ? "rotate-180 text-[#0284c7]" : "text-slate-400"}`} />
                 </button>
 
                 {/* Dropdown Menu Card */}
@@ -158,70 +196,110 @@ export default function PublicLayout({
 
               <Link
                 href="/a-propos"
-                className={`rounded-xl px-4 py-2 transition-all duration-200 ${
+                className={`rounded-xl px-3.5 py-2 transition-all ${
                   isActive("/a-propos")
-                    ? "bg-white text-[#0284c7] shadow-md shadow-sky-500/10 font-extrabold"
-                    : "hover:bg-white/80 hover:text-[#242424]"
+                    ? "bg-[#f0f9ff] text-[#0284c7] font-extrabold"
+                    : "hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
                 À propos
               </Link>
               <Link
                 href="/centres"
-                className={`rounded-xl px-4 py-2 transition-all duration-200 ${
+                className={`rounded-xl px-3.5 py-2 transition-all ${
                   isActive("/centres")
-                    ? "bg-white text-[#0284c7] shadow-md shadow-sky-500/10 font-extrabold"
-                    : "hover:bg-white/80 hover:text-[#242424]"
+                    ? "bg-[#f0f9ff] text-[#0284c7] font-extrabold"
+                    : "hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
                 Nos Centres
               </Link>
               <Link
                 href="/conseils"
-                className={`rounded-xl px-4 py-2 transition-all duration-200 ${
+                className={`rounded-xl px-3.5 py-2 transition-all ${
                   isActive("/conseils")
-                    ? "bg-white text-[#0284c7] shadow-md shadow-sky-500/10 font-extrabold"
-                    : "hover:bg-white/80 hover:text-[#242424]"
+                    ? "bg-[#f0f9ff] text-[#0284c7] font-extrabold"
+                    : "hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
                 Conseils
               </Link>
               <Link
                 href="/contact"
-                className={`rounded-xl px-4 py-2 transition-all duration-200 ${
+                className={`rounded-xl px-3.5 py-2 transition-all ${
                   isActive("/contact")
-                    ? "bg-white text-[#0284c7] shadow-md shadow-sky-500/10 font-extrabold"
-                    : "hover:bg-white/80 hover:text-[#242424]"
+                    ? "bg-[#f0f9ff] text-[#0284c7] font-extrabold"
+                    : "hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
                 Contact
               </Link>
             </nav>
 
-            {/* Right Action Buttons */}
-            <div className="hidden lg:flex items-center gap-2.5">
-              <Link
-                href="/client"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[#0284c7]/30 bg-[#f0f9ff] px-4 py-3 text-xs font-extrabold text-[#0284c7] transition-all duration-200 hover:bg-[#0284c7] hover:text-white shadow-sm"
-              >
-                <User className="h-4 w-4" />
-                <span>Mon Espace Cliente</span>
-              </Link>
-              <Link
-                href="/reservation"
-                className="group relative inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0284c7] to-[#06b6d4] px-5 py-3 text-xs font-bold text-white shadow-lg shadow-[#0284c7]/25 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#0284c7]/35 active:scale-[0.98]"
-              >
-                <Calendar className="h-4 w-4 transition-transform group-hover:scale-110" />
-                <span>Réserver</span>
-              </Link>
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100 px-3 py-3 text-xs font-bold text-slate-600 transition-all duration-200 hover:bg-slate-200 shadow-sm"
-                title="Accès Administrateur / Coach CRM"
-              >
-                <ShieldCheck className="h-4 w-4 text-slate-500" />
-                <span>CRM</span>
-              </Link>
+            {/* Right Action Buttons: Ultra-Sleek Single Line Buttons */}
+            <div className="hidden lg:flex items-center gap-2">
+              {clientData ? (
+                /* PARCOURS ADHÉRENT CONNECTÉ */
+                <>
+                  <Link
+                    href="/client"
+                    className="inline-flex items-center gap-2 rounded-xl border border-amber-300/80 bg-gradient-to-r from-amber-50 to-amber-100/60 px-3.5 py-2 text-xs font-black text-amber-950 shadow-xs hover:border-amber-400 transition-all whitespace-nowrap"
+                  >
+                    <Trophy className="h-4 w-4 text-amber-500 shrink-0" />
+                    <span>
+                      {clientData.firstName || "Mon Espace"}
+                      <span className="ml-1.5 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] text-slate-950 font-black">
+                        {clientData.gamificationStats?.levelTitle || "AQ8 Club"}
+                      </span>
+                    </span>
+                  </Link>
+
+                  <Link
+                    href="/reservation"
+                    className="group inline-flex items-center gap-2 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] px-4 py-2 text-xs font-extrabold text-white shadow-md shadow-[#0284c7]/20 transition-all hover:scale-[1.02] whitespace-nowrap"
+                  >
+                    <Zap className="h-4 w-4 text-yellow-300 shrink-0 transition-transform group-hover:scale-110" />
+                    <span>Réserver 1-Clic</span>
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => signOut(auth)}
+                    className="p-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                    title="Déconnexion"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </>
+              ) : (
+                /* PARCOURS NOUVEAU CLIENT / VISITEUR */
+                <>
+                  <Link
+                    href="/client"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#0284c7]/25 bg-[#f0f9ff] px-3.5 py-2 text-xs font-bold text-[#0284c7] hover:bg-[#0284c7] hover:text-white transition-all whitespace-nowrap"
+                  >
+                    <User className="h-4 w-4 shrink-0" />
+                    <span>Espace Adhérente</span>
+                  </Link>
+
+                  <Link
+                    href="/reservation"
+                    className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0284c7] to-[#0369a1] px-4 py-2 text-xs font-extrabold text-white shadow-md shadow-sky-500/20 hover:shadow-sky-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all whitespace-nowrap"
+                  >
+                    <Sparkles className="h-4 w-4 text-amber-300 shrink-0 transition-transform group-hover:scale-110" />
+                    <span>Réserver ma 1ère séance</span>
+                  </Link>
+
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center gap-1 rounded-xl border border-slate-200/70 bg-slate-50 px-2.5 py-2 text-xs font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-all whitespace-nowrap"
+                    title="Accès Administrateur / Staff CRM"
+                  >
+                    <ShieldCheck className="h-4 w-4 text-slate-400 shrink-0" />
+                    <span>CRM</span>
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Mobile menu toggle */}
@@ -257,22 +335,50 @@ export default function PublicLayout({
         {/* Mobile Responsive Drawer */}
         {mobileMenuOpen && (
           <div id="public-mobile-menu" className="lg:hidden bg-white/98 backdrop-blur-xl border-b border-slate-200 px-4 pt-3 pb-6 space-y-3 text-xs font-bold shadow-2xl">
-            <Link
-              href="/client"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-[#242424]"
-            >
-              <User className="h-4 w-4 text-[#0284c7]" />
-              Mon Espace Adhérent (RDV & Mensurations)
-            </Link>
-            <Link
-              href="/reservation"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0284c7] to-[#06b6d4] px-4 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0284c7]/20"
-            >
-              <Calendar className="h-4 w-4" />
-              Réserver une séance
-            </Link>
+            {clientData ? (
+              <>
+                <Link
+                  href="/client"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex w-full items-center justify-between rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs font-black text-amber-950 shadow-xs"
+                >
+                  <div className="flex items-center gap-2">
+                    <Trophy className="h-4 w-4 text-amber-500" />
+                    <span>Mon Espace ({clientData.firstName})</span>
+                  </div>
+                  <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] text-slate-950 font-black">
+                    {clientData.gamificationStats?.levelTitle || "Club AQ8"}
+                  </span>
+                </Link>
+                <Link
+                  href="/reservation"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0284c7] to-[#06b6d4] px-4 py-3 text-xs font-extrabold text-white shadow-md"
+                >
+                  <Zap className="h-4 w-4 text-yellow-300" />
+                  Réserver en 1-Clic
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/client"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-[#242424]"
+                >
+                  <User className="h-4 w-4 text-[#0284c7]" />
+                  Mon Espace Adhérente (Connexion)
+                </Link>
+                <Link
+                  href="/reservation"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0284c7] to-[#06b6d4] px-4 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0284c7]/20"
+                >
+                  <Sparkles className="h-4 w-4 text-amber-300" />
+                  Réserver ma 1ère séance
+                </Link>
+              </>
+            )}
 
             <div className="space-y-1 pt-1">
               {[

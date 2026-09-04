@@ -292,6 +292,45 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
       }
     }
 
+    // Auto-match or Auto-provision Client record for instant linking
+    let clientIdToAssign = '';
+    const phoneTrimmed = data.phone.trim();
+    const emailTrimmed = data.email ? data.email.trim().toLowerCase() : '';
+
+    const existingClientByPhone = await transaction.get(
+      db.collection('clients').where('phone', '==', phoneTrimmed).limit(1)
+    );
+
+    if (!existingSameDayAppointments.empty && !existingClientByPhone.empty) {
+      clientIdToAssign = existingClientByPhone.docs[0].id;
+    } else if (!existingClientByPhone.empty) {
+      clientIdToAssign = existingClientByPhone.docs[0].id;
+    } else if (emailTrimmed) {
+      const existingClientByEmail = await transaction.get(
+        db.collection('clients').where('email', '==', emailTrimmed).limit(1)
+      );
+      if (!existingClientByEmail.empty) {
+        clientIdToAssign = existingClientByEmail.docs[0].id;
+      }
+    }
+
+    // If client does not exist yet, auto-provision a new client profile
+    if (!clientIdToAssign) {
+      const newClientRef = db.collection('clients').doc();
+      clientIdToAssign = newClientRef.id;
+      transaction.set(newClientRef, {
+        id: newClientRef.id,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone,
+        email: data.email || '',
+        centerId: data.centerId,
+        status: 'active',
+        createdAt: createdAt,
+        updatedAt: createdAt,
+      });
+    }
+
     const slotSnapshot = await transaction.get(slotRef);
     const slot = await normalizeAdminSlot(transaction, db, slotSnapshot, data.centerId, dateTime, createdAt, transactionCenter);
     const entryId = `request-${requestRef.id}`;
@@ -319,13 +358,14 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
       status: 'confirmed',
       createdAt,
       reservedAt: createdAt,
+      clientId: clientIdToAssign,
     });
 
     transaction.set(appointmentRef, {
       id: requestRef.id,
       centerId: data.centerId,
       centerName: transactionCenter.name,
-      clientId: '',
+      clientId: clientIdToAssign,
       clientFirstName: data.firstName,
       clientLastName: data.lastName,
       clientPhone: data.phone,

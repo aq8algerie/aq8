@@ -77,6 +77,32 @@ export interface Client {
   sportGoals?: string[];
   avatarUrl?: string;
   pin?: string;
+  gamificationStats?: ClientGamificationStats;
+}
+
+export interface Badge {
+  id: string;
+  title: string;
+  description: string;
+  iconName: string;
+  category: 'milestone' | 'streak' | 'engagement';
+  requiredCount: number;
+  currentCount: number;
+  isUnlocked: boolean;
+  unlockedAt?: string;
+}
+
+export interface ClientGamificationStats {
+  level: 'starter' | 'challenger' | 'warrior' | 'legend';
+  levelTitle: string;
+  levelBadgeIcon: string;
+  totalCompletedSessions: number;
+  currentStreakWeeks: number;
+  bestStreakWeeks: number;
+  earnedBonusSessions: number;
+  progressToNextLevel: number; // 0 to 100
+  nextLevelSessionTarget: number;
+  badges: Badge[];
 }
 
 export type AppointmentStatus = 'booked' | 'completed' | 'cancelled';
