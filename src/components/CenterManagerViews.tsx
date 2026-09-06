@@ -42,7 +42,7 @@ import { MeasurementModal } from './manager/modals/MeasurementModal';
 // Utilities & Business rules
 import { getTodayDateString } from '../lib/centerManagerUtils';
 import { validateAppointment } from '../lib/appointmentRules';
-import { findActivePackageForClientAndService, isPackageCompatibleWithService, isPackageExpired } from '../lib/packageRules';
+import { deductSessionFromPackage, findActivePackageForClientAndService, isPackageCompatibleWithService, isPackageExpired, restoreSessionToPackage } from '../lib/packageRules';
 import { AlertTriangle } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { notifyCrmEmailBestEffort } from '../lib/emailNotificationClient';
@@ -57,6 +57,7 @@ import {
 } from '../lib/crmTransactions';
 import { runCrmOperation } from '../lib/crmOperationsClient';
 import { mutateClientRecords } from '../lib/clientRecordsClient';
+import { saveDocument } from '../lib/firestoreRepository';
 
 type PendingClientAction =
   | { kind: 'delete'; clientIds: string[] }
@@ -445,6 +446,27 @@ export function CenterManagerViews({
       return;
     }
 
+    if (!selectedService) {
+      triggerToast('Veuillez sélectionner une prestation valide.', 'error');
+      return;
+    }
+
+    const activePkg = findActivePackageForClientAndService(
+      aptData.clientId,
+      selectedService,
+      clientPackages,
+      packages
+    );
+
+    if (!activePkg) {
+      const serviceLabel = selectedService.type === 'aq8' ? 'AQ8' : 'Wonder';
+      triggerToast(
+        `Solde insuffisant : cet adhérent ne possède aucun forfait ${serviceLabel} actif avec des crédits disponibles.`,
+        'error'
+      );
+      return;
+    }
+
     try {
       const appointmentId = `apt-${Date.now()}`;
       await createAppointmentInTransaction(db, {
@@ -458,9 +480,25 @@ export function CenterManagerViews({
         createdAt: new Date().toISOString()
       });
 
+      // Automatically deduct 1 session credit from client package
+      const updatedPkg = deductSessionFromPackage(activePkg);
+      await saveDocument(db, 'client_packages', updatedPkg.id, updatedPkg);
+      await saveDocument(db, 'appointments', appointmentId, {
+        id: appointmentId,
+        clientId: aptData.clientId,
+        serviceId: aptData.serviceId,
+        centerId,
+        dateTime: dateTimeStr,
+        duration: selectedService ? selectedService.duration : 20,
+        notes: aptData.notes || '',
+        status: 'booked',
+        completedWithClientPackageId: activePkg.id,
+        deductedCredits: 1,
+      });
+
       logCrmAction(userId, userName, 'center_manager', {
         action: 'CREATE_APPOINTMENT',
-        details: `Planification d'un rendez-vous le ${aptData.date} à ${aptData.time} pour le client : ${clientObj ? `${clientObj.firstName} ${clientObj.lastName}` : aptData.clientId}`,
+        details: `Planification du RDV le ${aptData.date} à ${aptData.time} pour ${clientObj ? `${clientObj.firstName} ${clientObj.lastName}` : aptData.clientId}. 1 crédit déduit du forfait ${activePkg.id}. Solde restant : ${updatedPkg.sessionsRemaining} séance(s).`,
         targetId: appointmentId,
         targetType: 'appointment',
         centerId,
@@ -474,7 +512,7 @@ export function CenterManagerViews({
       });
 
       setShowAptModal(false);
-      triggerToast('Rendez-vous planifié avec succès !');
+      triggerToast(`Rendez-vous planifié ! 1 séance déduite (Solde restant : ${updatedPkg.sessionsRemaining}).`);
     } catch (error) {
       triggerToast(getErrorMessage(error, 'Erreur lors de la planification du RDV.'), 'error');
     }
@@ -574,6 +612,16 @@ export function CenterManagerViews({
         },
       });
 
+      let refundMessage = '';
+      if (apt.completedWithClientPackageId && apt.deductedCredits === 1) {
+        const linkedPkg = clientPackages.find(cp => cp.id === apt.completedWithClientPackageId);
+        if (linkedPkg) {
+          const restored = restoreSessionToPackage(linkedPkg);
+          await saveDocument(db, 'client_packages', restored.id, restored);
+          refundMessage = ` (1 crédit recrédité, nouveau solde : ${restored.sessionsRemaining})`;
+        }
+      }
+
       notifyCrmEmailBestEffort({
         type: 'appointment_cancelled',
         centerId,
@@ -581,7 +629,7 @@ export function CenterManagerViews({
       });
 
       if (!options.silent) {
-        triggerToast('Séance annulée avec succès.');
+        triggerToast(`Séance annulée avec succès${refundMessage}.`);
       }
       return { ok: true };
     } catch (error) {

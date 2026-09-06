@@ -135,6 +135,10 @@ export interface Package {
   sessionsCount: number;
   price: number; // in DZD
   description: string;
+  tag?: string;
+  details?: string[];
+  aq8Sessions?: number;
+  wonderSessions?: number;
 }
 
 export interface ClientPackage {

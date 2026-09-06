@@ -6,6 +6,7 @@ import {
   deductSessionFromPackage,
   findActivePackageForClient,
   findActivePackageForClientAndService,
+  restoreSessionToPackage,
   validateDeduction,
   validateSessionCompletion,
 } from './packageRules';
@@ -301,6 +302,14 @@ test('package deduction decrements sessions and completes at zero', () => {
     status: 'active'
   });
   assert.equal(deductSessionFromPackage({ ...activePackage, sessionsRemaining: 1 }).status, 'completed');
+});
+
+test('package restoration increments sessions and reactivates completed packages', () => {
+  assert.deepEqual(restoreSessionToPackage({ ...activePackage, sessionsRemaining: 0, status: 'completed' }), {
+    ...activePackage,
+    sessionsRemaining: 1,
+    status: 'active'
+  });
 });
 
 test('session completion selects a package compatible with the booked technology', () => {

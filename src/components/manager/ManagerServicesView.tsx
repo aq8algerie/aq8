@@ -165,33 +165,57 @@ export function ManagerServicesView({
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {packs.slice(0, gridLimit).map(pkg => (
-                <div key={pkg.id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-xs flex flex-col justify-between space-y-4 hover:shadow-md hover:border-slate-200 transition-all">
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-start">
-                      <span className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wide ${
-                        pkg.type === 'aq8'
-                          ? 'bg-[#0284c7]/10 text-[#0284c7]'
-                          : pkg.type === 'wonder'
-                          ? 'bg-amber-500/10 text-amber-600'
-                          : 'bg-slate-200/80 text-slate-700'
-                      }`}>
-                        {pkg.type === 'aq8' ? '⚡ AQ8' : pkg.type === 'wonder' ? '✨ Wonder' : '🔀 Mix'}
-                      </span>
-                      <span className="flex items-center gap-1 text-[10px] text-slate-400 font-mono font-semibold">
+                <div key={pkg.id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-xs flex flex-col justify-between space-y-4 hover:shadow-md hover:border-slate-200 transition-all relative overflow-hidden">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wide ${
+                          pkg.type === 'aq8'
+                            ? 'bg-[#0284c7]/10 text-[#0284c7]'
+                            : pkg.type === 'wonder'
+                            ? 'bg-amber-500/10 text-amber-600'
+                            : 'bg-indigo-50 text-indigo-700'
+                        }`}>
+                          {pkg.type === 'aq8' ? '⚡ AQ8' : pkg.type === 'wonder' ? '✨ Wonder' : '🔀 Mix'}
+                        </span>
+                        {pkg.tag && (
+                          <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-900 text-white uppercase tracking-wider">
+                            {pkg.tag}
+                          </span>
+                        )}
+                      </div>
+                      <span className="flex items-center gap-1 text-[10px] text-slate-500 font-mono font-bold bg-slate-100 px-2 py-0.5 rounded-md">
                         <Layers className="h-3 w-3" />
                         {pkg.sessionsCount} séances
                       </span>
                     </div>
-                    <h4 className="font-bold text-slate-800 font-display text-sm leading-tight">{pkg.name}</h4>
-                    <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">{pkg.description}</p>
+
+                    <div>
+                      <h4 className="font-bold text-slate-900 font-display text-base leading-tight">{pkg.name}</h4>
+                      <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">{pkg.description}</p>
+                    </div>
+
+                    {pkg.details && pkg.details.length > 0 && (
+                      <ul className="space-y-1.5 pt-2 border-t border-slate-100 text-[11px] text-slate-600 font-medium">
+                        {pkg.details.map((detail, idx) => (
+                          <li key={idx} className="flex items-start gap-1.5">
+                            <span className="text-emerald-500 font-bold shrink-0">✓</span>
+                            <span>{detail}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
 
-                  <div className="pt-3 border-t border-slate-50 flex items-center justify-between">
-                    <span className="font-mono font-bold text-xs text-[#353535]">
-                      {formatDZD(pkg.price)}
-                    </span>
-                    <span className="flex items-center gap-0.5 text-[9px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
-                      <CheckCircle2 className="h-3 w-3" /> Actif
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <div>
+                      <span className="font-mono font-black text-base text-slate-900 block">
+                        {pkg.price > 0 ? `${pkg.price.toLocaleString('fr-DZ')} DA` : 'Sur devis'}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-medium">/ pack</span>
+                    </div>
+                    <span className="flex items-center gap-1 text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/60">
+                      <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Actif
                     </span>
                   </div>
                 </div>

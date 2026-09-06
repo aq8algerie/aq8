@@ -336,36 +336,94 @@ export const INITIAL_SERVICES: Service[] = [
 
 export const INITIAL_PACKAGES: Package[] = [
   {
-    id: 'pkg-1',
-    name: 'Forfait AQ8 Découverte (5 Séances)',
-    type: 'aq8',
-    sessionsCount: 5,
-    price: 15000,
-    description: 'Idéal pour s\'initier à l\'électrostimulation AQ8 et ressentir les premiers résultats.'
-  },
-  {
-    id: 'pkg-2',
-    name: 'Forfait AQ8 Vitalité (10 Séances)',
-    type: 'aq8',
-    sessionsCount: 10,
-    price: 27000,
-    description: 'Notre best-seller. Idéal pour une perte de poids et un renforcement musculaire visible.'
-  },
-  {
-    id: 'pkg-3',
-    name: 'Forfait Wonder Intensity (10 Séances)',
-    type: 'wonder',
-    sessionsCount: 10,
-    price: 38000,
-    description: '10 séances intensives Wonder pour remodeler fessiers, abdos et cuisses sans effort.'
-  },
-  {
-    id: 'pkg-4',
-    name: 'Cure Royal Slim & Sculpt (20 Séances Mixte)',
+    id: 'pkg-synergie',
+    name: 'Découverte Synergie',
     type: 'mix',
-    sessionsCount: 20,
-    price: 65000,
-    description: 'Cure de choc combinant 10 séances d\'EMS AQ8 et 10 séances Wonder.'
+    sessionsCount: 9,
+    price: 15000,
+    tag: 'Essentiel',
+    aq8Sessions: 8,
+    wonderSessions: 1,
+    description: 'Idéal pour tester l\'alliance AQ8 & Wonder et lancer la transformation.',
+    details: [
+      '8 séances AQ8 + 1 séance Wonder',
+      'Parfait pour tonifier et sculpter',
+      'Suivi personnalisé inclus',
+      'Premiers résultats visibles',
+      'Accès flexible'
+    ]
+  },
+  {
+    id: 'pkg-focus-aq8',
+    name: 'Focus AQ8',
+    type: 'aq8',
+    sessionsCount: 12,
+    price: 22000,
+    tag: 'Renforcement',
+    aq8Sessions: 12,
+    wonderSessions: 0,
+    description: 'Un programme intensif centré sur la technologie AQ8 pour un renforcement musculaire profond.',
+    details: [
+      '12 séances AQ8',
+      'Ciblage ventre, cuisses, fessiers',
+      'Amélioration de la posture',
+      'Gain de force et d\'endurance',
+      'Suivi personnalisé'
+    ]
+  },
+  {
+    id: 'pkg-duo-equilibre',
+    name: 'Duo Équilibré',
+    type: 'mix',
+    sessionsCount: 8,
+    price: 22000,
+    tag: 'Recommandé',
+    aq8Sessions: 6,
+    wonderSessions: 2,
+    description: 'L\'équilibre parfait entre renforcement profond et action ciblée pour des résultats visibles.',
+    details: [
+      '6 séances AQ8 + 2 séances Wonder',
+      'Synergie pour affiner et raffermir',
+      'Action anti-cellulite',
+      'Silhouette redessinée',
+      'Suivi personnalisé'
+    ]
+  },
+  {
+    id: 'pkg-transfo-intense',
+    name: 'Transformation Intense',
+    type: 'mix',
+    sessionsCount: 8,
+    price: 26000,
+    tag: 'Transformation',
+    aq8Sessions: 4,
+    wonderSessions: 4,
+    description: 'La combinaison ultime pour un remodelage complet et rapide de la silhouette.',
+    details: [
+      '4 séances AQ8 + 4 séances Wonder',
+      'Action maximale sur la tonicité',
+      'Effet visible sur les zones rebelles',
+      'Métabolisme relancé',
+      'Suivi premium'
+    ]
+  },
+  {
+    id: 'pkg-focus-wonder',
+    name: 'Focus Wonder',
+    type: 'wonder',
+    sessionsCount: 8,
+    price: 35000,
+    tag: 'Performance',
+    aq8Sessions: 0,
+    wonderSessions: 8,
+    description: 'Un programme dédié à la technologie Wonder pour une action ciblée et puissante.',
+    details: [
+      '8 séances Wonder',
+      'Effet sculptant et lissant',
+      'Ciblage zones spécifiques',
+      'Technologie de pointe',
+      'Suivi premium'
+    ]
   }
 ];
 

@@ -196,3 +196,16 @@ export function deductSessionFromPackage(clientPackage: ClientPackage): ClientPa
     status: remaining === 0 ? 'completed' : 'active'
   };
 }
+
+/**
+ * Restores a previously deducted session to the client package
+ */
+export function restoreSessionToPackage(clientPackage: ClientPackage): ClientPackage {
+  const remaining = clientPackage.sessionsRemaining + 1;
+  return {
+    ...clientPackage,
+    sessionsRemaining: remaining,
+    status: 'active'
+  };
+}
+

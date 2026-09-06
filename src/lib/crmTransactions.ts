@@ -7,7 +7,7 @@ import {
   Transaction,
 } from 'firebase/firestore';
 import { Appointment, BookingRequest, Center, Client, Service } from '../types';
-import { validateSessionCompletion } from './packageRules';
+import { restoreSessionToPackage, validateSessionCompletion } from './packageRules';
 import {
   BookingServiceType,
   CenterBookingConfig,
@@ -596,6 +596,22 @@ export async function cancelAppointmentInTransaction(
     const slot = await normalizeSlotFromSnapshot(transaction, db, slotSnapshot, params.centerId, appointment.dateTime, cancelledAt, centerConfig);
     const nextSlot = removeAppointmentFromSlot(slot, params.appointmentId, centerConfig);
 
+    let refundDetails = '';
+    if (appointment.completedWithClientPackageId && appointment.deductedCredits === 1) {
+      const clientPackageRef = doc(db, 'client_packages', appointment.completedWithClientPackageId);
+      const clientPackageSnapshot = await transaction.get(clientPackageRef);
+      if (clientPackageSnapshot.exists()) {
+        const clientPackage = clientPackageSnapshot.data() as any;
+        const restored = restoreSessionToPackage(clientPackage);
+        transaction.update(clientPackageRef, {
+          sessionsRemaining: restored.sessionsRemaining,
+          status: restored.status,
+          updatedAt: cancelledAt,
+        });
+        refundDetails = ` 1 crédit récrédité sur le forfait ${clientPackage.id} (nouveau solde : ${restored.sessionsRemaining} séances).`;
+      }
+    }
+
     writeSlotOrDelete(transaction, db, slotRef, nextSlot);
     transaction.update(appointmentRef, {
       status: 'cancelled',
@@ -607,7 +623,7 @@ export async function cancelAppointmentInTransaction(
     });
     writeCrmAuditLog(transaction, db, params.audit, {
       action: 'CANCEL_APPOINTMENT',
-      details: `Annulation de la réservation ${appointment.id} du ${appointment.dateTime.replace('T', ' ')}. Motif : ${params.reason?.trim() || 'Annulation manager'}.`,
+      details: `Annulation de la réservation ${appointment.id} du ${appointment.dateTime.replace('T', ' ')}. Motif : ${params.reason?.trim() || 'Annulation manager'}.${refundDetails}`,
       targetId: appointment.id,
       targetType: 'appointment',
       centerId: params.centerId,
