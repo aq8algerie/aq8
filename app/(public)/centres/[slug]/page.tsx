@@ -19,7 +19,7 @@ import {
   ShieldAlert,
   Sparkles,
 } from "lucide-react";
-import { getServerPublicCenterBySlug } from "../../../../src/lib/serverPublicData";
+import { getServerPublicCenterBySlug, getServerPublicPackages } from "../../../../src/lib/serverPublicData";
 import { Center } from "../../../../src/types";
 import { getPublicCenterBadgeLabel } from "../../../../src/lib/centerVisibility";
 import { generateCenterSeo } from "../../../../lib/seo";
@@ -90,7 +90,28 @@ export async function generateMetadata({
 export default async function CenterDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const center = slug ? await getServerPublicCenterBySlug(slug) : undefined;
+  const allMasterPackages = await getServerPublicPackages();
   const publicBadgeLabel = center ? getPublicCenterBadgeLabel(center) : "";
+
+  const packages = center
+    ? allMasterPackages
+        .filter((p) => {
+          if (center.customActivePackages && center.customActivePackages.length > 0) {
+            return center.customActivePackages.includes(p.id);
+          }
+          if (p.type === "mix") {
+            return center.services.includes("aq8") && center.services.includes("wonder");
+          }
+          return center.services.includes(p.type as any);
+        })
+        .map((p) => {
+          const customPrice = center.customPackagePrices?.[p.id];
+          return {
+            ...p,
+            price: customPrice !== undefined && customPrice > 0 ? customPrice : p.price,
+          };
+        })
+    : [];
 
   if (!center) {
     return (
@@ -376,6 +397,123 @@ export default async function CenterDetailPage({ params }: PageProps) {
                     </p>
                   </article>
                 ))}
+              </div>
+            </section>
+
+            {/* Prestations & Forfaits */}
+            <section id="forfaits-section" className="space-y-6 scroll-mt-24">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full bg-[#0284c7]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#0284c7]">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Tarifs & Formules
+                </span>
+                <h2 className="mt-2 font-display text-2xl font-bold text-[#353535]">
+                  Prestations & Forfaits — {center.name}
+                </h2>
+                <p className="mt-1 text-sm font-medium text-slate-500">
+                  Découvrez nos forfaits de séances AQ8 EMS &amp; Wonder Axion et choisissez l’offre idéale.
+                </p>
+              </div>
+
+              <div className="grid gap-5 sm:grid-cols-2">
+                {packages.map((pkg) => {
+                  const isRecommended = pkg.tag?.toLowerCase().includes("recommandé");
+
+                  return (
+                    <article
+                      key={pkg.id}
+                      className={`relative flex flex-col justify-between rounded-2xl border bg-white p-6 shadow-sm transition-all hover:shadow-md ${
+                        isRecommended
+                          ? "border-[#0284c7] ring-2 ring-[#0284c7]/20 shadow-md"
+                          : "border-slate-200 hover:border-[#0284c7]/40"
+                      }`}
+                    >
+                      {isRecommended && (
+                        <div className="absolute -top-3.5 left-6 rounded-full bg-[#0284c7] px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-sm">
+                          Recommandé
+                        </div>
+                      )}
+
+                      <div className="space-y-4">
+                        {/* Header Tag & Title */}
+                        <div className="space-y-1.5">
+                          {pkg.tag && (
+                            <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${
+                              isRecommended
+                                ? "bg-[#0284c7]/10 text-[#0284c7]"
+                                : "bg-slate-100 text-slate-700"
+                            }`}>
+                              {pkg.tag}
+                            </span>
+                          )}
+                          <h3 className="font-display text-xl font-bold text-[#353535]">
+                            {pkg.name}
+                          </h3>
+                        </div>
+
+                        {/* Sessions Breakdown */}
+                        <div className="flex flex-wrap gap-2 text-xs font-semibold">
+                          {pkg.aq8Sessions ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-lg bg-sky-50 px-2.5 py-1 text-[#0284c7] border border-sky-100">
+                              <span className="h-1.5 w-1.5 rounded-full bg-[#0284c7]" />
+                              {pkg.aq8Sessions} séance{pkg.aq8Sessions > 1 ? "s" : ""} AQ8
+                            </span>
+                          ) : null}
+                          {pkg.wonderSessions ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1 text-amber-700 border border-amber-100">
+                              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                              {pkg.wonderSessions} séance{pkg.wonderSessions > 1 ? "s" : ""} Wonder
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {/* Price */}
+                        <div>
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="font-mono text-2xl font-black text-[#353535]">
+                              {pkg.price.toLocaleString("fr-DZ")} DA
+                            </span>
+                            <span className="text-xs font-medium text-slate-500">
+                              / pack
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Description */}
+                        <p className="text-xs font-medium leading-relaxed text-slate-600">
+                          {pkg.description}
+                        </p>
+
+                        {/* Bullet Details */}
+                        {pkg.details && pkg.details.length > 0 && (
+                          <ul className="space-y-2 border-t border-slate-100 pt-4 text-xs font-medium text-slate-700">
+                            {pkg.details.map((detail, idx) => (
+                              <li key={idx} className="flex items-start gap-2">
+                                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#0284c7]" />
+                                <span>{detail}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+
+                      {/* CTA Button */}
+                      <div className="mt-6 pt-2">
+                        <a
+                          href="#booking-form-section"
+                          className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold transition-all shadow-xs ${
+                            isRecommended
+                              ? "bg-[#0284c7] text-white hover:bg-[#0369a1]"
+                              : "bg-[#353535] text-white hover:bg-[#0284c7]"
+                          }`}
+                        >
+                          Choisir ce pack
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </a>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </section>
 

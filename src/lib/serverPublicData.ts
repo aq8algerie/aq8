@@ -1,8 +1,8 @@
 import 'server-only';
 import { getAdminDb } from './serverFirebaseAdmin';
 import { getPublicCenters } from './centerVisibility';
-import { INITIAL_CENTERS, INITIAL_SETTINGS } from '../mockData';
-import type { Center, GeneralSettings } from '../types';
+import { INITIAL_CENTERS, INITIAL_PACKAGES, INITIAL_SETTINGS } from '../mockData';
+import type { Center, GeneralSettings, Package } from '../types';
 import { toPlainFirestoreData } from './firestoreSerialization';
 
 const PUBLIC_DATA_TIMEOUT_MS = 4_000;
@@ -53,6 +53,27 @@ export async function getServerPublicCenterBySlug(
   return centers.find(center => center.slug === slug);
 }
 
+export async function getServerPublicPackages(): Promise<Package[]> {
+  try {
+    const snapshot = await withPublicDataTimeout(
+      getAdminDb().collection('packages').get(),
+      'Firestore packages',
+    );
+    const packages = snapshot.docs.map(doc => toPlainFirestoreData({
+      ...doc.data(),
+      id: doc.id,
+    }) as Package);
+    return packages.length > 0 ? packages : INITIAL_PACKAGES;
+  } catch (error) {
+    if (process.env.NODE_ENV === 'production') {
+      console.warn(
+        '[public-packages] Firestore unavailable, using the bundled fallback.',
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+    return INITIAL_PACKAGES;
+  }
+}
 
 export async function getServerPublicSettings(): Promise<GeneralSettings> {
   try {

@@ -22,6 +22,11 @@ type EditableCenterSettings = Pick<
   | 'womenHours'
   | 'equipment'
   | 'cancellationRule'
+  | 'customServicePrices'
+  | 'customPackagePrices'
+  | 'customActiveServices'
+  | 'customActivePackages'
+  | 'services'
 >;
 
 type CenterSettingsMutation = {
@@ -43,6 +48,11 @@ const ALLOWED_KEYS = new Set<keyof EditableCenterSettings>([
   'womenHours',
   'equipment',
   'cancellationRule',
+  'customServicePrices',
+  'customPackagePrices',
+  'customActiveServices',
+  'customActivePackages',
+  'services',
 ]);
 
 const TEXT_LIMITS: Partial<Record<keyof EditableCenterSettings, number>> = {
@@ -166,6 +176,56 @@ function normalizeBookingHours(value: unknown): Center['bookingHours'] {
   return normalized;
 }
 
+function normalizePricesDict(value: unknown, label: string): Record<string, number> {
+  if (!isPlainObject(value)) {
+    throw new CrmAccessError(`Tarification ${label} invalide.`, 400);
+  }
+  const result: Record<string, number> = {};
+  for (const [key, rawPrice] of Object.entries(value)) {
+    if (!/^[a-zA-Z0-9_-]{1,120}$/.test(key)) {
+      throw new CrmAccessError(`Clé ${key} invalide.`, 400);
+    }
+    const numPrice = Number(rawPrice);
+    if (!Number.isFinite(numPrice) || numPrice < 0 || numPrice > 5000000) {
+      throw new CrmAccessError(`Tarif pour ${key} invalide (doit être entre 0 et 5 000 000 DA).`, 400);
+    }
+    result[key] = Math.round(numPrice);
+  }
+  return result;
+}
+
+function normalizeStringList(value: unknown, label: string, maxItems = 50, maxLen = 120): string[] {
+  if (!Array.isArray(value)) {
+    throw new CrmAccessError(`Liste ${label} invalide.`, 400);
+  }
+  if (value.length > maxItems) {
+    throw new CrmAccessError(`Trop d'éléments dans ${label}.`, 400);
+  }
+  return value.map(item => {
+    if (typeof item !== 'string') {
+      throw new CrmAccessError(`Élément invalide dans ${label}.`, 400);
+    }
+    const trimmed = item.trim();
+    if (!trimmed || trimmed.length > maxLen) {
+      throw new CrmAccessError(`Longueur invalide dans ${label}.`, 400);
+    }
+    return trimmed;
+  });
+}
+
+function normalizeServicesList(value: unknown): ('aq8' | 'wonder')[] {
+  if (!Array.isArray(value)) {
+    throw new CrmAccessError('Liste des technologies invalide.', 400);
+  }
+  const valid = new Set(['aq8', 'wonder']);
+  for (const item of value) {
+    if (typeof item !== 'string' || !valid.has(item)) {
+      throw new CrmAccessError('Technologie invalide.', 400);
+    }
+  }
+  return Array.from(new Set(value)) as ('aq8' | 'wonder')[];
+}
+
 function normalizeTextList(
   value: unknown,
   key: keyof EditableCenterSettings,
@@ -203,6 +263,16 @@ function normalizeUpdates(value: unknown): Partial<EditableCenterSettings> {
       normalized.bookingHours = normalizeBookingHours(value[key]);
     } else if (key === 'imageUrl') {
       normalized.imageUrl = normalizePublicImageUrl(value[key]);
+    } else if (key === 'customServicePrices') {
+      normalized.customServicePrices = normalizePricesDict(value[key], 'des prestations');
+    } else if (key === 'customPackagePrices') {
+      normalized.customPackagePrices = normalizePricesDict(value[key], 'des forfaits');
+    } else if (key === 'customActiveServices') {
+      normalized.customActiveServices = normalizeStringList(value[key], 'services actifs', 50, 100);
+    } else if (key === 'customActivePackages') {
+      normalized.customActivePackages = normalizeStringList(value[key], 'forfaits actifs', 50, 100);
+    } else if (key === 'services') {
+      normalized.services = normalizeServicesList(value[key]);
     } else if (key === 'email') {
       const email = normalizeText(value[key], key, TEXT_LIMITS[key]!);
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {

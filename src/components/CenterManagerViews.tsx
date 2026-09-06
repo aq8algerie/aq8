@@ -201,7 +201,7 @@ export function CenterManagerViews({
       const customPrice = currentCenter?.customServicePrices?.[s.id];
       return {
         ...s,
-        price: customPrice !== undefined ? customPrice : 0
+        price: customPrice !== undefined ? customPrice : s.price
       };
     });
 
@@ -220,7 +220,7 @@ export function CenterManagerViews({
       const customPrice = currentCenter?.customPackagePrices?.[p.id];
       return {
         ...p,
-        price: customPrice !== undefined ? customPrice : 0
+        price: customPrice !== undefined ? customPrice : p.price
       };
     });
 
@@ -1064,6 +1064,16 @@ export function CenterManagerViews({
               <ManagerServicesView
                 centerServices={centerServices}
                 centerPackages={centerPackages}
+                allServices={services}
+                allPackages={packages}
+                currentCenter={currentCenter}
+                onSaveCenterServicesAndPackages={async (updates) => {
+                  return handleSaveCenterUpdate(
+                    updates,
+                    'Prestations et forfaits du centre mis à jour.',
+                    'Catalogue du centre enregistré'
+                  );
+                }}
               />
             )}
 

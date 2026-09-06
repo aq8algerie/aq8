@@ -346,7 +346,6 @@ export const INITIAL_PACKAGES: Package[] = [
     wonderSessions: 1,
     description: 'Idéal pour tester l\'alliance AQ8 & Wonder et lancer la transformation.',
     details: [
-      '8 séances AQ8 + 1 séance Wonder',
       'Parfait pour tonifier et sculpter',
       'Suivi personnalisé inclus',
       'Premiers résultats visibles',
@@ -364,7 +363,6 @@ export const INITIAL_PACKAGES: Package[] = [
     wonderSessions: 0,
     description: 'Un programme intensif centré sur la technologie AQ8 pour un renforcement musculaire profond.',
     details: [
-      '12 séances AQ8',
       'Ciblage ventre, cuisses, fessiers',
       'Amélioration de la posture',
       'Gain de force et d\'endurance',
@@ -382,7 +380,6 @@ export const INITIAL_PACKAGES: Package[] = [
     wonderSessions: 2,
     description: 'L\'équilibre parfait entre renforcement profond et action ciblée pour des résultats visibles.',
     details: [
-      '6 séances AQ8 + 2 séances Wonder',
       'Synergie pour affiner et raffermir',
       'Action anti-cellulite',
       'Silhouette redessinée',
@@ -400,7 +397,6 @@ export const INITIAL_PACKAGES: Package[] = [
     wonderSessions: 4,
     description: 'La combinaison ultime pour un remodelage complet et rapide de la silhouette.',
     details: [
-      '4 séances AQ8 + 4 séances Wonder',
       'Action maximale sur la tonicité',
       'Effet visible sur les zones rebelles',
       'Métabolisme relancé',
@@ -418,7 +414,6 @@ export const INITIAL_PACKAGES: Package[] = [
     wonderSessions: 8,
     description: 'Un programme dédié à la technologie Wonder pour une action ciblée et puissante.',
     details: [
-      '8 séances Wonder',
       'Effet sculptant et lissant',
       'Ciblage zones spécifiques',
       'Technologie de pointe',
