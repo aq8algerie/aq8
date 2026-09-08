@@ -209,6 +209,8 @@ export const INITIAL_CENTERS: Center[] = [
       '4': [{ start: '10:00', end: '20:00' }],
       '6': [{ start: '10:00', end: '20:00' }]
     },
+    customActiveServices: ['srv-ems-sculpt', 'srv-wonder', 'srv-aq8', 'srv-power-plate'],
+    customActivePackages: ['pkg-synergie', 'pkg-focus-aq8', 'pkg-duo-equilibre', 'pkg-transfo-intense', 'pkg-focus-wonder'],
     customServices: [
       {
         id: 'srv-ems-sculpt',
