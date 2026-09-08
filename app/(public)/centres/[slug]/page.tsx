@@ -374,36 +374,69 @@ export default async function CenterDetailPage({ params }: PageProps) {
               </div>
             </section>
 
-            {/* Services */}
+            {/* Services / Prestations */}
             <section className="space-y-5">
               <div>
                 <h2 className="font-display text-2xl font-bold text-[#353535]">
-                  Prestations disponibles
+                  Prestations disponibles — {center.name}
                 </h2>
                 <p className="mt-1 text-sm font-medium text-slate-500">
-                  Choisissez la prestation adaptée à vos objectifs.
+                  Choisissez la technologie et le protocole adaptés à vos objectifs.
                 </p>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                {center.services.map((service) => (
-                  <article
-                    key={service}
-                    className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition-premium hover:border-[#0284c7]/30 hover:shadow-md"
-                  >
-                    <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-md bg-[#0284c7]/10 text-[#0284c7] shadow-inner">
-                      <CheckCircle2 className="h-5 w-5" />
-                    </div>
+                {center.customServices && center.customServices.length > 0 ? (
+                  center.customServices.map((srv) => (
+                    <article
+                      key={srv.id}
+                      className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs transition-all hover:border-[#0284c7]/40 hover:shadow-md space-y-3"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className={`text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full ${
+                          srv.type === 'aq8' ? 'bg-[#0284c7]/10 text-[#0284c7]' : 'bg-amber-500/10 text-amber-700'
+                        }`}>
+                          {srv.type === 'aq8' ? '⚡ AQ8 EMS' : '✨ Wonder Axion'}
+                        </span>
+                        <span className="font-mono text-sm font-black text-[#353535]">
+                          {srv.price ? `${srv.price.toLocaleString('fr-DZ')} DA` : ''}
+                        </span>
+                      </div>
 
-                    <h3 className="font-display text-lg font-bold text-[#353535]">
-                      {getServiceLabel(service)}
-                    </h3>
+                      <h3 className="font-display text-lg font-bold text-[#353535]">
+                        {srv.name}
+                      </h3>
 
-                    <p className="mt-2 text-sm font-medium leading-relaxed text-slate-600">
-                      {getServiceDescription(service)}
-                    </p>
-                  </article>
-                ))}
+                      <p className="text-xs font-medium leading-relaxed text-slate-600">
+                        {srv.description}
+                      </p>
+
+                      <div className="pt-2 text-[11px] font-semibold text-slate-400 font-mono flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5 text-[#0284c7]" />
+                        {srv.duration} minutes encadrées
+                      </div>
+                    </article>
+                  ))
+                ) : (
+                  center.services.map((service) => (
+                    <article
+                      key={service}
+                      className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition-premium hover:border-[#0284c7]/30 hover:shadow-md"
+                    >
+                      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-md bg-[#0284c7]/10 text-[#0284c7] shadow-inner">
+                        <CheckCircle2 className="h-5 w-5" />
+                      </div>
+
+                      <h3 className="font-display text-lg font-bold text-[#353535]">
+                        {getServiceLabel(service)}
+                      </h3>
+
+                      <p className="mt-2 text-sm font-medium leading-relaxed text-slate-600">
+                        {getServiceDescription(service)}
+                      </p>
+                    </article>
+                  ))
+                )}
               </div>
             </section>
 

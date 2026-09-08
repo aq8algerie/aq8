@@ -171,13 +171,13 @@ export const INITIAL_CENTERS: Center[] = [
     id: 'center-5',
     name: 'AQ8 Sidi Yahia',
     city: 'Alger',
-    address: 'Avenue Sidi Yahia, Hydra, Alger',
-    phone: '+213 5 53021714',
-    email: 'sidiyahia@aq8algerie.com',
+    address: 'Centre commercial Zemzem, Sidi Yahia, Hydra, Alger',
+    phone: '05 53 02 17 14',
+    email: 'sculptfitcenter@gmail.com',
     imageUrl: '/images/centres/aq8-sidi-yahia.webp',
     services: ['aq8', 'wonder'],
-    schedule: 'Samedi : 10:00 - 21:00 | Dimanche - Jeudi : 09:00 - 21:00 | Vendredi : Fermé',
-    description: 'Un espace premium et épuré sur l\'avenue emblématique de Sidi Yahia, parfait pour un coaching de haut niveau sur mesure.',
+    schedule: 'Samedi, Lundi, Mercredi : Femmes 10:00 - 14:00 | Hommes 14:00 - 20:00 || Dimanche, Mardi, Jeudi : Femmes 10:00 - 18:00 | Hommes 18:00 - 20:00 || Vendredi : Fermé',
+    description: 'La Méthode Sculpt Fit : l’amincissement technologique. Nous avons sélectionné les 4 meilleures technologies mondiales pour transformer votre silhouette.',
     slug: 'sidi-yahia',
     status: 'Ouvert',
     importantNotes: [
@@ -187,14 +187,12 @@ export const INITIAL_CENTERS: Center[] = [
       '⚠️🚨 IMPORTANT : Vous devez absolument recevoir votre reçu de paiement pour valider votre paiement directement à notre centre.'
     ],
     menHours: [
-      'de 14h00 à 17h00 (Dimanche - Jeudi)',
-      'de 19h00 à 21h00 (Dimanche - Jeudi)',
-      'de 16h00 à 21h00 (Samedi)'
+      'de 14h00 à 20h00 (Samedi, Lundi, Mercredi)',
+      'de 18h00 à 20h00 (Dimanche, Mardi, Jeudi)'
     ],
     womenHours: [
-      'de 9h00 à 14h00 (Dimanche - Jeudi)',
-      'de 17h00 à 19h00 (Dimanche - Jeudi)',
-      'de 10h00 à 16h00 (Samedi)'
+      'de 10h00 à 14h00 (Samedi, Lundi, Mercredi)',
+      'de 10h00 à 18h00 (Dimanche, Mardi, Jeudi)'
     ],
     equipment: [
       'Un tee shirt manches longues et d’un bas fin en coton',
@@ -204,13 +202,134 @@ export const INITIAL_CENTERS: Center[] = [
     cancellationRule: 'Veuillez noter que si vous ne pouvez pas assister à votre séance, il est impératif d’annuler au moins 24 heures à l’avance pour éviter que la séance ne soit automatiquement déduite de votre forfait en cours. Merci',
     bookingCapacity: { aq8: 3, wonder: 1 },
     bookingHours: {
-      '0': [{ start: '09:00', end: '21:00' }],
-      '1': [{ start: '09:00', end: '21:00' }],
-      '2': [{ start: '09:00', end: '21:00' }],
-      '3': [{ start: '09:00', end: '21:00' }],
-      '4': [{ start: '09:00', end: '21:00' }],
-      '6': [{ start: '10:00', end: '21:00' }]
-    }
+      '0': [{ start: '10:00', end: '20:00' }],
+      '1': [{ start: '10:00', end: '20:00' }],
+      '2': [{ start: '10:00', end: '20:00' }],
+      '3': [{ start: '10:00', end: '20:00' }],
+      '4': [{ start: '10:00', end: '20:00' }],
+      '6': [{ start: '10:00', end: '20:00' }]
+    },
+    customServices: [
+      {
+        id: 'srv-ems-sculpt',
+        name: 'EMS Sculpt',
+        type: 'wonder',
+        duration: 25,
+        price: 4500,
+        description: 'La technologie de référence pour brûler les graisses et construire du muscle simultanément sans effort.'
+      },
+      {
+        id: 'srv-wonder',
+        name: 'Wonder',
+        type: 'wonder',
+        duration: 25,
+        price: 4500,
+        description: 'Combinaison unique d\'émissions électromagnétiques et neuromusculaires pour une tonification extrême.'
+      },
+      {
+        id: 'srv-aq8',
+        name: 'EMS AQ8',
+        type: 'aq8',
+        duration: 20,
+        price: 3500,
+        description: 'Électrostimulation sans fil pour un travail complet du corps et une amélioration métabolique profonde.'
+      },
+      {
+        id: 'srv-power-plate',
+        name: 'Power Plate',
+        type: 'aq8',
+        duration: 20,
+        price: 3000,
+        description: 'Vibrations haute performance pour drainer, raffermir et améliorer la micro-circulation.'
+      }
+    ],
+    customPackages: [
+      {
+        id: 'pkg-synergie',
+        name: 'Découverte Synergie',
+        type: 'mix',
+        sessionsCount: 9,
+        price: 15000,
+        tag: 'Essentiel',
+        aq8Sessions: 8,
+        wonderSessions: 1,
+        description: 'Idéal pour tester l\'alliance AQ8 & Wonder et lancer la transformation.',
+        details: [
+          'Parfait pour tonifier et sculpter',
+          'Suivi personnalisé inclus',
+          'Premiers résultats visibles',
+          'Accès flexible'
+        ]
+      },
+      {
+        id: 'pkg-focus-aq8',
+        name: 'Focus AQ8',
+        type: 'aq8',
+        sessionsCount: 12,
+        price: 22000,
+        tag: 'Renforcement',
+        aq8Sessions: 12,
+        wonderSessions: 0,
+        description: 'Un programme intensif centré sur la technologie AQ8 pour un renforcement musculaire profond.',
+        details: [
+          'Ciblage ventre, cuisses, fessiers',
+          'Amélioration de la posture',
+          'Gain de force et d\'endurance',
+          'Suivi personnalisé'
+        ]
+      },
+      {
+        id: 'pkg-duo-equilibre',
+        name: 'Duo Équilibré',
+        type: 'mix',
+        sessionsCount: 8,
+        price: 22000,
+        tag: 'Recommandé',
+        aq8Sessions: 6,
+        wonderSessions: 2,
+        description: 'L\'équilibre parfait entre renforcement profond et action ciblée pour des résultats visibles.',
+        details: [
+          'Synergie pour affiner et raffermir',
+          'Action anti-cellulite',
+          'Silhouette redessinée',
+          'Suivi personnalisé'
+        ]
+      },
+      {
+        id: 'pkg-transfo-intense',
+        name: 'Transformation Intense',
+        type: 'mix',
+        sessionsCount: 8,
+        price: 26000,
+        tag: 'Transformation',
+        aq8Sessions: 4,
+        wonderSessions: 4,
+        description: 'La combinaison ultime pour un remodelage complet et rapide de la silhouette.',
+        details: [
+          'Action maximale sur la tonicité',
+          'Effet visible sur les zones rebelles',
+          'Métabolisme relancé',
+          'Suivi premium'
+        ]
+      },
+      {
+        id: 'pkg-focus-wonder',
+        name: 'Focus Wonder',
+        type: 'wonder',
+        sessionsCount: 8,
+        price: 35000,
+        tag: 'Performance',
+        aq8Sessions: 0,
+        wonderSessions: 8,
+        description: 'Un programme dédié à la technologie Wonder pour une action ciblée et puissante.',
+        details: [
+          'Effet sculptant et lissant',
+          'Ciblage zones spécifiques',
+          'Technologie de pointe',
+          'Suivi premium'
+        ]
+      }
+    ]
   },
   {
     id: 'center-6',
