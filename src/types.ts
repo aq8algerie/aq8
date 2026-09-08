@@ -25,6 +25,8 @@ export interface Center {
   customPackagePrices?: Record<string, number>;
   customActiveServices?: string[];
   customActivePackages?: string[];
+  customServices?: Service[];
+  customPackages?: Package[];
   bookingCapacity?: Partial<Record<'aq8' | 'wonder', number>>;
   bookingHours?: Partial<Record<'0' | '1' | '2' | '3' | '4' | '5' | '6', Array<{ start: string; end: string }>>>;
 }

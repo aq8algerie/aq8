@@ -93,9 +93,16 @@ export default async function CenterDetailPage({ params }: PageProps) {
   const allMasterPackages = await getServerPublicPackages();
   const publicBadgeLabel = center ? getPublicCenterBadgeLabel(center) : "";
 
+  const rawPackages = center?.customPackages && center.customPackages.length > 0
+    ? center.customPackages
+    : allMasterPackages;
+
   const packages = center
-    ? allMasterPackages
+    ? rawPackages
         .filter((p) => {
+          if (!p || p.id === 'pkg-legacy-payment' || p.name?.toLowerCase().includes('legacy')) {
+            return false;
+          }
           if (center.customActivePackages && center.customActivePackages.length > 0) {
             return center.customActivePackages.includes(p.id);
           }

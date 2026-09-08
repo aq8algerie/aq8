@@ -6,6 +6,16 @@
 import { Appointment, Client, ClientPackage, Package, Service } from '../types';
 
 /**
+ * Check if a package is a real user-facing package (filters out technical legacy packages)
+ */
+export function isRealPackage(pkg: Package): boolean {
+  if (!pkg || !pkg.id) return false;
+  if (pkg.id === 'pkg-legacy-payment') return false;
+  if (pkg.name && pkg.name.toLowerCase().includes('legacy')) return false;
+  return true;
+}
+
+/**
  * Check if a client package is expired (more than 45 days since purchase)
  */
 export function isPackageExpired(clientPackage: ClientPackage): boolean {

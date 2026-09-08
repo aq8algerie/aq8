@@ -18,10 +18,15 @@ import {
   RotateCcw,
   Search,
   Check,
-  Loader2
+  Loader2,
+  Plus,
+  Trash2,
+  X,
+  Sparkles
 } from 'lucide-react';
 import { Service, Package, Center } from '../../types';
 import { CrmActionResult } from '../../lib/crmTransactions';
+import { isRealPackage } from '../../lib/packageRules';
 
 interface ManagerServicesViewProps {
   centerServices?: Service[];
@@ -34,6 +39,8 @@ interface ManagerServicesViewProps {
     customActivePackages?: string[];
     customServicePrices?: Record<string, number>;
     customPackagePrices?: Record<string, number>;
+    customServices?: Service[];
+    customPackages?: Package[];
   }) => Promise<CrmActionResult>;
 }
 
@@ -50,9 +57,9 @@ export function ManagerServicesView({
   const [searchQuery, setSearchQuery] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  // Derive available master lists
-  const availableServices = allServices.length > 0 ? allServices : centerServices;
-  const availablePackages = allPackages.length > 0 ? allPackages : centerPackages;
+  // Custom center lists
+  const [customServices, setCustomServices] = useState<Service[]>([]);
+  const [customPackages, setCustomPackages] = useState<Package[]>([]);
 
   // Active state lists
   const [activeServiceIds, setActiveServiceIds] = useState<string[]>([]);
@@ -62,48 +69,56 @@ export function ManagerServicesView({
   const [servicePrices, setServicePrices] = useState<Record<string, number>>({});
   const [packagePrices, setPackagePrices] = useState<Record<string, number>>({});
 
-  // Editing price state
+  // Editing inline price state
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingPriceValue, setEditingPriceValue] = useState<string>('');
 
+  // Modals state
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [editingService, setEditingService] = useState<Service | null>(null);
+
+  const [showPackageModal, setShowPackageModal] = useState(false);
+  const [editingPackage, setEditingPackage] = useState<Package | null>(null);
+
+  const [deletingItem, setDeletingItem] = useState<{ id: string; name: string; isService: boolean } | null>(null);
+
   // Initialize or re-sync states when currentCenter changes
   useEffect(() => {
+    const initialServices = currentCenter?.customServices && currentCenter.customServices.length > 0
+      ? currentCenter.customServices
+      : (allServices.length > 0 ? allServices : centerServices);
+
+    const rawPackages = currentCenter?.customPackages && currentCenter.customPackages.length > 0
+      ? currentCenter.customPackages
+      : (allPackages.length > 0 ? allPackages : centerPackages);
+
+    const initialPackages = rawPackages.filter(isRealPackage);
+
+    setCustomServices(initialServices);
+    setCustomPackages(initialPackages);
+
     if (currentCenter) {
-      // Services active list
       if (currentCenter.customActiveServices && currentCenter.customActiveServices.length > 0) {
         setActiveServiceIds(currentCenter.customActiveServices);
       } else {
-        const defaultActiveSrvs = availableServices
-          .filter(s => currentCenter.services?.includes(s.type as any))
-          .map(s => s.id);
-        setActiveServiceIds(defaultActiveSrvs.length > 0 ? defaultActiveSrvs : availableServices.map(s => s.id));
+        setActiveServiceIds(initialServices.map(s => s.id));
       }
 
-      // Packages active list
       if (currentCenter.customActivePackages && currentCenter.customActivePackages.length > 0) {
         setActivePackageIds(currentCenter.customActivePackages);
       } else {
-        const defaultActivePkgs = availablePackages
-          .filter(p => {
-            if (p.type === 'mix') {
-              return currentCenter.services?.includes('aq8') && currentCenter.services?.includes('wonder');
-            }
-            return currentCenter.services?.includes(p.type as any);
-          })
-          .map(p => p.id);
-        setActivePackageIds(defaultActivePkgs.length > 0 ? defaultActivePkgs : availablePackages.map(p => p.id));
+        setActivePackageIds(initialPackages.map(p => p.id));
       }
 
-      // Custom price maps
       setServicePrices(currentCenter.customServicePrices || {});
       setPackagePrices(currentCenter.customPackagePrices || {});
     } else {
-      setActiveServiceIds(availableServices.map(s => s.id));
-      setActivePackageIds(availablePackages.map(p => p.id));
+      setActiveServiceIds(initialServices.map(s => s.id));
+      setActivePackageIds(initialPackages.map(p => p.id));
       setServicePrices({});
       setPackagePrices({});
     }
-  }, [currentCenter, availableServices, availablePackages]);
+  }, [currentCenter, allServices, allPackages, centerServices, centerPackages]);
 
   // Format DZD currency
   const formatDZD = (amount: number) =>
@@ -123,13 +138,13 @@ export function ManagerServicesView({
     );
   };
 
-  // Start editing price
+  // Start inline editing price
   const startEditingPrice = (id: string, currentPrice: number) => {
     setEditingItemId(id);
     setEditingPriceValue(String(currentPrice));
   };
 
-  // Save price edit
+  // Save inline price edit
   const savePriceEdit = (id: string, isService: boolean) => {
     const num = Math.max(0, Math.round(Number(editingPriceValue) || 0));
     if (isService) {
@@ -140,7 +155,7 @@ export function ManagerServicesView({
     setEditingItemId(null);
   };
 
-  // Reset custom price to catalog default
+  // Reset custom price to default
   const resetCustomPrice = (id: string, isService: boolean) => {
     if (isService) {
       setServicePrices(prev => {
@@ -157,6 +172,67 @@ export function ManagerServicesView({
     }
   };
 
+  // Service Modal Actions
+  const handleSaveService = (serviceData: Omit<Service, 'id'> & { id?: string }) => {
+    if (editingService) {
+      // Edit existing
+      setCustomServices(prev =>
+        prev.map(s => (s.id === editingService.id ? { ...serviceData, id: editingService.id } : s))
+      );
+    } else {
+      // Create new
+      const newId = `srv-${Date.now()}`;
+      const newService: Service = { ...serviceData, id: newId };
+      setCustomServices(prev => [...prev, newService]);
+      setActiveServiceIds(prev => [...prev, newId]);
+    }
+    setShowServiceModal(false);
+    setEditingService(null);
+  };
+
+  // Package Modal Actions
+  const handleSavePackage = (packageData: Omit<Package, 'id'> & { id?: string }) => {
+    if (editingPackage) {
+      // Edit existing
+      setCustomPackages(prev =>
+        prev.map(p => (p.id === editingPackage.id ? { ...packageData, id: editingPackage.id } : p))
+      );
+    } else {
+      // Create new
+      const newId = `pkg-${Date.now()}`;
+      const newPackage: Package = { ...packageData, id: newId };
+      setCustomPackages(prev => [...prev, newPackage]);
+      setActivePackageIds(prev => [...prev, newId]);
+    }
+    setShowPackageModal(false);
+    setEditingPackage(null);
+  };
+
+  // Delete Action
+  const confirmDelete = () => {
+    if (!deletingItem) return;
+    const { id, isService } = deletingItem;
+
+    if (isService) {
+      setCustomServices(prev => prev.filter(s => s.id !== id));
+      setActiveServiceIds(prev => prev.filter(x => x !== id));
+      setServicePrices(prev => {
+        const copy = { ...prev };
+        delete copy[id];
+        return copy;
+      });
+    } else {
+      setCustomPackages(prev => prev.filter(p => p.id !== id));
+      setActivePackageIds(prev => prev.filter(x => x !== id));
+      setPackagePrices(prev => {
+        const copy = { ...prev };
+        delete copy[id];
+        return copy;
+      });
+    }
+    setDeletingItem(null);
+  };
+
   // Save all changes to backend
   const handleSaveAll = async () => {
     if (!onSaveCenterServicesAndPackages) return;
@@ -166,24 +242,28 @@ export function ManagerServicesView({
         customActiveServices: activeServiceIds,
         customActivePackages: activePackageIds,
         customServicePrices: servicePrices,
-        customPackagePrices: packagePrices
+        customPackagePrices: packagePrices,
+        customServices,
+        customPackages
       });
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Filter lists by search query
-  const filteredServices = availableServices.filter(s =>
+  // Filter lists by search query & filter out legacy packages
+  const filteredServices = customServices.filter(s =>
     s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredPackages = availablePackages.filter(p =>
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (p.tag && p.tag.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredPackages = customPackages
+    .filter(isRealPackage)
+    .filter(p =>
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.tag && p.tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
 
   return (
     <div id="manager-services-view" className="space-y-6">
@@ -197,31 +277,59 @@ export function ManagerServicesView({
             </h3>
           </div>
           <p className="text-xs text-slate-500 font-medium leading-relaxed">
-            Activez ou désactivez les offres et personnalisez la tarification officielle en DZD pour votre centre.
+            Gérez 100% l'offre de votre centre : créez, modifiez, supprimez, activez/désactivez vos prestations et forfaits.
           </p>
         </div>
 
-        {/* Global Save Button */}
-        {onSaveCenterServicesAndPackages && (
-          <button
-            type="button"
-            onClick={handleSaveAll}
-            disabled={isSaving}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer disabled:opacity-50 shrink-0"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Enregistrement...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                Enregistrer le catalogue
-              </>
-            )}
-          </button>
-        )}
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+          {activeSection === 'services' ? (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingService(null);
+                setShowServiceModal(true);
+              }}
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer"
+            >
+              <Plus className="h-4 w-4" />
+              Créer une Prestation
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingPackage(null);
+                setShowPackageModal(true);
+              }}
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer"
+            >
+              <Plus className="h-4 w-4" />
+              Créer un Forfait
+            </button>
+          )}
+
+          {onSaveCenterServicesAndPackages && (
+            <button
+              type="button"
+              onClick={handleSaveAll}
+              disabled={isSaving}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer disabled:opacity-50"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Enregistrement...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  Enregistrer le catalogue
+                </>
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Control Bar: Section Tabs & Search & View Mode */}
@@ -238,7 +346,7 @@ export function ManagerServicesView({
             }`}
           >
             <Activity className="h-4 w-4" />
-            Prestations ({activeServiceIds.length}/{availableServices.length})
+            Prestations ({activeServiceIds.length}/{customServices.length})
           </button>
 
           <button
@@ -251,7 +359,7 @@ export function ManagerServicesView({
             }`}
           >
             <Package2 className="h-4 w-4" />
-            Forfaits ({activePackageIds.length}/{availablePackages.length})
+            Forfaits ({activePackageIds.length}/{customPackages.length})
           </button>
         </div>
 
@@ -329,25 +437,48 @@ export function ManagerServicesView({
                           {srv.type === 'aq8' ? '⚡ AQ8 EMS' : '✨ Wonder'}
                         </span>
 
-                        <button
-                          type="button"
-                          onClick={() => toggleServiceActive(srv.id)}
-                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold transition-all cursor-pointer ${
-                            isActive
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                              : 'bg-slate-200/80 text-slate-600 border border-slate-300/60'
-                          }`}
-                        >
-                          {isActive ? (
-                            <>
-                              <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Actif
-                            </>
-                          ) : (
-                            <>
-                              <XCircle className="h-3 w-3 text-slate-400" /> Désactivé
-                            </>
-                          )}
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => toggleServiceActive(srv.id)}
+                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold transition-all cursor-pointer ${
+                              isActive
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+                                : 'bg-slate-200/80 text-slate-600 border border-slate-300/60'
+                            }`}
+                          >
+                            {isActive ? (
+                              <>
+                                <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Actif
+                              </>
+                            ) : (
+                              <>
+                                <XCircle className="h-3 w-3 text-slate-400" /> Désactivé
+                              </>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingService(srv);
+                              setShowServiceModal(true);
+                            }}
+                            className="p-1 text-slate-400 hover:text-[#0284c7] hover:bg-sky-50 rounded-lg transition-all cursor-pointer"
+                            title="Modifier les détails de la prestation"
+                          >
+                            <Edit3 className="h-3.5 w-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setDeletingItem({ id: srv.id, name: srv.name, isService: true })}
+                            className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
+                            title="Supprimer la prestation"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
 
                       <div>
@@ -400,7 +531,7 @@ export function ManagerServicesView({
                               )}
                             </div>
                             <span className="text-[10px] text-slate-400 font-medium">
-                              {isCustom ? `Catalogue : ${formatDZD(srv.price)}` : 'Tarif standard'}
+                              {isCustom ? `Base : ${formatDZD(srv.price)}` : 'Tarif standard'}
                             </span>
                           </div>
 
@@ -410,7 +541,7 @@ export function ManagerServicesView({
                                 type="button"
                                 onClick={() => resetCustomPrice(srv.id, true)}
                                 className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
-                                title="Rétablir tarif catalogue"
+                                title="Rétablir tarif standard"
                               >
                                 <RotateCcw className="h-3.5 w-3.5" />
                               </button>
@@ -419,7 +550,7 @@ export function ManagerServicesView({
                               type="button"
                               onClick={() => startEditingPrice(srv.id, displayPrice)}
                               className="p-1.5 text-[#0284c7] hover:bg-[#0284c7]/10 rounded-lg cursor-pointer transition-all"
-                              title="Modifier le tarif"
+                              title="Modifier rapidement le tarif"
                             >
                               <Edit3 className="h-3.5 w-3.5" />
                             </button>
@@ -503,14 +634,27 @@ export function ManagerServicesView({
                           </button>
                         </td>
                         <td className="p-4 text-right">
-                          <button
-                            type="button"
-                            onClick={() => startEditingPrice(srv.id, displayPrice)}
-                            className="p-1.5 text-[#0284c7] hover:bg-sky-50 rounded-lg cursor-pointer"
-                            title="Modifier tarif"
-                          >
-                            <Edit3 className="h-3.5 w-3.5" />
-                          </button>
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingService(srv);
+                                setShowServiceModal(true);
+                              }}
+                              className="p-1.5 text-slate-500 hover:text-[#0284c7] hover:bg-sky-50 rounded-lg cursor-pointer"
+                              title="Modifier"
+                            >
+                              <Edit3 className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeletingItem({ id: srv.id, name: srv.name, isService: true })}
+                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -566,25 +710,48 @@ export function ManagerServicesView({
                           )}
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => togglePackageActive(pkg.id)}
-                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold transition-all cursor-pointer ${
-                            isActive
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                              : 'bg-slate-200/80 text-slate-600 border border-slate-300/60'
-                          }`}
-                        >
-                          {isActive ? (
-                            <>
-                              <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Actif
-                            </>
-                          ) : (
-                            <>
-                              <XCircle className="h-3 w-3 text-slate-400" /> Désactivé
-                            </>
-                          )}
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => togglePackageActive(pkg.id)}
+                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold transition-all cursor-pointer ${
+                              isActive
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+                                : 'bg-slate-200/80 text-slate-600 border border-slate-300/60'
+                            }`}
+                          >
+                            {isActive ? (
+                              <>
+                                <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Actif
+                              </>
+                            ) : (
+                              <>
+                                <XCircle className="h-3 w-3 text-slate-400" /> Désactivé
+                              </>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingPackage(pkg);
+                              setShowPackageModal(true);
+                            }}
+                            className="p-1 text-slate-400 hover:text-[#0284c7] hover:bg-sky-50 rounded-lg transition-all cursor-pointer"
+                            title="Modifier les détails du forfait"
+                          >
+                            <Edit3 className="h-3.5 w-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setDeletingItem({ id: pkg.id, name: pkg.name, isService: false })}
+                            className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
+                            title="Supprimer le forfait"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
 
                       <div>
@@ -606,6 +773,11 @@ export function ManagerServicesView({
                         {pkg.wonderSessions ? (
                           <span className="bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-md">
                             {pkg.wonderSessions} séance{pkg.wonderSessions > 1 ? 's' : ''} Wonder
+                          </span>
+                        ) : null}
+                        {!pkg.aq8Sessions && !pkg.wonderSessions && pkg.sessionsCount > 0 ? (
+                          <span className="bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-md">
+                            {pkg.sessionsCount} séance{pkg.sessionsCount > 1 ? 's' : ''}
                           </span>
                         ) : null}
                       </div>
@@ -654,7 +826,7 @@ export function ManagerServicesView({
                             </div>
                             {isCustom && (
                               <span className="text-[9px] font-bold bg-amber-50 text-amber-700 px-1.5 py-0.2 rounded border border-amber-200 inline-block mt-0.5">
-                                Tarif personnalisé (Catalogue : {formatDZD(pkg.price)})
+                                Tarif personnalisé (Base : {formatDZD(pkg.price)})
                               </span>
                             )}
                           </div>
@@ -665,7 +837,7 @@ export function ManagerServicesView({
                                 type="button"
                                 onClick={() => resetCustomPrice(pkg.id, false)}
                                 className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
-                                title="Rétablir tarif catalogue"
+                                title="Rétablir tarif standard"
                               >
                                 <RotateCcw className="h-3.5 w-3.5" />
                               </button>
@@ -674,7 +846,7 @@ export function ManagerServicesView({
                               type="button"
                               onClick={() => startEditingPrice(pkg.id, displayPrice)}
                               className="p-1.5 text-[#0284c7] hover:bg-[#0284c7]/10 rounded-lg cursor-pointer transition-all"
-                              title="Modifier le tarif"
+                              title="Modifier rapidement le tarif"
                             >
                               <Edit3 className="h-3.5 w-3.5" />
                             </button>
@@ -724,6 +896,7 @@ export function ManagerServicesView({
                           {pkg.aq8Sessions ? `${pkg.aq8Sessions} AQ8` : ''}
                           {pkg.aq8Sessions && pkg.wonderSessions ? ' + ' : ''}
                           {pkg.wonderSessions ? `${pkg.wonderSessions} Wonder` : ''}
+                          {!pkg.aq8Sessions && !pkg.wonderSessions ? `${pkg.sessionsCount} séances` : ''}
                         </td>
                         <td className="p-4 text-right">
                           {isEditingThis ? (
@@ -767,14 +940,27 @@ export function ManagerServicesView({
                           </button>
                         </td>
                         <td className="p-4 text-right">
-                          <button
-                            type="button"
-                            onClick={() => startEditingPrice(pkg.id, displayPrice)}
-                            className="p-1.5 text-[#0284c7] hover:bg-sky-50 rounded-lg cursor-pointer"
-                            title="Modifier tarif"
-                          >
-                            <Edit3 className="h-3.5 w-3.5" />
-                          </button>
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingPackage(pkg);
+                                setShowPackageModal(true);
+                              }}
+                              className="p-1.5 text-slate-500 hover:text-[#0284c7] hover:bg-sky-50 rounded-lg cursor-pointer"
+                              title="Modifier"
+                            >
+                              <Edit3 className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeletingItem({ id: pkg.id, name: pkg.name, isService: false })}
+                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -785,6 +971,395 @@ export function ManagerServicesView({
           )}
         </div>
       )}
+
+      {/* SERVICE MODAL (CREATE / EDIT) */}
+      {showServiceModal && (
+        <ServiceModalForm
+          initialData={editingService}
+          onClose={() => {
+            setShowServiceModal(false);
+            setEditingService(null);
+          }}
+          onSave={handleSaveService}
+        />
+      )}
+
+      {/* PACKAGE MODAL (CREATE / EDIT) */}
+      {showPackageModal && (
+        <PackageModalForm
+          initialData={editingPackage}
+          onClose={() => {
+            setShowPackageModal(false);
+            setEditingPackage(null);
+          }}
+          onSave={handleSavePackage}
+        />
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {deletingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                <Trash2 className="h-4 w-4 text-red-500" />
+                Supprimer {deletingItem.isService ? 'la prestation' : 'le forfait'} ?
+              </h4>
+              <button
+                type="button"
+                onClick={() => setDeletingItem(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Êtes-vous sûr de vouloir supprimer définitivement{' '}
+              <strong className="text-slate-900">« {deletingItem.name} »</strong> du catalogue de ce centre ? Cette action sera appliquée lors de l'enregistrement du catalogue.
+            </p>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeletingItem(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+{/* SERVICE FORM MODAL COMPONENT */}
+function ServiceModalForm({
+  initialData,
+  onClose,
+  onSave
+}: {
+  initialData: Service | null;
+  onClose: () => void;
+  onSave: (serviceData: Omit<Service, 'id'> & { id?: string }) => void;
+}) {
+  const [name, setName] = useState(initialData?.name || '');
+  const [type, setType] = useState<'aq8' | 'wonder'>(initialData?.type || 'aq8');
+  const [duration, setDuration] = useState(initialData?.duration || 20);
+  const [price, setPrice] = useState(initialData?.price || 3000);
+  const [description, setDescription] = useState(initialData?.description || '');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    onSave({
+      ...(initialData?.id ? { id: initialData.id } : {}),
+      name: name.trim(),
+      type,
+      duration: Math.max(1, duration),
+      price: Math.max(0, price),
+      description: description.trim()
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+      <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h4 className="font-bold font-display text-slate-800 text-base flex items-center gap-2">
+            <Activity className="h-5 w-5 text-[#0284c7]" />
+            {initialData ? 'Modifier la Prestation' : 'Créer une Prestation'}
+          </h4>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1">
+            <label className="block text-xs font-bold text-slate-700">Nom de la prestation *</label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="ex: AQ8 Coaching EMS Découverte"
+              className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-[#0284c7]"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-slate-700">Technologie *</label>
+              <select
+                value={type}
+                onChange={e => setType(e.target.value as 'aq8' | 'wonder')}
+                className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-[#0284c7]"
+              >
+                <option value="aq8">AQ8 EMS</option>
+                <option value="wonder">Wonder Axion</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-slate-700">Durée (minutes) *</label>
+              <input
+                type="number"
+                min="1"
+                max="300"
+                required
+                value={duration}
+                onChange={e => setDuration(Number(e.target.value))}
+                className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-[#0284c7]"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-xs font-bold text-slate-700">Tarif par séance (DZD) *</label>
+            <input
+              type="number"
+              min="0"
+              required
+              value={price}
+              onChange={e => setPrice(Number(e.target.value))}
+              className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl font-mono font-bold text-slate-800 focus:outline-none focus:border-[#0284c7]"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-xs font-bold text-slate-700">Description</label>
+            <textarea
+              rows={3}
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="Description complète pour l'adhérent et le planning..."
+              className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-[#0284c7]"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
+            >
+              {initialData ? 'Enregistrer les modifications' : 'Créer la prestation'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+{/* PACKAGE FORM MODAL COMPONENT */}
+function PackageModalForm({
+  initialData,
+  onClose,
+  onSave
+}: {
+  initialData: Package | null;
+  onClose: () => void;
+  onSave: (packageData: Omit<Package, 'id'> & { id?: string }) => void;
+}) {
+  const [name, setName] = useState(initialData?.name || '');
+  const [type, setType] = useState<'aq8' | 'wonder' | 'mix'>(initialData?.type || 'mix');
+  const [aq8Sessions, setAq8Sessions] = useState(initialData?.aq8Sessions ?? (initialData?.type === 'wonder' ? 0 : 8));
+  const [wonderSessions, setWonderSessions] = useState(initialData?.wonderSessions ?? (initialData?.type === 'aq8' ? 0 : 2));
+  const [price, setPrice] = useState(initialData?.price || 20000);
+  const [tag, setTag] = useState(initialData?.tag || '');
+  const [description, setDescription] = useState(initialData?.description || '');
+  const [detailsText, setDetailsText] = useState((initialData?.details || []).join('\n'));
+
+  const sessionsCount = (aq8Sessions || 0) + (wonderSessions || 0);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+
+    const details = detailsText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+
+    onSave({
+      ...(initialData?.id ? { id: initialData.id } : {}),
+      name: name.trim(),
+      type,
+      sessionsCount: Math.max(1, sessionsCount),
+      aq8Sessions: Math.max(0, aq8Sessions),
+      wonderSessions: Math.max(0, wonderSessions),
+      price: Math.max(0, price),
+      tag: tag.trim() || undefined,
+      description: description.trim(),
+      details: details.length > 0 ? details : undefined
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 border border-slate-100 my-8 animate-in fade-in zoom-in-95 duration-150">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h4 className="font-bold font-display text-slate-800 text-base flex items-center gap-2">
+            <Package2 className="h-5 w-5 text-[#0284c7]" />
+            {initialData ? 'Modifier le Forfait' : 'Créer un Forfait'}
+          </h4>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1">
+            <label className="block text-xs font-bold text-slate-700">Nom du forfait *</label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="ex: Pack Duo Équilibré 8 Séances"
+              className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-[#0284c7]"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-slate-700">Type de forfait *</label>
+              <select
+                value={type}
+                onChange={e => {
+                  const newType = e.target.value as 'aq8' | 'wonder' | 'mix';
+                  setType(newType);
+                  if (newType === 'aq8') setWonderSessions(0);
+                  if (newType === 'wonder') setAq8Sessions(0);
+                }}
+                className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-[#0284c7]"
+              >
+                <option value="mix">Combiné / Mixte (AQ8 + Wonder)</option>
+                <option value="aq8">AQ8 EMS uniquement</option>
+                <option value="wonder">Wonder Axion uniquement</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-slate-700">Badge / Tag (optionnel)</label>
+              <input
+                type="text"
+                value={tag}
+                onChange={e => setTag(e.target.value)}
+                placeholder="ex: Recommandé, Essentiel"
+                className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-[#0284c7]"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-slate-700">Séances AQ8</label>
+              <input
+                type="number"
+                min="0"
+                value={aq8Sessions}
+                onChange={e => setAq8Sessions(Number(e.target.value))}
+                disabled={type === 'wonder'}
+                className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-[#0284c7] disabled:bg-slate-100"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-slate-700">Séances Wonder</label>
+              <input
+                type="number"
+                min="0"
+                value={wonderSessions}
+                onChange={e => setWonderSessions(Number(e.target.value))}
+                disabled={type === 'aq8'}
+                className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-[#0284c7] disabled:bg-slate-100"
+              />
+            </div>
+          </div>
+
+          <div className="bg-sky-50/70 p-3 rounded-xl border border-sky-100 text-xs text-[#0284c7] font-semibold flex justify-between items-center">
+            <span>Total séances calculé :</span>
+            <span className="font-mono text-sm font-black">{sessionsCount} séance(s)</span>
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-xs font-bold text-slate-700">Tarif Forfait (DZD) *</label>
+            <input
+              type="number"
+              min="0"
+              required
+              value={price}
+              onChange={e => setPrice(Number(e.target.value))}
+              className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl font-mono font-bold text-slate-800 focus:outline-none focus:border-[#0284c7]"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-xs font-bold text-slate-700">Description court terme *</label>
+            <textarea
+              rows={2}
+              required
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="Un programme complet pour affiner la silhouette et..."
+              className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-[#0284c7]"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-xs font-bold text-slate-700">Inclus / Points forts (une ligne par puce)</label>
+            <textarea
+              rows={3}
+              value={detailsText}
+              onChange={e => setDetailsText(e.target.value)}
+              placeholder={"Action ciblée ventre & cuisses\nSuivi mensurations inclus\nRésultats rapides..."}
+              className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-[#0284c7] font-mono text-[11px]"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
+            >
+              {initialData ? 'Enregistrer le forfait' : 'Créer le forfait'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

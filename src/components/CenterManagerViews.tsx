@@ -18,6 +18,8 @@ import {
   BookingRequest
 } from '../types';
 
+import { isRealPackage } from '../lib/packageRules';
+
 // Manager subviews
 import { ManagerTopBanner } from './manager/ManagerTopBanner';
 import { ManagerTabs, SubTabId } from './manager/ManagerTabs';
@@ -190,7 +192,11 @@ export function CenterManagerViews({
     )
   );
   // Custom center services filtering & pricing
-  const centerServices = services
+  const rawCenterServices = currentCenter?.customServices && currentCenter.customServices.length > 0
+    ? currentCenter.customServices
+    : services;
+
+  const centerServices = rawCenterServices
     .filter(s => {
       if (currentCenter?.customActiveServices) {
         return currentCenter.customActiveServices.includes(s.id);
@@ -206,7 +212,12 @@ export function CenterManagerViews({
     });
 
   // Custom center packages filtering & pricing
-  const centerPackages = packages
+  const rawCenterPackages = currentCenter?.customPackages && currentCenter.customPackages.length > 0
+    ? currentCenter.customPackages
+    : packages;
+
+  const centerPackages = rawCenterPackages
+    .filter(isRealPackage)
     .filter(p => {
       if (currentCenter?.customActivePackages) {
         return currentCenter.customActivePackages.includes(p.id);

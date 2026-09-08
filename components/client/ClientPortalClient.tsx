@@ -947,14 +947,17 @@ export function ClientPortalClient() {
           </div>
 
           {/* Subscribed Packages Card Section */}
-          {clientPackages.length > 0 && (
-            <div className="space-y-3">
-              <h4 className="font-display text-xs font-black uppercase tracking-wider text-slate-700">
-                Vos Abonnements & Forfaits Actifs ({clientPackages.length})
-              </h4>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {clientPackages.map((pkg, idx) => (
-                  <div key={pkg.id || idx} className="rounded-2xl border-2 border-[#0284c7]/30 bg-[#0284c7]/5 p-4 space-y-2">
+          {(() => {
+            const filteredClientPackages = clientPackages.filter(pkg => pkg.packageId !== 'pkg-legacy-payment' && !pkg.packageName?.toLowerCase().includes('legacy'));
+            if (filteredClientPackages.length === 0) return null;
+            return (
+              <div className="space-y-3">
+                <h4 className="font-display text-xs font-black uppercase tracking-wider text-slate-700">
+                  Vos Abonnements & Forfaits Actifs ({filteredClientPackages.length})
+                </h4>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {filteredClientPackages.map((pkg, idx) => (
+                    <div key={pkg.id || idx} className="rounded-2xl border-2 border-[#0284c7]/30 bg-[#0284c7]/5 p-4 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-sm text-slate-900">{pkg.packageName || "Forfait AQ8"}</span>
                       <span className="rounded-full bg-[#0284c7] px-2.5 py-0.5 text-[10px] font-black text-white uppercase">
@@ -965,14 +968,12 @@ export function ClientPortalClient() {
                       <span>Séances restantes :</span>
                       <span className="font-mono text-sm font-black text-[#0284c7]">{pkg.sessionsRemaining ?? pkg.totalSessions ?? "Disponible"} / {pkg.totalSessions || 10}</span>
                     </div>
-                    {pkg.expirationDate && (
-                      <p className="text-[10px] font-medium text-slate-500">Valide jusqu'au : {pkg.expirationDate}</p>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Receipts & Payments History Section */}
           <div className="space-y-3">

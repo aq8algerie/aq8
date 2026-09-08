@@ -26,6 +26,8 @@ type EditableCenterSettings = Pick<
   | 'customPackagePrices'
   | 'customActiveServices'
   | 'customActivePackages'
+  | 'customServices'
+  | 'customPackages'
   | 'services'
 >;
 
@@ -52,6 +54,8 @@ const ALLOWED_KEYS = new Set<keyof EditableCenterSettings>([
   'customPackagePrices',
   'customActiveServices',
   'customActivePackages',
+  'customServices',
+  'customPackages',
   'services',
 ]);
 
@@ -246,6 +250,69 @@ function normalizeTextList(
   });
 }
 
+function normalizeCustomServices(value: unknown): any[] {
+  if (!Array.isArray(value) || value.length > 50) {
+    throw new CrmAccessError('Liste de prestations invalide.', 400);
+  }
+  return value.map((srv, index) => {
+    if (!isPlainObject(srv)) {
+      throw new CrmAccessError(`Prestation #${index + 1} invalide.`, 400);
+    }
+    const id = typeof srv.id === 'string' ? srv.id.trim() : '';
+    const name = typeof srv.name === 'string' ? srv.name.trim() : '';
+    const type = srv.type === 'wonder' ? 'wonder' : 'aq8';
+    const duration = Math.max(1, Math.min(300, Math.round(Number(srv.duration) || 0)));
+    const price = Math.max(0, Math.min(1000000, Math.round(Number(srv.price) || 0)));
+    const description = typeof srv.description === 'string' ? srv.description.trim().slice(0, 500) : '';
+
+    if (!id || !name) {
+      throw new CrmAccessError(`Nom ou identifiant de prestation manquant.`, 400);
+    }
+
+    return { id, name, type, duration, price, description };
+  });
+}
+
+function normalizeCustomPackages(value: unknown): any[] {
+  if (!Array.isArray(value) || value.length > 50) {
+    throw new CrmAccessError('Liste de forfaits invalide.', 400);
+  }
+  return value.map((pkg, index) => {
+    if (!isPlainObject(pkg)) {
+      throw new CrmAccessError(`Forfait #${index + 1} invalide.`, 400);
+    }
+    const id = typeof pkg.id === 'string' ? pkg.id.trim() : '';
+    const name = typeof pkg.name === 'string' ? pkg.name.trim() : '';
+    const type = (pkg.type === 'wonder' || pkg.type === 'mix') ? pkg.type : 'aq8';
+    const sessionsCount = Math.max(1, Math.min(500, Math.round(Number(pkg.sessionsCount) || 0)));
+    const price = Math.max(0, Math.min(5000000, Math.round(Number(pkg.price) || 0)));
+    const description = typeof pkg.description === 'string' ? pkg.description.trim().slice(0, 500) : '';
+    const tag = typeof pkg.tag === 'string' ? pkg.tag.trim().slice(0, 50) : undefined;
+    const aq8Sessions = pkg.aq8Sessions !== undefined ? Math.max(0, Math.min(500, Math.round(Number(pkg.aq8Sessions) || 0))) : undefined;
+    const wonderSessions = pkg.wonderSessions !== undefined ? Math.max(0, Math.min(500, Math.round(Number(pkg.wonderSessions) || 0))) : undefined;
+    const details = Array.isArray(pkg.details)
+      ? pkg.details.filter((d: unknown) => typeof d === 'string').map((d: unknown) => (d as string).trim().slice(0, 200))
+      : undefined;
+
+    if (!id || !name) {
+      throw new CrmAccessError(`Nom ou identifiant de forfait manquant.`, 400);
+    }
+
+    return {
+      id,
+      name,
+      type,
+      sessionsCount,
+      price,
+      description,
+      tag,
+      aq8Sessions,
+      wonderSessions,
+      details,
+    };
+  });
+}
+
 function normalizeUpdates(value: unknown): Partial<EditableCenterSettings> {
   if (!isPlainObject(value)) {
     throw new CrmAccessError('Paramètres du centre invalides.', 400);
@@ -271,6 +338,10 @@ function normalizeUpdates(value: unknown): Partial<EditableCenterSettings> {
       normalized.customActiveServices = normalizeStringList(value[key], 'services actifs', 50, 100);
     } else if (key === 'customActivePackages') {
       normalized.customActivePackages = normalizeStringList(value[key], 'forfaits actifs', 50, 100);
+    } else if (key === 'customServices') {
+      normalized.customServices = normalizeCustomServices(value[key]);
+    } else if (key === 'customPackages') {
+      normalized.customPackages = normalizeCustomPackages(value[key]);
     } else if (key === 'services') {
       normalized.services = normalizeServicesList(value[key]);
     } else if (key === 'email') {

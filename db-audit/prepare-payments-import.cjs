@@ -92,14 +92,7 @@ function main() {
 
   payments.sort((a, b) => a.date.localeCompare(b.date) || Number(a.legacyNodeId) - Number(b.legacyNodeId));
 
-  const packageRows = [{
-    id: "pkg-legacy-payment",
-    name: "Paiement legacy importé",
-    type: "mix",
-    sessionsCount: 0,
-    price: 0,
-    description: "Forfait technique utilisé pour rattacher les encaissements importés depuis l'ancien site.",
-  }];
+  const packageRows = [];
 
   const paymentColumns = ["id", "clientId", "packageId", "centerId", "amount", "date", "method", "receiptNumber"];
   const reviewColumns = Object.keys(review[0] || payments[0] || {});
