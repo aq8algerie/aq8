@@ -39,6 +39,7 @@ interface ManagerClientsViewProps {
 
 type StatusFilter = 'all' | ClientStatus;
 type SubFilterType = 'all' | 'has_active' | 'no_active' | 'inactive_30d' | 'renewal_needed';
+type SortOption = 'alpha_asc' | 'alpha_desc' | 'newest' | 'oldest' | 'balance_desc';
 
 export function ManagerClientsView({
   centerId,
@@ -62,6 +63,7 @@ export function ManagerClientsView({
   const [subFilter, setSubFilter] = useState<SubFilterType>('all');
   const [periodFilter, setPeriodFilter] = useState<'all' | 'this_month' | 'this_year'>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('alpha_asc');
 
   const clientPageSizes = [20, 50, 100, 200] as const;
   const centerClients = useMemo(() => clients.filter(client => client.centerId === centerId), [centerId, clients]);
@@ -93,41 +95,64 @@ export function ManagerClientsView({
     return `${first}${last || (!first ? fallback : '')}`.toUpperCase() || 'C';
   };
 
-  const filteredClients = useMemo(() => centerClients.filter(client => {
-    const fullName = getClientDisplayName(client).toLowerCase();
-    const query = searchQuery.toLowerCase().trim();
-    const phone = safeText(client.phone).toLowerCase();
-    const email = safeText(client.email).toLowerCase();
-    const matchesSearch = !query || fullName.includes(query) || phone.includes(query) || email.includes(query);
-    if (!matchesSearch) return false;
+  const filteredClients = useMemo(() => {
+    const list = centerClients.filter(client => {
+      const fullName = getClientDisplayName(client).toLowerCase();
+      const query = searchQuery.toLowerCase().trim();
+      const phone = safeText(client.phone).toLowerCase();
+      const email = safeText(client.email).toLowerCase();
+      const matchesSearch = !query || fullName.includes(query) || phone.includes(query) || email.includes(query);
+      if (!matchesSearch) return false;
 
-    if (genderFilter !== 'all' && client.gender !== genderFilter) return false;
+      if (genderFilter !== 'all' && client.gender !== genderFilter) return false;
 
-    if (statusFilter !== 'all' && getClientStatus(client) !== statusFilter) return false;
+      if (statusFilter !== 'all' && getClientStatus(client) !== statusFilter) return false;
 
-    const retention = retentionMap.get(client.id);
+      const retention = retentionMap.get(client.id);
 
-    if (subFilter !== 'all') {
-      const activePackage = hasActivePackage(client);
-      if (subFilter === 'has_active' && !activePackage) return false;
-      if (subFilter === 'no_active' && activePackage) return false;
-      if (subFilter === 'inactive_30d' && (!retention || !retention.isInactive30Days)) return false;
-      if (subFilter === 'renewal_needed' && (!retention || !retention.needsPackageRenewal)) return false;
-    }
-
-    if (periodFilter !== 'all') {
-      const createdDate = new Date(client.createdAt);
-      const now = new Date();
-      if (Number.isNaN(createdDate.getTime())) return false;
-      if (periodFilter === 'this_month') {
-        const isThisMonth = createdDate.getMonth() === now.getMonth() && createdDate.getFullYear() === now.getFullYear();
-        if (!isThisMonth) return false;
+      if (subFilter !== 'all') {
+        const activePackage = hasActivePackage(client);
+        if (subFilter === 'has_active' && !activePackage) return false;
+        if (subFilter === 'no_active' && activePackage) return false;
+        if (subFilter === 'inactive_30d' && (!retention || !retention.isInactive30Days)) return false;
+        if (subFilter === 'renewal_needed' && (!retention || !retention.needsPackageRenewal)) return false;
       }
-      if (periodFilter === 'this_year' && createdDate.getFullYear() !== now.getFullYear()) return false;
-    }
 
-    return true;
-  }), [centerClients, clientPackages, genderFilter, periodFilter, searchQuery, statusFilter, subFilter, retentionMap]);
+      if (periodFilter !== 'all') {
+        const createdDate = new Date(client.createdAt);
+        const now = new Date();
+        if (Number.isNaN(createdDate.getTime())) return false;
+        if (periodFilter === 'this_month') {
+          const isThisMonth = createdDate.getMonth() === now.getMonth() && createdDate.getFullYear() === now.getFullYear();
+          if (!isThisMonth) return false;
+        }
+        if (periodFilter === 'this_year' && createdDate.getFullYear() !== now.getFullYear()) return false;
+      }
+
+      return true;
+    });
+
+    return list.sort((a, b) => {
+      if (sortBy === 'alpha_asc') {
+        return getClientDisplayName(a).localeCompare(getClientDisplayName(b), 'fr', { sensitivity: 'base' });
+      }
+      if (sortBy === 'alpha_desc') {
+        return getClientDisplayName(b).localeCompare(getClientDisplayName(a), 'fr', { sensitivity: 'base' });
+      }
+      if (sortBy === 'newest') {
+        return (b.createdAt || '').localeCompare(a.createdAt || '');
+      }
+      if (sortBy === 'oldest') {
+        return (a.createdAt || '').localeCompare(b.createdAt || '');
+      }
+      if (sortBy === 'balance_desc') {
+        const remA = clientPackages.filter(cp => cp.clientId === a.id && cp.status === 'active').reduce((acc, curr) => acc + curr.sessionsRemaining, 0);
+        const remB = clientPackages.filter(cp => cp.clientId === b.id && cp.status === 'active').reduce((acc, curr) => acc + curr.sessionsRemaining, 0);
+        return remB - remA;
+      }
+      return 0;
+    });
+  }, [centerClients, clientPackages, genderFilter, periodFilter, searchQuery, statusFilter, subFilter, sortBy, retentionMap]);
 
   const totalPages = Math.max(1, Math.ceil(filteredClients.length / listPageSize));
   const paginatedClients = filteredClients.slice((listPage - 1) * listPageSize, listPage * listPageSize);
@@ -147,7 +172,7 @@ export function ManagerClientsView({
   useEffect(() => {
     setListPage(1);
     setGridLimit(12);
-  }, [searchQuery, genderFilter, subFilter, periodFilter, statusFilter, listPageSize]);
+  }, [searchQuery, genderFilter, subFilter, periodFilter, statusFilter, sortBy, listPageSize]);
 
   useEffect(() => {
     const validIds = new Set(centerClients.map(client => client.id));
@@ -347,7 +372,18 @@ export function ManagerClientsView({
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-5">
+          <div className="space-y-1">
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Tri & Ordre</label>
+            <select value={sortBy} onChange={(event) => setSortBy(event.target.value as SortOption)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] text-slate-700 focus:outline-none font-bold">
+              <option value="alpha_asc">🔤 Nom (A ➔ Z)</option>
+              <option value="alpha_desc">🔤 Nom (Z ➔ A)</option>
+              <option value="newest">📅 Plus récents d'abord</option>
+              <option value="oldest">📅 Plus anciens d'abord</option>
+              <option value="balance_desc">⚡ Solde restant (Décroissant)</option>
+            </select>
+          </div>
+
           <div className="space-y-1">
             <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Genre</label>
             <select value={genderFilter} onChange={(event) => setGenderFilter(event.target.value as 'all' | 'H' | 'F')} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] text-slate-700 focus:outline-none font-bold">

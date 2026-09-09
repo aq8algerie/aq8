@@ -194,14 +194,41 @@ export function ManagerPaymentsView({
     });
   }, [centerClients, centerClientPackages, centerPayments, centerAppointments]);
 
+type BalanceSortOption = 'alpha_asc' | 'alpha_desc' | 'balance_desc' | 'balance_asc' | 'spent_desc';
+
+  const [balanceSortBy, setBalanceSortBy] = useState<BalanceSortOption>('alpha_asc');
+
   const filteredClientBalances = useMemo(() => {
-    return clientBalanceRows.filter(row => {
+    const list = clientBalanceRows.filter(row => {
       const fullName = `${row.client.firstName} ${row.client.lastName}`.toLowerCase();
       const matchesQuery = !searchQuery.trim() || fullName.includes(searchQuery.trim().toLowerCase()) || row.client.phone.includes(searchQuery.trim());
       const matchesBalance = balanceFilter === 'all' || row.statusCategory === balanceFilter;
       return matchesQuery && matchesBalance;
-    }).sort((a, b) => b.totalRemaining - a.totalRemaining);
-  }, [clientBalanceRows, searchQuery, balanceFilter]);
+    });
+
+    return list.sort((a, b) => {
+      if (balanceSortBy === 'alpha_asc') {
+        const nameA = `${a.client.firstName} ${a.client.lastName}`;
+        const nameB = `${b.client.firstName} ${b.client.lastName}`;
+        return nameA.localeCompare(nameB, 'fr', { sensitivity: 'base' });
+      }
+      if (balanceSortBy === 'alpha_desc') {
+        const nameA = `${a.client.firstName} ${a.client.lastName}`;
+        const nameB = `${b.client.firstName} ${b.client.lastName}`;
+        return nameB.localeCompare(nameA, 'fr', { sensitivity: 'base' });
+      }
+      if (balanceSortBy === 'balance_desc') {
+        return b.totalRemaining - a.totalRemaining;
+      }
+      if (balanceSortBy === 'balance_asc') {
+        return a.totalRemaining - b.totalRemaining;
+      }
+      if (balanceSortBy === 'spent_desc') {
+        return b.totalSpent - a.totalSpent;
+      }
+      return 0;
+    });
+  }, [clientBalanceRows, searchQuery, balanceFilter, balanceSortBy]);
 
   const totalPages = Math.max(1, Math.ceil(filteredPayments.length / listPageSize));
   const normalizedListPage = Math.min(listPage, totalPages);
@@ -578,14 +605,31 @@ export function ManagerPaymentsView({
               </div>
             </div>
 
-            <div className="relative">
-              <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Rechercher par prénom, nom ou téléphone d'adhérent..."
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#0284c7] focus:bg-white"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="sm:col-span-2 relative">
+                <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Rechercher par prénom, nom ou téléphone d'adhérent..."
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#0284c7] focus:bg-white"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">Tri :</span>
+                <select
+                  value={balanceSortBy}
+                  onChange={(e) => setBalanceSortBy(e.target.value as BalanceSortOption)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-[#0284c7]"
+                >
+                  <option value="alpha_asc">🔤 Nom (A ➔ Z)</option>
+                  <option value="alpha_desc">🔤 Nom (Z ➔ A)</option>
+                  <option value="balance_desc">⚡ Solde restant (Plus élevé)</option>
+                  <option value="balance_asc">⚡ Solde restant (Plus bas)</option>
+                  <option value="spent_desc">💰 Total investi (Décroissant)</option>
+                </select>
+              </div>
             </div>
           </div>
 
