@@ -40,8 +40,8 @@ export async function POST(request: Request) {
     const clientsSnap = await db.collection('clients').where('email', '==', email).get();
     if (clientsSnap.empty) {
       return NextResponse.json(
-        { ok: false, error: 'Aucun profil adhérent trouvé pour cet e-mail. Veuillez contacter votre centre.' },
-        { status: 404 }
+        { ok: false, client: null, error: 'Aucun profil adhérent trouvé pour cet e-mail. Veuillez contacter votre centre.' },
+        { status: 200 }
       );
     }
 
@@ -50,8 +50,8 @@ export async function POST(request: Request) {
 
     if (activeClients.length === 0) {
       return NextResponse.json(
-        { ok: false, error: 'Votre profil adhérent a été archivé. Veuillez contacter votre centre.' },
-        { status: 404 }
+        { ok: false, client: null, error: 'Votre profil adhérent a été archivé. Veuillez contacter votre centre.' },
+        { status: 200 }
       );
     }
 

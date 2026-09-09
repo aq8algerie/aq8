@@ -29,6 +29,7 @@ type EditableCenterSettings = Pick<
   | 'customServices'
   | 'customPackages'
   | 'services'
+  | 'sessionValidationMode'
 >;
 
 type CenterSettingsMutation = {
@@ -57,6 +58,7 @@ const ALLOWED_KEYS = new Set<keyof EditableCenterSettings>([
   'customServices',
   'customPackages',
   'services',
+  'sessionValidationMode',
 ]);
 
 const TEXT_LIMITS: Partial<Record<keyof EditableCenterSettings, number>> = {
@@ -230,6 +232,13 @@ function normalizeServicesList(value: unknown): ('aq8' | 'wonder')[] {
   return Array.from(new Set(value)) as ('aq8' | 'wonder')[];
 }
 
+function normalizeSessionValidationMode(value: unknown): 'auto' | 'manual' {
+  if (value !== 'auto' && value !== 'manual') {
+    throw new CrmAccessError('Mode de déduction des séances invalide.', 400);
+  }
+  return value;
+}
+
 function normalizeTextList(
   value: unknown,
   key: keyof EditableCenterSettings,
@@ -344,6 +353,8 @@ function normalizeUpdates(value: unknown): Partial<EditableCenterSettings> {
       normalized.customPackages = normalizeCustomPackages(value[key]);
     } else if (key === 'services') {
       normalized.services = normalizeServicesList(value[key]);
+    } else if (key === 'sessionValidationMode') {
+      normalized.sessionValidationMode = normalizeSessionValidationMode(value[key]);
     } else if (key === 'email') {
       const email = normalizeText(value[key], key, TEXT_LIMITS[key]!);
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
