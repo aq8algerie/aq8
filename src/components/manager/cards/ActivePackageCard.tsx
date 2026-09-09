@@ -71,10 +71,10 @@ export function ActivePackageCard({
                         <button
                           type="button"
                           onClick={() => onCancelPackageClick(cp.id)}
-                          className="p-1 text-slate-400 hover:text-rose-600 transition cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 transition cursor-pointer"
                           title="Annuler ce forfait"
                         >
-                          <Ban className="h-3.5 w-3.5" />
+                          <Ban className="h-3 w-3" /> Annuler
                         </button>
                       )}
                     </div>

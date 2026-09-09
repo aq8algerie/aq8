@@ -650,13 +650,25 @@ export function ManagerPaymentsView({
                         </td>
 
                         <td className="p-4 text-center">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedClientLedger(row.client)}
-                            className="px-3 py-1.5 bg-slate-100 hover:bg-[#0284c7] hover:text-white text-slate-700 font-bold rounded-xl transition text-[11px] inline-flex items-center gap-1 cursor-pointer"
-                          >
-                            <Eye className="h-3.5 w-3.5" /> Fiche Solde
-                          </button>
+                          <div className="inline-flex items-center justify-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedClientLedger(row.client)}
+                              className="px-3 py-1.5 bg-slate-100 hover:bg-[#0284c7] hover:text-white text-slate-700 font-bold rounded-xl transition text-[11px] inline-flex items-center gap-1 cursor-pointer"
+                            >
+                              <Eye className="h-3.5 w-3.5" /> Fiche Solde
+                            </button>
+                            {row.activePkg && onCancelPackageClick && (
+                              <button
+                                type="button"
+                                onClick={() => onCancelPackageClick(row.activePkg!.id)}
+                                className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 rounded-xl transition text-[11px] inline-flex items-center gap-1 cursor-pointer"
+                                title="Annuler le forfait actif"
+                              >
+                                <Ban className="h-3.5 w-3.5" /> Annuler
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -763,10 +775,10 @@ export function ManagerPaymentsView({
                                   setSelectedClientLedger(null);
                                   onCancelPackageClick(cp.id);
                                 }}
-                                className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition cursor-pointer"
+                                className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
                                 title="Annuler ce forfait"
                               >
-                                <Ban className="h-4 w-4" />
+                                <Ban className="h-3.5 w-3.5" /> Annuler le forfait
                               </button>
                             )}
                           </div>
