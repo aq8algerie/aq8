@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { CalendarClock, Plus, RotateCcw, Save, Trash2, Zap } from 'lucide-react';
+import { CalendarClock, CheckCircle2, Plus, RotateCcw, Save, Trash2, Zap } from 'lucide-react';
 import { Center } from '../../types';
 import {
   BOOKING_DAY_KEYS,
@@ -38,6 +38,7 @@ const START_OPTIONS = TIME_OPTIONS.slice(0, -1);
 type BookingSettingsPayload = {
   bookingCapacity: Center['bookingCapacity'];
   bookingHours: Center['bookingHours'];
+  sessionValidationMode: 'auto' | 'manual';
 };
 
 type SaveResult = {
@@ -100,12 +101,14 @@ export function ManagerBookingSettingsPanel({
 }: ManagerBookingSettingsPanelProps) {
   const [capacity, setCapacity] = useState<CenterCapacity>(() => getCenterBookingCapacity(currentCenter.id, currentCenter));
   const [hours, setHours] = useState<WeeklyOpeningHours>(() => cloneWeeklyHours(getCenterWeeklyOpeningHours(currentCenter.id, currentCenter)));
+  const [sessionValidationMode, setSessionValidationMode] = useState<'auto' | 'manual'>(() => currentCenter.sessionValidationMode || 'auto');
   const [saving, setSaving] = useState(false);
   const [localError, setLocalError] = useState('');
 
   useEffect(() => {
     setCapacity(getCenterBookingCapacity(currentCenter.id, currentCenter));
     setHours(cloneWeeklyHours(getCenterWeeklyOpeningHours(currentCenter.id, currentCenter)));
+    setSessionValidationMode(currentCenter.sessionValidationMode || 'auto');
     setLocalError('');
   }, [currentCenter]);
 
@@ -176,6 +179,7 @@ export function ManagerBookingSettingsPanel({
   const restoreDefaults = () => {
     setCapacity(getDefaultCenterBookingCapacity(currentCenter.id));
     setHours(cloneWeeklyHours(getDefaultCenterWeeklyOpeningHours(currentCenter.id)));
+    setSessionValidationMode('auto');
     setLocalError('');
   };
 
@@ -186,6 +190,7 @@ export function ManagerBookingSettingsPanel({
     const result = await onSave({
       bookingCapacity: sanitizeCapacity(capacity),
       bookingHours: sanitizeHours(hours),
+      sessionValidationMode,
     });
 
     if (!result.ok) {
@@ -203,9 +208,9 @@ export function ManagerBookingSettingsPanel({
             <CalendarClock className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-display text-sm font-bold text-slate-800">Paramètres de réservation</h3>
+            <h3 className="font-display text-sm font-bold text-slate-800">Paramètres de réservation & Déduction des séances</h3>
             <p className="text-[11px] font-medium leading-relaxed text-slate-500">
-              Horaires publics, jours ouverts et capacité d'accueil par heure pour ce centre.
+              Horaires publics, capacité d'accueil par heure et mode de déduction du solde pour ce centre.
             </p>
           </div>
         </div>
@@ -235,6 +240,67 @@ export function ManagerBookingSettingsPanel({
           {localError}
         </div>
       )}
+
+      {/* Mode de Validation des Séances / Déduction du Solde */}
+      <div className="rounded-xl border border-slate-150 bg-slate-50/80 p-4 space-y-3">
+        <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+          <CheckCircle2 className="h-4 w-4 text-[#0284c7]" /> Mode de Validation & Déduction des Séances Adhérents
+        </div>
+        <p className="text-[11px] font-medium text-slate-500">
+          Définissez la règle appliquée lorsque vos adhérents réservent ou effectuent des séances dans votre centre.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <label
+            className={`p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition ${
+              sessionValidationMode === 'auto'
+                ? 'bg-white border-[#0284c7] ring-2 ring-[#0284c7]/20 shadow-xs'
+                : 'bg-white/60 border-slate-200 hover:bg-white'
+            }`}
+          >
+            <input
+              type="radio"
+              name="sessionValidationMode"
+              value="auto"
+              checked={sessionValidationMode === 'auto'}
+              onChange={() => setSessionValidationMode('auto')}
+              className="mt-1 accent-[#0284c7]"
+            />
+            <div className="space-y-1">
+              <span className="block text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+                ⚡ Validation Automatique <span className="text-[9px] bg-sky-100 text-[#0284c7] px-2 py-0.5 rounded-full font-bold">Par défaut</span>
+              </span>
+              <span className="block text-[10px] text-slate-500 font-medium leading-relaxed">
+                Le crédit de séance est <strong>déduit automatiquement</strong> du solde de l'adhérent dès la création de la réservation. Restitué en cas d'annulation.
+              </span>
+            </div>
+          </label>
+
+          <label
+            className={`p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition ${
+              sessionValidationMode === 'manual'
+                ? 'bg-white border-[#0284c7] ring-2 ring-[#0284c7]/20 shadow-xs'
+                : 'bg-white/60 border-slate-200 hover:bg-white'
+            }`}
+          >
+            <input
+              type="radio"
+              name="sessionValidationMode"
+              value="manual"
+              checked={sessionValidationMode === 'manual'}
+              onChange={() => setSessionValidationMode('manual')}
+              className="mt-1 accent-[#0284c7]"
+            />
+            <div className="space-y-1">
+              <span className="block text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+                ✋ Validation Manuelle <span className="text-[9px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">À la présence</span>
+              </span>
+              <span className="block text-[10px] text-slate-500 font-medium leading-relaxed">
+                Le créneau est réservé <strong>sans déduire de crédit immédiat</strong>. La déduction de 1 crédit s'effectue au moment où le manager valide la séance faite.
+              </span>
+            </div>
+          </label>
+        </div>
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">

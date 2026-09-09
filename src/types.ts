@@ -29,6 +29,7 @@ export interface Center {
   customPackages?: Package[];
   bookingCapacity?: Partial<Record<'aq8' | 'wonder', number>>;
   bookingHours?: Partial<Record<'0' | '1' | '2' | '3' | '4' | '5' | '6', Array<{ start: string; end: string }>>>;
+  sessionValidationMode?: 'auto' | 'manual';
 }
 
 export interface CenterManager {
@@ -123,6 +124,7 @@ export interface Appointment {
   completedByUserName?: string;
   completedWithClientPackageId?: string;
   deductedCredits?: number;
+  validationModeAtBooking?: 'auto' | 'manual';
   updatedAt?: string;
   cancelledAt?: string;
   cancelledByUserId?: string;

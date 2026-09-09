@@ -173,13 +173,15 @@ export function CenterManagerViews({
   const handleSaveBookingSettings = async (settings: {
     bookingCapacity: Center['bookingCapacity'];
     bookingHours: Center['bookingHours'];
+    sessionValidationMode?: Center['sessionValidationMode'];
   }): Promise<CrmActionResult> => {
     return handleSaveCenterUpdate(
       {
         bookingCapacity: settings.bookingCapacity,
         bookingHours: settings.bookingHours,
+        ...(settings.sessionValidationMode ? { sessionValidationMode: settings.sessionValidationMode } : {}),
       },
-      'Paramètres de réservation mis à jour.',
+      'Paramètres de réservation et mode de déduction mis à jour.',
       'Paramètres enregistrés',
     );
   };
@@ -469,7 +471,10 @@ export function CenterManagerViews({
       packages
     );
 
-    if (!activePkg) {
+    const validationMode = currentCenter?.sessionValidationMode || 'auto';
+    const isManualMode = validationMode === 'manual';
+
+    if (!activePkg && !isManualMode) {
       const serviceLabel = selectedService.type === 'aq8' ? 'AQ8' : 'Wonder';
       triggerToast(
         `Solde insuffisant : cet adhérent ne possède aucun forfait ${serviceLabel} actif avec des crédits disponibles.`,
@@ -491,39 +496,73 @@ export function CenterManagerViews({
         createdAt: new Date().toISOString()
       });
 
-      // Automatically deduct 1 session credit from client package
-      const updatedPkg = deductSessionFromPackage(activePkg);
-      await saveDocument(db, 'client_packages', updatedPkg.id, updatedPkg);
-      await saveDocument(db, 'appointments', appointmentId, {
-        id: appointmentId,
-        clientId: aptData.clientId,
-        serviceId: aptData.serviceId,
-        centerId,
-        dateTime: dateTimeStr,
-        duration: selectedService ? selectedService.duration : 20,
-        notes: aptData.notes || '',
-        status: 'booked',
-        completedWithClientPackageId: activePkg.id,
-        deductedCredits: 1,
-      });
+      if (isManualMode) {
+        await saveDocument(db, 'appointments', appointmentId, {
+          id: appointmentId,
+          clientId: aptData.clientId,
+          serviceId: aptData.serviceId,
+          centerId,
+          dateTime: dateTimeStr,
+          duration: selectedService ? selectedService.duration : 20,
+          notes: aptData.notes || '',
+          status: 'booked',
+          deductedCredits: 0,
+          validationModeAtBooking: 'manual',
+        });
 
-      logCrmAction(userId, userName, 'center_manager', {
-        action: 'CREATE_APPOINTMENT',
-        details: `Planification du RDV le ${aptData.date} à ${aptData.time} pour ${clientObj ? `${clientObj.firstName} ${clientObj.lastName}` : aptData.clientId}. 1 crédit déduit du forfait ${activePkg.id}. Solde restant : ${updatedPkg.sessionsRemaining} séance(s).`,
-        targetId: appointmentId,
-        targetType: 'appointment',
-        centerId,
-        centerName: currentCenter?.name
-      });
+        logCrmAction(userId, userName, 'center_manager', {
+          action: 'CREATE_APPOINTMENT',
+          details: `Planification du RDV le ${aptData.date} à ${aptData.time} pour ${clientObj ? `${clientObj.firstName} ${clientObj.lastName}` : aptData.clientId} (Validation manuelle à la séance).`,
+          targetId: appointmentId,
+          targetType: 'appointment',
+          centerId,
+          centerName: currentCenter?.name
+        });
 
-      notifyCrmEmailBestEffort({
-        type: 'appointment_booked',
-        centerId,
-        appointmentId,
-      });
+        notifyCrmEmailBestEffort({
+          type: 'appointment_booked',
+          centerId,
+          appointmentId,
+        });
 
-      setShowAptModal(false);
-      triggerToast(`Rendez-vous planifié ! 1 séance déduite (Solde restant : ${updatedPkg.sessionsRemaining}).`);
+        setShowAptModal(false);
+        triggerToast(`Rendez-vous planifié ! (Validation manuelle : le solde sera déduit lors de la réalisation de la séance).`);
+      } else {
+        if (!activePkg) return;
+        const updatedPkg = deductSessionFromPackage(activePkg);
+        await saveDocument(db, 'client_packages', updatedPkg.id, updatedPkg);
+        await saveDocument(db, 'appointments', appointmentId, {
+          id: appointmentId,
+          clientId: aptData.clientId,
+          serviceId: aptData.serviceId,
+          centerId,
+          dateTime: dateTimeStr,
+          duration: selectedService ? selectedService.duration : 20,
+          notes: aptData.notes || '',
+          status: 'booked',
+          completedWithClientPackageId: activePkg.id,
+          deductedCredits: 1,
+          validationModeAtBooking: 'auto',
+        });
+
+        logCrmAction(userId, userName, 'center_manager', {
+          action: 'CREATE_APPOINTMENT',
+          details: `Planification du RDV le ${aptData.date} à ${aptData.time} pour ${clientObj ? `${clientObj.firstName} ${clientObj.lastName}` : aptData.clientId}. 1 crédit déduit du forfait ${activePkg.id}. Solde restant : ${updatedPkg.sessionsRemaining} séance(s).`,
+          targetId: appointmentId,
+          targetType: 'appointment',
+          centerId,
+          centerName: currentCenter?.name
+        });
+
+        notifyCrmEmailBestEffort({
+          type: 'appointment_booked',
+          centerId,
+          appointmentId,
+        });
+
+        setShowAptModal(false);
+        triggerToast(`Rendez-vous planifié ! 1 séance déduite (Solde restant : ${updatedPkg.sessionsRemaining}).`);
+      }
     } catch (error) {
       triggerToast(getErrorMessage(error, 'Erreur lors de la planification du RDV.'), 'error');
     }
@@ -1060,6 +1099,8 @@ export function CenterManagerViews({
                 clients={clients}
                 payments={payments}
                 packages={centerPackages}
+                clientPackages={clientPackages}
+                appointments={appointments}
                 onLogPaymentClick={() => {
                   setPayClientId('');
                   setShowPaymentModal(true);

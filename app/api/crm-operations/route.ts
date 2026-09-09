@@ -187,9 +187,10 @@ async function completeAppointment(
       throw new CrmAccessError(validation.error, 409);
     }
 
+    const alreadyDeducted = appointment.deductedCredits === 1;
     const completedAt = new Date().toISOString();
-    const sessionsRemaining = clientPackage.sessionsRemaining - 1;
-    const packageStatus: ClientPackage['status'] = sessionsRemaining === 0 ? 'completed' : 'active';
+    const sessionsRemaining = alreadyDeducted ? clientPackage.sessionsRemaining : clientPackage.sessionsRemaining - 1;
+    const packageStatus: ClientPackage['status'] = sessionsRemaining === 0 ? 'completed' : clientPackage.status;
     const clientName = `${client.firstName} ${client.lastName}`.trim() || appointment.clientId;
     const serviceName = service.name || (service.type === 'aq8' ? 'AQ8' : 'Wonder');
 
@@ -211,7 +212,9 @@ async function completeAppointment(
     });
     writeAudit(transaction, actor, {
       action: 'COMPLETE_APPOINTMENT',
-      details: `Validation de la séance du ${appointment.dateTime.replace('T', ' ')} pour ${clientName}. 1 crédit ${serviceName} déduit du forfait ${packageDefinition.name}. Solde restant : ${sessionsRemaining} séance(s).`,
+      details: alreadyDeducted
+        ? `Validation de la séance du ${appointment.dateTime.replace('T', ' ')} pour ${clientName} (Crédit déjà déduit à la réservation). Solde restant : ${sessionsRemaining} séance(s).`
+        : `Validation de la séance du ${appointment.dateTime.replace('T', ' ')} pour ${clientName}. 1 crédit ${serviceName} déduit du forfait ${packageDefinition?.name || 'client'}. Solde restant : ${sessionsRemaining} séance(s).`,
       targetId: appointment.id,
       targetType: 'appointment',
       centerId,
