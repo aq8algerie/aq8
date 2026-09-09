@@ -153,7 +153,7 @@ export interface ClientPackage {
   sessionsRemaining: number;
   totalSessions: number;
   purchaseDate: string;
-  status: 'active' | 'completed' | 'expired';
+  status: 'active' | 'completed' | 'expired' | 'cancelled';
   updatedAt?: string;
   lastSessionAt?: string;
   lastCompletedAppointmentId?: string;
@@ -163,6 +163,11 @@ export interface ClientPackage {
   sourcePaymentId?: string;
   reversedAt?: string;
   reversedByPaymentId?: string;
+  cancelledAt?: string;
+  cancelledByUserId?: string;
+  cancelledByUserName?: string;
+  cancellationReason?: string;
+  cancellationNotes?: string;
 }
 
 export interface Payment {

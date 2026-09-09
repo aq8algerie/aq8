@@ -43,6 +43,7 @@ type OperationPayload = {
   autoActivatePackage?: boolean;
   purchaseDate?: string;
   reason?: string;
+  notes?: string;
 };
 
 const PAYMENT_METHODS: Payment['method'][] = ['cash', 'card', 'ccp', 'cheque'];
@@ -599,6 +600,9 @@ export async function POST(request: Request) {
       case 'reverse_payment':
         result = await reversePayment(actor, payload);
         break;
+      case 'cancel_package':
+        result = await cancelPackage(actor, payload);
+        break;
       default:
         throw new CrmAccessError('Opération CRM inconnue.', 400);
     }
@@ -614,4 +618,73 @@ export async function POST(request: Request) {
     const response = getCrmErrorResponse(error);
     return NextResponse.json({ ok: false, error: response.message }, { status: response.status });
   }
+}
+
+async function cancelPackage(
+  actor: ServerCrmProfile,
+  payload: OperationPayload,
+) {
+  const db = getAdminDb();
+  const centerId = requiredText(payload.centerId, 'Centre', 80);
+  const clientPackageId = requiredText(payload.clientPackageId, 'Forfait client', 120);
+  const reason = requiredText(payload.reason || 'Annulation', 'Motif d\'annulation', 200);
+  const notes = typeof payload.notes === 'string' ? payload.notes.slice(0, 500) : '';
+  assertCenterAccess(actor, centerId);
+
+  return db.runTransaction(async transaction => {
+    const clientPackageRef = db.collection('client_packages').doc(clientPackageId);
+    const clientPackageSnapshot = await transaction.get(clientPackageRef);
+    const clientPackage = docData<ClientPackage>(clientPackageSnapshot);
+
+    if (!clientPackage || clientPackage.centerId !== centerId) {
+      throw new CrmAccessError('Forfait introuvable dans ce centre.', 404);
+    }
+
+    if (clientPackage.status === 'cancelled') {
+      return {
+        ok: true,
+        created: false,
+        clientPackageId,
+        sessionsRemaining: 0,
+        status: 'cancelled',
+      };
+    }
+
+    const clientSnapshot = await transaction.get(db.collection('clients').doc(clientPackage.clientId));
+    const packageSnapshot = await transaction.get(db.collection('packages').doc(clientPackage.packageId));
+    const client = docData<Client>(clientSnapshot);
+    const packageDefinition = docData<Package>(packageSnapshot);
+
+    const cancelledAt = new Date().toISOString();
+    const clientName = client ? `${client.firstName} ${client.lastName}`.trim() : clientPackage.clientId;
+    const packageName = packageDefinition?.name || 'Forfait';
+
+    transaction.update(clientPackageRef, {
+      status: 'cancelled',
+      sessionsRemaining: 0,
+      cancelledAt,
+      cancelledByUserId: actor.uid,
+      cancelledByUserName: actor.name,
+      cancellationReason: reason,
+      cancellationNotes: notes,
+      updatedAt: cancelledAt,
+    });
+
+    writeAudit(transaction, actor, {
+      action: 'CANCEL_CLIENT_PACKAGE',
+      details: `Annulation du forfait ${packageName} pour ${clientName}. Motif : ${reason}${notes ? ` (Notes: ${notes})` : ''}. Solde restant annulé.`,
+      targetId: clientPackage.id,
+      targetType: 'client_package',
+      centerId,
+      timestamp: cancelledAt,
+    });
+
+    return {
+      ok: true,
+      created: true,
+      clientPackageId,
+      sessionsRemaining: 0,
+      status: 'cancelled',
+    };
+  });
 }

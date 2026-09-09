@@ -40,6 +40,7 @@ interface ClientProfileViewProps {
   onBack: () => void;
   onAssignPackage: () => void;
   onLogMeasurement: () => void;
+  onCancelPackageClick?: (clientPackageId: string) => void;
 }
 
 export function ClientProfileView({
@@ -52,6 +53,7 @@ export function ClientProfileView({
   onBack,
   onAssignPackage,
   onLogMeasurement,
+  onCancelPackageClick,
 }: ClientProfileViewProps) {
   // Filter for this client
   const clientApts = appointments.filter(a => a.clientId === client.id);
@@ -415,6 +417,7 @@ export function ClientProfileView({
               clientPackages={clientPkgs}
               packages={packages}
               onAssignClick={onAssignPackage}
+              onCancelPackageClick={onCancelPackageClick}
             />
             <MeasurementChart
               measurements={clientMeas}
@@ -575,6 +578,7 @@ export function ClientProfileView({
               clientPackages={clientPkgs}
               packages={packages}
               onAssignClick={onAssignPackage}
+              onCancelPackageClick={onCancelPackageClick}
             />
           </div>
           <div className="space-y-6">

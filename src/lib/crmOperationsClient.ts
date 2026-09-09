@@ -4,7 +4,8 @@ export type CrmOperationAction =
   | 'complete_appointment'
   | 'assign_package'
   | 'record_payment'
-  | 'reverse_payment';
+  | 'reverse_payment'
+  | 'cancel_package';
 
 type CrmOperationPayload = {
   action: CrmOperationAction;

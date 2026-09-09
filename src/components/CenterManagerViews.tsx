@@ -40,6 +40,7 @@ import { AppointmentModal } from './manager/modals/AppointmentModal';
 import { PackageAssignModal } from './manager/modals/PackageAssignModal';
 import { PaymentModal } from './manager/modals/PaymentModal';
 import { MeasurementModal } from './manager/modals/MeasurementModal';
+import { CancelPackageModal } from './manager/modals/CancelPackageModal';
 
 // Utilities & Business rules
 import { getTodayDateString } from '../lib/centerManagerUtils';
@@ -137,12 +138,45 @@ export function CenterManagerViews({
   const [feedback, setFeedback] = useState<ProfessionalToastState | null>(null);
   const [pendingPaymentDeleteId, setPendingPaymentDeleteId] = useState<string | null>(null);
   const [confirmingPaymentDelete, setConfirmingPaymentDelete] = useState(false);
+  const [cancellingClientPackageId, setCancellingClientPackageId] = useState<string | null>(null);
 
   const triggerToast = (message: string, type: ToastType = 'success', action?: ToastAction, title?: string) => {
     setFeedback({ message, type, action, title });
     setTimeout(() => {
       setFeedback(null);
     }, 4200);
+  };
+
+  const handleConfirmCancelPackage = async (input: {
+    clientPackageId: string;
+    reason: string;
+    notes: string;
+    reversePayment: boolean;
+  }) => {
+    const cp = clientPackages.find(item => item.id === input.clientPackageId);
+    if (!cp) throw new Error('Forfait introuvable.');
+
+    await runCrmOperation({
+      action: 'cancel_package',
+      centerId,
+      clientPackageId: input.clientPackageId,
+      reason: input.reason,
+      notes: input.notes,
+    });
+
+    if (input.reversePayment && cp.sourcePaymentId) {
+      const pay = payments.find(p => p.id === cp.sourcePaymentId);
+      if (pay && pay.status !== 'reversed' && pay.kind !== 'reversal') {
+        await runCrmOperation({
+          action: 'reverse_payment',
+          centerId,
+          paymentId: pay.id,
+          reason: `Remboursement / Annulation forfait (${input.reason})`,
+        });
+      }
+    }
+
+    triggerToast(`Forfait annulé avec succès (${input.reason}).`, 'success');
   };
 
   // Find center metadata
@@ -1004,23 +1038,24 @@ export function CenterManagerViews({
       <div id="manager-subtab-viewport" className="min-h-[400px]">
         {activeClient ? (
           /* Client Fiche (Bio Profile Detail) overrides typical tabs when active */
-          <ClientProfileView
-            client={activeClient}
-            appointments={appointments}
-            services={centerServices}
-            clientPackages={clientPackages}
-            packages={centerPackages}
-            measurements={measurements}
-            onBack={() => setSelectedClientId(null)}
-            onAssignPackage={() => {
-              setPkgAssignClientId(activeClient.id);
-              setShowPackageAssignModal(true);
-            }}
-            onLogMeasurement={() => {
-              setMeasClientId(activeClient.id);
-              setShowMeasurementModal(true);
-            }}
-          />
+            <ClientProfileView
+              client={activeClient}
+              appointments={appointments}
+              services={centerServices}
+              clientPackages={clientPackages}
+              packages={centerPackages}
+              measurements={measurements}
+              onBack={() => setSelectedClientId(null)}
+              onAssignPackage={() => {
+                setPkgAssignClientId(activeClient.id);
+                setShowPackageAssignModal(true);
+              }}
+              onLogMeasurement={() => {
+                setMeasClientId(activeClient.id);
+                setShowMeasurementModal(true);
+              }}
+              onCancelPackageClick={(cpId) => setCancellingClientPackageId(cpId)}
+            />
         ) : (
           <>
             {activeSubTab === 'dashboard' && (
@@ -1108,6 +1143,7 @@ export function CenterManagerViews({
                 onReversePayment={(payId) => {
                   setPendingPaymentDeleteId(payId);
                 }}
+                onCancelPackageClick={(cpId) => setCancellingClientPackageId(cpId)}
                 currentCenter={currentCenter}
               />
             )}
@@ -1193,6 +1229,25 @@ export function CenterManagerViews({
           initialClientId={measClientId || undefined}
         />
       )}
+
+      {cancellingClientPackageId && (() => {
+        const cp = clientPackages.find(item => item.id === cancellingClientPackageId);
+        if (!cp) return null;
+        const clientObj = clients.find(c => c.id === cp.clientId);
+        const packDef = centerPackages.find(p => p.id === cp.packageId);
+        const sourcePay = payments.find(p => p.id === cp.sourcePaymentId);
+
+        return (
+          <CancelPackageModal
+            clientPackage={cp}
+            client={clientObj}
+            packageDefinition={packDef}
+            payment={sourcePay}
+            onClose={() => setCancellingClientPackageId(null)}
+            onConfirmCancel={handleConfirmCancelPackage}
+          />
+        );
+      })()}
     </div>
   );
 }

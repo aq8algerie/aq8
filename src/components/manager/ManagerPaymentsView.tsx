@@ -22,7 +22,8 @@ import {
   Sparkles,
   Zap,
   HelpCircle,
-  Eye
+  Eye,
+  Ban
 } from 'lucide-react';
 import { Client, Payment, Package, Center, ClientPackage, Appointment } from '../../types';
 
@@ -36,6 +37,7 @@ interface ManagerPaymentsViewProps {
   currentCenter: Center;
   onLogPaymentClick: () => void;
   onReversePayment: (paymentId: string) => void;
+  onCancelPackageClick?: (clientPackageId: string) => void;
 }
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100, 200] as const;
@@ -95,7 +97,8 @@ export function ManagerPaymentsView({
   appointments = [],
   currentCenter,
   onLogPaymentClick,
-  onReversePayment
+  onReversePayment,
+  onCancelPackageClick,
 }: ManagerPaymentsViewProps) {
   const [activeTab, setActiveTab] = useState<MainTab>('register');
   const [listPage, setListPage] = useState(1);
@@ -729,19 +732,43 @@ export function ManagerPaymentsView({
                   <div className="space-y-2">
                     {clientPkgs.length > 0 ? clientPkgs.map(cp => {
                       const packDef = packages.find(p => p.id === cp.packageId);
+                      const isCancelled = cp.status === 'cancelled';
+
                       return (
                         <div key={cp.id} className="p-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-xs">
                           <div>
                             <span className="font-bold text-slate-800 block">{packDef?.name || 'Forfait'}</span>
                             <span className="text-[10px] text-slate-400">Acheté le: {safeText(cp.purchaseDate)}</span>
+                            {isCancelled && cp.cancellationReason && (
+                              <span className="text-[10px] text-rose-600 font-semibold block">Motif: {cp.cancellationReason}</span>
+                            )}
                           </div>
-                          <div className="text-right">
-                            <span className="font-mono font-bold text-[#0284c7] block">{cp.sessionsRemaining} / {cp.totalSessions} séa.</span>
-                            <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md ${
-                              cp.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
-                            }`}>
-                              {cp.status}
-                            </span>
+                          <div className="flex items-center gap-2">
+                            <div className="text-right">
+                              <span className="font-mono font-bold text-[#0284c7] block">{isCancelled ? 0 : cp.sessionsRemaining} / {cp.totalSessions} séa.</span>
+                              <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md ${
+                                isCancelled
+                                  ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                                  : cp.status === 'active'
+                                  ? 'bg-emerald-50 text-emerald-700'
+                                  : 'bg-slate-100 text-slate-500'
+                              }`}>
+                                {isCancelled ? 'Annulé' : cp.status}
+                              </span>
+                            </div>
+                            {!isCancelled && onCancelPackageClick && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedClientLedger(null);
+                                  onCancelPackageClick(cp.id);
+                                }}
+                                className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition cursor-pointer"
+                                title="Annuler ce forfait"
+                              >
+                                <Ban className="h-4 w-4" />
+                              </button>
+                            )}
                           </div>
                         </div>
                       );
