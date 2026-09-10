@@ -18,6 +18,7 @@ interface PaymentModalProps {
     method: 'cash' | 'card' | 'ccp' | 'cheque';
     receiptNumber: string;
     autoActivatePackage: boolean;
+    customSessionsCount?: number;
   }) => Promise<{ ok: boolean }>;
   initialClientId?: string;
 }
@@ -31,7 +32,9 @@ export function PaymentModal({
 }: PaymentModalProps) {
   const [clientId, setClientId] = useState(initialClientId || '');
   const [packageId, setPackageId] = useState(packages[0]?.id || '');
-  const [amount, setAmount] = useState(27000);
+  const selectedPackage = packages.find(p => p.id === packageId);
+  const [customSessionsCount, setCustomSessionsCount] = useState(selectedPackage?.sessionsCount || 1);
+  const [amount, setAmount] = useState((selectedPackage?.price || 3000) * (selectedPackage?.sessionsCount || 1));
   const [method, setMethod] = useState<'cash' | 'card' | 'ccp' | 'cheque'>('cash');
   const [receiptNumber, setReceiptNumber] = useState('');
   const [autoActivatePackage, setAutoActivatePackage] = useState(true);
@@ -39,17 +42,31 @@ export function PaymentModal({
   const submittingRef = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Sync package price when packageId changes
+  // Sync package price and session count when packageId changes
   useEffect(() => {
     const matched = packages.find(p => p.id === packageId);
     if (matched) {
+      const defaultCount = matched.sessionsCount || 1;
+      setCustomSessionsCount(defaultCount);
       setAmount(matched.price);
     }
   }, [packageId, packages]);
 
+  const handleSessionsChange = (count: number) => {
+    const validCount = Math.max(1, count);
+    setCustomSessionsCount(validCount);
+    const matched = packages.find(p => p.id === packageId);
+    if (matched) {
+      const unitPrice = matched.isFlexible 
+        ? matched.price 
+        : Math.round(matched.price / Math.max(1, matched.sessionsCount || 1));
+      setAmount(Math.round(unitPrice * validCount));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clientId || !packageId || amount <= 0 || submittingRef.current) return;
+    if (!clientId || !packageId || amount <= 0 || customSessionsCount <= 0 || submittingRef.current) return;
 
     submittingRef.current = true;
     setIsSubmitting(true);
@@ -63,6 +80,7 @@ export function PaymentModal({
         method,
         receiptNumber: receiptNumber.trim(),
         autoActivatePackage,
+        customSessionsCount,
       });
 
       if (!result.ok) {
@@ -107,9 +125,34 @@ export function PaymentModal({
               required
             >
               {packages.map(p => (
-                <option key={p.id} value={p.id}>{p.name} ({p.price.toLocaleString('fr-DZ')} DZD)</option>
+                <option key={p.id} value={p.id}>{p.name} ({p.price.toLocaleString('fr-DZ')} DZD{p.isFlexible ? ' / séance' : ''})</option>
               ))}
             </select>
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex justify-between items-center">
+              <label className="font-semibold text-slate-600 block">Nombre de séances attribuées *</label>
+              {selectedPackage?.isFlexible && (
+                <span className="text-[10px] bg-sky-100 text-[#0284c7] font-extrabold px-2 py-0.5 rounded-md uppercase">
+                  Séance Libre
+                </span>
+              )}
+            </div>
+            <input
+              type="number"
+              min="1"
+              max="500"
+              required
+              value={customSessionsCount}
+              onChange={(e) => handleSessionsChange(parseInt(e.target.value) || 1)}
+              className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 font-mono font-bold text-sm text-[#0284c7] focus:outline-none"
+            />
+            <p className="text-[11px] text-slate-500">
+              {selectedPackage?.isFlexible 
+                ? "💡 Séance Libre : le client peut payer 1, 2, 3 séances ou plus. Le montant global s'ajuste automatiquement."
+                : "Ajustez le nombre de séances attribuées au client si nécessaire."}
+            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -120,7 +163,7 @@ export function PaymentModal({
                 required
                 value={amount}
                 onChange={(e) => setAmount(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none"
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 font-mono font-bold text-slate-800 focus:outline-none"
               />
             </div>
             <div className="space-y-1">

@@ -787,6 +787,7 @@ export function CenterManagerViews({
     clientPackageId: string;
     clientId: string;
     packageId: string;
+    customSessionsCount?: number;
   }): Promise<CrmActionResult> => {
     const client = centerClients.find(candidate => candidate.id === data.clientId);
     if (!client) {
@@ -805,10 +806,9 @@ export function CenterManagerViews({
         centerId,
         clientId: data.clientId,
         packageId: data.packageId,
+        customSessionsCount: data.customSessionsCount,
         purchaseDate: getTodayDateString(),
       });
-
-
 
       setShowPackageAssignModal(false);
       triggerToast(
@@ -835,6 +835,7 @@ export function CenterManagerViews({
     method: 'cash' | 'card' | 'ccp' | 'cheque';
     receiptNumber: string;
     autoActivatePackage: boolean;
+    customSessionsCount?: number;
   }): Promise<CrmActionResult> => {
     const operationSuffix = payData.paymentId.replace(/^pay-/, '');
     const clientPackageId = payData.autoActivatePackage
@@ -856,6 +857,7 @@ export function CenterManagerViews({
         centerId,
         clientId: payData.clientId,
         packageId: payData.packageId,
+        customSessionsCount: payData.customSessionsCount,
         amount: payData.amount,
         method: payData.method,
         receiptNumber: generatedReceipt,

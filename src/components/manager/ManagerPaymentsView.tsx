@@ -127,8 +127,11 @@ export function ManagerPaymentsView({
   }, [centerPayments]);
 
   const totalSessionsPurchased = useMemo(() => {
-    return centerClientPackages.reduce((sum, cp) => sum + (cp.totalSessions || 0), 0);
-  }, [centerClientPackages]);
+    return centerClientPackages.reduce((sum, cp) => {
+      const pack = packages.find(p => p.id === cp.packageId);
+      return sum + (pack?.sessionsCount ?? cp.totalSessions ?? 0);
+    }, 0);
+  }, [centerClientPackages, packages]);
 
   const totalSessionsRemaining = useMemo(() => {
     return centerClientPackages
@@ -169,7 +172,10 @@ export function ManagerPaymentsView({
     return centerClients.map(client => {
       const pkgs = centerClientPackages.filter(cp => cp.clientId === client.id);
       const activePkg = pkgs.find(cp => cp.status === 'active' && cp.sessionsRemaining > 0);
-      const totalAcquired = pkgs.reduce((sum, cp) => sum + (cp.totalSessions || 0), 0);
+      const totalAcquired = pkgs.reduce((sum, cp) => {
+        const pack = packages.find(p => p.id === cp.packageId);
+        return sum + (pack?.sessionsCount ?? cp.totalSessions ?? 0);
+      }, 0);
       const totalRemaining = pkgs.filter(cp => cp.status === 'active').reduce((sum, cp) => sum + Math.max(0, cp.sessionsRemaining || 0), 0);
       const clientPays = centerPayments.filter(p => p.clientId === client.id && p.status !== 'reversed');
       const totalSpent = clientPays.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
@@ -765,7 +771,7 @@ type BalanceSortOption = 'alpha_asc' | 'alpha_desc' | 'balance_desc' | 'balance_
                   <div>
                     <span className="text-[10px] text-slate-400 font-bold uppercase block">Solde Disponible</span>
                     <span className="font-mono text-lg font-black text-[#0284c7]">
-                      {activePkg ? `${activePkg.sessionsRemaining} / ${activePkg.totalSessions}` : '0 séance'}
+                      {activePkg ? `${activePkg.sessionsRemaining} / ${packages.find(p => p.id === activePkg.packageId)?.sessionsCount ?? activePkg.totalSessions}` : '0 séance'}
                     </span>
                   </div>
                   <div>
@@ -789,6 +795,7 @@ type BalanceSortOption = 'alpha_asc' | 'alpha_desc' | 'balance_desc' | 'balance_
                     {clientPkgs.length > 0 ? clientPkgs.map(cp => {
                       const packDef = packages.find(p => p.id === cp.packageId);
                       const isCancelled = cp.status === 'cancelled';
+                      const totalSess = packDef?.sessionsCount ?? cp.totalSessions;
 
                       return (
                         <div key={cp.id} className="p-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-xs">
@@ -801,7 +808,7 @@ type BalanceSortOption = 'alpha_asc' | 'alpha_desc' | 'balance_desc' | 'balance_
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="text-right">
-                              <span className="font-mono font-bold text-[#0284c7] block">{isCancelled ? 0 : cp.sessionsRemaining} / {cp.totalSessions} séa.</span>
+                              <span className="font-mono font-bold text-[#0284c7] block">{isCancelled ? 0 : cp.sessionsRemaining} / {totalSess} séa.</span>
                               <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md ${
                                 isCancelled
                                   ? 'bg-rose-100 text-rose-800 border border-rose-200'

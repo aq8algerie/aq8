@@ -143,6 +143,7 @@ export interface Package {
   details?: string[];
   aq8Sessions?: number;
   wonderSessions?: number;
+  isFlexible?: boolean;
 }
 
 export interface ClientPackage {

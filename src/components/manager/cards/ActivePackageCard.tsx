@@ -51,6 +51,7 @@ export function ActivePackageCard({
                 : 'bg-slate-200 text-slate-600';
 
               const sessionsRemaining = (expired || isCancelled) ? 0 : cp.sessionsRemaining;
+              const totalSessions = pack?.sessionsCount ?? cp.totalSessions ?? 0;
               
               return (
                 <div key={cp.id} className="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-2 text-xs">
@@ -82,13 +83,13 @@ export function ActivePackageCard({
 
                   <div className="flex items-center justify-between text-xs pt-1">
                     <span className="text-slate-500 font-medium">Séances restantes:</span>
-                    <span className="font-mono font-bold text-sm text-[#0284c7]">{sessionsRemaining} / {cp.totalSessions}</span>
+                    <span className="font-mono font-bold text-sm text-[#0284c7]">{sessionsRemaining} / {totalSessions}</span>
                   </div>
 
                   {/* Visual progress bar */}
                   <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
                     <div 
-                      style={{ width: `${(sessionsRemaining / cp.totalSessions) * 100}%` }} 
+                      style={{ width: `${(sessionsRemaining / (totalSessions || 1)) * 100}%` }} 
                       className={`h-full transition-all ${isCancelled ? 'bg-rose-500' : 'bg-[#0284c7]'}`}
                     ></div>
                   </div>

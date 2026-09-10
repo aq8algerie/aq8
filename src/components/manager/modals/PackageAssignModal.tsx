@@ -14,6 +14,7 @@ interface PackageAssignModalProps {
     clientPackageId: string;
     clientId: string;
     packageId: string;
+    customSessionsCount?: number;
   }) => Promise<{ ok: boolean }>;
   initialClientId?: string;
 }
@@ -27,13 +28,23 @@ export function PackageAssignModal({
 }: PackageAssignModalProps) {
   const [clientId, setClientId] = useState(initialClientId || '');
   const [packageId, setPackageId] = useState(packages[0]?.id || '');
+  const selectedPackage = packages.find(p => p.id === packageId);
+  const [customSessionsCount, setCustomSessionsCount] = useState(selectedPackage?.sessionsCount || 1);
   const clientPackageIdRef = useRef(`clipkg-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
   const submittingRef = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handlePackageChange = (newPkgId: string) => {
+    setPackageId(newPkgId);
+    const matched = packages.find(p => p.id === newPkgId);
+    if (matched) {
+      setCustomSessionsCount(matched.sessionsCount || 1);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clientId || !packageId || submittingRef.current) return;
+    if (!clientId || !packageId || customSessionsCount <= 0 || submittingRef.current) return;
 
     submittingRef.current = true;
     setIsSubmitting(true);
@@ -43,6 +54,7 @@ export function PackageAssignModal({
         clientPackageId: clientPackageIdRef.current,
         clientId,
         packageId,
+        customSessionsCount,
       });
 
       if (!result.ok) {
@@ -84,16 +96,41 @@ export function PackageAssignModal({
             <label className="font-semibold text-slate-600 block">Type de Forfait disponible *</label>
             <select
               value={packageId}
-              onChange={(e) => setPackageId(e.target.value)}
+              onChange={(e) => handlePackageChange(e.target.value)}
               className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none"
               required
             >
               {packages.map(p => (
                 <option key={p.id} value={p.id}>
-                  {p.name} ({p.sessionsCount} sessions - {p.price.toLocaleString('fr-DZ')} DZD)
+                  {p.name} ({p.sessionsCount} {p.sessionsCount > 1 ? 'sessions' : 'session'} - {p.price.toLocaleString('fr-DZ')} DZD)
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex justify-between items-center">
+              <label className="font-semibold text-slate-600 block">Nombre de séances à attribuer *</label>
+              {selectedPackage?.isFlexible && (
+                <span className="text-[10px] bg-sky-100 text-[#0284c7] font-extrabold px-2 py-0.5 rounded-md uppercase">
+                  Séance Libre
+                </span>
+              )}
+            </div>
+            <input
+              type="number"
+              min="1"
+              max="500"
+              required
+              value={customSessionsCount}
+              onChange={(e) => setCustomSessionsCount(Math.max(1, parseInt(e.target.value) || 1))}
+              className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 font-mono font-bold text-sm text-[#0284c7] focus:outline-none"
+            />
+            <p className="text-[11px] text-slate-500">
+              {selectedPackage?.isFlexible 
+                ? "💡 Forfait Séance Libre : ajustez librement le nombre de séances payées par le client (1, 2, 3...)."
+                : "Vous pouvez personnaliser le nombre de séances attribuées pour ce forfait."}
+            </p>
           </div>
 
           <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">

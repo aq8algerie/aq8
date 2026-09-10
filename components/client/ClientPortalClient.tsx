@@ -966,7 +966,7 @@ export function ClientPortalClient() {
                     </div>
                     <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
                       <span>Séances restantes :</span>
-                      <span className="font-mono text-sm font-black text-[#0284c7]">{pkg.sessionsRemaining ?? pkg.totalSessions ?? "Disponible"} / {pkg.totalSessions || 10}</span>
+                      <span className="font-mono text-sm font-black text-[#0284c7]">{pkg.sessionsRemaining ?? pkg.totalSessions ?? "Disponible"} / {pkg.sessionsCount || pkg.totalSessions || 10}</span>
                     </div>
                     </div>
                   ))}

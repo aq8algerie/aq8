@@ -1190,6 +1190,7 @@ function PackageModalForm({
   const [tag, setTag] = useState(initialData?.tag || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [detailsText, setDetailsText] = useState((initialData?.details || []).join('\n'));
+  const [isFlexible, setIsFlexible] = useState(initialData?.isFlexible || false);
 
   const sessionsCount = (aq8Sessions || 0) + (wonderSessions || 0);
 
@@ -1211,6 +1212,7 @@ function PackageModalForm({
       wonderSessions: Math.max(0, wonderSessions),
       price: Math.max(0, price),
       tag: tag.trim() || undefined,
+      isFlexible,
       description: description.trim(),
       details: details.length > 0 ? details : undefined
     });
@@ -1244,6 +1246,19 @@ function PackageModalForm({
               placeholder="ex: Pack Duo Équilibré 8 Séances"
               className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-[#0284c7]"
             />
+          </div>
+
+          <div className="flex items-center gap-2 p-3 bg-sky-50/50 rounded-xl border border-sky-100">
+            <input
+              type="checkbox"
+              id="chk-package-flexible"
+              checked={isFlexible}
+              onChange={e => setIsFlexible(e.target.checked)}
+              className="h-4 w-4 text-[#0284c7] border-slate-300 rounded focus:ring-[#0284c7]"
+            />
+            <label htmlFor="chk-package-flexible" className="text-xs font-semibold text-slate-800 select-none cursor-pointer">
+              Forfait "Séance Libre" (Permet au client d'acheter 1, 2, 3... séances sur-mesure)
+            </label>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

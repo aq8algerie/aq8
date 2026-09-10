@@ -102,7 +102,7 @@ export function CancelPackageModal({
           <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
             <div className="flex justify-between font-bold text-slate-800">
               <span>{packageName}</span>
-              <span className="font-mono text-[#0284c7]">{clientPackage.sessionsRemaining} / {clientPackage.totalSessions} séa.</span>
+              <span className="font-mono text-[#0284c7]">{clientPackage.sessionsRemaining} / {packageDefinition?.sessionsCount ?? clientPackage.totalSessions} séa.</span>
             </div>
             <p className="text-[11px] text-slate-500 font-medium">Adhérent : <strong>{clientName}</strong> (Souscrit le {clientPackage.purchaseDate})</p>
           </div>

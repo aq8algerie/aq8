@@ -540,6 +540,21 @@ export const INITIAL_PACKAGES: Package[] = [
       'Technologie de pointe',
       'Suivi premium'
     ]
+  },
+  {
+    id: 'pkg-seance-libre',
+    name: 'Séance Libre (À la carte)',
+    type: 'mix',
+    sessionsCount: 1,
+    price: 3000,
+    tag: 'Séances Libres',
+    isFlexible: true,
+    description: 'Forfait sur-mesure à la séance. Déterminez librement le nombre de séances (1, 2, 3...).',
+    details: [
+      'Nombre de séances au choix',
+      'Valable pour toutes les prestations',
+      'Paiement à l\'unité ou par lot'
+    ]
   }
 ];
 
@@ -605,40 +620,40 @@ export const INITIAL_CLIENT_PACKAGES: ClientPackage[] = [
   {
     id: 'clipkg-1',
     clientId: 'cli-1',
-    packageId: 'pkg-2', // AQ8 Vitalité (10 Séances)
+    packageId: 'pkg-focus-aq8', // Focus AQ8 (12 Séances)
     centerId: 'center-1',
     sessionsRemaining: 6,
-    totalSessions: 10,
+    totalSessions: 12,
     purchaseDate: '2026-05-10',
     status: 'active'
   },
   {
     id: 'clipkg-2',
     clientId: 'cli-2',
-    packageId: 'pkg-1', // AQ8 Découverte (5 Séances)
+    packageId: 'pkg-synergie', // Découverte Synergie (9 Séances)
     centerId: 'center-1',
     sessionsRemaining: 0,
-    totalSessions: 5,
+    totalSessions: 9,
     purchaseDate: '2026-05-15',
     status: 'completed'
   },
   {
     id: 'clipkg-3',
     clientId: 'cli-3',
-    packageId: 'pkg-3', // Wonder Intensity (10 Séances)
+    packageId: 'pkg-focus-wonder', // Focus Wonder (8 Séances)
     centerId: 'center-1',
-    sessionsRemaining: 8,
-    totalSessions: 10,
+    sessionsRemaining: 6,
+    totalSessions: 8,
     purchaseDate: '2026-06-01',
     status: 'active'
   },
   {
     id: 'clipkg-4',
     clientId: 'cli-4',
-    packageId: 'pkg-2', // AQ8 Vitalité (10)
+    packageId: 'pkg-duo-equilibre', // Duo Équilibré (8 Séances)
     centerId: 'center-2',
-    sessionsRemaining: 9,
-    totalSessions: 10,
+    sessionsRemaining: 7,
+    totalSessions: 8,
     purchaseDate: '2026-06-12',
     status: 'active'
   }
@@ -648,9 +663,9 @@ export const INITIAL_PAYMENTS: Payment[] = [
   {
     id: 'pay-1',
     clientId: 'cli-1',
-    packageId: 'pkg-2',
+    packageId: 'pkg-focus-aq8',
     centerId: 'center-1',
-    amount: 27000,
+    amount: 22000,
     date: '2026-05-10',
     method: 'cash',
     receiptNumber: 'REC-2026-001'
@@ -658,7 +673,7 @@ export const INITIAL_PAYMENTS: Payment[] = [
   {
     id: 'pay-2',
     clientId: 'cli-2',
-    packageId: 'pkg-1',
+    packageId: 'pkg-synergie',
     centerId: 'center-1',
     amount: 15000,
     date: '2026-05-15',
@@ -668,9 +683,9 @@ export const INITIAL_PAYMENTS: Payment[] = [
   {
     id: 'pay-3',
     clientId: 'cli-3',
-    packageId: 'pkg-3',
+    packageId: 'pkg-focus-wonder',
     centerId: 'center-1',
-    amount: 38000,
+    amount: 35000,
     date: '2026-06-01',
     method: 'cheque',
     receiptNumber: 'CHQ-77890'

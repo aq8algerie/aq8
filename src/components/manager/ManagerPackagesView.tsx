@@ -68,7 +68,7 @@ export function ManagerPackagesView({
                         )}
                       </td>
                       <td className="p-4 font-mono font-bold text-[#0284c7]">
-                        {isCancelled ? 0 : cp.sessionsRemaining} / {cp.totalSessions}
+                        {isCancelled ? 0 : cp.sessionsRemaining} / {pack?.sessionsCount ?? cp.totalSessions}
                       </td>
                       <td className="p-4 text-slate-500 font-mono">{cp.purchaseDate}</td>
                       <td className="p-4">
@@ -154,7 +154,7 @@ export function ManagerPackagesView({
                 <div className="flex justify-between items-center border-t border-slate-50 pt-2.5 text-xs">
                   <span className="text-[11px] text-slate-500">Affecté le {cp.purchaseDate}</span>
                   <div className="font-mono font-bold text-xs">
-                    Séances: <span className="text-[#0284c7]">{isCancelled ? 0 : cp.sessionsRemaining} / {cp.totalSessions}</span>
+                    Séances: <span className="text-[#0284c7]">{isCancelled ? 0 : cp.sessionsRemaining} / {pack?.sessionsCount ?? cp.totalSessions}</span>
                   </div>
                 </div>
               </div>

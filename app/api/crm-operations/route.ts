@@ -44,6 +44,7 @@ type OperationPayload = {
   purchaseDate?: string;
   reason?: string;
   notes?: string;
+  customSessionsCount?: number;
 };
 
 const PAYMENT_METHODS: Payment['method'][] = ['cash', 'card', 'ccp', 'cheque'];
@@ -242,6 +243,8 @@ async function assignPackage(
   const clientId = requiredText(payload.clientId, 'Client', 120);
   const packageId = requiredText(payload.packageId, 'Forfait', 120);
   const purchaseDate = requiredDate(payload.purchaseDate, "Date d'activation");
+  const rawCustomSessions = Number(payload.customSessionsCount);
+  const customSessionsCount = Number.isInteger(rawCustomSessions) && rawCustomSessions > 0 ? rawCustomSessions : undefined;
   assertCenterAccess(actor, centerId);
 
   return db.runTransaction(async transaction => {
@@ -276,14 +279,15 @@ async function assignPackage(
       throw new CrmAccessError(validation.error, 409);
     }
 
+    const finalSessionsCount = customSessionsCount ?? packageDefinition.sessionsCount;
     const activatedAt = new Date().toISOString();
     const clientPackage: ClientPackage = {
       id: clientPackageId,
       clientId,
       packageId,
       centerId,
-      sessionsRemaining: packageDefinition.sessionsCount,
-      totalSessions: packageDefinition.sessionsCount,
+      sessionsRemaining: finalSessionsCount,
+      totalSessions: finalSessionsCount,
       purchaseDate,
       status: 'active',
       activatedAt,
@@ -293,7 +297,7 @@ async function assignPackage(
     transaction.create(clientPackageRef, clientPackage);
     writeAudit(transaction, actor, {
       action: 'ASSIGN_PACKAGE',
-      details: `Activation du forfait ${packageDefinition.name} pour ${client.firstName} ${client.lastName}, avec ${packageDefinition.sessionsCount} séance(s).`,
+      details: `Activation du forfait ${packageDefinition.name} pour ${client.firstName} ${client.lastName}, avec ${finalSessionsCount} séance(s).`,
       targetId: clientPackageId,
       targetType: 'client_package',
       centerId,
@@ -321,6 +325,8 @@ async function recordPayment(
   const clientPackageId = autoActivatePackage
     ? requiredText(payload.clientPackageId, 'Forfait client', 120)
     : undefined;
+  const rawCustomSessions = Number(payload.customSessionsCount);
+  const customSessionsCount = Number.isInteger(rawCustomSessions) && rawCustomSessions > 0 ? rawCustomSessions : undefined;
   if (typeof amount !== 'number' || !PAYMENT_METHODS.includes(method as Payment['method'])) {
     throw new CrmAccessError('Montant ou mode de paiement invalide.', 400);
   }
@@ -404,6 +410,7 @@ async function recordPayment(
       }
     }
 
+    const finalSessionsCount = customSessionsCount ?? packageDefinition.sessionsCount;
     const recordedAt = new Date().toISOString();
     const payment: Payment = {
       ...expectedPayment,
@@ -427,8 +434,8 @@ async function recordPayment(
         clientId,
         packageId,
         centerId,
-        sessionsRemaining: packageDefinition.sessionsCount,
-        totalSessions: packageDefinition.sessionsCount,
+        sessionsRemaining: finalSessionsCount,
+        totalSessions: finalSessionsCount,
         purchaseDate: date,
         status: 'active',
         activatedAt: recordedAt,
@@ -440,7 +447,7 @@ async function recordPayment(
 
     writeAudit(transaction, actor, {
       action: autoActivatePackage ? 'RECORD_PAYMENT_AND_ACTIVATE_PACKAGE' : 'RECORD_PAYMENT',
-      details: `Paiement de ${amount} DZD enregistré pour ${client.firstName} ${client.lastName}, forfait ${packageDefinition.name}, référence ${receiptNumber}.${autoActivatePackage ? ' Forfait activé dans la même opération.' : ''}`,
+      details: `Paiement de ${amount} DZD enregistré pour ${client.firstName} ${client.lastName}, forfait ${packageDefinition.name} (${finalSessionsCount} séance(s)), référence ${receiptNumber}.${autoActivatePackage ? ' Forfait activé dans la même opération.' : ''}`,
       targetId: paymentId,
       targetType: 'payment',
       centerId,
