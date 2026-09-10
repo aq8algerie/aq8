@@ -18,6 +18,7 @@ import {
   validatePackageActivation,
   validatePaymentRegistration,
 } from '@/src/lib/paymentRules';
+import { INITIAL_PACKAGES } from '@/src/mockData';
 import type {
   Appointment,
   Center,
@@ -98,6 +99,24 @@ function docData<T extends { id: string }>(
   return { ...snapshot.data(), id: snapshot.id } as T;
 }
 
+async function getPackageDefinition(
+  transaction: Transaction,
+  db: FirebaseFirestore.Firestore,
+  packageId: string,
+  center?: Center,
+): Promise<Package | undefined> {
+  const packageSnapshot = await transaction.get(db.collection('packages').doc(packageId));
+  if (packageSnapshot.exists) {
+    const pkg = docData<Package>(packageSnapshot);
+    if (pkg && pkg.name) return pkg;
+  }
+  if (center?.customPackages && center.customPackages.length > 0) {
+    const customMatch = center.customPackages.find(p => p.id === packageId);
+    if (customMatch) return customMatch;
+  }
+  return INITIAL_PACKAGES.find(p => p.id === packageId);
+}
+
 function writeAudit(
   transaction: Transaction,
   actor: ServerCrmProfile,
@@ -170,12 +189,13 @@ async function completeAppointment(
 
     const clientSnapshot = await transaction.get(db.collection('clients').doc(appointment.clientId));
     const serviceSnapshot = await transaction.get(db.collection('services').doc(appointment.serviceId));
+    const centerSnapshot = await transaction.get(db.collection('centers').doc(centerId));
     const client = docData<Client>(clientSnapshot);
     const service = docData<Service>(serviceSnapshot);
-    const packageSnapshot = clientPackage
-      ? await transaction.get(db.collection('packages').doc(clientPackage.packageId))
-      : null;
-    const packageDefinition = packageSnapshot ? docData<Package>(packageSnapshot) : undefined;
+    const center = docData<Center>(centerSnapshot);
+    const packageDefinition = clientPackage
+      ? await getPackageDefinition(transaction, db, clientPackage.packageId, center)
+      : undefined;
 
     const validation = validateSessionCompletion({
       appointment,
@@ -269,11 +289,10 @@ async function assignPackage(
     }
 
     const clientSnapshot = await transaction.get(db.collection('clients').doc(clientId));
-    const packageSnapshot = await transaction.get(db.collection('packages').doc(packageId));
     const centerSnapshot = await transaction.get(db.collection('centers').doc(centerId));
     const client = docData<Client>(clientSnapshot);
-    const packageDefinition = docData<Package>(packageSnapshot);
     const center = docData<Center>(centerSnapshot);
+    const packageDefinition = await getPackageDefinition(transaction, db, packageId, center);
     const validation = validatePackageActivation({ center, client, packageDefinition, centerId });
     if (validation.valid === false) {
       throw new CrmAccessError(validation.error, 409);
@@ -381,11 +400,10 @@ async function recordPayment(
     }
 
     const clientSnapshot = await transaction.get(db.collection('clients').doc(clientId));
-    const packageSnapshot = await transaction.get(db.collection('packages').doc(packageId));
     const centerSnapshot = await transaction.get(db.collection('centers').doc(centerId));
     const client = docData<Client>(clientSnapshot);
-    const packageDefinition = docData<Package>(packageSnapshot);
     const center = docData<Center>(centerSnapshot);
+    const packageDefinition = await getPackageDefinition(transaction, db, packageId, center);
     const validation = validatePaymentRegistration({
       center,
       client,
@@ -658,9 +676,10 @@ async function cancelPackage(
     }
 
     const clientSnapshot = await transaction.get(db.collection('clients').doc(clientPackage.clientId));
-    const packageSnapshot = await transaction.get(db.collection('packages').doc(clientPackage.packageId));
+    const centerSnapshot = await transaction.get(db.collection('centers').doc(centerId));
     const client = docData<Client>(clientSnapshot);
-    const packageDefinition = docData<Package>(packageSnapshot);
+    const center = docData<Center>(centerSnapshot);
+    const packageDefinition = await getPackageDefinition(transaction, db, clientPackage.packageId, center);
 
     const cancelledAt = new Date().toISOString();
     const clientName = client ? `${client.firstName} ${client.lastName}`.trim() : clientPackage.clientId;

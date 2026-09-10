@@ -210,7 +210,7 @@ export const INITIAL_CENTERS: Center[] = [
       '6': [{ start: '10:00', end: '20:00' }]
     },
     customActiveServices: ['srv-ems-sculpt', 'srv-wonder', 'srv-aq8', 'srv-power-plate'],
-    customActivePackages: ['pkg-synergie', 'pkg-focus-aq8', 'pkg-duo-equilibre', 'pkg-transfo-intense', 'pkg-focus-wonder'],
+    customActivePackages: ['pkg-synergie', 'pkg-focus-aq8', 'pkg-duo-equilibre', 'pkg-transfo-intense', 'pkg-focus-wonder', 'pkg-seance-libre', 'pkg-seance-libre-aq8', 'pkg-seance-libre-wonder'],
     customServices: [
       {
         id: 'srv-ems-sculpt',
@@ -553,6 +553,40 @@ export const INITIAL_PACKAGES: Package[] = [
     details: [
       'Nombre de séances au choix',
       'Valable pour toutes les prestations',
+      'Paiement à l\'unité ou par lot'
+    ]
+  },
+  {
+    id: 'pkg-seance-libre-aq8',
+    name: 'Séance Libre AQ8',
+    type: 'aq8',
+    sessionsCount: 1,
+    price: 3000,
+    tag: 'Séances Libres',
+    isFlexible: true,
+    aq8Sessions: 1,
+    wonderSessions: 0,
+    description: 'Séance libre à la carte pour la technologie AQ8 EMS.',
+    details: [
+      'Nombre de séances au choix',
+      'AQ8 EMS uniquement',
+      'Paiement à l\'unité ou par lot'
+    ]
+  },
+  {
+    id: 'pkg-seance-libre-wonder',
+    name: 'Séance Libre Wonder',
+    type: 'wonder',
+    sessionsCount: 1,
+    price: 4500,
+    tag: 'Séances Libres',
+    isFlexible: true,
+    aq8Sessions: 0,
+    wonderSessions: 1,
+    description: 'Séance libre à la carte pour la technologie Wonder Axion.',
+    details: [
+      'Nombre de séances au choix',
+      'Wonder Axion uniquement',
       'Paiement à l\'unité ou par lot'
     ]
   }

@@ -31,15 +31,21 @@ export function validatePackageActivation({
     return { valid: false, error: "Le compte de cet adhérent n’est pas actif." };
   }
 
-  if (!packageDefinition) {
+  if (!packageDefinition || !packageDefinition.name) {
     return { valid: false, error: 'Forfait introuvable.' };
   }
 
-  const packageIsActive = center.customActivePackages
-    ? center.customActivePackages.includes(packageDefinition.id)
-    : packageDefinition.type === 'mix'
-      ? center.services.includes('aq8') && center.services.includes('wonder')
-      : center.services.includes(packageDefinition.type);
+  const isCustomOnCenter = Boolean(center.customPackages?.some(p => p.id === packageDefinition.id));
+  const isInActiveList = Boolean(center.customActivePackages && center.customActivePackages.includes(packageDefinition.id));
+  const isCompatibleWithServices = packageDefinition.type === 'mix'
+    ? (center.services.includes('aq8') || center.services.includes('wonder'))
+    : center.services.includes(packageDefinition.type);
+
+  const packageIsActive = isCustomOnCenter || (
+    center.customActivePackages !== undefined
+      ? isInActiveList
+      : isCompatibleWithServices
+  );
 
   if (!packageIsActive) {
     return { valid: false, error: "Ce forfait n'est pas activé dans votre centre." };
