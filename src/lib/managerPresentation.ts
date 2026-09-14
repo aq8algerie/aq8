@@ -6,17 +6,60 @@ function cleanDisplayPart(value: unknown): string {
   return /^(undefined|null|nan)$/i.test(text) ? '' : text;
 }
 
-export function getClientDisplayName(client?: Client, fallback = 'Adhérent inconnu'): string {
-  if (!client) return fallback;
+export function resolveAppointmentClient(
+  appointment?: Appointment | null,
+  clients: Client[] = []
+): Client | undefined {
+  if (!appointment) return undefined;
 
-  const fullName = [cleanDisplayPart(client.firstName), cleanDisplayPart(client.lastName)]
-    .filter(Boolean)
-    .join(' ');
+  const matched = clients.find(c => c.id === appointment.clientId);
+  if (matched) return matched;
 
-  return fullName
-    || cleanDisplayPart(client.phone)
-    || cleanDisplayPart(client.email)
-    || 'Adhérent sans nom';
+  if (
+    appointment.clientFirstName ||
+    appointment.clientLastName ||
+    appointment.clientPhone ||
+    appointment.clientEmail
+  ) {
+    return {
+      id: appointment.clientId || appointment.id,
+      firstName: appointment.clientFirstName || '',
+      lastName: appointment.clientLastName || '',
+      phone: appointment.clientPhone || '',
+      email: appointment.clientEmail || '',
+      centerId: appointment.centerId,
+      createdAt: appointment.createdAt || '',
+      status: 'active',
+    };
+  }
+
+  return undefined;
+}
+
+export function getClientDisplayName(
+  client?: Partial<Client> | null,
+  fallback = 'Adhérent inconnu',
+  appointment?: Appointment | null
+): string {
+  if (client) {
+    const fullName = [cleanDisplayPart(client.firstName), cleanDisplayPart(client.lastName)]
+      .filter(Boolean)
+      .join(' ');
+    if (fullName) return fullName;
+    if (cleanDisplayPart(client.phone)) return cleanDisplayPart(client.phone);
+    if (cleanDisplayPart(client.email)) return cleanDisplayPart(client.email);
+  }
+
+  if (appointment) {
+    const apptFullName = [cleanDisplayPart(appointment.clientFirstName), cleanDisplayPart(appointment.clientLastName)]
+      .filter(Boolean)
+      .join(' ');
+    if (apptFullName) return apptFullName;
+    if (cleanDisplayPart(appointment.clientPhone)) return cleanDisplayPart(appointment.clientPhone);
+    if (cleanDisplayPart(appointment.clientEmail)) return cleanDisplayPart(appointment.clientEmail);
+  }
+
+  return fallback;
 }
 
 export function getAppointmentTechnology(

@@ -35,6 +35,7 @@ import {
   getAppointmentStatusLabel,
   getAppointmentTechnology,
   getClientDisplayName,
+  resolveAppointmentClient,
   isAppointmentOverdue,
 } from '../../lib/managerPresentation';
 import { AppointmentMutationOptions, CrmActionResult } from '../../lib/crmTransactions';
@@ -135,8 +136,8 @@ export function ManagerBookingsView({
     .sort((a, b) => b.dateTime.localeCompare(a.dateTime));
 
   const filteredAppointments = sortedAppointments.filter(apt => {
-    const cl = centerClients.find(c => c.id === apt.clientId);
-    const clientFullName = getClientDisplayName(cl).toLowerCase();
+    const cl = centerClients.find(c => c.id === apt.clientId) || resolveAppointmentClient(apt, clients);
+    const clientFullName = getClientDisplayName(cl, 'Adhérent inconnu', apt).toLowerCase();
     const clientPhone = safeText(cl?.phone).toLowerCase();
     const clientEmail = safeText(cl?.email).toLowerCase();
     const srv = services.find(s => s.id === apt.serviceId);
@@ -545,7 +546,7 @@ export function ManagerBookingsView({
               <tbody className="divide-y divide-slate-100 text-slate-700">
                 {paginatedAppointments.length > 0 ? (
                   paginatedAppointments.map(apt => {
-                    const cl = centerClients.find(c => c.id === apt.clientId);
+                    const cl = centerClients.find(c => c.id === apt.clientId) || resolveAppointmentClient(apt, clients);
                     const srv = services.find(s => s.id === apt.serviceId);
                     const isSelected = selectedIds.includes(apt.id);
                     const tech = getAppointmentTechnology(apt, services);
@@ -570,7 +571,7 @@ export function ManagerBookingsView({
                         {/* Client details */}
                         <td className="p-4">
                           <div className="font-bold text-[#353535] flex items-center gap-1.5">
-                            {getClientDisplayName(cl)}
+                            {getClientDisplayName(cl, 'Adhérent inconnu', apt)}
                             {cl?.gender === 'F' ? (
                               <span className="w-1.5 h-1.5 rounded-full bg-rose-400" title="Femme"></span>
                             ) : cl?.gender === 'H' ? (
@@ -728,7 +729,7 @@ export function ManagerBookingsView({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {gridAppointments.length > 0 ? (
               gridAppointments.map(apt => {
-                const cl = centerClients.find(c => c.id === apt.clientId);
+                const cl = centerClients.find(c => c.id === apt.clientId) || resolveAppointmentClient(apt, clients);
                 const srv = services.find(s => s.id === apt.serviceId);
                 const isSelected = selectedIds.includes(apt.id);
                 const tech = getAppointmentTechnology(apt, services);
@@ -760,7 +761,7 @@ export function ManagerBookingsView({
                         </div>
                         <div>
                           <h4 className="font-bold text-slate-800 text-sm">
-                            {getClientDisplayName(cl)}
+                            {getClientDisplayName(cl, 'Adhérent inconnu', apt)}
                           </h4>
                           <span className="text-[10px] text-slate-400 font-mono block">{cl?.phone}</span>
                         </div>
@@ -891,7 +892,7 @@ export function ManagerBookingsView({
             <div className="p-5 space-y-4 text-xs">
               {/* Client Info Banner */}
               {(() => {
-                const cl = centerClients.find(c => c.id === viewingApt.clientId);
+                const cl = centerClients.find(c => c.id === viewingApt.clientId) || resolveAppointmentClient(viewingApt, clients);
                 const srv = services.find(s => s.id === viewingApt.serviceId);
                 const tech = getAppointmentTechnology(viewingApt, services);
                 return (
@@ -903,7 +904,7 @@ export function ManagerBookingsView({
                         </div>
                         <div>
                           <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Adhérent enregistré</span>
-                          <h5 className="font-bold text-slate-800 text-sm">{getClientDisplayName(cl)}</h5>
+                          <h5 className="font-bold text-slate-800 text-sm">{getClientDisplayName(cl, 'Adhérent inconnu', viewingApt)}</h5>
                         </div>
                       </div>
 

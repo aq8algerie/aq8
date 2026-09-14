@@ -119,6 +119,13 @@ export interface Appointment {
   duration: number; // in minutes
   status: AppointmentStatus;
   notes?: string;
+  clientFirstName?: string;
+  clientLastName?: string;
+  clientPhone?: string;
+  clientEmail?: string;
+  serviceName?: string;
+  serviceType?: 'aq8' | 'wonder';
+  createdAt?: string;
   completedAt?: string;
   completedByUserId?: string;
   completedByUserName?: string;

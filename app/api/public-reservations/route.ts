@@ -376,7 +376,7 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
       bookingDate: data.bookingDate,
       bookingTime: data.bookingTime,
       dateTime: `${data.bookingDate}T${data.bookingTime}`,
-      status: 'confirmed',
+      status: 'booked',
       createdAt,
       updatedAt: createdAt,
       createdSource: 'web_public',

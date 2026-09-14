@@ -31,7 +31,7 @@ import {
 } from './blog';
 import { CrmAccessError, getCrmErrorResponse, isOperationalCrmCenterStatus } from './serverCrmAccess';
 import { getMonthToDateOccupancy } from './managerDashboardMetrics';
-import { getAppointmentStatusLabel, getAppointmentTechnology, getClientDisplayName } from './managerPresentation';
+import { getAppointmentStatusLabel, getAppointmentTechnology, getClientDisplayName, resolveAppointmentClient } from './managerPresentation';
 
 function test(name: string, run: () => void) {
   run();
@@ -840,6 +840,26 @@ test('manager presentation cleans legacy names and derives appointment technolog
     getAppointmentStatusLabel({ ...appointment, dateTime: '2026-08-04T10:00' }, new Date('2026-08-03T12:00:00')),
     'Planifiée',
   );
+
+  const publicAppt: Appointment = {
+    id: 'req-1',
+    clientId: 'client-unloaded',
+    serviceId: 'service-1',
+    centerId: 'center-1',
+    dateTime: '2026-09-15T10:00',
+    duration: 20,
+    status: 'booked',
+    clientFirstName: 'Sami',
+    clientLastName: 'Benali',
+    clientPhone: '0555123456',
+    clientEmail: 'sami@example.com',
+  };
+
+  assert.equal(getClientDisplayName(undefined, 'Adhérent inconnu', publicAppt), 'Sami Benali');
+  const resolved = resolveAppointmentClient(publicAppt, []);
+  assert.equal(resolved?.firstName, 'Sami');
+  assert.equal(resolved?.lastName, 'Benali');
+  assert.equal(getClientDisplayName(resolved), 'Sami Benali');
 });
 console.log('All business-rule tests passed.');
 test('suspended, showcase, inactive and archived centers are denied at server access', () => {

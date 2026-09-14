@@ -205,14 +205,14 @@ export default function CrmPage() {
 
     const unsubManagers = onSnapshot(managersRef, (snapshot) => {
       const list: CenterManager[] = [];
-      snapshot.forEach(doc => list.push(doc.data() as CenterManager));
+      snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as CenterManager));
       setManagers(list);
     });
 
     const unsubClients = onSnapshot(clientsRef, (snapshot) => {
       const list: Client[] = [];
       snapshot.forEach(doc => {
-        const client = doc.data() as Client;
+        const client = { id: doc.id, ...doc.data() } as Client;
         if (client.status !== 'archived') list.push(client);
       });
       setClients(list);
@@ -220,25 +220,25 @@ export default function CrmPage() {
 
     const unsubAppointments = onSnapshot(appointmentsRef, (snapshot) => {
       const list: Appointment[] = [];
-      snapshot.forEach(doc => list.push(doc.data() as Appointment));
+      snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as Appointment));
       setAppointments(list);
     });
 
     const unsubClientPackages = onSnapshot(clientPackagesRef, (snapshot) => {
       const list: ClientPackage[] = [];
-      snapshot.forEach(doc => list.push(doc.data() as ClientPackage));
+      snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as ClientPackage));
       setClientPackages(list);
     });
 
     const unsubPayments = onSnapshot(paymentsRef, (snapshot) => {
       const list: Payment[] = [];
-      snapshot.forEach(doc => list.push(doc.data() as Payment));
+      snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as Payment));
       setPayments(list);
     });
 
     const unsubMeasurements = onSnapshot(measurementsRef, (snapshot) => {
       const list: Measurement[] = [];
-      snapshot.forEach(doc => list.push(doc.data() as Measurement));
+      snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as Measurement));
       setMeasurements(list);
     });
 

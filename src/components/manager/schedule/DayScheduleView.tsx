@@ -7,6 +7,7 @@ import React from 'react';
 import { AlertCircle, CheckCircle2, CheckSquare, Clock, Edit2, Eye, PhoneCall, Square, XCircle } from 'lucide-react';
 import { Appointment, Center, Client, Package, Service } from '../../../types';
 import { getSlotAvailability } from '../../../lib/bookingCapacityRules';
+import { getClientDisplayName, resolveAppointmentClient } from '../../../lib/managerPresentation';
 
 type PackageType = Package['type'];
 
@@ -82,7 +83,7 @@ export function DayScheduleView({
             <div className="flex-1 space-y-3">
               {hourApts.length > 0 ? (
                 hourApts.map(apt => {
-                  const cl = centerClients.find(c => c.id === apt.clientId);
+                  const cl = resolveAppointmentClient(apt, centerClients);
                   const srv = services.find(s => s.id === apt.serviceId);
                   const isSelected = selectedIds.includes(apt.id);
                   const tech = cl ? getTechnologyForClient(cl.id) : null;
@@ -105,7 +106,7 @@ export function DayScheduleView({
                         </button>
                         <div className="space-y-1">
                           <div className="font-black text-sm text-slate-900 flex items-center gap-2">
-                            <span>{cl ? `${cl.firstName} ${cl.lastName}` : 'Adhérent inconnu'}</span>
+                            <span>{getClientDisplayName(cl, 'Adhérent inconnu', apt)}</span>
                             {cl?.gender === 'F' ? (
                               <span className="px-1.5 py-0.2 rounded-full bg-pink-100 border border-pink-300 text-pink-700 text-[10px] font-bold">Femme</span>
                             ) : cl?.gender === 'H' ? (

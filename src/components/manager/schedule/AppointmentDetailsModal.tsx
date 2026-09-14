@@ -8,6 +8,7 @@ import { CalendarDays, FileText, Mail, Phone, User } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Appointment, Client, Package, Service } from '../../../types';
 import { formatDateTime } from '../../../lib/centerManagerUtils';
+import { getClientDisplayName, resolveAppointmentClient } from '../../../lib/managerPresentation';
 
 type PackageType = Package['type'];
 
@@ -30,7 +31,7 @@ export function AppointmentDetailsModal({
     return null;
   }
 
-  const client = centerClients.find(candidate => candidate.id === appointment.clientId);
+  const client = resolveAppointmentClient(appointment, centerClients);
   const service = services.find(candidate => candidate.id === appointment.serviceId);
   const tech = client ? getTechnologyForClient(client.id) : null;
 
@@ -60,7 +61,7 @@ export function AppointmentDetailsModal({
               <div>
                 <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Adhérent du Centre</span>
                 <h5 className="font-bold text-slate-800 text-sm">
-                  {client ? `${client.firstName} ${client.lastName}` : 'Adhérent inconnu'}
+                  {getClientDisplayName(client, 'Adhérent inconnu', appointment)}
                 </h5>
               </div>
             </div>
@@ -68,11 +69,11 @@ export function AppointmentDetailsModal({
             <div className="grid grid-cols-2 gap-2 border-t border-slate-200/50 pt-2.5 text-[11px] text-slate-600 font-semibold">
               <div className="flex items-center gap-1.5">
                 <Phone className="h-3.5 w-3.5 text-slate-400" />
-                <span>{client?.phone || 'Non renseigné'}</span>
+                <span>{client?.phone || appointment.clientPhone || 'Non renseigné'}</span>
               </div>
               <div className="flex items-center gap-1.5 truncate">
                 <Mail className="h-3.5 w-3.5 text-slate-400" />
-                <span className="truncate">{client?.email || 'Pas de courriel'}</span>
+                <span className="truncate">{client?.email || appointment.clientEmail || 'Pas de courriel'}</span>
               </div>
             </div>
           </div>
