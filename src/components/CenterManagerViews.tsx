@@ -624,26 +624,12 @@ export function CenterManagerViews({
       return fail('La prestation associée à cette séance est introuvable.');
     }
 
-    const activePkg = findActivePackageForClientAndService(
+    const activePkg = service ? findActivePackageForClientAndService(
       apt.clientId,
       service,
       clientPackages,
       packages
-    );
-
-    if (!activePkg) {
-      const expiredCompatiblePackage = clientPackages.some(clientPackage =>
-        clientPackage.clientId === apt.clientId &&
-        clientPackage.status === 'active' &&
-        isPackageExpired(clientPackage) &&
-        isPackageCompatibleWithService(clientPackage, service, packages)
-      );
-      const serviceLabel = service.type === 'aq8' ? 'AQ8' : 'Wonder';
-      return fail(expiredCompatiblePackage
-        ? `Forfait ${serviceLabel} expiré : renouvelez-le avant de valider cette séance.`
-        : `Aucun forfait ${serviceLabel} actif avec un crédit disponible.`
-      );
-    }
+    ) : undefined;
 
     try {
       const completion = await runCrmOperation<{
@@ -654,13 +640,15 @@ export function CenterManagerViews({
         action: 'complete_appointment',
         appointmentId: apt.id,
         centerId,
-        clientPackageId: activePkg.id,
+        clientPackageId: activePkg ? activePkg.id : 'none',
       });
 
-
-
       if (!options.silent) {
-        triggerToast('Séance validée, crédit déduit et opération auditée.', 'success', 'completed');
+        triggerToast(
+          activePkg ? 'Séance validée, crédit déduit et opération auditée.' : 'Séance validée (hors forfait) et opération auditée.',
+          'success',
+          'completed'
+        );
       }
       return { ok: true };
     } catch (error) {

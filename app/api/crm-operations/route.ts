@@ -158,34 +158,32 @@ async function completeAppointment(
   const db = getAdminDb();
   const centerId = requiredText(payload.centerId, 'Centre', 80);
   const appointmentId = requiredText(payload.appointmentId, 'Réservation', 120);
-  const clientPackageId = requiredText(payload.clientPackageId, 'Forfait client', 120);
+  const clientPackageId = payload.clientPackageId ? String(payload.clientPackageId).trim() : 'none';
   assertCenterAccess(actor, centerId);
 
   return db.runTransaction(async transaction => {
     const appointmentRef = db.collection('appointments').doc(appointmentId);
-    const clientPackageRef = db.collection('client_packages').doc(clientPackageId);
     const appointmentSnapshot = await transaction.get(appointmentRef);
-    const clientPackageSnapshot = await transaction.get(clientPackageRef);
     const appointment = docData<Appointment>(appointmentSnapshot);
-    const clientPackage = docData<ClientPackage>(clientPackageSnapshot);
 
     if (!appointment || appointment.centerId !== centerId) {
       throw new CrmAccessError('Réservation introuvable dans ce centre.', 404);
     }
-    if (
-      appointment.status === 'completed' &&
-      appointment.completedWithClientPackageId === clientPackageId &&
-      appointment.deductedCredits === 1 &&
-      clientPackage
-    ) {
+    if (appointment.status === 'completed') {
       return {
         ok: true,
         created: false,
-        clientPackageId,
-        sessionsRemaining: clientPackage.sessionsRemaining,
-        packageStatus: clientPackage.status,
+        clientPackageId: appointment.completedWithClientPackageId || 'none',
+        sessionsRemaining: 0,
+        packageStatus: 'completed',
       };
     }
+
+    const clientPackageRef = clientPackageId && clientPackageId !== 'none'
+      ? db.collection('client_packages').doc(clientPackageId)
+      : null;
+    const clientPackageSnapshot = clientPackageRef ? await transaction.get(clientPackageRef) : null;
+    const clientPackage = clientPackageSnapshot ? docData<ClientPackage>(clientPackageSnapshot) : undefined;
 
     const clientSnapshot = await transaction.get(db.collection('clients').doc(appointment.clientId));
     const serviceSnapshot = await transaction.get(db.collection('services').doc(appointment.serviceId));
@@ -209,34 +207,42 @@ async function completeAppointment(
       throw new CrmAccessError(validation.error, 409);
     }
 
-    const alreadyDeducted = appointment.deductedCredits === 1;
     const completedAt = new Date().toISOString();
-    const sessionsRemaining = alreadyDeducted ? clientPackage.sessionsRemaining : clientPackage.sessionsRemaining - 1;
-    const packageStatus: ClientPackage['status'] = sessionsRemaining === 0 ? 'completed' : clientPackage.status;
-    const clientName = `${client.firstName} ${client.lastName}`.trim() || appointment.clientId;
-    const serviceName = service.name || (service.type === 'aq8' ? 'AQ8' : 'Wonder');
+    let sessionsRemaining = 0;
+    let packageStatus: ClientPackage['status'] = 'completed';
 
-    transaction.update(clientPackageRef, {
-      sessionsRemaining,
-      status: packageStatus,
-      updatedAt: completedAt,
-      lastSessionAt: completedAt,
-      lastCompletedAppointmentId: appointment.id,
-    });
+    if (clientPackageRef && clientPackage) {
+      const alreadyDeducted = appointment.deductedCredits === 1;
+      sessionsRemaining = alreadyDeducted ? clientPackage.sessionsRemaining : Math.max(clientPackage.sessionsRemaining - 1, 0);
+      packageStatus = sessionsRemaining === 0 ? 'completed' : clientPackage.status;
+
+      transaction.update(clientPackageRef, {
+        sessionsRemaining,
+        status: packageStatus,
+        updatedAt: completedAt,
+        lastSessionAt: completedAt,
+        lastCompletedAppointmentId: appointment.id,
+      });
+    }
+
+    const clientName = client ? `${client.firstName} ${client.lastName}`.trim() : (appointment.clientFirstName ? `${appointment.clientFirstName} ${appointment.clientLastName}`.trim() : appointment.clientId);
+    const serviceName = service ? service.name || (service.type === 'aq8' ? 'AQ8' : 'Wonder') : 'Prestation';
+
     transaction.update(appointmentRef, {
       status: 'completed',
       completedAt,
       completedByUserId: actor.uid,
       completedByUserName: actor.name,
-      completedWithClientPackageId: clientPackage.id,
-      deductedCredits: 1,
+      completedWithClientPackageId: clientPackage ? clientPackage.id : 'none',
+      deductedCredits: clientPackage ? 1 : 0,
       updatedAt: completedAt,
     });
+
     writeAudit(transaction, actor, {
       action: 'COMPLETE_APPOINTMENT',
-      details: alreadyDeducted
-        ? `Validation de la séance du ${appointment.dateTime.replace('T', ' ')} pour ${clientName} (Crédit déjà déduit à la réservation). Solde restant : ${sessionsRemaining} séance(s).`
-        : `Validation de la séance du ${appointment.dateTime.replace('T', ' ')} pour ${clientName}. 1 crédit ${serviceName} déduit du forfait ${packageDefinition?.name || 'client'}. Solde restant : ${sessionsRemaining} séance(s).`,
+      details: clientPackage
+        ? `Validation de la séance du ${appointment.dateTime.replace('T', ' ')} pour ${clientName}. 1 crédit ${serviceName} déduit du forfait ${packageDefinition?.name || 'client'}. Solde restant : ${sessionsRemaining} séance(s).`
+        : `Validation de la séance du ${appointment.dateTime.replace('T', ' ')} pour ${clientName} (${serviceName} hors forfait / paiement direct).`,
       targetId: appointment.id,
       targetType: 'appointment',
       centerId,
@@ -246,7 +252,7 @@ async function completeAppointment(
     return {
       ok: true,
       created: true,
-      clientPackageId,
+      clientPackageId: clientPackage ? clientPackage.id : 'none',
       sessionsRemaining,
       packageStatus,
     };

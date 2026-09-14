@@ -109,50 +109,40 @@ export function validateSessionCompletion({
     return { valid: false, error: 'Cette séance a déjà été validée ou annulée.' };
   }
 
-  if (!client || client.centerId !== managerCenterId || client.id !== appointment.clientId) {
-    return { valid: false, error: "L'adhérent est introuvable ou n'appartient pas à votre centre." };
-  }
-
-  if (client.status === 'suspended' || client.status === 'archived') {
+  if (client && (client.status === 'suspended' || client.status === 'archived')) {
     return { valid: false, error: "Le compte de cet adhérent n’est pas actif." };
   }
 
-  if (!service || service.id !== appointment.serviceId) {
-    return { valid: false, error: 'La prestation associée à cette séance est introuvable.' };
-  }
+  if (clientPackage) {
+    if (
+      clientPackage.centerId !== managerCenterId ||
+      clientPackage.clientId !== appointment.clientId
+    ) {
+      return { valid: false, error: 'Le forfait sélectionné ne correspond pas à cette séance.' };
+    }
 
-  if (!clientPackage) {
-    return { valid: false, error: "L'adhérent ne possède aucun forfait compatible actif." };
-  }
+    if (packageDefinition && packageDefinition.id !== clientPackage.packageId) {
+      return { valid: false, error: 'La définition du forfait est introuvable.' };
+    }
 
-  if (
-    clientPackage.centerId !== managerCenterId ||
-    clientPackage.clientId !== appointment.clientId
-  ) {
-    return { valid: false, error: 'Le forfait sélectionné ne correspond pas à cette séance.' };
-  }
+    if (
+      clientPackage.status !== 'active' ||
+      !Number.isInteger(clientPackage.sessionsRemaining) ||
+      clientPackage.sessionsRemaining <= 0
+    ) {
+      return { valid: false, error: "Le forfait actif de cet adhérent ne contient plus de crédit." };
+    }
 
-  if (!packageDefinition || packageDefinition.id !== clientPackage.packageId) {
-    return { valid: false, error: 'La définition du forfait est introuvable.' };
-  }
+    if (isPackageExpired(clientPackage)) {
+      return { valid: false, error: "Le forfait actif de cet adhérent a expiré." };
+    }
 
-  if (
-    clientPackage.status !== 'active' ||
-    !Number.isInteger(clientPackage.sessionsRemaining) ||
-    clientPackage.sessionsRemaining <= 0
-  ) {
-    return { valid: false, error: "Le forfait actif de cet adhérent ne contient plus de crédit." };
-  }
-
-  if (isPackageExpired(clientPackage)) {
-    return { valid: false, error: "Le forfait actif de cet adhérent a expiré." };
-  }
-
-  if (packageDefinition.type !== 'mix' && packageDefinition.type !== service.type) {
-    return {
-      valid: false,
-      error: `Ce forfait ne permet pas de valider une séance ${service.type === 'aq8' ? 'AQ8' : 'Wonder'}.`,
-    };
+    if (service && packageDefinition && packageDefinition.type !== 'mix' && packageDefinition.type !== service.type) {
+      return {
+        valid: false,
+        error: `Ce forfait ne permet pas de valider une séance ${service.type === 'aq8' ? 'AQ8' : 'Wonder'}.`,
+      };
+    }
   }
 
   return { valid: true };
