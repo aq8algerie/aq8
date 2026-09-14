@@ -292,7 +292,7 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
       }
     }
 
-    // Auto-match or Auto-provision Client record for instant linking
+    // Auto-match or Auto-provision Client record for instant linking and CRM Clients tab listing
     let clientIdToAssign = '';
     const phoneTrimmed = data.phone.trim();
     const emailTrimmed = data.email ? data.email.trim().toLowerCase() : '';
@@ -301,21 +301,24 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
       db.collection('clients').where('phone', '==', phoneTrimmed).limit(1)
     );
 
-    if (!existingSameDayAppointments.empty && !existingClientByPhone.empty) {
-      clientIdToAssign = existingClientByPhone.docs[0].id;
-    } else if (!existingClientByPhone.empty) {
-      clientIdToAssign = existingClientByPhone.docs[0].id;
-    } else if (emailTrimmed) {
+    let matchedDoc = !existingClientByPhone.empty ? existingClientByPhone.docs[0] : null;
+
+    if (!matchedDoc && emailTrimmed) {
       const existingClientByEmail = await transaction.get(
         db.collection('clients').where('email', '==', emailTrimmed).limit(1)
       );
       if (!existingClientByEmail.empty) {
-        clientIdToAssign = existingClientByEmail.docs[0].id;
+        matchedDoc = existingClientByEmail.docs[0];
       }
     }
 
-    // If client does not exist yet, auto-provision a new client profile
-    if (!clientIdToAssign) {
+    if (matchedDoc) {
+      clientIdToAssign = matchedDoc.id;
+      const clientData = matchedDoc.data();
+      if (!clientData.centerId) {
+        transaction.update(matchedDoc.ref, { centerId: data.centerId, updatedAt: createdAt });
+      }
+    } else {
       const newClientRef = db.collection('clients').doc();
       clientIdToAssign = newClientRef.id;
       transaction.set(newClientRef, {

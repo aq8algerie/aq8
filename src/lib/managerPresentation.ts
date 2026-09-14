@@ -36,6 +36,53 @@ export function resolveAppointmentClient(
   return undefined;
 }
 
+export function getCenterClients(
+  centerId: string,
+  clients: Client[] = [],
+  appointments: Appointment[] = []
+): Client[] {
+  const result: Client[] = [];
+  const addedIds = new Set<string>();
+
+  clients.forEach(client => {
+    if (client.centerId === centerId && client.status !== 'archived') {
+      result.push(client);
+      addedIds.add(client.id);
+    }
+  });
+
+  const centerAppointments = appointments.filter(a => a.centerId === centerId);
+  centerAppointments.forEach(apt => {
+    if (!apt.clientId) return;
+
+    const existingClient = clients.find(c => c.id === apt.clientId);
+    if (existingClient && existingClient.status !== 'archived' && !addedIds.has(existingClient.id)) {
+      result.push(existingClient);
+      addedIds.add(existingClient.id);
+      return;
+    }
+
+    if (!existingClient && !addedIds.has(apt.clientId)) {
+      if (apt.clientFirstName || apt.clientLastName || apt.clientPhone || apt.clientEmail) {
+        const synthetic: Client = {
+          id: apt.clientId,
+          firstName: apt.clientFirstName || '',
+          lastName: apt.clientLastName || '',
+          phone: apt.clientPhone || '',
+          email: apt.clientEmail || '',
+          centerId: centerId,
+          createdAt: apt.createdAt || new Date().toISOString(),
+          status: 'active',
+        };
+        result.push(synthetic);
+        addedIds.add(synthetic.id);
+      }
+    }
+  });
+
+  return result;
+}
+
 export function getClientDisplayName(
   client?: Partial<Client> | null,
   fallback = 'Adhérent inconnu',

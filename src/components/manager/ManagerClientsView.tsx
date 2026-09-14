@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Appointment, Client, ClientPackage, ClientStatus } from '../../types';
 import { analyzeClientRetention } from '../../lib/crmRetention';
+import { getCenterClients } from '../../lib/managerPresentation';
 
 interface ManagerClientsViewProps {
   centerId: string;
@@ -66,7 +67,10 @@ export function ManagerClientsView({
   const [sortBy, setSortBy] = useState<SortOption>('alpha_asc');
 
   const clientPageSizes = [20, 50, 100, 200] as const;
-  const centerClients = useMemo(() => clients.filter(client => client.centerId === centerId), [centerId, clients]);
+  const centerClients = useMemo(
+    () => getCenterClients(centerId, clients, appointments),
+    [centerId, clients, appointments]
+  );
 
   // Retention Map analysis
   const retentionMap = useMemo(() => {
