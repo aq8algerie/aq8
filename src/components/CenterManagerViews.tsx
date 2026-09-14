@@ -615,7 +615,7 @@ export function CenterManagerViews({
     const apt = appointments.find(a => a.id === aptId);
     if (!apt) return fail('Réservation introuvable.');
 
-    if (apt.status !== 'booked') {
+    if (apt.status !== 'booked' && apt.status !== 'confirmed') {
       return fail('Cette séance a déjà été validée ou annulée.');
     }
 

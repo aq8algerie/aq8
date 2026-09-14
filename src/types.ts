@@ -108,7 +108,7 @@ export interface ClientGamificationStats {
   badges: Badge[];
 }
 
-export type AppointmentStatus = 'booked' | 'completed' | 'cancelled';
+export type AppointmentStatus = 'booked' | 'confirmed' | 'completed' | 'cancelled';
 
 export interface Appointment {
   id: string;

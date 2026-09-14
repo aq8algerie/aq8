@@ -14,6 +14,7 @@ import {
 } from '../../lib/crmTransactions';
 import { getTodayDateString } from '../../lib/centerManagerUtils';
 import { getBookingHoursForDate } from '../../lib/bookingCapacityRules';
+import { isBookedStatus } from '../../lib/managerPresentation';
 import { db } from '../../lib/firebase';
 import { notifyCrmEmail } from '../../lib/emailNotificationClient';
 import { ProfessionalToast, ProfessionalToastState, ToastAction, ToastType } from './ProfessionalToast';
@@ -252,7 +253,7 @@ export function ManagerScheduleView({
   };
 
   const handleBulkComplete = async () => {
-    const eligibleBookings = appointments.filter(a => selectedIds.includes(a.id) && a.status === 'booked');
+    const eligibleBookings = appointments.filter(a => selectedIds.includes(a.id) && isBookedStatus(a.status));
 
     if (eligibleBookings.length === 0) {
       showToast('Aucun rendez-vous éligible (planifié) sélectionné.', 'error');
@@ -278,7 +279,7 @@ export function ManagerScheduleView({
   };
 
   const handleBulkCancel = async () => {
-    const eligibleBookings = appointments.filter(a => selectedIds.includes(a.id) && a.status === 'booked');
+    const eligibleBookings = appointments.filter(a => selectedIds.includes(a.id) && isBookedStatus(a.status));
     if (eligibleBookings.length === 0) {
       showToast('Aucune séance planifiée éligible pour annulation.', 'error');
       return;

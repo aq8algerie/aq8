@@ -62,6 +62,10 @@ export function getClientDisplayName(
   return fallback;
 }
 
+export function isBookedStatus(status?: string): boolean {
+  return status === 'booked' || status === 'confirmed';
+}
+
 export function getAppointmentTechnology(
   appointment: Appointment,
   services: Service[],
@@ -70,7 +74,7 @@ export function getAppointmentTechnology(
 }
 
 export function isAppointmentOverdue(appointment: Appointment, now = new Date()): boolean {
-  if (appointment.status !== 'booked') return false;
+  if (!isBookedStatus(appointment.status)) return false;
 
   const startsAt = new Date(appointment.dateTime.replace(' ', 'T'));
   if (Number.isNaN(startsAt.getTime())) return false;

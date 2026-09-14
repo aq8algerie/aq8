@@ -105,7 +105,7 @@ export function validateSessionCompletion({
     return { valid: false, error: "Cette réservation n'appartient pas à votre centre." };
   }
 
-  if (appointment.status !== 'booked') {
+  if (appointment.status !== 'booked' && appointment.status !== 'confirmed') {
     return { valid: false, error: 'Cette séance a déjà été validée ou annulée.' };
   }
 
@@ -177,8 +177,8 @@ export function validateDeduction(
     return { valid: false, error: "L'adhérent n'existe pas ou n'appartient pas à ce centre." };
   }
 
-  // 3. Check current status of the reservation (should be booked)
-  if (appointment.status !== 'booked') {
+  // 3. Check current status of the reservation (should be booked or confirmed)
+  if (appointment.status !== 'booked' && appointment.status !== 'confirmed') {
     return { valid: false, error: "La réservation n'est pas dans l'état planifiée." };
   }
 

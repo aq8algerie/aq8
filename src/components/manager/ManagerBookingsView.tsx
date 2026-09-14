@@ -35,6 +35,7 @@ import {
   getAppointmentStatusLabel,
   getAppointmentTechnology,
   getClientDisplayName,
+  isBookedStatus,
   resolveAppointmentClient,
   isAppointmentOverdue,
 } from '../../lib/managerPresentation';
@@ -154,7 +155,7 @@ export function ManagerBookingsView({
       safeText(apt.id).toLowerCase().includes(normalizedSearch) ||
       safeText(apt.notes).toLowerCase().includes(normalizedSearch);
 
-    const matchesStatus = statusFilter === 'All' || apt.status === statusFilter;
+    const matchesStatus = statusFilter === 'All' || apt.status === statusFilter || (statusFilter === 'booked' && isBookedStatus(apt.status));
     const matchesService = serviceFilter === 'All' || apt.serviceId === serviceFilter;
     const matchesDate = matchesDateFilter(apt);
     const matchesGender = genderFilter === 'All' || (genderFilter === 'unknown' ? !cl?.gender : cl?.gender === genderFilter);
@@ -254,7 +255,7 @@ export function ManagerBookingsView({
 
   // 5. Bulk Operations
   const handleBulkComplete = async () => {
-    const bookingsToComplete = appointments.filter(a => selectedIds.includes(a.id) && a.status === 'booked');
+    const bookingsToComplete = appointments.filter(a => selectedIds.includes(a.id) && isBookedStatus(a.status));
 
     if (bookingsToComplete.length === 0) {
       showToast('Aucun rendez-vous planifié éligible parmi les sélections.', 'error');
@@ -280,7 +281,7 @@ export function ManagerBookingsView({
   };
 
   const handleBulkCancel = async () => {
-    const bookingsToCancel = appointments.filter(a => selectedIds.includes(a.id) && a.status === 'booked');
+    const bookingsToCancel = appointments.filter(a => selectedIds.includes(a.id) && isBookedStatus(a.status));
 
     if (bookingsToCancel.length === 0) {
       showToast("Aucun rendez-vous planifié éligible à l'annulation.", 'error');
@@ -628,7 +629,7 @@ export function ManagerBookingsView({
                             >
                               <Edit2 className="h-4 w-4" />
                             </button>
-                            {apt.status === 'booked' && (
+                            {isBookedStatus(apt.status) && (
                               <>
                                 <button
                                   onClick={() => handleSingleComplete(apt.id)}
@@ -821,7 +822,7 @@ export function ManagerBookingsView({
                           >
                             <Edit2 className="h-4 w-4" />
                           </button>
-                          {apt.status === 'booked' && (
+                          {isBookedStatus(apt.status) && (
                             <>
                               <button
                                 onClick={() => handleSingleComplete(apt.id)}

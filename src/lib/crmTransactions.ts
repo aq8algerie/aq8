@@ -490,7 +490,7 @@ export async function updateAppointmentInTransaction(
       throw new Error("Cette réservation n'appartient pas à votre centre.");
     }
 
-    if (currentAppointment.status !== 'booked' || params.status !== 'booked') {
+    if ((currentAppointment.status !== 'booked' && currentAppointment.status !== 'confirmed') || (params.status !== 'booked' && params.status !== 'confirmed')) {
       throw new Error(
         'Seules les réservations planifiées peuvent être modifiées. Utilisez les actions dédiées pour valider ou annuler une séance.'
       );
@@ -585,7 +585,7 @@ export async function cancelAppointmentInTransaction(
     if (appointment.centerId !== params.centerId) {
       throw new Error("Cette réservation n'appartient pas à votre centre.");
     }
-    if (appointment.status !== 'booked') {
+    if (appointment.status !== 'booked' && appointment.status !== 'confirmed') {
       throw new Error('Seules les réservations planifiées peuvent être annulées.');
     }
 
