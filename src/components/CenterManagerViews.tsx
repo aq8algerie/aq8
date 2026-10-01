@@ -67,6 +67,7 @@ type PendingClientAction =
   | { kind: 'status'; clientIds: string[]; status: ClientStatus };
 
 export function CenterManagerViews({
+  canReadFinances = false,
   centerId,
   centers,
   clients,
@@ -83,6 +84,7 @@ export function CenterManagerViews({
   userId,
   userName
 }: {
+  canReadFinances?: boolean;
   centerId: string;
   centers: Center[];
   clients: Client[];
@@ -1020,6 +1022,7 @@ export function CenterManagerViews({
       {/* Primary Subtab navigation */}
       {!activeTab && (
         <ManagerTabs
+          canReadFinances={canReadFinances}
           activeTab={activeSubTab}
           onTabChange={setActiveSubTab}
           onClearSelectedClient={() => setSelectedClientId(null)}
@@ -1053,6 +1056,7 @@ export function CenterManagerViews({
           <>
             {activeSubTab === 'dashboard' && (
               <ManagerDashboard
+                canReadFinances={canReadFinances}
                 onBookSlot={(slot) => {
                   setAppointmentPreset(slot);
                   setShowAptModal(true);
@@ -1131,7 +1135,8 @@ export function CenterManagerViews({
               />
             )}
 
-            {activeSubTab === 'payments' && (
+            {activeSubTab === 'payments' && !canReadFinances && <p className="rounded-xl bg-slate-50 p-5 text-sm text-slate-600">Les finances du centre sont réservées au gérant.</p>}
+            {activeSubTab === 'payments' && canReadFinances && (
               <ManagerPaymentsView
                 centerId={centerId}
                 clients={clients}

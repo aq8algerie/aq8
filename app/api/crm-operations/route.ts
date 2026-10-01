@@ -4,6 +4,7 @@ import type { Transaction } from 'firebase-admin/firestore';
 import { getAdminDb } from '@/src/lib/serverFirebaseAdmin';
 import {
   CrmAccessError,
+  assertFinancialAccess,
   getCrmErrorResponse,
   type ServerCrmProfile,
   verifyServerCrmAccess,
@@ -493,6 +494,7 @@ async function reversePayment(
   actor: ServerCrmProfile,
   payload: OperationPayload,
 ) {
+  assertFinancialAccess(actor);
   const db = getAdminDb();
   const centerId = requiredText(payload.centerId, 'Centre', 80);
   const paymentId = requiredText(payload.paymentId, 'Paiement', 120);

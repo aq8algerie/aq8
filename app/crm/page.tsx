@@ -50,12 +50,14 @@ import { useData } from "@/components/context/DataProvider";
 
 import { saveDocument, syncCollection as syncFirestoreCollection } from "@/src/lib/firestoreRepository";
 import { getPublicCenters } from "@/src/lib/centerVisibility";
+import { canReadCenterFinances } from "@/src/lib/financialAccess";
 
 import { SuperAdminTabId } from "@/src/components/super-admin/SuperAdminTabs";
 
 type CrmRole = "super_admin" | "center_manager";
 
 type CrmProfile = {
+  email?: string;
   role?: string;
   centerId?: string | null;
   name?: string;
@@ -93,6 +95,7 @@ export default function CrmPage() {
   const [crmRole, setCrmRole] = useState<CrmRole | null>(null);
   const [crmCenterId, setCrmCenterId] = useState<string | null>(null);
   const [loggedManagerName, setLoggedManagerName] = useState("");
+  const [canReadFinances, setCanReadFinances] = useState(false);
 
   // CRM collections states (loaded after login)
   const [managers, setManagers] = useState<CenterManager[]>([]);
@@ -130,7 +133,9 @@ export default function CrmPage() {
   // Set up auth state listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      localStorage.removeItem('aq8_payments');
       if (!user) {
+        setCanReadFinances(false);
         setCrmRole(null);
         setCrmCenterId(null);
         setLoggedManagerName("");
@@ -166,9 +171,11 @@ export default function CrmPage() {
         }
 
         setCrmRole(profile.role as CrmRole);
+        setCanReadFinances(canReadCenterFinances(profile));
         setCrmCenterId(profile.role === "center_manager" ? profile.centerId || null : null);
         setLoggedManagerName(profile.displayName || profile.name || user.displayName || user.email || "Utilisateur CRM");
       } catch (error) {
+        setCanReadFinances(false);
         console.error("Failed to restore CRM session:", error);
         await signOut(auth).catch(() => undefined);
         setCrmRole(null);
@@ -230,11 +237,12 @@ export default function CrmPage() {
       setClientPackages(list);
     });
 
-    const unsubPayments = onSnapshot(paymentsRef, (snapshot) => {
+    if (!canReadFinances) setPayments([]);
+    const unsubPayments = canReadFinances ? onSnapshot(paymentsRef, (snapshot) => {
       const list: Payment[] = [];
       snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as Payment));
       setPayments(list);
-    });
+    }, () => setPayments([])) : () => {};
 
     const unsubMeasurements = onSnapshot(measurementsRef, (snapshot) => {
       const list: Measurement[] = [];
@@ -258,7 +266,7 @@ export default function CrmPage() {
       unsubMeasurements();
       unsubBookingRequests();
     };
-  }, [crmRole, crmCenterId]);
+  }, [crmRole, crmCenterId, canReadFinances]);
 
   // Set up theme settings
   useEffect(() => {
@@ -483,7 +491,7 @@ export default function CrmPage() {
                   { id: "schedule" as const, label: "Planning du Jour", icon: Calendar },
                   { id: "clients" as const, label: "Gestion Clients", icon: Users },
                   { id: "bookings" as const, label: "Réservations", icon: Calendar },
-                  { id: "payments" as const, label: "Paiements Encaissés", icon: DollarSign },
+                  ...(canReadFinances ? [{ id: "payments" as const, label: "Paiements Encaissés", icon: DollarSign }] : []),
                   { id: "services" as const, label: "Prestations & Forfaits", icon: Layers },
                   { id: "settings" as const, label: "Paramètres", icon: Settings }
                 ].map(tab => {
@@ -548,6 +556,7 @@ export default function CrmPage() {
         ) : (
           <Suspense fallback={<CrmLoadingState />}>
             <CenterManagerViews
+              canReadFinances={canReadFinances}
               centerId={crmCenterId || "center-1"}
               centers={centers}
               clients={clients}

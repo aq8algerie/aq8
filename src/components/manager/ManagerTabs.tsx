@@ -15,6 +15,7 @@ interface TabItem {
 }
 
 interface ManagerTabsProps {
+  canReadFinances?: boolean;
   activeTab: SubTabId;
   onTabChange: (tabId: SubTabId) => void;
   onClearSelectedClient: () => void;
@@ -23,6 +24,7 @@ interface ManagerTabsProps {
 }
 
 export function ManagerTabs({
+  canReadFinances = false,
   activeTab,
   onTabChange,
   onClearSelectedClient,
@@ -50,7 +52,7 @@ export function ManagerTabs({
     <>
       {/* Desktop & Tablet Top Scrollable Tabs */}
       <div id="manager-navigation-tabs" role="tablist" aria-label="Navigation du centre" className="hidden md:flex border-b border-slate-200 overflow-x-auto gap-1 pb-px scrollbar-thin">
-        {tabs.map(tab => {
+        {tabs.filter(tab => tab.id !== 'payments' || canReadFinances).map(tab => {
           const badgeCount = badges[tab.id] || 0;
           return (
             <button
@@ -111,7 +113,7 @@ export function ManagerTabs({
 
       {/* Fixed Bottom Navigation Bar for Mobile Smartphones (Native App Style) */}
       <nav aria-label="Navigation mobile rapide" className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-2 py-1.5 md:hidden flex justify-around items-center pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-        {mobileTabs.map(tab => {
+        {mobileTabs.filter(tab => tab.id !== 'payments' || canReadFinances).map(tab => {
           const isActive = activeTab === tab.id || (tab.id === 'settings' && ['services', 'bookings'].includes(activeTab));
           const badgeCount = badges[tab.id] || 0;
 

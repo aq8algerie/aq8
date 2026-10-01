@@ -1,5 +1,6 @@
 import type { DecodedIdToken } from 'firebase-admin/auth';
 import { getAdminAuthInstance, getAdminDb } from './serverFirebaseAdmin';
+import { canReadCenterFinances } from './financialAccess';
 
 export type ServerCrmRole = 'super_admin' | 'center_manager';
 
@@ -11,6 +12,7 @@ export type ServerCrmProfile = {
   centerId: string | null;
   active: true;
   token: DecodedIdToken;
+  canReadFinances: boolean;
 };
 
 const BLOCKED_CENTER_STATUSES = new Set(['suspended', 'showcase', 'inactive', 'archived']);
@@ -78,8 +80,13 @@ export async function verifyServerCrmAccess(
     role,
     centerId,
     active: true,
+    canReadFinances: canReadCenterFinances({ role, centerId, email: typeof data.email === 'string' ? data.email : null, active: true }),
     token,
   };
+}
+
+export function assertFinancialAccess(actor: ServerCrmProfile): void {
+  if (!actor.canReadFinances) throw new CrmAccessError('Les finances de ce centre sont réservées au gérant.', 403);
 }
 
 export function getCrmErrorResponse(error: unknown): { status: number; message: string } {

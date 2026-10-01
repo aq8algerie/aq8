@@ -40,6 +40,7 @@ import { analyzeClientRetention } from '../../lib/crmRetention';
 import { getMonthToDateOccupancy } from '../../lib/managerDashboardMetrics';
 
 interface ManagerDashboardProps {
+  canReadFinances: boolean;
   onBookSlot: (slot: ManagerAvailableSlot) => void;
   bookingRequests: BookingRequest[];
   onOpenClient: (clientId: string) => void;
@@ -64,6 +65,7 @@ interface ManagerDashboardProps {
 }
 
 export function ManagerDashboard({
+  canReadFinances,
   onBookSlot,
   bookingRequests,
   onOpenClient,
@@ -345,7 +347,7 @@ export function ManagerDashboard({
       </div>
 
       {/* Stat metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${canReadFinances ? 'xl:grid-cols-5' : ''} gap-4`}>
         <StatCard
           id="stat-clients"
           title="Membres Abonnés"
@@ -356,7 +358,7 @@ export function ManagerDashboard({
           trend={{ text: `${newClientsThisMonth} nouveau(x) ce mois`, isPositive: true }}
           borderLeftClass={genderFilter === 'F' ? 'border-l-4 border-l-rose-500' : genderFilter === 'H' ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-blue-500'}
         />
-        <StatCard
+        {canReadFinances && <StatCard
           id="stat-revenue-month"
           title="Chiffre d'affaires mensuel"
           value={formatDZD(revenueThisMonth)}
@@ -370,8 +372,8 @@ export function ManagerDashboard({
             isPositive: revenueDelta === null || revenueDelta >= 0,
           }}
           borderLeftClass="border-l-4 border-l-emerald-500"
-        />
-        <StatCard
+        />}
+        {canReadFinances && <StatCard
           id="stat-revenue-year"
           title="Chiffre d'affaires annuel"
           value={formatDZD(revenueThisYear)}
@@ -380,7 +382,7 @@ export function ManagerDashboard({
           iconColorClass="text-emerald-600"
           trend={{ text: `Année ${now.getFullYear()}`, isPositive: true }}
           borderLeftClass="border-l-4 border-l-emerald-500"
-        />
+        />}
         <StatCard
           id="stat-bookings"
           title="Nombre de Réservations"
@@ -782,8 +784,8 @@ export function ManagerDashboard({
       <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div className="space-y-1">
-            <h3 className="font-bold font-display text-slate-800 text-sm">Analyses d'Activité & Finances</h3>
-            <p className="text-[10px] text-slate-400">Suivi d'affluence et chiffre d'affaires ({genderFilter === 'All' ? 'Tous les genres' : genderFilter === 'F' ? 'Femmes' : 'Hommes'})</p>
+            <h3 className="font-bold font-display text-slate-800 text-sm">{canReadFinances ? "Analyses d'Activité & Finances" : "Analyses d'Activité"}</h3>
+            <p className="text-[10px] text-slate-400">{canReadFinances ? "Suivi d'affluence et chiffre d'affaires" : "Suivi d'affluence"} ({genderFilter === 'All' ? 'Tous les genres' : genderFilter === 'F' ? 'Femmes' : 'Hommes'})</p>
           </div>
           <div className="flex bg-slate-100 rounded-xl p-1 border border-slate-200/50 flex-wrap gap-1">
             <button
@@ -810,14 +812,14 @@ export function ManagerDashboard({
             >
               Par Mois
             </button>
-            <button
+            {canReadFinances && <button
               onClick={() => setAffluenceTab('revenue')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 affluenceTab === 'revenue' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'
               }`}
             >
               Chiffre d'Affaires
-            </button>
+            </button>}
           </div>
         </div>
 
@@ -911,7 +913,7 @@ export function ManagerDashboard({
             </div>
           )}
 
-          {affluenceTab === 'revenue' && (
+          {canReadFinances && affluenceTab === 'revenue' && (
             <div className="space-y-4">
               {(() => {
                 const trendData = getLocalRevenueTrendData();

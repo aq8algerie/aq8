@@ -30,6 +30,10 @@ async function seedSecurityFixtures() {
   await testEnv.withSecurityRulesDisabled(async context => {
     const db = context.firestore();
     const fixtures: Array<[string, Record<string, unknown>]> = [
+      ['centers/center-5', { id: 'center-5', name: 'Sidi Yahia', status: 'active' }],
+      ['users/sidi-owner', { role: 'center_manager', centerId: 'center-5', active: true, email: 'contact@sculptfitcenter.com' }],
+      ['users/sidi-staff', { role: 'center_manager', centerId: 'center-5', active: true, email: 'staff@example.com' }],
+      ['payments/sidi-payment', { id: 'sidi-payment', centerId: 'center-5', amount: 12000 }],
       ['centers/center-a', { id: 'center-a', name: 'Centre A', status: 'active' }],
       ['centers/center-b', { id: 'center-b', name: 'Centre B', status: 'active' }],
       ['centers/center-suspended', { id: 'center-suspended', name: 'Suspendu', status: 'suspended' }],
@@ -219,6 +223,10 @@ async function run() {
     const managerBDb = testEnv.authenticatedContext('manager-b').firestore();
     const suspendedManagerDb = testEnv.authenticatedContext('manager-suspended').firestore();
     const superAdminDb = testEnv.authenticatedContext('super-admin').firestore();
+    const sidiOwnerDb = testEnv.authenticatedContext('sidi-owner').firestore();
+    const sidiStaffDb = testEnv.authenticatedContext('sidi-staff', {
+      email: 'contact@sculptfitcenter.com',
+    }).firestore();
     const anonymousStorage = testEnv.unauthenticatedContext().storage();
     const managerAStorage = testEnv.authenticatedContext('manager-a').storage();
     const superAdminStorage = testEnv.authenticatedContext('super-admin').storage();
@@ -251,6 +259,18 @@ async function run() {
 
     await testCase('anonymous users cannot read CRM clients', async () => {
       await assertFails(getDoc(doc(anonymousDb, 'clients', 'client-a')));
+    });
+
+    await testCase('Sidi Yahia finances require the trusted owner profile', async () => {
+      await assertSucceeds(getDoc(doc(sidiOwnerDb, 'payments', 'sidi-payment')));
+      await assertSucceeds(getDocs(query(collection(sidiOwnerDb, 'payments'), where('centerId', '==', 'center-5'))));
+      await assertSucceeds(getDoc(doc(superAdminDb, 'payments', 'sidi-payment')));
+      await assertFails(getDoc(doc(sidiStaffDb, 'payments', 'sidi-payment')));
+      await assertFails(getDocs(query(collection(sidiStaffDb, 'payments'), where('centerId', '==', 'center-5'))));
+      await assertFails(updateDoc(doc(sidiStaffDb, 'users', 'sidi-staff'), {
+        email: 'contact@sculptfitcenter.com',
+      }));
+      await assertSucceeds(getDoc(doc(managerADb, 'payments', 'payment-a')));
     });
 
     await testCase('manager A can read only center A clients', async () => {

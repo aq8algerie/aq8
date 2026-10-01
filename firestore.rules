@@ -41,6 +41,12 @@ service cloud.firestore {
       return isSuperAdmin() || isCenterManager(centerId);
     }
 
+    function canReadFinances(centerId) {
+      return isSuperAdmin() || (isCenterManager(centerId)
+        && (centerId != 'center-5'
+          || ('email' in userProfile() && userProfile().email == 'contact@sculptfitcenter.com')));
+    }
+
     function isActiveClientForCenterAfter(clientId, centerId) {
       let client = getAfter(/databases/$(database)/documents/clients/$(clientId)).data;
       return client.centerId == centerId
@@ -373,7 +379,7 @@ service cloud.firestore {
     }
 
     match /payments/{paymentId} {
-      allow read: if canAccessCenter(resource.data.centerId);
+      allow read: if canReadFinances(resource.data.centerId);
       allow create, update, delete: if false;
     }
 

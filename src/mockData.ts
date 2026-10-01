@@ -973,7 +973,7 @@ export class AQ8Database {
   }
 
   static savePayments(data: Payment[]): void {
-    this.save('payments', data);
+    if (canUseLocalStorage()) window.localStorage.removeItem('aq8_payments');
   }
 
   static getAppointments(): Appointment[] {

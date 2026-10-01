@@ -79,6 +79,7 @@ import { PublicContact } from './components/public/PublicContact';
 import { PublicBooking } from './components/public/PublicBooking';
 
 import { saveDocument, syncCollection as syncFirestoreCollection } from './lib/firestoreRepository';
+import { canReadCenterFinances } from './lib/financialAccess';
 import { getPublicCenters } from './lib/centerVisibility';
 
 const CrmPortal = React.lazy(() =>
@@ -104,6 +105,7 @@ function CrmLoadingState() {
 type CrmRole = 'super_admin' | 'center_manager';
 
 type CrmProfile = {
+  email?: string;
   role: CrmRole;
   centerId?: string | null;
   name?: string;
@@ -112,6 +114,7 @@ type CrmProfile = {
 };
 
 export default function App() {
+  const [canReadFinances, setCanReadFinances] = useState(false);
   // 1. SYSTEM STATES (PERSISTED IN LOCALSTORAGE)
   const [centers, setCenters] = useState<Center[]>([]);
   const [managers, setManagers] = useState<CenterManager[]>([]);
@@ -163,6 +166,8 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        setCanReadFinances(false);
+        localStorage.removeItem('aq8_payments');
         setCrmRole(null);
         setCrmCenterId(null);
         setLoggedManagerName('');
@@ -186,6 +191,7 @@ export default function App() {
         }
 
         setCrmRole(profile.role);
+        setCanReadFinances(canReadCenterFinances(profile));
         setCrmCenterId(profile.role === 'center_manager' ? profile.centerId || null : null);
         setLoggedManagerName(profile.displayName || profile.name || user.displayName || user.email || 'Utilisateur CRM');
       } catch (error) {
@@ -309,12 +315,14 @@ export default function App() {
       AQ8Database.saveClientPackages(list);
     });
 
-    const unsubscribePayments = onSnapshot(paymentsRef, (snapshot) => {
+    if (!canReadFinances) setPayments([]);
+    localStorage.removeItem('aq8_payments');
+    const unsubscribePayments = canReadFinances ? onSnapshot(paymentsRef, (snapshot) => {
       const list: Payment[] = [];
       snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as Payment));
       setPayments(list);
       AQ8Database.savePayments(list);
-    });
+    }, () => setPayments([])) : () => {};
 
     const unsubscribeMeasurements = onSnapshot(measurementsRef, (snapshot) => {
       const list: Measurement[] = [];
@@ -339,7 +347,7 @@ export default function App() {
       unsubscribeMeasurements();
       unsubscribeBookingRequests();
     };
-  }, [crmRole, crmCenterId]);
+  }, [crmRole, crmCenterId, canReadFinances]);
 
   // 2. ROUTING & NAVIGATION STATE
   // 'home' | 'about' | 'aq8' | 'wonder' | 'centers' | 'center-detail' | 'contact' | 'booking' | 'login' | 'crm'
@@ -910,7 +918,7 @@ export default function App() {
                         { id: 'schedule' as const, label: 'Planning du Jour', icon: Calendar },
                         { id: 'clients' as const, label: 'Gestion Clients', icon: Users },
                         { id: 'bookings' as const, label: 'Réservations', icon: Calendar },
-                        { id: 'payments' as const, label: 'Paiements Encaissés', icon: DollarSign },
+                        ...(canReadFinances ? [{ id: 'payments' as const, label: 'Paiements Encaissés', icon: DollarSign }] : []),
                         { id: 'services' as const, label: 'Prestations & Forfaits', icon: Layers },
                         { id: 'settings' as const, label: 'Paramètres', icon: Settings }
                       ].map(tab => {
@@ -985,6 +993,7 @@ export default function App() {
                 /* RENDER CENTER MANAGER VIEW BLOCK (STRICT ISOLATION VIA CURRENT CENTERID) */
                 <Suspense fallback={<CrmLoadingState />}>
                 <CenterManagerViews
+                  canReadFinances={canReadFinances}
                   centerId={crmCenterId || 'center-1'}
                   centers={centers}
                   clients={clients}

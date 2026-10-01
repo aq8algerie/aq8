@@ -33,6 +33,7 @@ import { CrmAccessError, getCrmErrorResponse, isOperationalCrmCenterStatus } fro
 import { getManagerAvailableSlots, getMonthToDateOccupancy } from './managerDashboardMetrics';
 import { analyzeClientRetention } from './crmRetention';
 import { validateFollowUpInput, isFollowUpDeferred } from './clientFollowUpRules';
+import { canReadCenterFinances } from './financialAccess';
 import { getAppointmentStatusLabel, getAppointmentTechnology, getClientDisplayName, resolveAppointmentClient } from './managerPresentation';
 
 function test(name: string, run: () => void) {
@@ -968,4 +969,14 @@ test('follow-up suggestions resume on the scheduled date and respect the latest 
   assert.equal(isFollowUpDeferred({ followUps: [entry] }, '2026-10-02'), false);
   assert.equal(isFollowUpDeferred({ followUps: [{ ...entry, outcome: 'declined', nextContactDate: null }] }, '2026-10-03'), true);
   assert.equal(isFollowUpDeferred({ followUps: [{ ...entry, outcome: 'declined' }, { ...entry, id: 'new', outcome: 'interested', nextContactDate: null }] }, '2026-10-03'), false);
+});
+
+test('Sidi Yahia financial access belongs to the owner and active super admins only', () => {
+  const profile = { role: 'center_manager', centerId: 'center-5', active: true, email: 'staff@example.com' };
+  assert.equal(canReadCenterFinances(profile), false);
+  assert.equal(canReadCenterFinances({ ...profile, email: 'contact@sculptfitcenter.com' }), true);
+  assert.equal(canReadCenterFinances({ ...profile, role: 'super_admin' }), true);
+  assert.equal(canReadCenterFinances({ ...profile, centerId: 'center-2' }), true);
+  assert.equal(canReadCenterFinances({ ...profile, email: 'contact@sculptfitcenter.com', active: false }), false);
+  assert.equal(canReadCenterFinances({ ...profile, role: 'client', email: 'contact@sculptfitcenter.com' }), false);
 });

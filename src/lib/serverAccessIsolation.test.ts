@@ -68,6 +68,7 @@ async function run() {
   } = await import('./serverCrmAccess');
   const { getAdminDb } = await import('./serverFirebaseAdmin');
   const { POST: mutateClients } = await import('../../app/api/crm-clients/route');
+  const { POST: mutateOperations } = await import('../../app/api/crm-operations/route');
   const { POST: mutateCenterSettings } = await import('../../app/api/crm-center-settings/route');
   const { POST: createPublicReservation } = await import('../../app/api/public-reservations/route');
 
@@ -77,6 +78,8 @@ async function run() {
     const managerWithoutCenter = await createIdentity(auth, 'manager-orphan@security.test');
     const inactiveManager = await createIdentity(auth, 'manager-inactive@security.test');
     const superAdmin = await createIdentity(auth, 'super-admin@security.test');
+    const sidiOwner = await createIdentity(auth, 'contact@sculptfitcenter.com');
+    const sidiStaff = await createIdentity(auth, 'sidi-staff@security.test');
 
     const db = getAdminDb();
     const batch = db.batch();
@@ -190,7 +193,29 @@ async function run() {
       active: true,
       name: 'Super Admin',
     });
+    batch.set(db.collection('centers').doc('center-5'), {
+      id: 'center-5', status: 'active', services: ['aq8'],
+    });
+    for (const [identity, email] of [
+      [sidiOwner, 'contact@sculptfitcenter.com'],
+      [sidiStaff, 'sidi-staff@security.test'],
+    ] as const) {
+      batch.set(db.collection('users').doc(identity.uid), {
+        uid: identity.uid, email, role: 'center_manager', centerId: 'center-5', active: true,
+      });
+    }
     await batch.commit();
+
+    await testCase('Sidi Yahia financial permissions are verified on the server', async () => {
+      const owner = await verifyServerCrmAccess(authenticatedRequest(sidiOwner.token), ['center_manager']);
+      const staff = await verifyServerCrmAccess(authenticatedRequest(sidiStaff.token), ['center_manager']);
+      assert.equal(owner.canReadFinances, true);
+      assert.equal(staff.canReadFinances, false);
+      const response = await mutateOperations(authenticatedRequest(sidiStaff.token, {
+        action: 'reverse_payment', centerId: 'center-5', paymentId: 'sidi-payment',
+      }));
+      assert.equal(response.status, 403);
+    });
 
 
     await testCase('valid active manager tokens are accepted by the server', async () => {
