@@ -1,7 +1,8 @@
 import { auth } from './firebase';
-import type { Client, ClientStatus } from '../types';
+import type { Client, ClientStatus, FollowUpOutcome } from '../types';
 
 type ClientMutation =
+  | { action: 'log_follow_up'; centerId: string; clientId: string; operationId: string; expectedLastId: string | null; outcome: FollowUpOutcome; notes: string; nextContactDate: string | null }
   | { action: 'upsert'; centerId: string; client: Partial<Client> & { id?: string } }
   | { action: 'set_status'; centerId: string; clientIds: string[]; status: ClientStatus }
   | { action: 'archive'; centerId: string; clientIds: string[] };

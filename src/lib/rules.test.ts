@@ -30,7 +30,9 @@ import {
   type BlogPost,
 } from './blog';
 import { CrmAccessError, getCrmErrorResponse, isOperationalCrmCenterStatus } from './serverCrmAccess';
-import { getMonthToDateOccupancy } from './managerDashboardMetrics';
+import { getManagerAvailableSlots, getMonthToDateOccupancy } from './managerDashboardMetrics';
+import { analyzeClientRetention } from './crmRetention';
+import { validateFollowUpInput, isFollowUpDeferred } from './clientFollowUpRules';
 import { getAppointmentStatusLabel, getAppointmentTechnology, getClientDisplayName, resolveAppointmentClient } from './managerPresentation';
 
 function test(name: string, run: () => void) {
@@ -892,4 +894,78 @@ test('package activation rejects archived clients', () => {
     centerId: paymentCenter.id,
   });
   assert.equal(result.valid, false);
+});
+
+test('retention ignores cancelled and future sessions and excludes archived clients', () => {
+  const now = new Date('2026-10-01T12:00:00Z');
+  const member: Client = { ...client, createdAt: '2026-07-01', status: 'active' };
+  const appointment: Appointment = {
+    id: 'retention-session', clientId: member.id, centerId: member.centerId,
+    serviceId: 'service-1', duration: 20, dateTime: '2026-08-01T12:00:00Z', status: 'completed',
+  };
+  const result = analyzeClientRetention([member, { ...member, id: 'archived', status: 'archived' }], [
+    appointment,
+    { ...appointment, id: 'cancelled', dateTime: '2026-09-30T12:00:00Z', status: 'cancelled' },
+    { ...appointment, id: 'future', dateTime: '2026-10-05T12:00:00Z', status: 'booked' },
+  ], [], member.centerId, now);
+  assert.equal(result.length, 1);
+  assert.equal(result[0].daysInactive, 61);
+  assert.equal(result[0].isInactive30Days, true);
+});
+
+test('retention considers all usable packages at the supplied date', () => {
+  const now = new Date('2026-10-01T12:00:00Z');
+  const pkg: ClientPackage = {
+    id: 'expired', clientId: client.id, centerId: client.centerId, packageId: 'pkg-1',
+    purchaseDate: '2026-07-01', status: 'active', sessionsRemaining: 1, totalSessions: 5,
+  };
+  const result = analyzeClientRetention([client], [], [
+    pkg, { ...pkg, id: 'usable', purchaseDate: '2026-09-20', sessionsRemaining: 5 },
+  ], client.centerId, now);
+  assert.equal(result[0].sessionsRemaining, 5);
+  assert.equal(result[0].needsPackageRenewal, false);
+});
+
+test('available manager slots exclude elapsed hours and respect capacity and centre isolation', () => {
+  const center = {
+    id: 'slots-center', services: ['aq8', 'wonder'],
+    bookingCapacity: { aq8: 2, wonder: 1 },
+    bookingHours: { '4': [{ start: '09:00', end: '12:00' }] },
+  } as Center;
+  const appointment: Appointment = {
+    id: 'held', clientId: 'client-1', centerId: center.id, serviceId: services[0].id,
+    dateTime: '2026-10-01T10:00', status: 'booked', duration: 20,
+  };
+  const slots = getManagerAvailableSlots({
+    date: '2026-10-01', centerId: center.id, center, services,
+    now: new Date('2026-10-01T09:30:00'),
+    appointments: [appointment,
+      { ...appointment, id: 'cancelled', status: 'cancelled' },
+      { ...appointment, id: 'other', centerId: 'other-center' },
+      { ...appointment, id: 'wonder', serviceId: services[1].id, status: 'confirmed' },
+    ],
+  });
+  assert.equal(slots.some(slot => slot.time === '09:00'), false);
+  assert.equal(slots.find(slot => slot.time === '10:00' && slot.serviceType === 'aq8')?.remaining, 1);
+  assert.equal(slots.some(slot => slot.time === '10:00' && slot.serviceType === 'wonder'), false);
+  assert.equal(slots.find(slot => slot.time === '11:00' && slot.serviceType === 'aq8')?.remaining, 2);
+  assert.equal(getManagerAvailableSlots({ date: '2026-10-02', centerId: center.id, center, services, appointments: [], now: new Date('2026-10-01T09:30:00') }).length, 0);
+});
+
+test('follow-up dates reject impossible or elapsed dates and refusals cannot schedule a reminder', () => {
+  const payload = { outcome: 'no_answer', notes: '  rappeler  ', nextContactDate: '2026-10-02' };
+  assert.equal(validateFollowUpInput(payload, '2026-10-01').notes, 'rappeler');
+  assert.throws(() => validateFollowUpInput({ ...payload, nextContactDate: '2026-02-30' }, '2026-01-01'));
+  assert.throws(() => validateFollowUpInput(payload, '2026-10-03'));
+  assert.throws(() => validateFollowUpInput({ ...payload, outcome: 'declined' }, '2026-10-01'));
+  assert.throws(() => validateFollowUpInput({ ...payload, outcome: '__proto__' }, '2026-10-01'));
+  assert.throws(() => validateFollowUpInput({ ...payload, notes: 'a'.repeat(1001) }, '2026-10-01'));
+});
+
+test('follow-up suggestions resume on the scheduled date and respect the latest refusal', () => {
+  const entry = { id: 'contact-1', outcome: 'no_answer' as const, notes: '', nextContactDate: '2026-10-02', createdAt: '2026-10-01', createdByUserId: 'manager', createdByUserName: 'Manager' };
+  assert.equal(isFollowUpDeferred({ followUps: [entry] }, '2026-10-01'), true);
+  assert.equal(isFollowUpDeferred({ followUps: [entry] }, '2026-10-02'), false);
+  assert.equal(isFollowUpDeferred({ followUps: [{ ...entry, outcome: 'declined', nextContactDate: null }] }, '2026-10-03'), true);
+  assert.equal(isFollowUpDeferred({ followUps: [{ ...entry, outcome: 'declined' }, { ...entry, id: 'new', outcome: 'interested', nextContactDate: null }] }, '2026-10-03'), false);
 });

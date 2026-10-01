@@ -17,6 +17,8 @@ interface AppointmentModalProps {
   onClose: () => void;
   onSubmit: (data: { clientId: string; serviceId: string; date: string; time: string; notes: string }) => void | Promise<void>;
   initialDate?: string;
+  initialTime?: string;
+  initialServiceId?: string;
   center: Center;
 }
 
@@ -28,6 +30,8 @@ export function AppointmentModal({
   onClose,
   onSubmit,
   initialDate,
+  initialTime,
+  initialServiceId,
   center
 }: AppointmentModalProps) {
   // Filtrer les prestations pour exclure "AQ8-EMS coaching privé" et "cure combinée AQ8"
@@ -44,10 +48,10 @@ export function AppointmentModal({
       const name = (s?.name || '').toLowerCase();
       return !name.includes('coaching privé') && !name.includes('cure combinée');
     });
-    return available[0]?.id || '';
+    return available.find(service => service.id === initialServiceId)?.id || available[0]?.id || '';
   });
   const [date, setDate] = useState(initialDate || getTodayDateString());
-  const [time, setTime] = useState('10:00');
+  const [time, setTime] = useState(initialTime || '10:00');
   const [notes, setNotes] = useState('');
 
   // États pour la recherche et le menu déroulant

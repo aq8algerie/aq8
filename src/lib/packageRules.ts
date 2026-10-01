@@ -18,7 +18,7 @@ export function isRealPackage(pkg: Package): boolean {
 /**
  * Check if a client package is expired (more than 45 days since purchase)
  */
-export function isPackageExpired(clientPackage: ClientPackage): boolean {
+export function isPackageExpired(clientPackage: ClientPackage, now: Date = new Date()): boolean {
   if (clientPackage.status === 'expired') return true;
   if (!clientPackage.purchaseDate) return false;
   
@@ -26,8 +26,7 @@ export function isPackageExpired(clientPackage: ClientPackage): boolean {
   if (isNaN(purchase.getTime())) return false;
   
   // Calculate date diff in days
-  const today = new Date();
-  const diffTime = today.getTime() - purchase.getTime();
+  const diffTime = now.getTime() - purchase.getTime();
   const diffDays = diffTime / (1000 * 60 * 60 * 24);
   
   return diffDays > 45;

@@ -29,8 +29,11 @@ export function analyzeClientRetention(
   centerId: string,
   now: Date = new Date()
 ): ClientRetentionStatus[] {
-  const centerClients = clients.filter(c => c.centerId === centerId && c.status !== 'suspended');
-  const centerAppointments = appointments.filter(a => a.centerId === centerId);
+  const centerClients = clients.filter(c => c.centerId === centerId && c.status !== 'suspended' && c.status !== 'archived');
+  const centerAppointments = appointments.filter(a => {
+    const date = new Date(a.dateTime).getTime();
+    return a.centerId === centerId && a.status === 'completed' && Number.isFinite(date) && date <= now.getTime();
+  });
   const centerPackages = clientPackages.filter(cp => cp.centerId === centerId);
 
   return centerClients.map(client => {
@@ -52,32 +55,32 @@ export function analyzeClientRetention(
     } else if (client.createdAt) {
       const createdTime = new Date(client.createdAt).getTime();
       if (!isNaN(createdTime)) {
-        daysInactive = Math.floor((now.getTime() - createdTime) / (1000 * 60 * 60 * 24));
+        daysInactive = Math.max(0, Math.floor((now.getTime() - createdTime) / (1000 * 60 * 60 * 24)));
       }
     }
 
     const isInactive30Days = daysInactive >= 30;
 
     // 2. Check client's active package status
-    const activePkg = centerPackages.find(
-      cp => cp.clientId === client.id && cp.status === 'active'
-    );
+    const activePackages = centerPackages.filter(cp => cp.clientId === client.id && cp.status === 'active');
+    const usablePackages = activePackages.filter(cp => !isPackageExpired(cp, now));
+    const sessionsAvailable = usablePackages.reduce((sum, cp) => sum + cp.sessionsRemaining, 0);
 
     let needsPackageRenewal = false;
     let renewalReason: 'expired' | 'low_credit' | 'no_package' | undefined;
     let sessionsRemaining: number | undefined;
 
-    if (!activePkg) {
+    if (activePackages.length === 0) {
       needsPackageRenewal = true;
       renewalReason = 'no_package';
     } else {
-      sessionsRemaining = activePkg.sessionsRemaining;
-      const expired = isPackageExpired(activePkg);
+      sessionsRemaining = sessionsAvailable;
+      const expired = usablePackages.length === 0;
 
       if (expired) {
         needsPackageRenewal = true;
         renewalReason = 'expired';
-      } else if (activePkg.sessionsRemaining <= 2) {
+      } else if (sessionsAvailable <= 2) {
         needsPackageRenewal = true;
         renewalReason = 'low_credit';
       }

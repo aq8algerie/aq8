@@ -24,7 +24,12 @@ import {
   Zap
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Client, Appointment, Payment, Measurement, Service, Package, ClientPackage, Center } from '../../types';
+import { Client, Appointment, Payment, Measurement, Service, Package, ClientPackage, Center, BookingRequest } from '../../types';
+import { ManagerActionCenter } from './ManagerActionCenter';
+import { ManagerAvailableSlots } from './ManagerAvailableSlots';
+import type { ManagerAvailableSlot } from '../../lib/managerDashboardMetrics';
+import { getLatestFollowUp, isFollowUpDeferred } from '../../lib/clientFollowUpRules';
+import { getTodayDateString } from '../../lib/centerManagerUtils';
 import { StatCard } from './cards/StatCard';
 import { QuickActionsCard } from './cards/QuickActionsCard';
 import { formatDZD } from '../../lib/centerManagerUtils';
@@ -35,6 +40,10 @@ import { analyzeClientRetention } from '../../lib/crmRetention';
 import { getMonthToDateOccupancy } from '../../lib/managerDashboardMetrics';
 
 interface ManagerDashboardProps {
+  onBookSlot: (slot: ManagerAvailableSlot) => void;
+  bookingRequests: BookingRequest[];
+  onOpenClient: (clientId: string) => void;
+  onAssignPackage: (clientId: string) => void;
   centerId: string;
   center?: Center;
   clients: Client[];
@@ -55,6 +64,10 @@ interface ManagerDashboardProps {
 }
 
 export function ManagerDashboard({
+  onBookSlot,
+  bookingRequests,
+  onOpenClient,
+  onAssignPackage,
   centerId,
   center,
   clients,
@@ -176,6 +189,17 @@ export function ManagerDashboard({
   const retentionAnalysis = analyzeClientRetention(clients, appointments, clientPackages, centerId);
   const inactive30dClients = retentionAnalysis.filter(r => r.isInactive30Days);
   const inactive30dCount = inactive30dClients.length;
+  const dueFollowUps = centerClients.filter(client => {
+    const latest = getLatestFollowUp(client);
+    return client.status !== 'archived' && client.status !== 'suspended'
+      && latest?.nextContactDate && latest.nextContactDate <= getTodayDateString()
+      && (genderFilter === 'All' || client.gender === genderFilter);
+  }).sort((a, b) => (getLatestFollowUp(a)?.nextContactDate || '').localeCompare(getLatestFollowUp(b)?.nextContactDate || ''));
+  const priorityFollowUps = inactive30dClients
+    .filter(({ client }) => !isFollowUpDeferred(client, getTodayDateString()))
+    .filter(({ client }) => genderFilter === 'All' || client.gender === genderFilter)
+    .sort((a, b) => b.daysInactive - a.daysInactive)
+    .slice(0, 5);
 
   // 3. Résumé journalier des séances du jour
   const todayCompleted = todayBookings.filter(a => a.status === 'completed').length;
@@ -379,6 +403,26 @@ export function ManagerDashboard({
         />
       </div>
 
+      <ManagerAvailableSlots centerId={centerId} center={center} appointments={centerAppointments} services={services} onBook={onBookSlot} />
+
+      <ManagerActionCenter
+        requests={bookingRequests.filter(request => request.centerId === centerId)}
+        renewals={retentionAnalysis.filter(item => item.needsPackageRenewal && !isFollowUpDeferred(item.client, getTodayDateString()) && (genderFilter === 'All' || item.client.gender === genderFilter))}
+        onOpenSchedule={() => onOpenTab('schedule')}
+        onOpenClient={onOpenClient}
+        onAssignPackage={onAssignPackage}
+      />
+
+      {dueFollowUps.length > 0 && <section aria-label="Rappels à effectuer" className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+        <h3 className="text-sm font-bold text-amber-900">Rappels à effectuer</h3>
+        <ul className="mt-3 divide-y divide-amber-200">
+          {dueFollowUps.map(client => <li key={client.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+            <div><p className="text-sm font-semibold text-amber-900">{client.firstName} {client.lastName}</p><p className="text-xs text-amber-800">Prévu le {getLatestFollowUp(client)?.nextContactDate?.split('-').reverse().join('/')}</p></div>
+            <button type="button" onClick={() => onOpenClient(client.id)} className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-amber-900 cursor-pointer">Ouvrir le suivi →</button>
+          </li>)}
+        </ul>
+      </section>}
+
       {/* === ALERTES MÉTIER & RELANCES PROACTIVES === */}
       {(expiringCount > 0 || expiredCount > 0 || negativeBalanceCount > 0 || inactive30dCount > 0) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -488,6 +532,37 @@ export function ManagerDashboard({
             </motion.div>
           )}
         </div>
+      )}
+
+      {priorityFollowUps.length > 0 && (
+        <section aria-label="Relances prioritaires" className="bg-white rounded-2xl border border-slate-100 shadow-xs p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <h3 className="font-bold text-slate-800 text-sm">Vos relances prioritaires</h3>
+              <p className="text-xs text-slate-500 mt-1">Jusqu’à 5 adhérents à recontacter, classés par durée d’inactivité.</p>
+            </div>
+            <button type="button" onClick={() => onOpenTab('clients')} className="text-xs font-semibold text-[#0284c7] hover:underline cursor-pointer">Ouvrir les clients →</button>
+          </div>
+          <ul className="divide-y divide-slate-100">
+            {priorityFollowUps.map(({ client, daysInactive, lastAppointmentDate, needsPackageRenewal }) => {
+              const phone = client.phone?.replace(/[^+\d]/g, '');
+              return (
+                <li key={client.id} className="py-3 flex flex-wrap items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <button type="button" onClick={() => onOpenClient(client.id)} className="text-sm font-semibold text-slate-800 hover:underline cursor-pointer">{client.firstName} {client.lastName}</button>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {lastAppointmentDate ? `${daysInactive} jours sans séance` : `Aucune séance réalisée · inscrit depuis ${daysInactive} jours`}
+                      {needsPackageRenewal ? ' · Forfait à renouveler' : ''}
+                    </p>
+                  </div>
+                  {phone ? (
+                    <a href={`tel:${phone}`} aria-label={`Appeler ${client.firstName} ${client.lastName}`} className="rounded-xl bg-[#0284c7]/10 px-3 py-2 text-xs font-semibold text-[#0284c7] hover:bg-[#0284c7]/20">Appeler · {client.phone}</a>
+                  ) : <span className="text-xs text-slate-400">Téléphone non renseigné</span>}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       )}
 
       {/* Résumé journalier en haut du tableau de bord */}

@@ -4,6 +4,7 @@ import {
   getBookingHoursForDate,
   getCenterBookingCapacity,
   getServiceTypeById,
+  getSlotAvailability,
 } from './bookingCapacityRules';
 
 export type OccupancyMetric = {
@@ -13,6 +14,33 @@ export type OccupancyMetric = {
 };
 
 export type MonthToDateOccupancy = Record<BookingServiceType, OccupancyMetric>;
+
+export type ManagerAvailableSlot = { date: string; time: string; serviceId: string; serviceType: BookingServiceType; remaining: number };
+
+export function getManagerAvailableSlots(input: {
+  date: string;
+  centerId: string;
+  center?: Center;
+  appointments: Appointment[];
+  services: Service[];
+  now?: Date;
+}): ManagerAvailableSlot[] {
+  const now = input.now ?? new Date();
+  const enabledServices = input.services.filter(service => {
+    const name = service.name.toLowerCase();
+    return !name.includes('coaching privé') && !name.includes('cure combinée')
+      && (!input.center || input.center.services.includes(service.type));
+  });
+  const servicesByType = enabledServices.filter((service, index, list) => list.findIndex(item => item.type === service.type) === index);
+  return getBookingHoursForDate(input.centerId, input.date, input.center).flatMap(time => {
+    const dateTime = `${input.date}T${time}`;
+    if (new Date(dateTime).getTime() <= now.getTime()) return [];
+    return servicesByType.flatMap(service => {
+      const availability = getSlotAvailability(input.appointments, input.services, input.centerId, dateTime, service.type, undefined, input.center);
+      return availability.isAvailable ? [{ date: input.date, time, serviceId: service.id, serviceType: service.type, remaining: availability.remaining }] : [];
+    });
+  });
+}
 
 function toLocalDateString(date: Date): string {
   const year = date.getFullYear();

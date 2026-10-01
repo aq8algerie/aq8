@@ -256,6 +256,32 @@ async function run() {
       assert.equal(response.status, 403);
     });
 
+    await testCase('follow-up writes are isolated, audited, idempotent and reject stale edits', async () => {
+      const payload = { action: 'log_follow_up', centerId: 'center-a', clientId: 'privacy-client', operationId: 'follow-up-1', expectedLastId: null, outcome: 'no_answer', notes: 'Rappeler', nextContactDate: null };
+      const response = await mutateClients(authenticatedRequest(managerA.token, payload));
+      assert.equal(response.status, 201);
+      assert.equal((await mutateClients(authenticatedRequest(managerA.token, payload))).status, 200);
+      const saved = (await db.collection('clients').doc('privacy-client').get()).data();
+      assert.equal(saved?.followUps.length, 1);
+      assert.equal(saved?.followUps[0].createdByUserId, managerA.uid);
+      const audit = await db.collection('audit_logs').where('action', '==', 'LOG_CLIENT_FOLLOW_UP').get();
+      assert.equal(audit.docs.filter(doc => doc.data().followUp?.id === 'follow-up-1').length, 1);
+      const clientIdentity = await createIdentity(auth, 'privacy-client@example.com');
+      const { POST: readClientPortal } = await import('../../app/api/client-portal/route');
+      const portalResponse = await readClientPortal(authenticatedRequest(clientIdentity.token));
+      assert.equal(portalResponse.status, 200);
+      const portalBody = await portalResponse.json();
+      assert.equal(portalBody.ok, true);
+      assert.equal('followUps' in portalBody.client, false);
+      assert.equal(JSON.stringify(portalBody).includes('Rappeler'), false);
+      assert.equal((await mutateClients(authenticatedRequest(managerA.token, { ...payload, operationId: 'follow-up-2' }))).status, 409);
+      assert.equal((await mutateClients(authenticatedRequest(managerA.token, { ...payload, centerId: 'center-b' }))).status, 403);
+      assert.equal((await mutateClients(authenticatedRequest(managerA.token, { ...payload, operationId: 'follow-up-3', clientId: 'unknown-client' }))).status, 404);
+      await db.collection('clients').doc('privacy-client').update({ status: 'suspended' });
+      assert.equal((await mutateClients(authenticatedRequest(managerA.token, { ...payload, operationId: 'follow-up-4', expectedLastId: 'follow-up-1' }))).status, 409);
+      await db.collection('clients').doc('privacy-client').update({ status: 'active' });
+    });
+
     await testCase('center settings use the authenticated API with strict isolation', async () => {
       const ownCenterResponse = await mutateCenterSettings(new Request(
         'http://localhost/api/crm-center-settings',

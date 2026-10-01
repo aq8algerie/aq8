@@ -7,8 +7,10 @@ import {
   verifyServerCrmAccess,
 } from '@/src/lib/serverCrmAccess';
 import type { Client, ClientStatus } from '@/src/types';
+import { validateFollowUpInput } from '@/src/lib/clientFollowUpRules';
 
 type ClientMutation =
+  | { action: 'log_follow_up'; centerId?: string; clientId?: string; operationId?: string; expectedLastId?: string | null; outcome?: unknown; notes?: unknown; nextContactDate?: unknown }
   | {
       action: 'upsert';
       centerId?: string;
@@ -261,12 +263,45 @@ async function mutateClientState(
   });
 }
 
+async function logFollowUp(actor: ServerCrmProfile, payload: Extract<ClientMutation, { action: 'log_follow_up' }>) {
+  const centerId = requiredText(payload.centerId, 'Centre', 80);
+  const clientId = requiredText(payload.clientId, 'Client', 120);
+  const operationId = requiredText(payload.operationId, 'Opération', 120);
+  assertCenterAccess(actor, centerId);
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Algiers', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  let normalized;
+  try { normalized = validateFollowUpInput(payload, today); } catch (error) { throw new CrmAccessError((error as Error).message, 400); }
+  const db = getAdminDb();
+  return db.runTransaction(async transaction => {
+    const ref = db.collection('clients').doc(clientId);
+    const snapshot = await transaction.get(ref);
+    if (!snapshot.exists) throw new CrmAccessError('Client introuvable.', 404);
+    const client = snapshot.data() as Client;
+    if (client.centerId !== centerId) throw new CrmAccessError("Ce client n’appartient pas à votre centre.", 403);
+    if (client.status === 'archived' || client.status === 'suspended') throw new CrmAccessError('Le client doit être actif.', 409);
+    const history = client.followUps || [];
+    const existing = history.find(entry => entry.id === operationId);
+    if (existing) {
+      if (existing.outcome !== normalized.outcome || existing.notes !== normalized.notes || existing.nextContactDate !== normalized.nextContactDate) throw new CrmAccessError('Cet identifiant est déjà utilisé.', 409);
+      return { ok: true, created: false };
+    }
+    if ((history.at(-1)?.id || null) !== payload.expectedLastId) throw new CrmAccessError('Une autre relance vient d’être enregistrée. Rechargez la fiche.', 409);
+    const timestamp = new Date().toISOString();
+    const followUp = { ...normalized, id: operationId, createdAt: timestamp, createdByUserId: actor.uid, createdByUserName: actor.name };
+    transaction.update(ref, { followUps: [...history, followUp].slice(-50), updatedAt: timestamp });
+    transaction.set(db.collection('audit_logs').doc(), { ...auditData(actor, { action: 'LOG_CLIENT_FOLLOW_UP', details: `Contact client : ${normalized.outcome}.`, targetId: clientId, centerId, timestamp }), followUp });
+    return { ok: true, created: true };
+  });
+}
+
 export async function POST(request: Request) {
   try {
     const actor = await verifyServerCrmAccess(request, ['super_admin', 'center_manager']);
     const payload = await request.json().catch(() => ({})) as ClientMutation;
     let result;
-    if (payload.action === 'upsert') {
+    if (payload.action === 'log_follow_up') {
+      result = await logFollowUp(actor, payload);
+    } else if (payload.action === 'upsert') {
       result = await upsertClient(actor, payload);
     } else if (payload.action === 'set_status' || payload.action === 'archive') {
       result = await mutateClientState(actor, payload);

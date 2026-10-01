@@ -88,7 +88,8 @@ export async function POST(request: Request) {
 
     // 6. Calculate Gamification Stats
     const gamificationStats = calculateClientGamification(appointments, measurements);
-    const clientWithGamification = { ...foundClient, gamificationStats };
+    const { followUps: _internalFollowUps, ...publicClient } = foundClient;
+    const clientWithGamification = { ...publicClient, gamificationStats };
 
     return NextResponse.json({
       ok: true,

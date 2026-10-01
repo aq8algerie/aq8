@@ -29,6 +29,7 @@ import { MeasurementChart } from './cards/MeasurementChart';
 import { formatDateTime } from '../../lib/centerManagerUtils';
 
 import { calculateClientGamification } from '../../lib/gamification';
+import { ClientFollowUpPanel } from './ClientFollowUpPanel';
 
 interface ClientProfileViewProps {
   client: Client;
@@ -98,6 +99,8 @@ export function ClientProfileView({
       >
         <ArrowLeft className="h-4 w-4" /> Retour au fichier clients
       </button>
+
+      <ClientFollowUpPanel key={client.id} client={client} />
 
       {/* Luxury Member Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1c1c1c] via-[#282828] to-[#121212] p-6 text-white shadow-xl border border-slate-800">

@@ -54,7 +54,19 @@ export interface Service {
 
 export type ClientStatus = 'active' | 'suspended' | 'archived';
 
+export type FollowUpOutcome = 'reached' | 'no_answer' | 'interested' | 'declined';
+export interface ClientFollowUp {
+  id: string;
+  outcome: FollowUpOutcome;
+  notes: string;
+  nextContactDate: string | null;
+  createdAt: string;
+  createdByUserId: string;
+  createdByUserName: string;
+}
+
 export interface Client {
+  followUps?: ClientFollowUp[];
   id: string;
   firstName: string;
   lastName: string;

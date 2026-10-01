@@ -125,6 +125,7 @@ export function CenterManagerViews({
   // Modal display toggles
   const [showClientModal, setShowClientModal] = useState(false);
   const [showAptModal, setShowAptModal] = useState(false);
+  const [appointmentPreset, setAppointmentPreset] = useState<{ date: string; time: string; serviceId: string } | null>(null);
   const [showPackageAssignModal, setShowPackageAssignModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showMeasurementModal, setShowMeasurementModal] = useState(false);
@@ -560,6 +561,7 @@ export function CenterManagerViews({
         });
 
         setShowAptModal(false);
+        setAppointmentPreset(null);
         triggerToast(`Rendez-vous planifié ! (Validation manuelle : le solde sera déduit lors de la réalisation de la séance).`);
       } else {
         if (!activePkg) return;
@@ -595,6 +597,7 @@ export function CenterManagerViews({
         });
 
         setShowAptModal(false);
+        setAppointmentPreset(null);
         triggerToast(`Rendez-vous planifié ! 1 séance déduite (Solde restant : ${updatedPkg.sessionsRemaining}).`);
       }
     } catch (error) {
@@ -1050,6 +1053,16 @@ export function CenterManagerViews({
           <>
             {activeSubTab === 'dashboard' && (
               <ManagerDashboard
+                onBookSlot={(slot) => {
+                  setAppointmentPreset(slot);
+                  setShowAptModal(true);
+                }}
+                bookingRequests={centerBookingRequests}
+                onOpenClient={setSelectedClientId}
+                onAssignPackage={(clientId) => {
+                  setPkgAssignClientId(clientId);
+                  setShowPackageAssignModal(true);
+                }}
                 centerId={centerId}
                 center={currentCenter}
                 clients={clients}
@@ -1184,9 +1197,11 @@ export function CenterManagerViews({
           services={centerServices}
           appointments={appointments.filter(appointment => appointment.centerId === centerId)}
           centerId={centerId}
-          onClose={() => setShowAptModal(false)}
+          onClose={() => { setShowAptModal(false); setAppointmentPreset(null); }}
           onSubmit={handleAptSubmit}
-          initialDate={bookingDateFilter}
+          initialDate={appointmentPreset?.date || bookingDateFilter}
+          initialTime={appointmentPreset?.time}
+          initialServiceId={appointmentPreset?.serviceId}
           center={currentCenter}
         />
       )}
