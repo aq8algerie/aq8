@@ -103,7 +103,6 @@ export function ManagerDashboard({
 
   // Filtered computed values
   const filteredClientsCount = filteredClients.length;
-  const filteredRevenue = filteredPayments.reduce((acc, curr) => acc + curr.amount, 0);
   const filteredAppointmentsCount = filteredAppointments.length;
   const filteredMeasurementsCount = filteredMeasurements.length;
   const now = new Date();
@@ -126,6 +125,13 @@ export function ManagerDashboard({
   const revenueThisMonth = filteredPayments
     .filter(payment => isInMonth(payment.date))
     .reduce((sum, payment) => sum + payment.amount, 0);
+  const revenueThisYear = filteredPayments
+    .filter(payment => {
+      const date = new Date(payment.date);
+      return !Number.isNaN(date.getTime()) && date.getFullYear() === now.getFullYear();
+    })
+    .reduce((sum, payment) => sum + payment.amount, 0);
+  const currentMonthLabel = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
   const revenuePreviousMonth = filteredPayments
     .filter(payment => isInMonth(payment.date, -1))
     .reduce((sum, payment) => sum + payment.amount, 0);
@@ -315,7 +321,7 @@ export function ManagerDashboard({
       </div>
 
       {/* Stat metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <StatCard
           id="stat-clients"
           title="Membres Abonnés"
@@ -327,18 +333,28 @@ export function ManagerDashboard({
           borderLeftClass={genderFilter === 'F' ? 'border-l-4 border-l-rose-500' : genderFilter === 'H' ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-blue-500'}
         />
         <StatCard
-          id="stat-revenue"
-          title="Chiffre d'Affaires"
-          value={formatDZD(filteredRevenue)}
+          id="stat-revenue-month"
+          title="Chiffre d'affaires mensuel"
+          value={formatDZD(revenueThisMonth)}
           icon={DollarSign}
           iconBgClass="bg-emerald-50"
           iconColorClass="text-emerald-600"
           trend={{
             text: revenueDelta === null
-              ? `${formatDZD(revenueThisMonth)} ce mois`
-              : `${revenueDelta >= 0 ? "+" : ""}${revenueDelta}% vs mois précédent`,
+              ? currentMonthLabel
+              : `${currentMonthLabel} · ${revenueDelta >= 0 ? "+" : ""}${revenueDelta}% vs mois précédent`,
             isPositive: revenueDelta === null || revenueDelta >= 0,
           }}
+          borderLeftClass="border-l-4 border-l-emerald-500"
+        />
+        <StatCard
+          id="stat-revenue-year"
+          title="Chiffre d'affaires annuel"
+          value={formatDZD(revenueThisYear)}
+          icon={DollarSign}
+          iconBgClass="bg-emerald-50"
+          iconColorClass="text-emerald-600"
+          trend={{ text: `Année ${now.getFullYear()}`, isPositive: true }}
           borderLeftClass="border-l-4 border-l-emerald-500"
         />
         <StatCard
