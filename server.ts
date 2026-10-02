@@ -40,6 +40,9 @@ async function startServer() {
   );
   app.use('/api/public-reservations', publicApiLimiter);
   app.use('/api/contact-messages', publicApiLimiter);
+  app.use('/api/client-portal/register', createLimiter(10, 'Trop de tentatives de création de compte. Réessayez plus tard.'));
+  app.use('/api/auth/reset-password', createLimiter(10, 'Trop de demandes de réinitialisation. Réessayez plus tard.'));
+  app.use('/api/client-portal', createLimiter(120, 'Trop de consultations. Réessayez plus tard.'));
 
   const protectedMutationLimiter = createLimiter(
     60,

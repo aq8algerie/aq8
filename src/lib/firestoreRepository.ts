@@ -4,6 +4,15 @@ export type EntityWithId = {
   id: string;
 };
 
+function canonicalJson(value: unknown): string | undefined {
+  return JSON.stringify(value, (_key, item) => {
+    if (item && typeof item === 'object' && !Array.isArray(item)) {
+      return Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]]));
+    }
+    return item;
+  });
+}
+
 export async function syncCollection<T extends EntityWithId>(
   db: Firestore,
   collectionName: string,
@@ -26,7 +35,7 @@ export async function syncCollection<T extends EntityWithId>(
   const changedItems = sanitizedNewList.filter(item => {
     if (!item.id) return false;
     const oldItem = oldById.get(item.id);
-    return !oldItem || JSON.stringify(oldItem) !== JSON.stringify(item);
+    return !oldItem || canonicalJson(oldItem) !== canonicalJson(item);
   });
 
   const deletedIds = Array.from(oldIds).filter(id => id && !newIds.has(id));
@@ -37,8 +46,7 @@ export async function syncCollection<T extends EntityWithId>(
 
   if (affectedIds.length === 0) return;
 
-  try {
-    await runTransaction(db, async transaction => {
+  await runTransaction(db, async transaction => {
       const snapshots = await Promise.all(
         affectedIds.map(id => transaction.get(doc(db, collectionName, id))),
       );
@@ -50,8 +58,8 @@ export async function syncCollection<T extends EntityWithId>(
         const expectedData = oldById.get(id);
         const snapshot = snapshotsById.get(id);
         const currentData = snapshot?.exists() ? snapshot.data() : undefined;
-        if (JSON.stringify(currentData) !== JSON.stringify(expectedData)) {
-          console.warn(`[syncCollection] Snapshot difference in ${collectionName} for ${id}, updating to latest.`);
+        if (canonicalJson(currentData) !== canonicalJson(expectedData)) {
+          throw new Error('Ces données ont été modifiées par un autre utilisateur. Actualisez avant de réessayer.');
         }
       }
 
@@ -66,16 +74,7 @@ export async function syncCollection<T extends EntityWithId>(
         }
       }
     });
-  } catch (error) {
-    console.warn(`[syncCollection] Transaction fallback for ${collectionName}:`, error);
-    for (const item of changedItems) {
-      if (item.id) {
-        await setDoc(doc(db, collectionName, item.id), item).catch(err =>
-          console.error(`[syncCollection] Direct setDoc failed for ${collectionName}/${item.id}:`, err)
-        );
-      }
-    }
-  }
+
 }
 
 export async function saveDocument<T>(

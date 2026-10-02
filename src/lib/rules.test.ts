@@ -1,3 +1,4 @@
+import { AQ8Database } from '../mockData';
 import assert from 'node:assert/strict';
 import { Appointment, Center, Client, ClientPackage, Package, Payment, Service } from '../types';
 import { isBeforePreviousDayCutoff, isFullHour, validateAppointment } from './appointmentRules';
@@ -979,4 +980,30 @@ test('Sidi Yahia financial access belongs to the owner and active super admins o
   assert.equal(canReadCenterFinances({ ...profile, centerId: 'center-2' }), true);
   assert.equal(canReadCenterFinances({ ...profile, email: 'contact@sculptfitcenter.com', active: false }), false);
   assert.equal(canReadCenterFinances({ ...profile, role: 'client', email: 'contact@sculptfitcenter.com' }), false);
+});
+
+
+test('private CRM browser caches are purged and never persisted again', () => {
+  const entries = new Map<string, string>([
+    ['aq8_clients', '[{"id":"private"}]'], ['aq8_measurements', '[{"weight":70}]'],
+    ['aq8_payments', '[{"amount":12000}]'], ['aq8_theme', 'dark'],
+  ]);
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: { localStorage: {
+    getItem: (key: string) => entries.get(key) ?? null,
+    setItem: (key: string, value: string) => entries.set(key, value),
+    removeItem: (key: string) => entries.delete(key),
+  } } });
+  try {
+    AQ8Database.clearPrivateCache();
+    AQ8Database.save('clients', [{ id: 'private' }]);
+    assert.equal(entries.has('aq8_clients'), false);
+    assert.equal(entries.has('aq8_measurements'), false);
+    assert.equal(entries.has('aq8_payments'), false);
+    assert.equal(entries.get('aq8_theme'), 'dark');
+    assert.deepEqual(AQ8Database.get('clients', []), []);
+  } finally {
+    if (previous) Object.defineProperty(globalThis, 'window', previous);
+    else Reflect.deleteProperty(globalThis, 'window');
+  }
 });

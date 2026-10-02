@@ -4,6 +4,7 @@ import {
   connectAuthEmulator,
   createUserWithEmailAndPassword,
   getAuth,
+  signInWithEmailAndPassword,
 } from 'firebase/auth';
 
 const PROJECT_ID = 'demo-aq8-security';
@@ -69,6 +70,9 @@ async function run() {
   const { getAdminDb } = await import('./serverFirebaseAdmin');
   const { POST: mutateClients } = await import('../../app/api/crm-clients/route');
   const { POST: mutateOperations } = await import('../../app/api/crm-operations/route');
+  const { POST: readPortal } = await import('../../app/api/client-portal/route');
+  const { POST: registerPortal } = await import('../../app/api/client-portal/register/route');
+  const { getAdminAuthInstance } = await import('./serverFirebaseAdmin');
   const { POST: mutateCenterSettings } = await import('../../app/api/crm-center-settings/route');
   const { POST: createPublicReservation } = await import('../../app/api/public-reservations/route');
 
@@ -80,6 +84,7 @@ async function run() {
     const superAdmin = await createIdentity(auth, 'super-admin@security.test');
     const sidiOwner = await createIdentity(auth, 'contact@sculptfitcenter.com');
     const sidiStaff = await createIdentity(auth, 'sidi-staff@security.test');
+    const portalMember = await createIdentity(auth, 'portal-member@security.test');
 
     const db = getAdminDb();
     const batch = db.batch();
@@ -206,6 +211,57 @@ async function run() {
     }
     await batch.commit();
 
+    await db.collection('clients').doc('portal-member').set({
+      email: 'portal-member@security.test', centerId: 'center-a', status: 'active',
+      firstName: 'Test', lastName: 'Adhérent', notes: 'INTERNAL_SECRET', pin: 'SECRET_PIN',
+      followUps: [{ notes: 'INTERNAL_SECRET' }],
+    });
+    await db.collection('client_packages').doc('portal-package').set({
+      clientId: 'portal-member', centerId: 'center-a', status: 'active', sessionsRemaining: 4,
+      cancellationNotes: 'INTERNAL_SECRET', activatedByUserId: 'staff-private-id',
+    });
+    await db.collection('payments').doc('portal-foreign').set({
+      clientId: 'portal-member', centerId: 'center-b', amount: 999,
+    });
+    await testCase('portal rejects unverified identities before returning member data', async () => {
+      const response = await readPortal(authenticatedRequest(portalMember.token));
+      assert.equal(response.status, 403);
+      assert.equal((await response.json()).code, 'EMAIL_VERIFICATION_REQUIRED');
+    });
+    await getAdminAuthInstance().updateUser(portalMember.uid, { emailVerified: true });
+    const verifiedCredential = await signInWithEmailAndPassword(auth, 'portal-member@security.test', 'Security-Test-Password-2026!');
+    const verifiedToken = await verifiedCredential.user.getIdToken(true);
+    await testCase('portal reads canonical packages and excludes foreign and internal data', async () => {
+      const response = await readPortal(authenticatedRequest(verifiedToken));
+      assert.equal(response.status, 200);
+      const body = await response.json();
+      assert.equal(body.ok, true);
+      assert.equal(body.clientPackages[0].sessionsRemaining, 4);
+      assert.equal(body.payments.length, 0);
+      assert.equal(JSON.stringify(body).includes('INTERNAL_SECRET'), false);
+      assert.equal('pin' in body.client, false);
+    });
+    await testCase('portal refuses ambiguous, suspended and revoked member access', async () => {
+      await db.collection('clients').doc('portal-duplicate').set({ email: 'portal-member@security.test', centerId: 'center-b', status: 'active' });
+      assert.equal((await readPortal(authenticatedRequest(verifiedToken))).status, 409);
+      await db.collection('clients').doc('portal-duplicate').delete();
+      await db.collection('clients').doc('portal-member').update({ status: 'suspended' });
+      assert.equal((await readPortal(authenticatedRequest(verifiedToken))).status, 200);
+      await db.collection('clients').doc('portal-member').update({ status: 'active' });
+      await getAdminAuthInstance().updateUser(portalMember.uid, { emailVerified: false });
+      assert.equal((await readPortal(authenticatedRequest(verifiedToken))).status, 403);
+    });
+    await testCase('registration reveals no CRM membership or member name', async () => {
+      const response = await registerPortal(new Request('http://localhost/api/client-portal/register', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email: 'unknown-member@security.test', password: 'Security-Test-Password-2026!' }),
+      }));
+      assert.equal(response.status, 200);
+      const user = await getAdminAuthInstance().getUserByEmail('unknown-member@security.test');
+      assert.equal(user.emailVerified, false);
+      assert.equal(user.displayName, 'Adhérent');
+    });
+
     await testCase('Sidi Yahia financial permissions are verified on the server', async () => {
       const owner = await verifyServerCrmAccess(authenticatedRequest(sidiOwner.token), ['center_manager']);
       const staff = await verifyServerCrmAccess(authenticatedRequest(sidiStaff.token), ['center_manager']);
@@ -292,8 +348,11 @@ async function run() {
       const audit = await db.collection('audit_logs').where('action', '==', 'LOG_CLIENT_FOLLOW_UP').get();
       assert.equal(audit.docs.filter(doc => doc.data().followUp?.id === 'follow-up-1').length, 1);
       const clientIdentity = await createIdentity(auth, 'privacy-client@example.com');
+      await getAdminAuthInstance().updateUser(clientIdentity.uid, { emailVerified: true });
+      const privacyCredential = await signInWithEmailAndPassword(auth, 'privacy-client@example.com', 'Security-Test-Password-2026!');
+      const privacyToken = await privacyCredential.user.getIdToken(true);
       const { POST: readClientPortal } = await import('../../app/api/client-portal/route');
-      const portalResponse = await readClientPortal(authenticatedRequest(clientIdentity.token));
+      const portalResponse = await readClientPortal(authenticatedRequest(privacyToken));
       assert.equal(portalResponse.status, 200);
       const portalBody = await portalResponse.json();
       assert.equal(portalBody.ok, true);

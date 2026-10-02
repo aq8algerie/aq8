@@ -51,6 +51,7 @@ import { useData } from "@/components/context/DataProvider";
 import { saveDocument, syncCollection as syncFirestoreCollection } from "@/src/lib/firestoreRepository";
 import { getPublicCenters } from "@/src/lib/centerVisibility";
 import { canReadCenterFinances } from "@/src/lib/financialAccess";
+import { AQ8Database } from "@/src/mockData";
 
 import { SuperAdminTabId } from "@/src/components/super-admin/SuperAdminTabs";
 
@@ -133,7 +134,7 @@ export default function CrmPage() {
   // Set up auth state listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      localStorage.removeItem('aq8_payments');
+      AQ8Database.clearPrivateCache();
       if (!user) {
         setCanReadFinances(false);
         setCrmRole(null);
@@ -302,10 +303,10 @@ export default function CrmPage() {
     syncCollection("managers", newManagers, managers);
   };
   const updateServices = (newServices: Service[]) => {
-    syncCollection("services", newServices, services);
+    return syncCollection("services", newServices, services);
   };
   const updatePackages = (newPackages: Package[]) => {
-    syncCollection("packages", newPackages, packages);
+    return syncCollection("packages", newPackages, packages);
   };
   const updateClients = (newClients: Client[]) => {
     syncCollection("clients", newClients, clients);

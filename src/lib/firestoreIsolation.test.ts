@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { syncCollection } from './firestoreRepository';
 import { readFile } from 'node:fs/promises';
 import {
   assertFails,
@@ -223,6 +224,20 @@ async function run() {
     const managerBDb = testEnv.authenticatedContext('manager-b').firestore();
     const suspendedManagerDb = testEnv.authenticatedContext('manager-suspended').firestore();
     const superAdminDb = testEnv.authenticatedContext('super-admin').firestore();
+    await testCase('collection synchronization rejects stale writes and preserves atomicity', async () => {
+      const original = { id: 'concurrency-package', name: 'Original', price: 100 };
+      await setDoc(doc(superAdminDb, 'packages', original.id), original);
+      await updateDoc(doc(superAdminDb, 'packages', original.id), { price: 200 });
+      const extra = { id: 'concurrency-extra', name: 'Extra', price: 50 };
+      await assert.rejects(syncCollection(superAdminDb, 'packages', [{ ...original, price: 150 }, extra], [original]), /modifiées/);
+      assert.equal((await getDoc(doc(superAdminDb, 'packages', original.id))).data()?.price, 200);
+      assert.equal((await getDoc(doc(superAdminDb, 'packages', extra.id))).exists(), false);
+      const latest = { price: 200, name: 'Original', id: original.id };
+      await syncCollection(superAdminDb, 'packages', [{ ...latest, price: 250 }], [latest]);
+      assert.equal((await getDoc(doc(superAdminDb, 'packages', original.id))).data()?.price, 250);
+      await syncCollection(superAdminDb, 'packages', [], [{ ...latest, price: 250 }]);
+      assert.equal((await getDoc(doc(superAdminDb, 'packages', original.id))).exists(), false);
+    });
     const sidiOwnerDb = testEnv.authenticatedContext('sidi-owner').firestore();
     const sidiStaffDb = testEnv.authenticatedContext('sidi-staff', {
       email: 'contact@sculptfitcenter.com',

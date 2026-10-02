@@ -43,6 +43,8 @@ import {
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
+  sendEmailVerification,
+  type User as FirebaseUser,
 } from "firebase/auth";
 import { auth, db } from "../../src/lib/firebase";
 import { calculateClientGamification } from "../../src/lib/gamification";
@@ -58,6 +60,9 @@ export function ClientPortalClient() {
   const [loginError, setLoginError] = useState("");
   const [activeAuthTab, setActiveAuthTab] = useState<"login" | "register">("login");
   const [authInitialized, setAuthInitialized] = useState(false);
+  const [verificationUser, setVerificationUser] = useState<FirebaseUser | null>(null);
+  const [verificationMessage, setVerificationMessage] = useState('');
+  const [verificationBusy, setVerificationBusy] = useState(false);
 
   // Forgot password state
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -81,6 +86,7 @@ export function ClientPortalClient() {
       if (firebaseUser) {
         await fetchClientPortalData(firebaseUser);
       } else {
+        setVerificationUser(null);
         setClientData(null);
         setAppointments([]);
         setMeasurements([]);
@@ -107,12 +113,23 @@ export function ClientPortalClient() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok || data.ok === false) {
+        if (data.code === 'EMAIL_VERIFICATION_REQUIRED') {
+          setVerificationUser(firebaseUser);
+          setClientData(null);
+          setAppointments([]);
+          setMeasurements([]);
+          setPayments([]);
+          setClientPackages([]);
+          return;
+        }
         setLoginError(data.error || "Une erreur est survenue lors de l'accès au compte.");
         await signOut(auth);
         setClientData(null);
         return;
       }
 
+      if (auth.currentUser?.uid !== firebaseUser.uid) return;
+      setVerificationUser(null);
       setClientData(data.client);
       setAppointments(data.appointments || []);
       setMeasurements(data.measurements || []);
@@ -125,6 +142,7 @@ export function ClientPortalClient() {
       setClientData(null);
     } finally {
       setIsLoadingData(false);
+      setIsLoggingIn(false);
     }
   };
 
@@ -266,6 +284,40 @@ export function ClientPortalClient() {
   }
 
   // IF NOT LOGGED IN: SHOW LOGIN / SIGN UP FORM
+  if (verificationUser) {
+    return (
+      <div className="mx-auto max-w-md space-y-5 rounded-2xl border bg-white p-8 text-center">
+        <Mail className="mx-auto h-10 w-10 text-sky-600" />
+        <h1 className="text-xl font-bold">Vérifiez votre adresse e-mail</h1>
+        <p className="text-sm text-slate-600">Pour protéger votre fiche, confirmez l’adresse {verificationUser.email} avec le lien reçu par e-mail.</p>
+        {verificationMessage && <p role="status" className="text-sm text-sky-700">{verificationMessage}</p>}
+        {loginError && <p role="alert" className="text-sm text-red-600">{loginError}</p>}
+        <button disabled={verificationBusy} className="w-full rounded-xl bg-sky-600 p-3 font-semibold text-white disabled:opacity-50" onClick={async () => {
+          setVerificationBusy(true);
+          setLoginError('');
+          try {
+            await sendEmailVerification(verificationUser);
+            setVerificationMessage('E-mail envoyé. Vérifiez aussi vos courriers indésirables.');
+          } catch {
+            setLoginError('Envoi impossible. Patientez un instant avant de réessayer.');
+          } finally { setVerificationBusy(false); }
+        }}>Envoyer le lien de vérification</button>
+        <button disabled={verificationBusy} className="w-full rounded-xl border p-3 font-semibold disabled:opacity-50" onClick={async () => {
+          setVerificationBusy(true);
+          try {
+            await verificationUser.reload();
+            if (!verificationUser.emailVerified) {
+              setVerificationMessage('Cliquez d’abord sur le lien de vérification reçu par e-mail.');
+              return;
+            }
+            await fetchClientPortalData(verificationUser);
+          } catch { setLoginError('Vérification impossible. Veuillez réessayer.'); }
+          finally { setVerificationBusy(false); }
+        }}>J’ai vérifié mon adresse</button>
+        <button onClick={handleLogout} className="text-sm text-slate-500">Utiliser un autre compte</button>
+      </div>
+    );
+  }
   if (!clientData) {
     return (
       <div className="mx-auto max-w-md space-y-8 py-6">
@@ -774,9 +826,9 @@ export function ClientPortalClient() {
             ) : (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {upcomingAppts.map((appt) => {
-                  const serviceLabel = appt.service?.toLowerCase() === "wonder" ? "Wonder Axion" : "AQ8 EMS";
-                  const dateStr = appt.bookingDate || appt.date || "";
-                  const timeStr = appt.bookingTime || appt.time || "";
+                  const serviceLabel = (appt.serviceType || appt.service || appt.serviceId)?.toLowerCase().includes("wonder") ? "Wonder Axion" : "AQ8 EMS";
+                  const dateStr = appt.dateTime?.slice(0, 10) || appt.bookingDate || appt.date || "";
+                  const timeStr = appt.dateTime?.slice(11, 16) || appt.bookingTime || appt.time || "";
 
                   return (
                     <div
@@ -838,11 +890,11 @@ export function ClientPortalClient() {
                 {pastAppts.map((appt) => (
                   <div key={appt.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2 text-xs">
                     <div className="flex justify-between items-center">
-                      <span className="font-bold text-slate-800">{appt.service?.toLowerCase() === "wonder" ? "Wonder Axion" : "AQ8 EMS"}</span>
+                      <span className="font-bold text-slate-800">{(appt.serviceType || appt.service || appt.serviceId)?.toLowerCase().includes("wonder") ? "Wonder Axion" : "AQ8 EMS"}</span>
                       <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">Effectuée</span>
                     </div>
                     <p className="text-slate-500 font-medium">
-                      {appt.bookingDate || appt.date} à {appt.bookingTime || appt.time}
+                      {appt.dateTime?.slice(0, 10) || appt.bookingDate || appt.date} à {appt.dateTime?.slice(11, 16) || appt.bookingTime || appt.time}
                     </p>
                   </div>
                 ))}

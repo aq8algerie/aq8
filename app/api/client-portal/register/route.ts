@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAdminAuthInstance, getAdminDb } from '@/src/lib/serverFirebaseAdmin';
+import { getAdminAuthInstance } from '@/src/lib/serverFirebaseAdmin';
 
 export async function POST(request: Request) {
   try {
@@ -7,50 +7,22 @@ export async function POST(request: Request) {
     const rawEmail = typeof body.email === 'string' ? body.email.trim() : '';
     const password = typeof body.password === 'string' ? body.password : '';
 
-    if (!rawEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)) {
+    if (!rawEmail || rawEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)) {
       return NextResponse.json(
         { ok: false, error: 'Veuillez saisir une adresse e-mail valide.' },
         { status: 400 }
       );
     }
 
-    if (password.length < 8) {
+    if (password.length < 8 || password.length > 128) {
       return NextResponse.json(
-        { ok: false, error: 'Le mot de passe doit contenir au moins 8 caractères.' },
+        { ok: false, error: 'Le mot de passe doit contenir entre 8 et 128 caractères.' },
         { status: 400 }
       );
     }
 
     const normalizedEmail = rawEmail.toLowerCase();
-    const db = getAdminDb();
     const auth = getAdminAuthInstance();
-
-    // 1. Check if email exists in clients Firestore collection
-    const clientsSnap = await db.collection('clients').where('email', '==', normalizedEmail).get();
-    if (clientsSnap.empty) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "Cet e-mail n'est pas enregistré dans notre base d'adhérents. Veuillez contacter votre centre pour l'ajouter à votre fiche.",
-        },
-        { status: 400 }
-      );
-    }
-
-    const allMatchingClients = clientsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
-    const activeClients = allMatchingClients.filter(cli => cli.status !== 'archived');
-
-    if (activeClients.length === 0) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: 'Votre profil adhérent a été archivé. Veuillez contacter votre centre.',
-        },
-        { status: 400 }
-      );
-    }
-
-    const clientDoc = activeClients[0];
 
     // 2. Check if a Firebase Auth user already exists for this email
     try {
@@ -70,7 +42,7 @@ export async function POST(request: Request) {
     }
 
     // 3. Create the Firebase Auth user
-    const displayName = `${clientDoc.firstName || ''} ${clientDoc.lastName || ''}`.trim() || 'Adhérente';
+    const displayName = 'Adhérent';
     await auth.createUser({
       email: normalizedEmail,
       password: password,
@@ -79,7 +51,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      message: 'Compte créé avec succès ! Vous pouvez maintenant vous connecter.',
+      message: 'Compte créé. Vérifiez votre adresse e-mail pour accéder à votre fiche.',
     });
   } catch (error) {
     console.error('[client-portal/register] registration failed:', error);

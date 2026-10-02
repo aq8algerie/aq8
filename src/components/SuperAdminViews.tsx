@@ -92,7 +92,7 @@ export function SuperAdminViews({
   payments?: Payment[];
   appointments?: Appointment[];
   onUpdateCenters: (centers: Center[]) => void | Promise<void>;
-  onUpdateServices: (services: Service[]) => void;
+  onUpdateServices: (services: Service[]) => void | Promise<void>;
   onUpdatePackages: (packages: Package[]) => void;
   onUpdateSettings: (settings: GeneralSettings) => void;
   activeTab?: SuperAdminTabId;
@@ -523,8 +523,9 @@ export function SuperAdminViews({
     setShowServiceModal(true);
   };
 
-  const handleServiceSubmit = (e: React.FormEvent) => {
+  const handleServiceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
     if (editingService) {
       logCrmAction(userId, userName, 'super_admin', {
         action: 'UPDATE_SERVICE',
@@ -541,7 +542,7 @@ export function SuperAdminViews({
         price: srvPrice,
         description: srvDesc
       } : s);
-      onUpdateServices(updated);
+      await onUpdateServices(updated);
     } else {
       const newSrvId = `srv-${Date.now()}`;
       logCrmAction(userId, userName, 'super_admin', {
@@ -559,9 +560,12 @@ export function SuperAdminViews({
         price: srvPrice,
         description: srvDesc
       };
-      onUpdateServices([...services, newSrv]);
+      await onUpdateServices([...services, newSrv]);
     }
     setShowServiceModal(false);
+    } catch (error) {
+      triggerToast(error instanceof Error ? error.message : "Enregistrement impossible.", "error", "Modification non enregistrée");
+    }
   };
 
   const handleDeleteService = (id: string) => {
@@ -597,7 +601,7 @@ export function SuperAdminViews({
         if (appointments.some(appointment => appointment.serviceId === pendingAdminAction.id)) {
           throw new Error('Cette prestation est utilisée dans l’historique des réservations et ne peut pas être supprimée.');
         }
-        onUpdateServices(services.filter(service => service.id !== pendingAdminAction.id));
+        await onUpdateServices(services.filter(service => service.id !== pendingAdminAction.id));
         await logCrmAction(userId, userName, 'super_admin', {
           action: 'DELETE_UNUSED_SERVICE',
           details: `Suppression de la prestation inutilisée : ${pendingAdminAction.label}`,

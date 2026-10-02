@@ -878,8 +878,19 @@ function canUseLocalStorage(): boolean {
 }
 
 export class AQ8Database {
+  static clearPrivateCache(): void {
+    if (!canUseLocalStorage()) return;
+    for (const key of ['managers', 'clients', 'client_packages', 'payments', 'appointments', 'measurements']) {
+      window.localStorage.removeItem(`aq8_${key}`);
+    }
+  }
+
   static get<T>(key: string, defaultValue: T): T {
     if (!canUseLocalStorage()) return defaultValue;
+    if (['managers', 'clients', 'client_packages', 'payments', 'appointments', 'measurements'].includes(key)) {
+      this.clearPrivateCache();
+      return defaultValue;
+    }
 
     try {
       const data = window.localStorage.getItem(`aq8_${key}`);
@@ -891,6 +902,10 @@ export class AQ8Database {
 
   static save<T>(key: string, value: T): void {
     if (!canUseLocalStorage()) return;
+    if (['managers', 'clients', 'client_packages', 'payments', 'appointments', 'measurements'].includes(key)) {
+      this.clearPrivateCache();
+      return;
+    }
 
     try {
       window.localStorage.setItem(`aq8_${key}`, JSON.stringify(value));

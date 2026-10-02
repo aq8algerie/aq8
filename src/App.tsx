@@ -160,11 +160,13 @@ export default function App() {
       await syncFirestoreCollection(db, colName, newList, oldList);
     } catch (error) {
       console.error(`Error syncing collection ${colName}:`, error);
+      throw error;
     }
   };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      AQ8Database.clearPrivateCache();
       if (!user) {
         setCanReadFinances(false);
         localStorage.removeItem('aq8_payments');
@@ -459,10 +461,10 @@ export default function App() {
     syncCollection('managers', newManagers, managers);
   };
 
-  const updateServices = (newServices: Service[]) => {
+  const updateServices = async (newServices: Service[]) => {
+    await syncCollection('services', newServices, services);
     setServices(newServices);
     AQ8Database.saveServices(newServices);
-    syncCollection('services', newServices, services);
   };
 
   const updatePackages = (newPackages: Package[]) => {
