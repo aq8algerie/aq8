@@ -239,7 +239,7 @@ export default function CrmPage() {
     });
 
     if (!canReadFinances) setPayments([]);
-    const unsubPayments = canReadFinances ? onSnapshot(paymentsRef, (snapshot) => {
+    const unsubPayments = canReadFinances && (crmRole === "super_admin" || crmCenterManagerTab === "payments") ? onSnapshot(paymentsRef, (snapshot) => {
       const list: Payment[] = [];
       snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as Payment));
       setPayments(list);
@@ -267,7 +267,7 @@ export default function CrmPage() {
       unsubMeasurements();
       unsubBookingRequests();
     };
-  }, [crmRole, crmCenterId, canReadFinances]);
+  }, [crmRole, crmCenterId, canReadFinances, crmCenterManagerTab]);
 
   // Set up theme settings
   useEffect(() => {

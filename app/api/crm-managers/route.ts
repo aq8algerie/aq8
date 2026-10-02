@@ -7,6 +7,7 @@ import type { CenterManager } from '@/src/types';
 type ManagerMutation =
   | {
       action: 'upsert';
+      financeRead?: boolean;
       managerId?: string;
       name?: string;
       email?: string;
@@ -73,7 +74,7 @@ async function disableCrmIdentity(uid: string): Promise<void> {
     await auth.setCustomUserClaims(uid, claims);
     await auth.revokeRefreshTokens(uid);
   } catch (err) {
-    console.warn('[crm-managers] disableCrmIdentity warning:', err);
+    throw err;
   }
 }
 
@@ -92,7 +93,7 @@ async function enableManagerIdentity(uid: string, name: string, centerId: string
     });
     await auth.revokeRefreshTokens(uid);
   } catch (err) {
-    console.warn('[crm-managers] enableManagerIdentity warning:', err);
+    throw err;
   }
 }
 
@@ -130,23 +131,11 @@ export async function POST(request: Request) {
       const centerId = requiredText(payload.centerId, 'Centre', 80);
       const active = payload.active === true;
 
-      // Robust center existence check
-      let centerSnapshot = await db.collection('centers').doc(centerId).get();
-      let centerName = centerId;
-
-      if (centerSnapshot.exists) {
-        centerName = String(centerSnapshot.data()?.name || centerId);
-      } else {
-        // Fallback: check centers collection
-        const allCentersSnap = await db.collection('centers').limit(100).get();
-        const matched = allCentersSnap.docs.find(d => d.id === centerId || String(d.data()?.id) === centerId);
-        if (matched) {
-          centerSnapshot = matched;
-          centerName = String(matched.data()?.name || centerId);
-        } else {
-          // If center doc is freshly created locally, create placeholder record in Firestore
-          centerName = centerId;
-        }
+      const centerSnapshot = await db.collection('centers').doc(centerId).get();
+      if (!centerSnapshot.exists) throw new CrmAccessError('Centre introuvable.', 404);
+      const centerName = String(centerSnapshot.data()?.name || centerId);
+      if (payload.financeRead !== undefined && typeof payload.financeRead !== 'boolean') {
+        throw new CrmAccessError('Permission financière invalide.', 400);
       }
 
       const managerId = payload.managerId
@@ -176,7 +165,7 @@ export async function POST(request: Request) {
           await disableCrmIdentity(authUid);
         }
       } catch (authErr) {
-        console.warn('[crm-managers] Admin Auth sync warning, continuing Firestore update:', authErr);
+        throw authErr;
       }
 
       const manager: CenterManager = {
@@ -186,6 +175,7 @@ export async function POST(request: Request) {
         centerId,
         active,
         authUid,
+        financeRead: payload.financeRead ?? previous?.financeRead ?? true,
         createdAt: previous?.createdAt || now,
         updatedAt: now,
       };
@@ -196,6 +186,7 @@ export async function POST(request: Request) {
         uid: authUid,
         email,
         role: 'center_manager',
+        financeRead: manager.financeRead,
         centerId,
         name,
         displayName: name,

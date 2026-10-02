@@ -7,9 +7,11 @@ export function canReadCenterFinances(input: {
   centerId?: string | null;
   email?: string | null;
   active?: boolean;
+  financeRead?: boolean;
 }): boolean {
   if (input.active !== true) return false;
   if (input.role === 'super_admin') return true;
   if (input.role !== 'center_manager' || !input.centerId) return false;
-  return input.centerId !== RESTRICTED_FINANCE_CENTER_ID || input.email === FINANCE_OWNER_EMAIL;
+  return input.financeRead !== false
+    && (input.centerId !== RESTRICTED_FINANCE_CENTER_ID || input.email === FINANCE_OWNER_EMAIL);
 }

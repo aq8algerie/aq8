@@ -3,10 +3,16 @@ import { ShieldCheck, Search, Download, RotateCcw, Activity, DollarSign, Calenda
 import { Center } from '../../types';
 
 export function AuditLogPanel({
+  onLoadMore,
+  hasMore,
+  loadingMore,
   centers,
   logs,
   loading
 }: {
+  onLoadMore: () => Promise<void>;
+  hasMore: boolean;
+  loadingMore: boolean;
   centers: Center[];
   logs: any[];
   loading: boolean;
@@ -109,7 +115,7 @@ export function AuditLogPanel({
             <ShieldCheck className="h-5 w-5 text-[#0284c7]" />
             Journal d'Audit & Sécurité CRM
           </h3>
-          <p className="text-xs text-slate-400 mt-0.5">Historique et traçabilité en temps réel de toutes les opérations effectuées sur le réseau AQ8 Algérie.</p>
+          <p className="text-xs text-slate-400 mt-0.5">Les dernières opérations sont suivies en temps réel. Les filtres et l’export portent sur les opérations chargées.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <button
@@ -128,11 +134,12 @@ export function AuditLogPanel({
         </div>
       </div>
 
+      {hasMore && <button disabled={loadingMore} onClick={() => void onLoadMore()} className="rounded-xl border px-4 py-2 text-sm font-semibold disabled:opacity-50">{loadingMore ? 'Chargement…' : 'Charger 50 opérations précédentes'}</button>}
       {/* SUMMARY KPI CARDS */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
           <div className="flex items-center justify-between text-slate-400 text-[10px] font-bold uppercase tracking-wider">
-            <span>Total Actions</span>
+            <span>Actions chargées</span>
             <Activity className="h-3.5 w-3.5 text-slate-500" />
           </div>
           <p className="text-lg font-black text-slate-800 font-mono mt-1">{totalCount}</p>

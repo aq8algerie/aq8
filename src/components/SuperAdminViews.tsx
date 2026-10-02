@@ -33,7 +33,7 @@ import {
   UploadCloud,
   Loader2
 } from 'lucide-react';
-import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, getDocs, startAfter, type QueryDocumentSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { logCrmAction } from '../lib/auditLogger';
 import { Center, CenterManager, Service, Package, GeneralSettings, Client, ClientPackage, Payment, Appointment } from '../types';
@@ -105,6 +105,9 @@ export function SuperAdminViews({
   const setActiveSubTab = onTabChange || setLocalActiveSubTab;
 
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [auditCursor, setAuditCursor] = useState<QueryDocumentSnapshot | null>(null);
+  const [auditHasMore, setAuditHasMore] = useState(false);
+  const [loadingMoreLogs, setLoadingMoreLogs] = useState(false);
   const [loadingLogs, setLoadingLogs] = useState(true);
   const [feedback, setFeedback] = useState<ProfessionalToastState | null>(null);
   const [managerAccessBusy, setManagerAccessBusy] = useState(false);
@@ -119,18 +122,25 @@ export function SuperAdminViews({
 
   useEffect(() => {
     if (activeSubTab === 'audit') {
+      setAuditCursor(null);
+      setAuditLogs([]);
+      setLoadingLogs(true);
       const q = query(
         collection(db, 'audit_logs'),
         orderBy('timestamp', 'desc'),
-        limit(200)
+        limit(50)
       );
       
+      let firstSnapshot = true;
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const logs: any[] = [];
         snapshot.forEach((doc) => {
           logs.push({ id: doc.id, ...doc.data() });
         });
-        setAuditLogs(logs);
+        setAuditLogs(previous => Array.from(new Map([...previous, ...logs].map(log => [log.id, log])).values()).sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp))));
+        setAuditCursor(previous => previous || snapshot.docs.at(-1) || null);
+        if (firstSnapshot) setAuditHasMore(snapshot.size === 50);
+        firstSnapshot = false;
         setLoadingLogs(false);
       }, (error) => {
         console.error("Failed to load audit logs:", error);
@@ -139,6 +149,20 @@ export function SuperAdminViews({
       return unsubscribe;
     }
   }, [activeSubTab]);
+
+  const loadMoreAuditLogs = async () => {
+    if (!auditCursor || loadingMoreLogs) return;
+    setLoadingMoreLogs(true);
+    try {
+      const snapshot = await getDocs(query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'), startAfter(auditCursor), limit(50)));
+      const older = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+      setAuditLogs(previous => Array.from(new Map([...previous, ...older].map(log => [log.id, log])).values()).sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp))));
+      setAuditCursor(snapshot.docs.at(-1) || auditCursor);
+      setAuditHasMore(snapshot.size === 50);
+    } catch {
+      triggerToast('Impossible de charger les opérations précédentes.', 'error', 'Chargement interrompu');
+    } finally { setLoadingMoreLogs(false); }
+  };
 
   // Modal States
   const [showCenterModal, setShowCenterModal] = useState(false);
@@ -217,6 +241,7 @@ export function SuperAdminViews({
   const [mgrEmail, setMgrEmail] = useState('');
   const [mgrCenterId, setMgrCenterId] = useState('');
   const [mgrActive, setMgrActive] = useState(true);
+  const [mgrFinanceRead, setMgrFinanceRead] = useState(true);
 
   // Form States - Service
   const [srvName, setSrvName] = useState('');
@@ -430,12 +455,14 @@ export function SuperAdminViews({
       setMgrEmail(mgr.email);
       setMgrCenterId(mgr.centerId);
       setMgrActive(mgr.active);
+      setMgrFinanceRead(mgr.financeRead !== false);
     } else {
       setEditingManager(null);
       setMgrName('');
       setMgrEmail('');
       setMgrCenterId(centers[0]?.id || '');
       setMgrActive(true);
+      setMgrFinanceRead(true);
     }
     setManagerAccessError('');
     setShowManagerModal(true);
@@ -454,6 +481,7 @@ export function SuperAdminViews({
         name: mgrName.trim(),
         email: mgrEmail.trim(),
         centerId: mgrCenterId,
+        financeRead: mgrFinanceRead,
         active: mgrActive,
       });
       setShowManagerModal(false);
@@ -759,6 +787,9 @@ export function SuperAdminViews({
       {activeSubTab === 'audit' && (
         <AuditLogPanel
           centers={centers}
+          onLoadMore={loadMoreAuditLogs}
+          hasMore={auditHasMore}
+          loadingMore={loadingMoreLogs}
           logs={auditLogs}
           loading={loadingLogs}
         />
@@ -1376,6 +1407,11 @@ export function SuperAdminViews({
                   className="h-4 w-4 accent-green-600"
                 />
               </div>
+
+              <label className="flex items-start gap-3 rounded-xl border p-3">
+                <input type="checkbox" checked={mgrFinanceRead} onChange={e => setMgrFinanceRead(e.target.checked)} className="mt-1 h-4 w-4" />
+                <span><strong className="block">Consulter les finances</strong><span className="text-xs text-slate-500">Chiffres d’affaires et historique des paiements. À Sidi Yahia, cet accès reste réservé au compte du gérant.</span></span>
+              </label>
 
               {managerAccessError && (
                 <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-[11px] font-semibold text-rose-700">

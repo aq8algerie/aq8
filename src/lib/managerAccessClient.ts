@@ -4,6 +4,7 @@ import type { CenterManager } from '../types';
 type ManagerAccessAction =
   | {
       action: 'upsert';
+      financeRead?: boolean;
       managerId?: string;
       name: string;
       email: string;

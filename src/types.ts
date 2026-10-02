@@ -33,6 +33,7 @@ export interface Center {
 }
 
 export interface CenterManager {
+  financeRead?: boolean;
   id: string;
   name: string;
   email: string;

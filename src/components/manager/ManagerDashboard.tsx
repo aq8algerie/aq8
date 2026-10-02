@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Users,
   DollarSign,
@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Client, Appointment, Payment, Measurement, Service, Package, ClientPackage, Center, BookingRequest } from '../../types';
+import { auth } from '../../lib/firebase';
 import { ManagerActionCenter } from './ManagerActionCenter';
 import { ManagerAvailableSlots } from './ManagerAvailableSlots';
 import type { ManagerAvailableSlot } from '../../lib/managerDashboardMetrics';
@@ -90,6 +91,30 @@ export function ManagerDashboard({
 }: ManagerDashboardProps) {
   // 1. Gender filtering state & Affluence Tab state
   const [genderFilter, setGenderFilter] = useState<'All' | 'F' | 'H'>('All');
+  const [financeSummary, setFinanceSummary] = useState<{ month: number; year: number; previousMonth: number; trend: Array<{ label: string; value: number }> } | null>(null);
+  const [financeError, setFinanceError] = useState(false);
+  useEffect(() => {
+    if (!canReadFinances) { setFinanceSummary(null); return; }
+    let cancelled = false;
+    setFinanceSummary(null);
+    setFinanceError(false);
+    const refresh = async () => {
+      try {
+        const token = await auth.currentUser?.getIdToken();
+        if (!token) throw new Error('Session absente');
+        const response = await fetch('/api/crm-financial-summary', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ centerId, gender: genderFilter }),
+        });
+        const body = await response.json();
+        if (!response.ok || !body.ok) throw new Error('Statistiques indisponibles');
+        if (!cancelled) { setFinanceSummary(body); setFinanceError(false); }
+      } catch { if (!cancelled) { setFinanceSummary(null); setFinanceError(true); } }
+    };
+    void refresh();
+    const timer = setInterval(() => void refresh(), 60000);
+    return () => { cancelled = true; clearInterval(timer); };
+  }, [centerId, genderFilter, canReadFinances]);
   const [affluenceTab, setAffluenceTab] = useState<'weekday' | 'hourly' | 'monthly' | 'revenue'>('weekday');
   const [hoveredManagerRevenuePoint, setHoveredManagerRevenuePoint] = useState<number | null>(null);
 
@@ -137,19 +162,10 @@ export function ManagerDashboard({
       && date.getMonth() === target.getMonth();
   };
   const newClientsThisMonth = filteredClients.filter(client => isInMonth(client.createdAt)).length;
-  const revenueThisMonth = filteredPayments
-    .filter(payment => isInMonth(payment.date))
-    .reduce((sum, payment) => sum + payment.amount, 0);
-  const revenueThisYear = filteredPayments
-    .filter(payment => {
-      const date = new Date(payment.date);
-      return !Number.isNaN(date.getTime()) && date.getFullYear() === now.getFullYear();
-    })
-    .reduce((sum, payment) => sum + payment.amount, 0);
+  const revenueThisMonth = financeSummary?.month ?? 0;
+  const revenueThisYear = financeSummary?.year ?? 0;
+  const revenuePreviousMonth = financeSummary?.previousMonth ?? 0;
   const currentMonthLabel = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-  const revenuePreviousMonth = filteredPayments
-    .filter(payment => isInMonth(payment.date, -1))
-    .reduce((sum, payment) => sum + payment.amount, 0);
   const revenueDelta = revenuePreviousMonth === 0
     ? null
     : Math.round(((revenueThisMonth - revenuePreviousMonth) / Math.abs(revenuePreviousMonth)) * 100);
@@ -284,29 +300,7 @@ export function ManagerDashboard({
   });
   const maxMonthlyVal = Math.max(...monthlyCounts, 1);
   // Local revenue trend for this center
-  const getLocalRevenueTrendData = () => {
-    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
-    const centerPayments = payments.filter(payment => payment.centerId === centerId);
-    const validDates = centerPayments
-      .map(payment => new Date(payment.date))
-      .filter(date => !Number.isNaN(date.getTime()))
-      .sort((a, b) => a.getTime() - b.getTime());
-    const latestDate = validDates.at(-1) || new Date();
-    const startMonth = new Date(latestDate.getFullYear(), latestDate.getMonth() - 5, 1);
-
-    return Array.from({ length: 6 }, (_, index) => {
-      const currentMonth = new Date(startMonth.getFullYear(), startMonth.getMonth() + index, 1);
-      const monthlyPayments = centerPayments.filter(payment => {
-        const paymentDate = new Date(payment.date);
-        return paymentDate.getFullYear() === currentMonth.getFullYear() && paymentDate.getMonth() === currentMonth.getMonth();
-      });
-      const total = monthlyPayments.reduce((sum, payment) => sum + payment.amount, 0);
-      return {
-        label: `${months[currentMonth.getMonth()]} ${String(currentMonth.getFullYear()).slice(-2)}`,
-        value: total
-      };
-    });
-  };
+  const getLocalRevenueTrendData = () => financeSummary?.trend || [];
 
   return (
     <div id="manager-dashboard" className="space-y-6">
@@ -361,7 +355,7 @@ export function ManagerDashboard({
         {canReadFinances && <StatCard
           id="stat-revenue-month"
           title="Chiffre d'affaires mensuel"
-          value={formatDZD(revenueThisMonth)}
+          value={financeSummary ? formatDZD(revenueThisMonth) : financeError ? "Indisponible" : "…"}
           icon={DollarSign}
           iconBgClass="bg-emerald-50"
           iconColorClass="text-emerald-600"
@@ -376,7 +370,7 @@ export function ManagerDashboard({
         {canReadFinances && <StatCard
           id="stat-revenue-year"
           title="Chiffre d'affaires annuel"
-          value={formatDZD(revenueThisYear)}
+          value={financeSummary ? formatDZD(revenueThisYear) : financeError ? "Indisponible" : "…"}
           icon={DollarSign}
           iconBgClass="bg-emerald-50"
           iconColorClass="text-emerald-600"
@@ -916,6 +910,7 @@ export function ManagerDashboard({
           {canReadFinances && affluenceTab === 'revenue' && (
             <div className="space-y-4">
               {(() => {
+                if (!financeSummary) return <p className="text-sm text-slate-500">{financeError ? "Statistiques indisponibles. Réessayez plus tard." : "Chargement des statistiques…"}</p>;
                 const trendData = getLocalRevenueTrendData();
                 const maxVal = Math.max(...trendData.map(d => d.value), 20000);
                 const width = 500;

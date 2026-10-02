@@ -70,6 +70,8 @@ async function run() {
   const { getAdminDb } = await import('./serverFirebaseAdmin');
   const { POST: mutateClients } = await import('../../app/api/crm-clients/route');
   const { POST: mutateOperations } = await import('../../app/api/crm-operations/route');
+  const { POST: readFinanceSummary } = await import('../../app/api/crm-financial-summary/route');
+  const { POST: mutateManagers } = await import('../../app/api/crm-managers/route');
   const { POST: readPortal } = await import('../../app/api/client-portal/route');
   const { POST: registerPortal } = await import('../../app/api/client-portal/register/route');
   const { getAdminAuthInstance } = await import('./serverFirebaseAdmin');
@@ -210,6 +212,32 @@ async function run() {
       });
     }
     await batch.commit();
+    await testCase('financial aggregates include reversals and enforce center permissions', async () => {
+      const date = new Date().toISOString().slice(0, 10);
+      const before = await (await readFinanceSummary(authenticatedRequest(managerA.token, { centerId: 'center-a' }))).json();
+      await db.collection('payments').doc('summary-payment').set({ centerId: 'center-a', clientId: 'privacy-client', date, amount: 12000 });
+      await db.collection('payments').doc('summary-reversal').set({ centerId: 'center-a', clientId: 'privacy-client', date, amount: -2000 });
+      const response = await readFinanceSummary(authenticatedRequest(managerA.token, { centerId: 'center-a' }));
+      assert.equal(response.status, 200);
+      const result = await response.json();
+      assert.equal(result.month, before.month + 10000);
+      assert.equal(result.year, before.year + 10000);
+      assert.equal(result.trend.at(-1).value, result.month);
+      await db.collection('clients').doc('privacy-client').update({ gender: 'F' });
+      const women = await (await readFinanceSummary(authenticatedRequest(managerA.token, { centerId: 'center-a', gender: 'F' }))).json();
+      assert.equal(women.month, 10000);
+      assert.equal((await readFinanceSummary(authenticatedRequest(managerA.token, { centerId: 'center-5' }))).status, 403);
+      assert.equal((await readFinanceSummary(authenticatedRequest(sidiStaff.token, { centerId: 'center-5' }))).status, 403);
+      await db.collection('users').doc(managerA.uid).update({ financeRead: false });
+      assert.equal((await readFinanceSummary(authenticatedRequest(managerA.token, { centerId: 'center-a' }))).status, 403);
+      await db.collection('users').doc(managerA.uid).update({ financeRead: true });
+    });
+    await testCase('manager provisioning cannot overwrite a super admin or invent a center', async () => {
+      const payload = { action: 'upsert', name: 'Test', email: 'super-admin@security.test', centerId: 'center-a', active: true };
+      assert.equal((await mutateManagers(authenticatedRequest(superAdmin.token, payload))).status, 409);
+      assert.equal((await db.collection('users').doc(superAdmin.uid).get()).data()?.role, 'super_admin');
+      assert.equal((await mutateManagers(authenticatedRequest(superAdmin.token, { ...payload, email: 'new-manager@security.test', centerId: 'missing-center' }))).status, 404);
+    });
 
     await db.collection('clients').doc('portal-member').set({
       email: 'portal-member@security.test', centerId: 'center-a', status: 'active',

@@ -307,6 +307,18 @@ async function run() {
       await assertFails(getDoc(doc(managerBDb, 'payments', 'payment-a')));
     });
 
+    await testCase('finance permission revocation leaves ordinary CRM access intact', async () => {
+      await testEnv.withSecurityRulesDisabled(async context => {
+        await updateDoc(doc(context.firestore(), 'users', 'manager-a'), { financeRead: false });
+      });
+      await assertFails(getDoc(doc(managerADb, 'payments', 'payment-a')));
+      await assertSucceeds(getDoc(doc(managerADb, 'clients', 'client-a')));
+      await assertFails(updateDoc(doc(managerADb, 'users', 'manager-a'), { financeRead: true }));
+      await testEnv.withSecurityRulesDisabled(async context => {
+        await updateDoc(doc(context.firestore(), 'users', 'manager-a'), { financeRead: true });
+      });
+    });
+
     await testCase('a suspended center loses Firestore CRM access immediately', async () => {
       await assertFails(
         getDoc(doc(suspendedManagerDb, 'clients', 'client-suspended-center')),

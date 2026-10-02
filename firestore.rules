@@ -43,6 +43,7 @@ service cloud.firestore {
 
     function canReadFinances(centerId) {
       return isSuperAdmin() || (isCenterManager(centerId)
+        && (!('financeRead' in userProfile()) || userProfile().financeRead == true)
         && (centerId != 'center-5'
           || ('email' in userProfile() && userProfile().email == 'contact@sculptfitcenter.com')));
     }

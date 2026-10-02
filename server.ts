@@ -53,6 +53,7 @@ async function startServer() {
   app.use('/api/blog-posts', protectedMutationLimiter);
   app.use('/api/crm-managers', protectedMutationLimiter);
   app.use('/api/crm-operations', protectedMutationLimiter);
+  app.use('/api/crm-financial-summary', createLimiter(240, 'Trop de consultations. Réessayez plus tard.'));
   app.use('/api/crm-clients', protectedMutationLimiter);
   app.use('/api/crm-center-settings', protectedMutationLimiter);
   app.use('/api/email-notifications/retry', protectedMutationLimiter);

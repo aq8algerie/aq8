@@ -80,7 +80,7 @@ export async function verifyServerCrmAccess(
     role,
     centerId,
     active: true,
-    canReadFinances: canReadCenterFinances({ role, centerId, email: typeof data.email === 'string' ? data.email : null, active: true }),
+    canReadFinances: canReadCenterFinances({ role, centerId, financeRead: data.financeRead, email: typeof data.email === 'string' ? data.email : null, active: true }),
     token,
   };
 }

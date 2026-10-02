@@ -978,6 +978,7 @@ test('Sidi Yahia financial access belongs to the owner and active super admins o
   assert.equal(canReadCenterFinances({ ...profile, email: 'contact@sculptfitcenter.com' }), true);
   assert.equal(canReadCenterFinances({ ...profile, role: 'super_admin' }), true);
   assert.equal(canReadCenterFinances({ ...profile, centerId: 'center-2' }), true);
+  assert.equal(canReadCenterFinances({ ...profile, centerId: 'center-2', financeRead: false }), false);
   assert.equal(canReadCenterFinances({ ...profile, email: 'contact@sculptfitcenter.com', active: false }), false);
   assert.equal(canReadCenterFinances({ ...profile, role: 'client', email: 'contact@sculptfitcenter.com' }), false);
 });
