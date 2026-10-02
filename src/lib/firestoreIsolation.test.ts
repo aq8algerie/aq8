@@ -8,6 +8,7 @@ import {
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
 import {
+  type Firestore,
   collection,
   doc,
   getDoc,
@@ -229,13 +230,13 @@ async function run() {
       await setDoc(doc(superAdminDb, 'packages', original.id), original);
       await updateDoc(doc(superAdminDb, 'packages', original.id), { price: 200 });
       const extra = { id: 'concurrency-extra', name: 'Extra', price: 50 };
-      await assert.rejects(syncCollection(superAdminDb, 'packages', [{ ...original, price: 150 }, extra], [original]), /modifiées/);
+      await assert.rejects(syncCollection(superAdminDb as unknown as Firestore, 'packages', [{ ...original, price: 150 }, extra], [original]), /modifiées/);
       assert.equal((await getDoc(doc(superAdminDb, 'packages', original.id))).data()?.price, 200);
       assert.equal((await getDoc(doc(superAdminDb, 'packages', extra.id))).exists(), false);
       const latest = { price: 200, name: 'Original', id: original.id };
-      await syncCollection(superAdminDb, 'packages', [{ ...latest, price: 250 }], [latest]);
+      await syncCollection(superAdminDb as unknown as Firestore, 'packages', [{ ...latest, price: 250 }], [latest]);
       assert.equal((await getDoc(doc(superAdminDb, 'packages', original.id))).data()?.price, 250);
-      await syncCollection(superAdminDb, 'packages', [], [{ ...latest, price: 250 }]);
+      await syncCollection(superAdminDb as unknown as Firestore, 'packages', [], [{ ...latest, price: 250 }]);
       assert.equal((await getDoc(doc(superAdminDb, 'packages', original.id))).exists(), false);
     });
     const sidiOwnerDb = testEnv.authenticatedContext('sidi-owner').firestore();
