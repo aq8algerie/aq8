@@ -411,7 +411,8 @@ async function createPublicReservation(input: PublicBookingRequestInput) {
 export async function POST(request: Request) {
   try {
     const body = (await request.json().catch(() => ({}))) as PublicBookingRequestInput;
-    const validation = validatePublicBookingRequest(body);
+    // Validate the input first; opening hours must come from the trusted centre record.
+    const validation = validatePublicBookingRequest(body, [], new Date(), undefined, { checkOpeningHours: false });
 
     if (validation.valid === false) {
       return NextResponse.json({ ok: false, error: validation.error }, { status: 400 });

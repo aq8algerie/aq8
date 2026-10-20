@@ -442,9 +442,9 @@ async function run() {
       assert.equal(externalImageResponse.status, 400);
     });
 
-    await testCase('public reservations do not reveal CRM membership or package state', async () => {
+    await testCase('public reservations honor configured Friday hours without revealing CRM data', async () => {
       const bookingDate = new Date();
-      bookingDate.setDate(bookingDate.getDate() + 3);
+      bookingDate.setDate(bookingDate.getDate() + ((5 - bookingDate.getDay() + 7) % 7 || 7));
       const date = bookingDate.toISOString().slice(0, 10);
       const response = await createPublicReservation(new Request(
         'http://localhost/api/public-reservations',
@@ -470,6 +470,13 @@ async function run() {
       assert.equal('warning' in body, false);
       assert.equal(serialized.includes('forfait'), false);
       assert.equal(serialized.includes('client existant'), false);
+      await db.collection('centers').doc('center-a').update({ 'bookingHours.5': [] });
+      const closedResponse = await createPublicReservation(new Request('http://localhost/api/public-reservations', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ centerId: 'center-a', centerName: 'Centre A', firstName: 'Visiteur', lastName: 'Test', phone: '0550333444', email: 'visitor@example.com', service: 'aq8', bookingDate: date, bookingTime: '11:00' }),
+      }));
+      assert.equal(closedResponse.status, 400);
+      assert.match((await closedResponse.json()).error, /horaires/);
     });
 
     await testCase('super admin tokens retain the explicit network role', async () => {

@@ -74,7 +74,8 @@ export function validatePublicBookingRequest(
   input: PublicBookingRequestInput,
   availableServices: string[] = [],
   now: Date = new Date(),
-  center?: CenterBookingConfig
+  center?: CenterBookingConfig,
+  options: { checkOpeningHours?: boolean } = {},
 ): ValidationResult<PublicBookingRequestInput> {
   const data = {
     centerId: normalizeText(input.centerId),
@@ -116,7 +117,7 @@ export function validatePublicBookingRequest(
     return { valid: false, error: 'Veuillez choisir un creneau horaire propose.' };
   }
 
-  if (!getBookingHoursForDate(data.centerId, data.bookingDate, center).includes(data.bookingTime)) {
+  if (options.checkOpeningHours !== false && !getBookingHoursForDate(data.centerId, data.bookingDate, center).includes(data.bookingTime)) {
     return { valid: false, error: "Ce creneau est en dehors des horaires d'ouverture du centre." };
   }
 
