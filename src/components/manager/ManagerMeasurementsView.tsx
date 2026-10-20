@@ -6,6 +6,7 @@
 import React from 'react';
 import { Plus, Scale } from 'lucide-react';
 import { Client, Measurement } from '../../types';
+import { MeasurementDetails, formatMeasurement } from './cards/MeasurementDetails';
 
 interface ManagerMeasurementsViewProps {
   centerId: string;
@@ -24,7 +25,7 @@ export function ManagerMeasurementsView({
   const centerClientsIds = new Set(centerClients.map(c => c.id));
   
   // Filter measurements belonging to clients of this center
-  const centerMeasurements = measurements.filter(m => centerClientsIds.has(m.clientId));
+  const centerMeasurements = measurements.filter(m => m.centerId === centerId && centerClientsIds.has(m.clientId));
 
   return (
     <div id="manager-measurements-view" className="space-y-4">
@@ -52,7 +53,7 @@ export function ManagerMeasurementsView({
                 <th className="p-4">Date de saisie</th>
                 <th className="p-4 font-mono">Poids (kg)</th>
                 <th className="p-4 font-mono">Grasse / Muscle (%)</th>
-                <th className="p-4">Poitrine / Taille (cm)</th>
+                <th className="p-4">Poitrine / Tour de taille (cm)</th>
                 <th className="p-4">Hanches / Cuisses (cm)</th>
               </tr>
             </thead>
@@ -61,7 +62,8 @@ export function ManagerMeasurementsView({
                 [...centerMeasurements].sort((a, b) => b.date.localeCompare(a.date)).map(meas => {
                   const cl = centerClients.find(c => c.id === meas.clientId);
                   return (
-                    <tr key={meas.id} className="hover:bg-slate-50/50 transition-colors">
+                    <React.Fragment key={meas.id}>
+                    <tr className="hover:bg-slate-50/50 transition-colors">
                       <td className="p-4 font-bold text-[#353535]">
                         {cl ? `${cl.firstName} ${cl.lastName}` : 'Adhérent inconnu'}
                       </td>
@@ -71,12 +73,19 @@ export function ManagerMeasurementsView({
                         {meas.bodyFat !== undefined ? `${meas.bodyFat}%` : '-'} / {meas.muscleMass !== undefined ? `${meas.muscleMass}%` : '-'}
                       </td>
                       <td className="p-4 font-mono text-slate-500">
-                        {meas.chest !== undefined ? `${meas.chest}cm` : '-'} / {meas.waist !== undefined ? `${meas.waist}cm` : '-'}
+                        {formatMeasurement(meas.chest, 'cm')} / {formatMeasurement(meas.waist, 'cm')}
                       </td>
                       <td className="p-4 font-mono text-slate-500">
-                        {meas.hips !== undefined ? `${meas.hips}cm` : '-'} / {meas.thighs !== undefined ? `${meas.thighs}cm` : '-'}
+                        {formatMeasurement(meas.hips, 'cm')} / {formatMeasurement(meas.thighs, 'cm')}
                       </td>
                     </tr>
+                    <tr><td colSpan={6} className="px-4 pb-4">
+                      <details className="rounded-xl border border-slate-100">
+                        <summary className="cursor-pointer p-3 text-xs font-semibold text-[#0284c7]">Toutes les mensurations du {meas.date}</summary>
+                        <div className="border-t border-slate-100 p-3"><MeasurementDetails measurement={meas} /></div>
+                      </details>
+                    </td></tr>
+                    </React.Fragment>
                   );
                 })
               ) : (
@@ -116,13 +125,17 @@ export function ManagerMeasurementsView({
                   </div>
                   <div>
                     <span className="text-slate-400 block text-[10px] uppercase">Haut du corps</span>
-                    <span className="font-mono font-medium">Poitrine: {meas.chest !== undefined ? `${meas.chest}cm` : '-'} | Taille: {meas.waist !== undefined ? `${meas.waist}cm` : '-'}</span>
+                    <span className="font-mono font-medium">Poitrine : {formatMeasurement(meas.chest, 'cm')} | Tour de taille : {formatMeasurement(meas.waist, 'cm')}</span>
                   </div>
                   <div className="col-span-2 border-t border-slate-50 pt-1">
                     <span className="text-slate-400 block text-[10px] uppercase">Bas du corps</span>
-                    <span className="font-mono font-medium">Hanches: {meas.hips !== undefined ? `${meas.hips}cm` : '-'} | Cuisses: {meas.thighs !== undefined ? `${meas.thighs}cm` : '-'}</span>
+                    <span className="font-mono font-medium">Hanches : {formatMeasurement(meas.hips, 'cm')} | Cuisses : {formatMeasurement(meas.thighs, 'cm')}</span>
                   </div>
                 </div>
+                <details className="border-t border-slate-100 pt-3">
+                  <summary className="cursor-pointer text-xs font-semibold text-[#0284c7]">Toutes les mensurations</summary>
+                  <div className="pt-3"><MeasurementDetails measurement={meas} /></div>
+                </details>
               </div>
             );
           })

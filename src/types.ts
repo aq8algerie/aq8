@@ -225,6 +225,26 @@ export interface Measurement {
   waist?: number; // cm
   hips?: number; // cm
   thighs?: number; // cm
+  heightCm?: number;
+  leftArm?: number;
+  lowerAbdomen?: number;
+  navel?: number;
+  thighHigh?: number;
+  thighMid?: number;
+  targetWeight?: number;
+  historicalMeasurements?: {
+    height: string;
+    waist: string;
+    leftArm: string;
+    lowerAbdomen: string;
+    navel: string;
+    thighHigh: string;
+    thighMid: string;
+    targetWeight: string;
+    measuredAt: string;
+    sourceSha256: string;
+    sourcePage: number;
+  };
   loggedBy: string; // manager name or ID
 }
 

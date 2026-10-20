@@ -23,7 +23,7 @@ export function MeasurementChart({
     <div id="client-measurement-chart" className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
       <div className="flex justify-between items-center">
         <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1">
-          <TrendingDown className="h-4 w-4 text-[#0284c7]" /> Évolution de la Masse Grasse vs Poids
+          <TrendingDown className="h-4 w-4 text-[#0284c7]" /> Évolution du poids
         </h4>
         <button
           id="btn-fiche-log-measurements"
@@ -76,7 +76,7 @@ export function MeasurementChart({
               })()}
             </svg>
           </div>
-          <p className="text-[10px] text-slate-400 text-center italic mt-2">Évolution continue du poids corporel (kg) sur les séances validées.</p>
+          <p className="text-[10px] text-slate-400 text-center italic mt-2">Évolution du poids corporel (kg) selon les dates des relevés.</p>
         </div>
       ) : sortedMeas.length === 1 ? (
         <div className="bg-slate-900 text-white rounded-2xl p-4 space-y-2">
@@ -87,7 +87,7 @@ export function MeasurementChart({
           <div className="flex items-baseline justify-between pt-1">
             <span className="text-2xl font-black text-white">{sortedMeas[0].weight} kg</span>
             <span className="text-xs text-slate-300">
-              {sortedMeas[0].waist ? `Taille : ${sortedMeas[0].waist}cm` : ''} {sortedMeas[0].hips ? `• Hanches : ${sortedMeas[0].hips}cm` : ''}
+              {sortedMeas[0].waist ? `Tour de taille : ${sortedMeas[0].waist} cm` : ''} {sortedMeas[0].hips ? `• Hanches : ${sortedMeas[0].hips} cm` : ''}
             </span>
           </div>
           <p className="text-[10px] text-slate-400 italic pt-1 border-t border-white/10">

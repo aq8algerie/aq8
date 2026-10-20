@@ -26,6 +26,7 @@ import {
 import { Client, Appointment, Service, ClientPackage, Package, Measurement } from '../../types';
 import { ActivePackageCard } from './cards/ActivePackageCard';
 import { MeasurementChart } from './cards/MeasurementChart';
+import { MeasurementHistory } from './cards/MeasurementHistory';
 import { formatDateTime } from '../../lib/centerManagerUtils';
 
 import { calculateClientGamification } from '../../lib/gamification';
@@ -492,7 +493,7 @@ export function ClientProfileView({
                             <span className="text-lg font-black text-white">{latest.weight ? `${latest.weight} kg` : '-'}</span>
                           </div>
                           <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
-                            <span className="block text-[10px] text-slate-400 uppercase font-bold">Taille</span>
+                            <span className="block text-[10px] text-slate-400 uppercase font-bold">Tour de taille</span>
                             <span className="text-lg font-black text-white">{latest.waist ? `${latest.waist} cm` : '-'}</span>
                           </div>
                           <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
@@ -508,39 +509,7 @@ export function ClientProfileView({
                     );
                   })()}
 
-                  {/* Full Data Table */}
-                  <div className="overflow-x-auto rounded-2xl border border-slate-200">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-200 bg-slate-100 text-[10px] uppercase font-bold text-slate-600">
-                          <th className="py-3 px-3">Date</th>
-                          <th className="py-3 px-3">Poids</th>
-                          <th className="py-3 px-3">Taille</th>
-                          <th className="py-3 px-3">Hanches</th>
-                          <th className="py-3 px-3">Cuisses</th>
-                          <th className="py-3 px-3">Poitrine</th>
-                          <th className="py-3 px-3">Masse Gras %</th>
-                          <th className="py-3 px-3">Masse Muscle %</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
-                        {[...clientMeas]
-                          .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
-                          .map((m, idx) => (
-                            <tr key={m.id || idx} className="hover:bg-slate-50 transition">
-                              <td className="py-3 px-3 font-bold text-slate-900 whitespace-nowrap">{m.date}</td>
-                              <td className="py-3 px-3 font-black text-[#0284c7]">{m.weight} kg</td>
-                              <td className="py-3 px-3">{m.waist ? `${m.waist} cm` : '-'}</td>
-                              <td className="py-3 px-3">{m.hips ? `${m.hips} cm` : '-'}</td>
-                              <td className="py-3 px-3">{m.thighs ? `${m.thighs} cm` : '-'}</td>
-                              <td className="py-3 px-3">{m.chest ? `${m.chest} cm` : '-'}</td>
-                              <td className="py-3 px-3 text-emerald-600 font-bold">{m.bodyFat ? `${m.bodyFat}%` : '-'}</td>
-                              <td className="py-3 px-3 text-rose-600 font-bold">{m.muscleMass ? `${m.muscleMass}%` : '-'}</td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <MeasurementHistory measurements={clientMeas} />
                 </div>
               ) : (
                 <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center space-y-3">
