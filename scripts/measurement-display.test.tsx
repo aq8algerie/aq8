@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MeasurementDetails } from '../src/components/manager/cards/MeasurementDetails';
 import { MeasurementHistory } from '../src/components/manager/cards/MeasurementHistory';
 import { ManagerMeasurementsView } from '../src/components/manager/ManagerMeasurementsView';
+import { HistoricalMemberships } from '../src/components/manager/cards/HistoricalMemberships';
 import type { Client, Measurement } from '../src/types';
 
 const measurement: Measurement = {
@@ -21,3 +22,15 @@ assert.equal((history.match(/<details /g)||[]).length,2,'Same-day source records
 const manager=renderToStaticMarkup(<ManagerMeasurementsView centerId="center-a" clients={[{id:'client-a',centerId:'center-a',firstName:'Client',lastName:'Test'} as Client]} measurements={[measurement,{...measurement,id:'foreign',centerId:'center-b',weight:999}]} onLogMeasurementClick={()=>{}} />);
 assert(!manager.includes('999'),'A measurement from another center must not be rendered.');
 console.log('Measurement display: complete fields, distinct height/waist, flagged anomalies, separate records and center isolation OK.');
+const member: NonNullable<Client['legacyMemberships']>[string] = {
+  id:'5256',clientId:'client-a',centerId:'center-a',centerName:'BirKhadem',status:'inactive',sourceStatus:'Inactif',
+  validFrom:'2023-12-30T16:49:27',validTo:'2026-01-29T16:49:27',createdAt:'2023-12-30T16:50:16Z',modifiedAt:'2026-01-30T01:02:11Z',
+  amount:null,source:{file:'07_AQ8_Adhesions_Premium.pdf',sha256:'source',page:3},
+};
+const client: Client={id:'client-a',centerId:'center-a',firstName:'Client',lastName:'Test',email:'test@example.com',phone:'',createdAt:'2023-01-01',legacyMemberships:{membership_5256:member}};
+const archive=renderToStaticMarkup(<HistoricalMemberships client={client} />);
+assert(archive.includes('Inactive'));assert(archive.includes('30/12/2023'));assert(archive.includes('29/01/2026'));
+assert(!archive.includes('<button'),'Historical memberships must not offer activation or payment actions.');
+assert.equal(renderToStaticMarkup(<HistoricalMemberships client={{...client,centerId:'center-b'}} />),'');
+assert.equal(renderToStaticMarkup(<HistoricalMemberships client={{...client,id:'client-b'}} />),'');
+console.log('Historical memberships: inactive archive, dates, no activation actions and client/center isolation OK.');

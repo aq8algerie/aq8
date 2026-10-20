@@ -67,6 +67,20 @@ export interface ClientFollowUp {
 }
 
 export interface Client {
+  legacyMemberships?: Record<string, {
+    id: string;
+    clientId: string;
+    centerId: string;
+    centerName: string;
+    status: 'inactive';
+    sourceStatus: string;
+    validFrom: string;
+    validTo: string;
+    createdAt: string;
+    modifiedAt: string;
+    amount: null;
+    source: { file: string; sha256: string; page: number };
+  }>;
   followUps?: ClientFollowUp[];
   id: string;
   firstName: string;

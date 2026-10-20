@@ -27,6 +27,7 @@ import { Client, Appointment, Service, ClientPackage, Package, Measurement } fro
 import { ActivePackageCard } from './cards/ActivePackageCard';
 import { MeasurementChart } from './cards/MeasurementChart';
 import { MeasurementHistory } from './cards/MeasurementHistory';
+import { HistoricalMemberships } from './cards/HistoricalMemberships';
 import { formatDateTime } from '../../lib/centerManagerUtils';
 
 import { calculateClientGamification } from '../../lib/gamification';
@@ -423,6 +424,7 @@ export function ClientProfileView({
               onAssignClick={onAssignPackage}
               onCancelPackageClick={onCancelPackageClick}
             />
+            <HistoricalMemberships client={client} />
             <MeasurementChart
               measurements={clientMeas}
               onLogMeasurementClick={onLogMeasurement}
@@ -552,6 +554,7 @@ export function ClientProfileView({
               onAssignClick={onAssignPackage}
               onCancelPackageClick={onCancelPackageClick}
             />
+            <HistoricalMemberships client={client} />
           </div>
           <div className="space-y-6">
             <MeasurementChart
