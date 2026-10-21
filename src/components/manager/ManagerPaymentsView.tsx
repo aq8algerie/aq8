@@ -31,6 +31,9 @@ import { ClientBalancesPanel } from './ClientBalancesPanel';
 import { HistoricalMemberships } from './cards/HistoricalMemberships';
 import { buildClientBalances, netReceipts, packageStatusLabel } from '../../lib/paymentBalances';
 import { isHistoricalRecord } from '../../lib/legacyHistory';
+import { matchesCrmSearch } from '../../lib/crmSearch';
+import { matchesPaymentState, paymentMethodLabels, type PaymentStateFilter } from '../../lib/paymentRegister';
+import { PaymentRegisterTable } from './PaymentRegisterTable';
 
 interface ManagerPaymentsViewProps {
   centerId: string;
@@ -56,7 +59,7 @@ const safeText = (value: unknown) => String(value ?? '').trim();
 
 const getClientDisplayName = (client?: Client) => {
   const fullName = `${safeText(client?.firstName)} ${safeText(client?.lastName)}`.trim();
-  return fullName || safeText(client?.email) || safeText(client?.phone) || 'Adhérent inconnu';
+  return fullName || safeText(client?.email) || safeText(client?.phone) || 'Dossier client non affiché';
 };
 
 const parsePaymentDate = (date: string) => {
@@ -112,6 +115,8 @@ export function ManagerPaymentsView({
   const [methodFilter, setMethodFilter] = useState<PaymentMethodFilter>('all');
   const [packageFilter, setPackageFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState<PaymentDateFilter>('all');
+  const [stateFilter, setStateFilter] = useState<PaymentStateFilter>('all');
+  const [traceNotice, setTraceNotice] = useState('');
   const [selectedReceiptPayment, setSelectedReceiptPayment] = useState<Payment | null>(null);
   const [selectedClientLedger, setSelectedClientLedger] = useState<Client | null>(null);
   const [showLedgerHistory, setShowLedgerHistory] = useState(false);
@@ -146,21 +151,24 @@ export function ManagerPaymentsView({
           client?.phone,
           pack?.name,
           pay.receiptNumber,
+          pay.clientId,
+          pay.reversalOfPaymentId,
+          pay.reversedByPaymentId,
           pay.id,
           pay.amount,
           pay.date,
           pay.method
-        ].map(safeText).join(' ').toLowerCase();
+        ];
 
-        const matchesSearch = !searchQuery.trim() || haystack.includes(searchQuery.trim().toLowerCase());
+        const matchesSearch = matchesCrmSearch(searchQuery, haystack, client?.phone || '');
         const matchesMethod = methodFilter === 'all' || pay.method === methodFilter;
         const matchesPackage = packageFilter === 'all' || pay.packageId === packageFilter;
         const matchesDate = isPaymentInDateFilter(pay.date, dateFilter);
 
-        return matchesSearch && matchesMethod && matchesPackage && matchesDate;
+        return matchesSearch && matchesMethod && matchesPackage && matchesDate && matchesPaymentState(pay, client, stateFilter);
       })
       .sort((a, b) => safeText(b.date).localeCompare(safeText(a.date)));
-  }, [centerPayments, centerClients, packages, searchQuery, methodFilter, packageFilter, dateFilter]);
+  }, [centerPayments, centerClients, packages, searchQuery, methodFilter, packageFilter, dateFilter, stateFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredPayments.length / listPageSize));
   const normalizedListPage = Math.min(listPage, totalPages);
@@ -168,11 +176,11 @@ export function ManagerPaymentsView({
   const paginatedPayments = filteredPayments.slice(startIndex, startIndex + listPageSize);
   const visibleStart = filteredPayments.length === 0 ? 0 : startIndex + 1;
   const visibleEnd = Math.min(startIndex + listPageSize, filteredPayments.length);
-  const hasActiveFilters = Boolean(searchQuery.trim()) || methodFilter !== 'all' || packageFilter !== 'all' || dateFilter !== 'all';
+  const hasActiveFilters = Boolean(searchQuery.trim()) || methodFilter !== 'all' || packageFilter !== 'all' || dateFilter !== 'all' || stateFilter !== 'all';
 
   useEffect(() => {
     setListPage(1);
-  }, [searchQuery, methodFilter, packageFilter, dateFilter, listPageSize]);
+  }, [searchQuery, methodFilter, packageFilter, dateFilter, stateFilter, listPageSize]);
 
   useEffect(() => {
     if (listPage > totalPages) {
@@ -185,6 +193,7 @@ export function ManagerPaymentsView({
     setMethodFilter('all');
     setPackageFilter('all');
     setDateFilter('all');
+    setStateFilter('all');
   };
 
   const handlePrintReceipt = () => {
@@ -210,7 +219,7 @@ export function ManagerPaymentsView({
         {nonUsableRemaining > 0 && <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">{nonUsableRemaining} crédit(s) figurent sur des forfaits non utilisables : expirés, clos ou rattachés à un client suspendu. Ils restent visibles dans le détail et ne sont pas comptés comme disponibles.</p>}
       </section>
       <nav aria-label="Paiements et crédits" className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-1.5 sm:grid-cols-3">
-        {([{ id: 'register', label: `Encaissements CRM (${centerPayments.length})` }, { id: 'balances', label: 'Crédits de séances' }, { id: 'history', label: 'Historique ancienne base' }] as Array<{ id: MainTab; label: string }>).map(tab => <button key={tab.id} type="button" aria-pressed={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} className={`rounded-xl px-4 py-3 text-sm font-bold transition ${activeTab === tab.id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>{tab.label}</button>)}
+        {([{ id: 'register', label: `Registre CRM (${centerPayments.length} écritures)` }, { id: 'balances', label: 'Crédits de séances' }, { id: 'history', label: 'Historique ancienne base' }] as Array<{ id: MainTab; label: string }>).map(tab => <button key={tab.id} type="button" aria-pressed={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} className={`rounded-xl px-4 py-3 text-sm font-bold transition ${activeTab === tab.id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>{tab.label}</button>)}
       </nav>
 
       {/* TAB 1: REGISTRE DES ENCAISSEMENTS */}
@@ -221,11 +230,21 @@ export function ManagerPaymentsView({
           <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-4 space-y-4">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <div>
-                <h3 className="font-bold font-display text-slate-800 text-base">Encaissements du CRM courant</h3>
+                <h3 className="font-bold font-display text-slate-800 text-base">Registre des paiements du CRM</h3>
                 <p className="text-xs text-slate-500">Recherchez un règlement, consultez son reçu et retrouvez les annulations.</p>
               </div>
             </div>
 
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="text-xs font-semibold text-slate-600">État de l’écriture
+                <select value={stateFilter} onChange={e => setStateFilter(e.target.value as PaymentStateFilter)} className="ml-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm">
+                  <option value="all">Toutes les écritures</option><option value="posted">Règlements enregistrés</option><option value="reversed">Règlements annulés</option><option value="reversal">Contre-écritures d’annulation</option><option value="adjustment">Régularisations</option><option value="unresolved">Dossiers clients à retrouver</option>
+                </select>
+              </label>
+              {centerPayments.some(p => !centerClients.some(c => c.id === p.clientId)) && <button type="button" onClick={() => { resetFilters(); setStateFilter('unresolved'); }} className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">{centerPayments.filter(p => !centerClients.some(c => c.id === p.clientId)).length} écriture(s) avec dossier client non affiché</button>}
+            </div>
+            <p className="text-xs text-slate-500">Les règlements annulés et leurs contre-écritures sont conservés séparément. Un dossier non affiché reste à vérifier ; aucun rattachement n’est déduit automatiquement.</p>
+            {traceNotice && <p role="status" className="break-words rounded-xl bg-amber-50 p-3 text-sm text-amber-900">{traceNotice} <button type="button" onClick={() => setTraceNotice('')} className="underline">Fermer</button></p>}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5">
               <label className="md:col-span-4 relative block">
                 <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -296,7 +315,7 @@ export function ManagerPaymentsView({
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-[11px] text-slate-500 font-semibold">
-              <span>{visibleStart}-{visibleEnd} sur {filteredPayments.length} paiement{filteredPayments.length > 1 ? 's' : ''}</span>
+              <span>{visibleStart}-{visibleEnd} sur {filteredPayments.length} écriture(s) · Somme des montants affichés : {netReceipts(filteredPayments).toLocaleString('fr-DZ')} DA</span>
               {hasActiveFilters && (
                 <button
                   type="button"
@@ -309,77 +328,7 @@ export function ManagerPaymentsView({
             </div>
           </div>
 
-          {/* Desktop Table View */}
-          <div className="hidden sm:block bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-xs">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 text-slate-400 font-semibold border-b border-slate-100 uppercase text-[10px]">
-                  <tr>
-                    <th className="p-4">Adhérent</th>
-                    <th className="p-4">Forfait</th>
-                    <th className="p-4 font-mono">Reçu #</th>
-                    <th className="p-4 text-right">Montant</th>
-                    <th className="p-4">Mode</th>
-                    <th className="p-4">Date</th>
-                    <th className="p-4 text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {paginatedPayments.length > 0 ? paginatedPayments.map(pay => {
-                    const cl = centerClients.find(c => c.id === pay.clientId);
-                    const pack = packages.find(p => p.id === pay.packageId);
-                    const amount = Number(pay.amount || 0);
-
-                    return (
-                      <tr key={pay.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-4 font-bold text-[#353535]">
-                          {getClientDisplayName(cl)}
-                        </td>
-                        <td className="p-4 text-slate-600">{safeText(pack?.name) || 'Forfait'}</td>
-                        <td className="p-4 font-mono font-semibold text-slate-400">{safeText(pay.receiptNumber) || '-'}</td>
-                        <td className="p-4 text-right font-mono font-bold text-slate-800">
-                          {amount.toLocaleString('fr-DZ')} DZD
-                        </td>
-                        <td className="p-4">
-                          <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-semibold text-[10px] uppercase">
-                            {safeText(pay.method) || '-'}
-                          </span>
-                        </td>
-                        <td className="p-4 text-slate-500 font-mono">{safeText(pay.date) || '-'}</td>
-                        <td className="p-4 text-center">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedReceiptPayment(pay)}
-                              className="p-1.5 hover:bg-slate-100 text-slate-600 rounded-lg border border-slate-100 transition cursor-pointer"
-                              title="Voir / Imprimer le reçu"
-                            >
-                              <Printer className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => onReversePayment(pay.id)}
-                              disabled={pay.kind === 'reversal' || pay.status === 'reversed' || amount <= 0}
-                              className="p-1.5 hover:bg-amber-50 text-amber-700 rounded-lg border border-amber-100 transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-35"
-                              title={pay.status === 'reversed' ? 'Encaissement déjà annulé' : 'Annuler comptablement l’encaissement'}
-                            >
-                              <Undo2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  }) : (
-                    <tr>
-                      <td colSpan={7} className="p-8 text-center text-slate-400 italic">
-                        Aucun paiement trouvé pour ces critères.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <PaymentRegisterTable payments={paginatedPayments} clients={centerClients} packages={packages} onReceipt={setSelectedReceiptPayment} onReverse={onReversePayment} onRelated={id => { const related = centerPayments.find(p => p.id === id); if (related) { setTraceNotice(''); setSelectedReceiptPayment(related); } else setTraceNotice(`Écriture liée non présente dans le registre chargé : ${id}. La référence est conservée pour contrôle.`); }} />
 
           {/* Pagination Controls */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-150 text-xs font-bold text-slate-600">
@@ -597,8 +546,8 @@ export function ManagerPaymentsView({
                 {(selectedReceiptPayment.status === 'reversed' || selectedReceiptPayment.kind === 'reversal') && <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-rose-800"><p className="text-sm font-bold">{selectedReceiptPayment.kind === 'reversal' ? 'Contre-écriture d’annulation' : 'Reçu annulé'}</p><p className="mt-1 text-xs">Montant d’origine conservé pour la traçabilité. Ce document ne représente pas un nouvel encaissement.</p>{selectedReceiptPayment.reversedByPaymentId && <p className="mt-1 break-all text-xs">Annulation : {selectedReceiptPayment.reversedByPaymentId}</p>}{selectedReceiptPayment.reversalOfPaymentId && <p className="mt-1 break-all text-xs">Règlement d’origine : {selectedReceiptPayment.reversalOfPaymentId}</p>}</div>}
                 <div className="space-y-2">
                   <div className="flex justify-between font-bold text-slate-800 text-[11px] pb-1.5 gap-3">
-                    <span>REÇU DE PAIEMENT N°</span>
-                    <span className="font-mono text-[#0284c7] text-right">{safeText(selectedReceiptPayment.receiptNumber) || `REC-${selectedReceiptPayment.id.slice(-6)}`}</span>
+                    <span>{selectedReceiptPayment.kind === 'reversal' ? 'RÉFÉRENCE D’ANNULATION' : selectedReceiptPayment.receiptNumber ? 'REÇU DE PAIEMENT N°' : 'RÉFÉRENCE D’ÉCRITURE'}</span>
+                    <span className="font-mono text-[#0284c7] text-right">{safeText(selectedReceiptPayment.receiptNumber) || selectedReceiptPayment.id}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-200/50 py-1 font-medium gap-3">
                     <span className="text-slate-400">Date d'émission :</span>
@@ -610,11 +559,12 @@ export function ManagerPaymentsView({
                   </div>
                   <div className="flex justify-between border-b border-slate-200/50 py-1 font-medium gap-3">
                     <span className="text-slate-400">Forfait souscrit :</span>
-                    <span className="font-bold text-slate-700 text-right">{safeText(pack?.name) || 'Abonnement'}</span>
+                    <span className="font-bold text-slate-700 text-right">{safeText(pack?.name) || safeText(selectedReceiptPayment.packageId) || 'Non renseigné'}</span>
                   </div>
+                  {selectedReceiptPayment.clientId && <div className="flex justify-between gap-3 border-b border-slate-200/50 py-1 font-medium"><span className="text-slate-400">Référence du dossier :</span><span className="break-all text-right font-mono text-slate-700">{selectedReceiptPayment.clientId}</span></div>}
                   <div className="flex justify-between border-b border-slate-200/50 py-1 font-medium gap-3">
                     <span className="text-slate-400">Mode de règlement :</span>
-                    <span className="font-bold text-slate-800 uppercase font-mono text-[9px] bg-slate-100 px-2 py-0.5 rounded-md">{safeText(selectedReceiptPayment.method) || '-'}</span>
+                    <span className="font-bold text-slate-800 uppercase font-mono text-[9px] bg-slate-100 px-2 py-0.5 rounded-md">{paymentMethodLabels[selectedReceiptPayment.method] || 'Non renseigné'}</span>
                   </div>
                 </div>
 

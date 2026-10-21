@@ -1,6 +1,7 @@
 import type { Appointment, Client, ClientPackage, Payment } from '../types';
 import { isPackageExpired } from './packageRules';
 import { isHistoricalRecord } from './legacyHistory';
+import { matchesCrmSearch } from './crmSearch';
 
 export type BalanceCategory = 'none' | 'available' | 'low' | 'expired' | 'closed' | 'suspended';
 export type BalanceFilter = 'with_package' | 'all' | 'available' | 'low' | 'expired' | 'closed' | 'none' | 'suspended';
@@ -62,11 +63,8 @@ export function matchesBalanceFilter(row: ClientBalanceRow, filter: BalanceFilte
   return row.statusCategory === filter;
 }
 export function filterClientBalances(rows: ClientBalanceRow[], filter: BalanceFilter, search: string, sort: BalanceSort) {
-  const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-  const tokens = normalize(search).trim().split(/\s+/).filter(Boolean);
   return rows.filter(row => {
-    const haystack = normalize(`${row.client.firstName} ${row.client.lastName} ${row.client.phone || ''} ${(row.client.phone || '').replace(/\D/g, '')}`);
-    return matchesBalanceFilter(row, filter) && tokens.every(token => haystack.includes(token));
+    return matchesBalanceFilter(row, filter) && matchesCrmSearch(search, [row.client.firstName, row.client.lastName], row.client.phone || '');
   }).sort((a, b) => {
     const name = `${a.client.firstName} ${a.client.lastName}`.localeCompare(`${b.client.firstName} ${b.client.lastName}`, 'fr', { sensitivity: 'base' });
     if (sort === 'balance_desc') return b.totalRemaining - a.totalRemaining || name;
