@@ -220,6 +220,7 @@ async function run() {
       await db.collection('payments').doc('summary-reversal').set({ centerId: 'center-a', clientId: 'privacy-client', date, amount: -2000 });
       await db.collection('payments').doc('legacy-payment-summary').set({ centerId: 'center-a', clientId: 'privacy-client', date, amount: 900000 });
       await db.collection('payments').doc('flagged-summary').set({ centerId: 'center-a', clientId: 'privacy-client', date, amount: 800000, historicalOnly: true });
+      await db.collection('payments').doc('demo-summary').set({ centerId: 'center-a', clientId: 'privacy-client', date, amount: 107000, reportingExcluded: true });
       const response = await readFinanceSummary(authenticatedRequest(managerA.token, { centerId: 'center-a' }));
       assert.equal(response.status, 200);
       const result = await response.json();

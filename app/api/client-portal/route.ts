@@ -1,3 +1,4 @@
+import { isExcludedFromFinancialReporting } from '@/src/lib/financialLedgerRules';
 import { isHistoricalRecord } from '@/src/lib/legacyHistory';
 import { NextResponse } from 'next/server';
 import { getAdminAuthInstance, getAdminDb } from '@/src/lib/serverFirebaseAdmin';
@@ -104,7 +105,7 @@ export async function POST(request: Request) {
       .sort((a: any, b: any) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || ''));
 
     // 4. Fetch payments
-    const payments = paySnap.docs.filter(ownCenter).filter(doc => !isHistoricalRecord({ ...doc.data(), id: doc.id }))
+    const payments = paySnap.docs.filter(ownCenter).filter(doc => !isExcludedFromFinancialReporting({ ...doc.data(), id: doc.id }))
       .map(doc => publicRecord(doc, ['clientId', 'centerId', 'packageId', 'amount', 'date', 'createdAt', 'method', 'receiptNumber', 'kind', 'status', 'reversalOfPaymentId']))
       .sort((a: any, b: any) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || ''));
 

@@ -1,3 +1,5 @@
+import { isExcludedFromFinancialReporting } from '../../lib/financialLedgerRules';
+import { netReceipts } from '../../lib/paymentBalances';
 ﻿import { useState } from 'react';
 import { AlertCircle, Award, Building, CheckCircle, Plus, Users } from 'lucide-react';
 import { Center, Client, Payment } from '../../types';
@@ -30,7 +32,7 @@ export function SuperAdminDashboard({
 
   const getRevenueTrendData = () => {
     const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
-    const validDates = payments
+    const validDates = payments.filter(p => !isExcludedFromFinancialReporting(p))
       .map(payment => new Date(payment.date))
       .filter(date => !Number.isNaN(date.getTime()))
       .sort((a, b) => a.getTime() - b.getTime());
@@ -43,7 +45,7 @@ export function SuperAdminDashboard({
         const paymentDate = new Date(payment.date);
         return paymentDate.getFullYear() === currentMonth.getFullYear() && paymentDate.getMonth() === currentMonth.getMonth();
       });
-      const total = mPayments.reduce((sum, payment) => sum + payment.amount, 0);
+      const total = netReceipts(mPayments);
       return {
         label: `${months[currentMonth.getMonth()]} ${String(currentMonth.getFullYear()).slice(-2)}`,
         value: total

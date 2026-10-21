@@ -1,5 +1,8 @@
 import type { ClientPackage, Payment } from '../types';
 import { isHistoricalRecord } from './legacyHistory';
+export function isExcludedFromFinancialReporting(payment: { id?: string; historicalOnly?: boolean; reportingExcluded?: boolean }) {
+  return payment.reportingExcluded === true || isHistoricalRecord(payment);
+}
 
 export function validatePaymentReversal(input: {
   payment: Payment | undefined;
@@ -9,7 +12,7 @@ export function validatePaymentReversal(input: {
   const { payment, clientPackage, centerId } = input;
   if (
     !payment ||
-    isHistoricalRecord(payment) ||
+    isExcludedFromFinancialReporting(payment) ||
     payment.centerId !== centerId ||
     payment.kind === 'reversal' ||
     !Number.isFinite(payment.amount) ||

@@ -1,3 +1,4 @@
+import { isExcludedFromFinancialReporting } from '../../lib/financialLedgerRules';
 import React, { useEffect, useState, useMemo } from 'react';
 import { Printer, FileText, Search, Filter, CreditCard, Layers, List, DollarSign, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { Client, Payment, Package, Center } from '../../types';
@@ -132,6 +133,7 @@ export function PaymentsPanel({
     const centerRevenues: Record<string, number> = {};
 
     payments.forEach(pay => {
+      if (isExcludedFromFinancialReporting(pay)) return;
       const pDate = parsePaymentDate(pay.date);
       if (!pDate) return;
       
@@ -383,7 +385,7 @@ export function PaymentsPanel({
                       </span>
                     </td>
                     <td className="p-4 font-bold text-[#353535]">
-                      {getClientDisplayName(cl)}
+                      {getClientDisplayName(cl)}{pay.reportingExcluded && <p className="mt-1 text-xs font-semibold text-amber-800">Démonstration · hors indicateurs</p>}
                     </td>
                     <td className="p-4 text-slate-500">{safeText(pack?.name) || 'Forfait'}</td>
                     <td className="p-4 font-mono text-slate-400">{safeText(pay.receiptNumber) || '-'}</td>
@@ -462,6 +464,7 @@ export function PaymentsPanel({
                   </p>
                 </div>
 
+                {selectedReceiptPayment.reportingExcluded && <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900"><strong>DOCUMENT DE DÉMONSTRATION — HORS COMPTABILITÉ</strong><p>Exemple initial conservé pour la traçabilité. Ce document ne prouve aucun encaissement réel.</p></div>}
                 {/* Receipt Details */}
                 <div className="space-y-2">
                   <div className="flex justify-between font-bold text-slate-800 text-[11px] pb-1.5 gap-3">

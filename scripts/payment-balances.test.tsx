@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { buildClientBalances, filterClientBalances, netReceipts, packageStatusLabel } from '../src/lib/paymentBalances';
 import { ClientBalancesPanel } from '../src/components/manager/ClientBalancesPanel';
 import type { Client, ClientPackage, Payment } from '../src/types';
+import { validatePaymentReversal } from '../src/lib/financialLedgerRules';
 
 const now = new Date('2026-10-21T00:00:00Z');
 const client = (id: string, extra = {}) => ({ id, firstName: id, lastName: 'Test', centerId: 'center-1', phone: '0550 12 34 56', status: 'active', ...extra }) as Client;
@@ -37,6 +38,10 @@ assert.equal(filterClientBalances(rows, 'with_package', '', 'balance_desc').leng
 assert.equal(packageStatusLabel(pkg('boundary', 'a', { purchaseDate: '2026-09-06' }), now), 'En cours');
 assert.equal(packageStatusLabel(pkg('expired', 'a', { purchaseDate: '2026-09-05' }), now), 'Expiré');
 assert.equal(netReceipts([pay('original', 200, { status: 'reversed' }), pay('reversal', -200, { kind: 'reversal' })]), 0);
+const demo = pay('demo', 107000, { reportingExcluded: true });
+assert.equal(netReceipts([pay('real', 12000), pay('counter', -2000), demo]), 10000);
+assert.equal(netReceipts([demo]), 0);
+assert.equal(validatePaymentReversal({ payment: demo, clientPackage: undefined, centerId: 'center-1' }).valid, false, 'Excluded demonstration must never generate a financial counter-entry');
 assert.equal(JSON.stringify(input), snapshot, 'Display changes never modify source data');
 const markup = renderToStaticMarkup(<ClientBalancesPanel rows={rows} packages={[]} onOpen={() => {}} />);
 assert.match(markup, /Sans forfait CRM \(1\)/);

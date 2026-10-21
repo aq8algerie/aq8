@@ -1,3 +1,4 @@
+import { netReceipts } from './lib/paymentBalances';
 import { isHistoricalRecord } from './lib/legacyHistory';
 /**
  * @license
@@ -543,7 +544,7 @@ export default function App() {
   };
 
   // Calculate high-level stats for Super Admin
-  const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
+  const totalRevenue = netReceipts(payments);
   const currentCrmCenter = crmCenterId ? centers.find(center => center.id === crmCenterId) : null;
   const canUseCrmRoleSwitcher = isDevToolsEnabled && crmRole === 'super_admin';
 

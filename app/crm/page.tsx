@@ -1,4 +1,6 @@
 "use client";
+import { netReceipts } from '../../src/lib/paymentBalances';
+
 import { isHistoricalRecord } from "../../src/lib/legacyHistory";
 
 import React, { Suspense, useState, useEffect, useMemo } from "react";
@@ -324,7 +326,7 @@ export default function CrmPage() {
     });
   };
 
-  const totalRevenue = useMemo(() => payments.reduce((sum, p) => sum + p.amount, 0), [payments]);
+  const totalRevenue = useMemo(() => netReceipts(payments), [payments]);
   const currentCrmCenter = crmCenterId ? centers.find(center => center.id === crmCenterId) : null;
 
   if (!authReady) {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { isHistoricalRecord } from '@/src/lib/legacyHistory';
+import { isExcludedFromFinancialReporting } from '@/src/lib/financialLedgerRules';
 import { getAdminDb } from '@/src/lib/serverFirebaseAdmin';
 import { assertFinancialAccess, CrmAccessError, getCrmErrorResponse, verifyServerCrmAccess } from '@/src/lib/serverCrmAccess';
 
@@ -27,10 +27,10 @@ export async function POST(request: Request) {
       const range = base.where('date', '>=', start).where('date', '<', end);
       const queries = chunks === null ? [range] : chunks.map(ids => range.where('clientId', 'in', ids));
       const totals = await Promise.all(queries.map(async query => {
-        const snapshot = await query.select('amount', 'historicalOnly').get();
+        const snapshot = await query.select('amount', 'historicalOnly', 'reportingExcluded').get();
         return snapshot.docs.reduce((total, doc) => {
           const data = doc.data();
-          return total + (isHistoricalRecord({ ...data, id: doc.id }) ? 0 : Number(data.amount) || 0);
+          return total + (isExcludedFromFinancialReporting({ ...data, id: doc.id }) ? 0 : Number(data.amount) || 0);
         }, 0);
       }));
       return totals.reduce((total, value) => total + value, 0);

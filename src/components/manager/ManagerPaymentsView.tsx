@@ -217,6 +217,7 @@ export function ManagerPaymentsView({
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500"><p>Les écritures de l’ancienne base sont consultables dans l’onglet Historique ancienne base.</p><p className="rounded-full bg-slate-100 px-3 py-1.5 font-semibold text-slate-700">Déduction des séances : {validationMode === 'auto' ? 'automatique' : 'validation manuelle'}</p></div>
         {nonUsableRemaining > 0 && <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">{nonUsableRemaining} crédit(s) figurent sur des forfaits non utilisables : expirés, clos ou rattachés à un client suspendu. Ils restent visibles dans le détail et ne sont pas comptés comme disponibles.</p>}
+        {centerPayments.some(p => p.reportingExcluded) && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">{centerPayments.filter(p => p.reportingExcluded).length} écriture(s) de démonstration, soit {centerPayments.filter(p => p.reportingExcluded).reduce((sum, p) => sum + p.amount, 0).toLocaleString('fr-DZ')} DA, restent conservées dans le registre et sont exclues des indicateurs financiers.</p>}
       </section>
       <nav aria-label="Paiements et crédits" className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-1.5 sm:grid-cols-3">
         {([{ id: 'register', label: `Registre CRM (${centerPayments.length} écritures)` }, { id: 'balances', label: 'Crédits de séances' }, { id: 'history', label: 'Historique ancienne base' }] as Array<{ id: MainTab; label: string }>).map(tab => <button key={tab.id} type="button" aria-pressed={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} className={`rounded-xl px-4 py-3 text-sm font-bold transition ${activeTab === tab.id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>{tab.label}</button>)}
@@ -238,10 +239,10 @@ export function ManagerPaymentsView({
             <div className="flex flex-wrap items-center gap-3">
               <label className="text-xs font-semibold text-slate-600">État de l’écriture
                 <select value={stateFilter} onChange={e => setStateFilter(e.target.value as PaymentStateFilter)} className="ml-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm">
-                  <option value="all">Toutes les écritures</option><option value="posted">Règlements enregistrés</option><option value="reversed">Règlements annulés</option><option value="reversal">Contre-écritures d’annulation</option><option value="adjustment">Régularisations</option><option value="unresolved">Dossiers clients à retrouver</option>
+                  <option value="all">Toutes les écritures</option><option value="posted">Règlements enregistrés</option><option value="reversed">Règlements annulés</option><option value="reversal">Contre-écritures d’annulation</option><option value="adjustment">Régularisations</option><option value="excluded">Démonstration · hors indicateurs</option><option value="unresolved">Dossiers clients à retrouver</option>
                 </select>
               </label>
-              {centerPayments.some(p => !centerClients.some(c => c.id === p.clientId)) && <button type="button" onClick={() => { resetFilters(); setStateFilter('unresolved'); }} className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">{centerPayments.filter(p => !centerClients.some(c => c.id === p.clientId)).length} écriture(s) avec dossier client non affiché</button>}
+              {centerPayments.some(p => !p.reportingExcluded && !centerClients.some(c => c.id === p.clientId)) && <button type="button" onClick={() => { resetFilters(); setStateFilter('unresolved'); }} className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">{centerPayments.filter(p => !p.reportingExcluded && !centerClients.some(c => c.id === p.clientId)).length} écriture(s) avec dossier client non affiché</button>}
             </div>
             <p className="text-xs text-slate-500">Les règlements annulés et leurs contre-écritures sont conservés séparément. Un dossier non affiché reste à vérifier ; aucun rattachement n’est déduit automatiquement.</p>
             {traceNotice && <p role="status" className="break-words rounded-xl bg-amber-50 p-3 text-sm text-amber-900">{traceNotice} <button type="button" onClick={() => setTraceNotice('')} className="underline">Fermer</button></p>}
@@ -315,7 +316,7 @@ export function ManagerPaymentsView({
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-[11px] text-slate-500 font-semibold">
-              <span>{visibleStart}-{visibleEnd} sur {filteredPayments.length} écriture(s) · Somme des montants affichés : {netReceipts(filteredPayments).toLocaleString('fr-DZ')} DA</span>
+              <span>{visibleStart}-{visibleEnd} sur {filteredPayments.length} écriture(s) · Somme des montants affichés : {filteredPayments.reduce((sum, p) => sum + p.amount, 0).toLocaleString('fr-DZ')} DA</span>
               {hasActiveFilters && (
                 <button
                   type="button"
@@ -542,6 +543,7 @@ export function ManagerPaymentsView({
                   <p className="text-[9px] text-slate-400 font-mono leading-normal">{safeText(currentCenter.address)}<br />Tél: {safeText(currentCenter.phone)}</p>
                 </div>
 
+                {selectedReceiptPayment.reportingExcluded && <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900"><strong>DOCUMENT DE DÉMONSTRATION — HORS COMPTABILITÉ</strong><p>Exemple initial du projet, conservé pour la traçabilité. Ce document ne prouve aucun encaissement réel.</p></div>}
                 {/* Receipt Details */}
                 {(selectedReceiptPayment.status === 'reversed' || selectedReceiptPayment.kind === 'reversal') && <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-rose-800"><p className="text-sm font-bold">{selectedReceiptPayment.kind === 'reversal' ? 'Contre-écriture d’annulation' : 'Reçu annulé'}</p><p className="mt-1 text-xs">Montant d’origine conservé pour la traçabilité. Ce document ne représente pas un nouvel encaissement.</p>{selectedReceiptPayment.reversedByPaymentId && <p className="mt-1 break-all text-xs">Annulation : {selectedReceiptPayment.reversedByPaymentId}</p>}{selectedReceiptPayment.reversalOfPaymentId && <p className="mt-1 break-all text-xs">Règlement d’origine : {selectedReceiptPayment.reversalOfPaymentId}</p>}</div>}
                 <div className="space-y-2">

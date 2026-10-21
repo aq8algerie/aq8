@@ -208,6 +208,8 @@ export interface ClientPackage {
 
 export interface Payment {
   historicalOnly?: boolean;
+  reportingExcluded?: boolean;
+  dataQuality?: { classification: 'confirmed_demo_fixture'; sourceCommit: string; sourceFile: string; sourceSha256: string };
   id: string;
   clientId: string;
   packageId: string;

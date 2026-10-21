@@ -1,3 +1,4 @@
+import { netReceipts } from '../../lib/paymentBalances';
 import { useState } from 'react';
 import { Venus } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -227,7 +228,7 @@ export function StatsPanel({
               const getCenterRevenues = () => {
                 return centers.map(c => {
                   const cPayments = payments.filter(p => p.centerId === c.id);
-                  const total = cPayments.reduce((sum, p) => sum + p.amount, 0);
+                  const total = netReceipts(cPayments);
                   return { name: c.name, revenue: total };
                 });
               };

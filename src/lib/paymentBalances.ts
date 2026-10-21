@@ -2,12 +2,13 @@ import type { Appointment, Client, ClientPackage, Payment } from '../types';
 import { isPackageExpired } from './packageRules';
 import { isHistoricalRecord } from './legacyHistory';
 import { matchesCrmSearch } from './crmSearch';
+import { isExcludedFromFinancialReporting } from './financialLedgerRules';
 
 export type BalanceCategory = 'none' | 'available' | 'low' | 'expired' | 'closed' | 'suspended';
 export type BalanceFilter = 'with_package' | 'all' | 'available' | 'low' | 'expired' | 'closed' | 'none' | 'suspended';
 export type BalanceSort = 'alpha_asc' | 'alpha_desc' | 'balance_desc' | 'balance_asc' | 'spent_desc';
 const quantity = (value: number) => Number.isFinite(value) ? Math.max(0, value) : 0;
-export const netReceipts = (payments: Payment[]) => payments.filter(p => !isHistoricalRecord(p))
+export const netReceipts = (payments: Payment[]) => payments.filter(p => !isExcludedFromFinancialReporting(p))
   .reduce((total, p) => total + (Number.isFinite(p.amount) ? p.amount : 0), 0);
 
 export function packageStatusLabel(pkg: ClientPackage, now: Date) {

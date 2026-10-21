@@ -43,4 +43,16 @@ assert.equal((markup.match(/Annuler l’encaissement/g) || []).length, 2, 'Only 
 assert.ok(!markup.includes('hidden sm:block'), 'Payments remain visible on small screens');
 assert.ok(!markup.includes('<script>'));
 assert.equal(JSON.stringify(rows), before);
+const demo: Payment = { ...base, id: 'demo', clientId: 'missing-demo-client', reportingExcluded: true, dataQuality: { classification: 'confirmed_demo_fixture', sourceFile: 'src/mockData.ts', sourceCommit: 'original-version', sourceSha256: 'proof' } };
+assert.equal(paymentEntryState(demo), 'excluded');
+assert.equal(matchesPaymentState(demo, undefined, 'unresolved'), false);
+assert.equal(matchesPaymentState(demo, undefined, 'excluded'), true);
+const demoBefore = JSON.stringify(demo);
+const demoMarkup = renderToStaticMarkup(<PaymentRegisterTable payments={[demo]} clients={[]} packages={[]} onReceipt={() => {}} onReverse={() => {}} onRelated={() => {}} />);
+assert.match(demoMarkup, /Démonstration/);
+assert.match(demoMarkup, /Preuve d’origine/);
+assert.match(demoMarkup, /original-version/);
+assert.match(demoMarkup, /Voir le document/);
+assert.ok(!demoMarkup.includes('Annuler l’encaissement'));
+assert.equal(JSON.stringify(demo), demoBefore);
 console.log('Payment register: states, linked reversals, unresolved references, signed amounts, mobile visibility, phone formats and immutable data passed.');
