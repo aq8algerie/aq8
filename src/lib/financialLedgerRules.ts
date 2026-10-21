@@ -1,4 +1,5 @@
 import type { ClientPackage, Payment } from '../types';
+import { isHistoricalRecord } from './legacyHistory';
 
 export function validatePaymentReversal(input: {
   payment: Payment | undefined;
@@ -8,6 +9,7 @@ export function validatePaymentReversal(input: {
   const { payment, clientPackage, centerId } = input;
   if (
     !payment ||
+    isHistoricalRecord(payment) ||
     payment.centerId !== centerId ||
     payment.kind === 'reversal' ||
     !Number.isFinite(payment.amount) ||

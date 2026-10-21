@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Printer, FileText, Search, Filter, CreditCard, Layers, List, DollarSign, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { Client, Payment, Package, Center } from '../../types';
+import { LegacyHistoryPanel } from '../manager/LegacyHistoryPanel';
 
 interface PaymentsPanelProps {
   centers: Center[];
@@ -37,6 +38,8 @@ export function PaymentsPanel({
   const [searchQuery, setSearchQuery] = useState('');
   const [methodFilter, setMethodFilter] = useState<PaymentMethodFilter>('all');
   const [centerFilter, setCenterFilter] = useState('all');
+  const [historyCenter, setHistoryCenter] = useState('center-1');
+  const [showHistory, setShowHistory] = useState(false);
   const [packageFilter, setPackageFilter] = useState('all');
   
   // Month and Year filter
@@ -177,6 +180,8 @@ export function PaymentsPanel({
 
   return (
     <div id="super-admin-payments-view" className="space-y-6">
+      <details onToggle={event => setShowHistory(event.currentTarget.open)} className="rounded-2xl border border-slate-200 bg-white p-4"><summary className="cursor-pointer font-bold text-slate-700">Historique financier de l’ancienne base, par centre</summary>{showHistory && <div className="mt-4 space-y-4"><label className="block text-sm font-semibold">Centre<select value={historyCenter} onChange={e => setHistoryCenter(e.target.value)} className="ml-3 rounded-lg border p-2">{centers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label><LegacyHistoryPanel centerId={historyCenter} kind="finance" /></div>}</details>
+      <p className="text-xs text-slate-500">Les indicateurs ci-dessous concernent les encaissements du CRM actuel. L’historique ancien reste consultable séparément, avec ses montants signés.</p>
       {/* Stats Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Consolidé */}

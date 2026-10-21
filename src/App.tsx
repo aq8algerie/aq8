@@ -1,3 +1,4 @@
+import { isHistoricalRecord } from './lib/legacyHistory';
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -306,8 +307,8 @@ export default function App() {
     const unsubscribeAppointments = onSnapshot(appointmentsRef, (snapshot) => {
       const list: Appointment[] = [];
       snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as Appointment));
-      setAppointments(list);
-      AQ8Database.saveAppointments(list);
+      setAppointments(list.filter(record => !isHistoricalRecord(record)));
+      AQ8Database.saveAppointments(list.filter(record => !isHistoricalRecord(record)));
     });
 
     const unsubscribeClientPackages = onSnapshot(clientPackagesRef, (snapshot) => {
@@ -322,8 +323,8 @@ export default function App() {
     const unsubscribePayments = canReadFinances ? onSnapshot(paymentsRef, (snapshot) => {
       const list: Payment[] = [];
       snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as Payment));
-      setPayments(list);
-      AQ8Database.savePayments(list);
+      setPayments(list.filter(record => !isHistoricalRecord(record)));
+      AQ8Database.savePayments(list.filter(record => !isHistoricalRecord(record)));
     }, () => setPayments([])) : () => {};
 
     const unsubscribeMeasurements = onSnapshot(measurementsRef, (snapshot) => {

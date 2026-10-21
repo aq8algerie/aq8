@@ -138,6 +138,7 @@ export interface ClientGamificationStats {
 export type AppointmentStatus = 'booked' | 'confirmed' | 'completed' | 'cancelled';
 
 export interface Appointment {
+  historicalOnly?: boolean;
   id: string;
   clientId: string;
   serviceId: string;
@@ -206,6 +207,7 @@ export interface ClientPackage {
 }
 
 export interface Payment {
+  historicalOnly?: boolean;
   id: string;
   clientId: string;
   packageId: string;

@@ -7,6 +7,7 @@ import {
   Transaction,
 } from 'firebase/firestore';
 import { Appointment, BookingRequest, Center, Client, Service } from '../types';
+import { isHistoricalRecord } from './legacyHistory';
 import { restoreSessionToPackage, validateSessionCompletion } from './packageRules';
 import {
   BookingServiceType,
@@ -486,6 +487,7 @@ export async function updateAppointmentInTransaction(
     }
 
     const currentAppointment = appointmentSnapshot.data() as Appointment;
+    if (isHistoricalRecord({ ...currentAppointment, id: params.id })) throw new Error('Cette réservation historique est conservée en lecture seule.');
     if (currentAppointment.centerId !== params.centerId) {
       throw new Error("Cette réservation n'appartient pas à votre centre.");
     }
@@ -582,6 +584,7 @@ export async function cancelAppointmentInTransaction(
     }
 
     const appointment = appointmentSnapshot.data() as Appointment;
+    if (isHistoricalRecord({ ...appointment, id: params.appointmentId })) throw new Error('Cette réservation historique est conservée en lecture seule.');
     if (appointment.centerId !== params.centerId) {
       throw new Error("Cette réservation n'appartient pas à votre centre.");
     }

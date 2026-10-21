@@ -1,4 +1,5 @@
 "use client";
+import { isHistoricalRecord } from "../../src/lib/legacyHistory";
 
 import React, { Suspense, useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
@@ -229,7 +230,7 @@ export default function CrmPage() {
     const unsubAppointments = onSnapshot(appointmentsRef, (snapshot) => {
       const list: Appointment[] = [];
       snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as Appointment));
-      setAppointments(list);
+      setAppointments(list.filter(record => !isHistoricalRecord(record)));
     });
 
     const unsubClientPackages = onSnapshot(clientPackagesRef, (snapshot) => {
@@ -242,7 +243,7 @@ export default function CrmPage() {
     const unsubPayments = canReadFinances && (crmRole === "super_admin" || crmCenterManagerTab === "payments") ? onSnapshot(paymentsRef, (snapshot) => {
       const list: Payment[] = [];
       snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() } as Payment));
-      setPayments(list);
+      setPayments(list.filter(record => !isHistoricalRecord(record)));
     }, () => setPayments([])) : () => {};
 
     const unsubMeasurements = onSnapshot(measurementsRef, (snapshot) => {

@@ -170,6 +170,9 @@ async function completeAppointment(
     if (!appointment || appointment.centerId !== centerId) {
       throw new CrmAccessError('Réservation introuvable dans ce centre.', 404);
     }
+    if (appointment.historicalOnly || /^legacy-(reservation|event)-/.test(appointment.id)) {
+      throw new CrmAccessError('Cette réservation historique est conservée en lecture seule.', 409);
+    }
     if (appointment.status === 'completed') {
       return {
         ok: true,

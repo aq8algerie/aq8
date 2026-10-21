@@ -400,6 +400,7 @@ export function ManagerDashboard({
       </div>
 
       <ManagerAvailableSlots centerId={centerId} center={center} appointments={centerAppointments} services={services} onBook={onBookSlot} />
+      {canReadFinances && <p className="text-xs text-slate-500">Le chiffre d’affaires affiché couvre les encaissements du CRM actuel. Les écritures de l’ancienne base restent consultables dans Paiements → Historique ancienne base et sont exclues de ces indicateurs tant que leur qualification n’est pas validée.</p>}
 
       <ManagerActionCenter
         requests={bookingRequests.filter(request => request.centerId === centerId)}

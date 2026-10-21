@@ -1035,6 +1035,8 @@ export function CenterManagerViews({
         {activeClient ? (
           /* Client Fiche (Bio Profile Detail) overrides typical tabs when active */
             <ClientProfileView
+              centerId={centerId}
+              canReadFinances={canReadFinances}
               client={activeClient}
               appointments={appointments}
               services={centerServices}

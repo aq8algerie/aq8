@@ -26,6 +26,7 @@ import {
   Ban
 } from 'lucide-react';
 import { Client, Payment, Package, Center, ClientPackage, Appointment } from '../../types';
+import { LegacyHistoryPanel } from './LegacyHistoryPanel';
 
 interface ManagerPaymentsViewProps {
   centerId: string;
@@ -45,7 +46,7 @@ const PAGE_SIZE_OPTIONS = [20, 50, 100, 200] as const;
 type PaymentPageSize = typeof PAGE_SIZE_OPTIONS[number];
 type PaymentDateFilter = 'all' | 'today' | 'this_week' | 'this_month' | 'this_year';
 type PaymentMethodFilter = 'all' | Payment['method'];
-type MainTab = 'register' | 'balances';
+type MainTab = 'register' | 'balances' | 'history';
 
 const safeText = (value: unknown) => String(value ?? '').trim();
 
@@ -344,6 +345,7 @@ type BalanceSortOption = 'alpha_asc' | 'alpha_desc' | 'balance_desc' | 'balance_
 
       {/* Main Tabs Navigation */}
       <div className="flex bg-white rounded-2xl p-1.5 border border-slate-200 shadow-xs gap-1.5">
+        <button type="button" onClick={() => setActiveTab('history')} className={`flex-1 rounded-xl px-4 py-2.5 text-xs font-black ${activeTab === 'history' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>Historique ancienne base</button>
         <button
           type="button"
           onClick={() => setActiveTab('register')}
@@ -369,6 +371,8 @@ type BalanceSortOption = 'alpha_asc' | 'alpha_desc' | 'balance_desc' | 'balance_
       </div>
 
       {/* TAB 1: REGISTRE DES ENCAISSEMENTS */}
+      {activeTab === 'history' && <LegacyHistoryPanel centerId={centerId} kind="finance" />}
+      <p className="text-xs text-slate-500">Les encaissements affichés ici concernent le CRM actuel. Les écritures anciennes et abonnements passés restent consultables dans « Historique ancienne base ».</p>
       {activeTab === 'register' && (
         <div className="space-y-4">
           {/* Filters Bar */}

@@ -32,8 +32,11 @@ import { formatDateTime } from '../../lib/centerManagerUtils';
 
 import { calculateClientGamification } from '../../lib/gamification';
 import { ClientFollowUpPanel } from './ClientFollowUpPanel';
+import { LegacyHistoryPanel } from './LegacyHistoryPanel';
 
 interface ClientProfileViewProps {
+  canReadFinances?: boolean;
+  centerId?: string;
   client: Client;
   appointments: Appointment[];
   services: Service[];
@@ -47,6 +50,8 @@ interface ClientProfileViewProps {
 }
 
 export function ClientProfileView({
+  canReadFinances = false,
+  centerId,
   client,
   appointments,
   services,
@@ -80,7 +85,7 @@ export function ClientProfileView({
   const age = calculateAge(client.dob);
   const isSuspended = client.status === 'suspended';
 
-  const [activeProfileTab, setActiveProfileTab] = React.useState<'profile' | 'measurements' | 'packages'>('profile');
+  const [activeProfileTab, setActiveProfileTab] = React.useState<'profile' | 'measurements' | 'packages' | 'history'>('profile');
 
   // Stats calculation
   const completedSessionsCount = clientApts.filter(a => a.status === 'completed').length;
@@ -203,6 +208,7 @@ export function ClientProfileView({
 
       {/* Profile Sub-Tabs Bar */}
       <div className="flex border-b border-slate-200 space-x-2 sm:space-x-4 overflow-x-auto">
+        <button type="button" onClick={() => setActiveProfileTab('history')} className={`whitespace-nowrap border-b-2 px-2 pb-3 text-sm font-bold ${activeProfileTab === 'history' ? 'border-sky-600 text-sky-700' : 'border-transparent text-slate-500'}`}>Historique ancienne base</button>
         <button
           type="button"
           onClick={() => setActiveProfileTab('profile')}
@@ -241,6 +247,7 @@ export function ClientProfileView({
       </div>
 
       {/* KPI Metrics Summary Cards */}
+      {activeProfileTab === 'history' && <div className="space-y-5"><LegacyHistoryPanel centerId={centerId || client.centerId} clientId={client.id} kind="reservations" />{canReadFinances && <LegacyHistoryPanel centerId={centerId || client.centerId} clientId={client.id} kind="finance" />}</div>}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-xs flex items-center gap-3">
           <div className="h-10 w-10 shrink-0 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">

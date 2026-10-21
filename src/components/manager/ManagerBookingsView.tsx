@@ -41,6 +41,7 @@ import {
 } from '../../lib/managerPresentation';
 import { AppointmentMutationOptions, CrmActionResult } from '../../lib/crmTransactions';
 import { ProfessionalToast, ProfessionalToastState, ToastAction, ToastType } from './ProfessionalToast';
+import { LegacyHistoryPanel } from './LegacyHistoryPanel';
 
 interface ManagerBookingsViewProps {
   centerId: string;
@@ -65,6 +66,7 @@ export function ManagerBookingsView({
 }: ManagerBookingsViewProps) {
   // 1. Core State
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [showHistory, setShowHistory] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | 'booked' | 'completed' | 'cancelled'>('All');
   const [serviceFilter, setServiceFilter] = useState<'All' | string>('All');
@@ -309,6 +311,7 @@ export function ManagerBookingsView({
 
   return (
     <div id="manager-bookings-container" className="space-y-6">
+      <details onToggle={event => setShowHistory(event.currentTarget.open)} className="rounded-2xl border border-slate-200 bg-white p-4"><summary className="cursor-pointer font-bold text-slate-700">Consulter les réservations de l’ancienne base</summary>{showHistory && <div className="mt-4"><LegacyHistoryPanel centerId={centerId} kind="reservations" /></div>}</details>
       <ProfessionalToast
         toast={toast}
         onDismiss={() => setToast(null)}

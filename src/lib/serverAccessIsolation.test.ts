@@ -71,6 +71,7 @@ async function run() {
   const { POST: mutateClients } = await import('../../app/api/crm-clients/route');
   const { POST: mutateOperations } = await import('../../app/api/crm-operations/route');
   const { POST: readFinanceSummary } = await import('../../app/api/crm-financial-summary/route');
+  const { POST: readHistory } = await import('../../app/api/crm-legacy-history/route');
   const { POST: mutateManagers } = await import('../../app/api/crm-managers/route');
   const { POST: readPortal } = await import('../../app/api/client-portal/route');
   const { POST: registerPortal } = await import('../../app/api/client-portal/register/route');
@@ -217,6 +218,8 @@ async function run() {
       const before = await (await readFinanceSummary(authenticatedRequest(managerA.token, { centerId: 'center-a' }))).json();
       await db.collection('payments').doc('summary-payment').set({ centerId: 'center-a', clientId: 'privacy-client', date, amount: 12000 });
       await db.collection('payments').doc('summary-reversal').set({ centerId: 'center-a', clientId: 'privacy-client', date, amount: -2000 });
+      await db.collection('payments').doc('legacy-payment-summary').set({ centerId: 'center-a', clientId: 'privacy-client', date, amount: 900000 });
+      await db.collection('payments').doc('flagged-summary').set({ centerId: 'center-a', clientId: 'privacy-client', date, amount: 800000, historicalOnly: true });
       const response = await readFinanceSummary(authenticatedRequest(managerA.token, { centerId: 'center-a' }));
       assert.equal(response.status, 200);
       const result = await response.json();
@@ -231,6 +234,41 @@ async function run() {
       await db.collection('users').doc(managerA.uid).update({ financeRead: false });
       assert.equal((await readFinanceSummary(authenticatedRequest(managerA.token, { centerId: 'center-a' }))).status, 403);
       await db.collection('users').doc(managerA.uid).update({ financeRead: true });
+    });
+    await testCase('historical journals preserve signs, isolate centers, paginate and enforce owner privacy', async () => {
+      const source = { file: 'history.pdf', sha256: 'test', page: 3, technicalPage: 10, legacyId: '1' };
+      await db.collection('legacy_financial_operations').doc('hist-a').set({ centerId: 'center-a', clientId: 'privacy-client', clientName: 'Amélie', date: '2026-01-01', type: 'Paiement', amount: -7000, comment: 'Débit ancien', source });
+      await db.collection('legacy_financial_operations').doc('hist-b').set({ centerId: 'center-b', clientId: 'foreign', clientName: 'FOREIGN_PRIVATE', date: '2026-01-01', type: 'Bonus', amount: 1000, comment: '', source });
+      const historyBatch = db.batch();
+      for (let i = 0; i < 55; i++) historyBatch.set(db.collection('legacy_reservations').doc(`history-${i}`), { centerId: 'center-a', clientId: 'privacy-client', clientName: 'A', date: '2026-01-01', type: 'Annulée', source: { ...source, legacyId: String(i) } });
+      await historyBatch.commit();
+      const payload = { centerId: 'center-a', kind: 'finance', search: 'amelie', from: '2026-01-01', to: '2026-01-01' };
+      assert.equal((await readHistory(authenticatedRequest('', payload))).status, 401);
+      assert.equal((await readHistory(authenticatedRequest(managerA.token, { ...payload, centerId: 'center-b' }))).status, 403);
+      assert.equal((await readHistory(authenticatedRequest(sidiStaff.token, { centerId: 'center-5', kind: 'finance' }))).status, 403);
+      assert.equal((await readHistory(authenticatedRequest(sidiOwner.token, { centerId: 'center-5', kind: 'finance' }))).status, 200);
+      const response = await readHistory(authenticatedRequest(managerA.token, payload));
+      assert.equal(response.status, 200);
+      const data = await response.json();
+      assert.equal(data.total, 1); assert.equal(data.rows[0].amount, -7000);
+      assert.equal(data.summary.types.Paiement.negative, -7000);
+      assert.equal(data.rows[0].source.page, 3);
+      assert.equal(JSON.stringify(data).includes('FOREIGN_PRIVATE'), false);
+      // The cache must not bypass a permission change.
+      await db.collection('users').doc(managerA.uid).update({ financeRead: false });
+      assert.equal((await readHistory(authenticatedRequest(managerA.token, payload))).status, 403);
+      assert.equal((await readHistory(authenticatedRequest(managerA.token, { centerId: 'center-a', kind: 'reservations' }))).status, 200);
+      await db.collection('users').doc(managerA.uid).update({ financeRead: true });
+      assert.equal((await readHistory(authenticatedRequest(managerA.token, { ...payload, from: 'wrong' }))).status, 400);
+      const firstPage = await (await readHistory(authenticatedRequest(managerA.token, { centerId: 'center-a', kind: 'reservations', page: 1 }))).json();
+      const secondPage = await (await readHistory(authenticatedRequest(managerA.token, { centerId: 'center-a', kind: 'reservations', page: 2 }))).json();
+      assert.equal(firstPage.total, 55); assert.equal(firstPage.rows.length, 50); assert.equal(secondPage.rows.length, 5);
+      assert.equal(new Set([...firstPage.rows, ...secondPage.rows].map(r => r.id)).size, 55);
+      const adminPage = await (await readHistory(authenticatedRequest(superAdmin.token, { centerId: 'center-b', kind: 'finance' }))).json();
+      assert.equal(adminPage.total, 1);
+      assert.equal(adminPage.rows[0].amount, 1000);
+      await db.collection('appointments').doc('legacy-reservation-test').set({ id: 'legacy-reservation-test', centerId: 'center-a', status: 'booked' });
+      assert.equal((await mutateOperations(authenticatedRequest(managerA.token, { action: 'complete_appointment', centerId: 'center-a', appointmentId: 'legacy-reservation-test' }))).status, 409);
     });
     await testCase('manager provisioning cannot overwrite a super admin or invent a center', async () => {
       const payload = { action: 'upsert', name: 'Test', email: 'super-admin@security.test', centerId: 'center-a', active: true };

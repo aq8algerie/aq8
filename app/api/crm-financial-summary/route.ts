@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { AggregateField } from 'firebase-admin/firestore';
+import { isHistoricalRecord } from '@/src/lib/legacyHistory';
 import { getAdminDb } from '@/src/lib/serverFirebaseAdmin';
 import { assertFinancialAccess, CrmAccessError, getCrmErrorResponse, verifyServerCrmAccess } from '@/src/lib/serverCrmAccess';
 
@@ -26,13 +26,17 @@ export async function POST(request: Request) {
     const sum = async (start: string, end: string) => {
       const range = base.where('date', '>=', start).where('date', '<', end);
       const queries = chunks === null ? [range] : chunks.map(ids => range.where('clientId', 'in', ids));
-      const totals = await Promise.all(queries.map(async query => (await query.aggregate({ total: AggregateField.sum('amount') }).get()).data().total));
+      const totals = await Promise.all(queries.map(async query => {
+        const snapshot = await query.select('amount', 'historicalOnly').get();
+        return snapshot.docs.reduce((total, doc) => {
+          const data = doc.data();
+          return total + (isHistoricalRecord({ ...data, id: doc.id }) ? 0 : Number(data.amount) || 0);
+        }, 0);
+      }));
       return totals.reduce((total, value) => total + value, 0);
     };
     const now = new Date();
-    const latest = await base.orderBy('date', 'desc').limit(1).get();
-    const latestDate = new Date(latest.docs[0]?.data().date || now);
-    const endMonth = Number.isNaN(latestDate.getTime()) ? now : latestDate;
+    const endMonth = now;
     const trendMonths = Array.from({ length: 6 }, (_, index) => new Date(endMonth.getFullYear(), endMonth.getMonth() - 5 + index, 1));
     const [month, year, previousMonth, trend] = await Promise.all([
       sum(key(now), key(new Date(now.getFullYear(), now.getMonth() + 1, 1))),
@@ -43,7 +47,7 @@ export async function POST(request: Request) {
         value: await sum(key(date), key(new Date(date.getFullYear(), date.getMonth() + 1, 1))),
       }))),
     ]);
-    return NextResponse.json({ ok: true, month, year, previousMonth, trend }, { headers: { 'Cache-Control': 'private, no-store' } });
+    return NextResponse.json({ ok: true, month, year, previousMonth, trend, scope: 'current_crm_excluding_legacy' }, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (error) {
     const resolved = getCrmErrorResponse(error);
     return NextResponse.json({ ok: false, error: resolved.message }, { status: resolved.status });

@@ -1,3 +1,4 @@
+import { isHistoricalRecord } from '@/src/lib/legacyHistory';
 import { NextResponse } from 'next/server';
 import { getAdminAuthInstance, getAdminDb } from '@/src/lib/serverFirebaseAdmin';
 
@@ -89,7 +90,7 @@ export async function POST(request: Request) {
     );
 
     // 2. Fetch appointments matching client ID
-    const appointments = apptSnap.docs.filter(ownCenter)
+    const appointments = apptSnap.docs.filter(ownCenter).filter(doc => !isHistoricalRecord({ ...doc.data(), id: doc.id }))
       .map(doc => publicRecord(doc, ['clientId', 'centerId', 'dateTime', 'date', 'time', 'bookingDate', 'bookingTime', 'duration', 'status', 'serviceId', 'service', 'serviceName', 'serviceType', 'completedAt']))
       .sort((a: any, b: any) => {
         const dateA = a.dateTime || `${a.date || a.bookingDate || ''} ${a.time || a.bookingTime || ''}`;
@@ -103,7 +104,7 @@ export async function POST(request: Request) {
       .sort((a: any, b: any) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || ''));
 
     // 4. Fetch payments
-    const payments = paySnap.docs.filter(ownCenter)
+    const payments = paySnap.docs.filter(ownCenter).filter(doc => !isHistoricalRecord({ ...doc.data(), id: doc.id }))
       .map(doc => publicRecord(doc, ['clientId', 'centerId', 'packageId', 'amount', 'date', 'createdAt', 'method', 'receiptNumber', 'kind', 'status', 'reversalOfPaymentId']))
       .sort((a: any, b: any) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || ''));
 
