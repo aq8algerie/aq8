@@ -34,6 +34,7 @@ import { isHistoricalRecord } from '../../lib/legacyHistory';
 import { matchesCrmSearch } from '../../lib/crmSearch';
 import { matchesPaymentState, paymentMethodLabels, type PaymentStateFilter } from '../../lib/paymentRegister';
 import { PaymentRegisterTable } from './PaymentRegisterTable';
+import { ReconciliationPanel } from './ReconciliationPanel';
 
 interface ManagerPaymentsViewProps {
   centerId: string;
@@ -53,7 +54,7 @@ const PAGE_SIZE_OPTIONS = [20, 50, 100, 200] as const;
 type PaymentPageSize = typeof PAGE_SIZE_OPTIONS[number];
 type PaymentDateFilter = 'all' | 'today' | 'this_week' | 'this_month' | 'this_year';
 type PaymentMethodFilter = 'all' | Payment['method'];
-type MainTab = 'register' | 'balances' | 'history';
+type MainTab = 'register' | 'balances' | 'history' | 'checks';
 
 const safeText = (value: unknown) => String(value ?? '').trim();
 
@@ -219,12 +220,13 @@ export function ManagerPaymentsView({
         {nonUsableRemaining > 0 && <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">{nonUsableRemaining} crédit(s) figurent sur des forfaits non utilisables : expirés, clos ou rattachés à un client suspendu. Ils restent visibles dans le détail et ne sont pas comptés comme disponibles.</p>}
         {centerPayments.some(p => p.reportingExcluded) && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">{centerPayments.filter(p => p.reportingExcluded).length} écriture(s) de démonstration, soit {centerPayments.filter(p => p.reportingExcluded).reduce((sum, p) => sum + p.amount, 0).toLocaleString('fr-DZ')} DA, restent conservées dans le registre et sont exclues des indicateurs financiers.</p>}
       </section>
-      <nav aria-label="Paiements et crédits" className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-1.5 sm:grid-cols-3">
-        {([{ id: 'register', label: `Registre CRM (${centerPayments.length} écritures)` }, { id: 'balances', label: 'Crédits de séances' }, { id: 'history', label: 'Historique ancienne base' }] as Array<{ id: MainTab; label: string }>).map(tab => <button key={tab.id} type="button" aria-pressed={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} className={`rounded-xl px-4 py-3 text-sm font-bold transition ${activeTab === tab.id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>{tab.label}</button>)}
+      <nav aria-label="Paiements et crédits" className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-1.5 sm:grid-cols-2 lg:grid-cols-4">
+        {([{ id: 'register', label: `Registre CRM (${centerPayments.length} écritures)` }, { id: 'balances', label: 'Crédits de séances' }, { id: 'history', label: 'Historique ancienne base' }, { id: 'checks', label: 'Contrôles et rapprochements' }] as Array<{ id: MainTab; label: string }>).map(tab => <button key={tab.id} type="button" aria-pressed={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} className={`rounded-xl px-4 py-3 text-sm font-bold transition ${activeTab === tab.id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>{tab.label}</button>)}
       </nav>
 
       {/* TAB 1: REGISTRE DES ENCAISSEMENTS */}
       {activeTab === 'history' && <LegacyHistoryPanel centerId={centerId} kind="finance" />}
+      {activeTab === 'checks' && <ReconciliationPanel key={centerId} centerId={centerId} />}
       {activeTab === 'register' && (
         <div className="space-y-4">
           {/* Filters Bar */}

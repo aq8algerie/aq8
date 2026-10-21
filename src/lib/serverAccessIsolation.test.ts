@@ -73,6 +73,7 @@ async function run() {
   const { POST: readFinanceSummary } = await import('../../app/api/crm-financial-summary/route');
   const { POST: readHistory } = await import('../../app/api/crm-legacy-history/route');
   const { POST: readTimeline } = await import('../../app/api/crm-client-timeline/route');
+  const { POST: readReconciliation } = await import('../../app/api/crm-reconciliation/route');
   const { POST: mutateManagers } = await import('../../app/api/crm-managers/route');
   const { POST: readPortal } = await import('../../app/api/client-portal/route');
   const { POST: registerPortal } = await import('../../app/api/client-portal/register/route');
@@ -306,6 +307,20 @@ async function run() {
       assert.ok(!JSON.stringify(hiddenStatement).includes('987654'));
       assert.ok(!JSON.stringify(hiddenStatement).includes('OWNER_ONLY_SECRET'));
       assert.equal((await readTimeline(authenticatedRequest(managerA.token, { ...sidiPayload, mode: 'statement' }))).status, 403);
+    });
+    await testCase('reconciliation enforces center and financial permissions even after cache warm-up', async () => {
+      const payload = { centerId: 'center-a' };
+      assert.equal((await readReconciliation(authenticatedRequest('', payload))).status, 401);
+      assert.equal((await readReconciliation(authenticatedRequest(managerA.token, { centerId: 'center-b' }))).status, 403);
+      assert.equal((await readReconciliation(authenticatedRequest(sidiStaff.token, { centerId: 'center-5' }))).status, 403);
+      const response = await readReconciliation(authenticatedRequest(managerA.token, payload));
+      assert.equal(response.status, 200); assert.equal(response.headers.get('cache-control'), 'private, no-store');
+      const data = await response.json(); assert.ok(Array.isArray(data.rows)); assert.ok(!JSON.stringify(data).includes('FOREIGN_PRIVATE'));
+      await db.collection('users').doc(managerA.uid).update({ financeRead: false });
+      assert.equal((await readReconciliation(authenticatedRequest(managerA.token, payload))).status, 403);
+      await db.collection('users').doc(managerA.uid).update({ financeRead: true });
+      assert.equal((await readReconciliation(authenticatedRequest(managerA.token, { ...payload, problem: '__proto__' }))).status, 400);
+      assert.equal((await readReconciliation(authenticatedRequest(sidiOwner.token, { centerId: 'center-5' }))).status, 200);
     });
     await testCase('manager provisioning cannot overwrite a super admin or invent a center', async () => {
       const payload = { action: 'upsert', name: 'Test', email: 'super-admin@security.test', centerId: 'center-a', active: true };
