@@ -4,6 +4,7 @@
  */
 
 import { Appointment, Client, ClientPackage, Package, Service } from '../types';
+export const PACKAGE_VALIDITY_DAYS = 45;
 
 /**
  * Check if a package is a real user-facing package (filters out technical legacy packages)
@@ -29,7 +30,7 @@ export function isPackageExpired(clientPackage: ClientPackage, now: Date = new D
   const diffTime = now.getTime() - purchase.getTime();
   const diffDays = diffTime / (1000 * 60 * 60 * 24);
   
-  return diffDays > 45;
+  return diffDays > PACKAGE_VALIDITY_DAYS;
 }
 
 /**

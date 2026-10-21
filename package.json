@@ -9,7 +9,7 @@
     "start": "node dist/server.cjs",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "test": "tsx src/lib/rules.test.ts && node scripts/historical-measurement-fields.test.mjs && tsx scripts/measurement-display.test.tsx && tsx src/lib/legacyHistory.test.ts && tsx scripts/legacy-history-display.test.tsx",
+    "test": "tsx src/lib/rules.test.ts && node scripts/historical-measurement-fields.test.mjs && tsx scripts/measurement-display.test.tsx && tsx src/lib/legacyHistory.test.ts && tsx scripts/legacy-history-display.test.tsx && tsx scripts/payment-balances.test.tsx",
     "test:security:firestore": "tsx src/lib/firestoreIsolation.test.ts",
     "test:security:server": "tsx src/lib/serverAccessIsolation.test.ts",
     "audit:security": "firebase emulators:exec --project demo-aq8-security --only \"firestore,storage,auth\" \"node scripts/run-security-tests.mjs\"",

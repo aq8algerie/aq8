@@ -27,6 +27,10 @@ import {
 } from 'lucide-react';
 import { Client, Payment, Package, Center, ClientPackage, Appointment } from '../../types';
 import { LegacyHistoryPanel } from './LegacyHistoryPanel';
+import { ClientBalancesPanel } from './ClientBalancesPanel';
+import { HistoricalMemberships } from './cards/HistoricalMemberships';
+import { buildClientBalances, netReceipts, packageStatusLabel } from '../../lib/paymentBalances';
+import { isHistoricalRecord } from '../../lib/legacyHistory';
 
 interface ManagerPaymentsViewProps {
   centerId: string;
@@ -101,7 +105,7 @@ export function ManagerPaymentsView({
   onReversePayment,
   onCancelPackageClick,
 }: ManagerPaymentsViewProps) {
-  const [activeTab, setActiveTab] = useState<MainTab>('register');
+  const [activeTab, setActiveTab] = useState<MainTab>('balances');
   const [listPage, setListPage] = useState(1);
   const [listPageSize, setListPageSize] = useState<PaymentPageSize>(20);
   const [searchQuery, setSearchQuery] = useState('');
@@ -110,35 +114,25 @@ export function ManagerPaymentsView({
   const [dateFilter, setDateFilter] = useState<PaymentDateFilter>('all');
   const [selectedReceiptPayment, setSelectedReceiptPayment] = useState<Payment | null>(null);
   const [selectedClientLedger, setSelectedClientLedger] = useState<Client | null>(null);
-  const [balanceFilter, setBalanceFilter] = useState<'all' | 'low' | 'empty' | 'active'>('all');
+  const [showLedgerHistory, setShowLedgerHistory] = useState(false);
+  const [balanceAsOf, setBalanceAsOf] = useState(() => new Date());
+  useEffect(() => { const timer = setInterval(() => setBalanceAsOf(new Date()), 60000); return () => clearInterval(timer); }, []);
 
-  const centerClients = useMemo(() => clients.filter(c => c.centerId === centerId), [clients, centerId]);
-  const centerPayments = useMemo(() => payments.filter(p => p.centerId === centerId), [payments, centerId]);
+  const centerClients = useMemo(() => clients.filter(c => c.centerId === centerId && c.status !== 'archived'), [clients, centerId]);
+  const centerPayments = useMemo(() => payments.filter(p => p.centerId === centerId && !isHistoricalRecord(p)), [payments, centerId]);
   const centerClientPackages = useMemo(() => clientPackages.filter(cp => cp.centerId === centerId), [clientPackages, centerId]);
-  const centerAppointments = useMemo(() => appointments.filter(a => a.centerId === centerId), [appointments, centerId]);
+  const centerAppointments = useMemo(() => appointments.filter(a => a.centerId === centerId && !isHistoricalRecord(a)), [appointments, centerId]);
 
   // Center Validation Mode
   const validationMode = currentCenter.sessionValidationMode || 'auto';
 
-  // Overall Financial Stats
-  const totalPostedAmount = useMemo(() => {
-    return centerPayments
-      .filter(p => p.status !== 'reversed' && p.kind !== 'reversal')
-      .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-  }, [centerPayments]);
-
-  const totalSessionsPurchased = useMemo(() => {
-    return centerClientPackages.reduce((sum, cp) => {
-      const pack = packages.find(p => p.id === cp.packageId);
-      return sum + (pack?.sessionsCount ?? cp.totalSessions ?? 0);
-    }, 0);
-  }, [centerClientPackages, packages]);
-
-  const totalSessionsRemaining = useMemo(() => {
-    return centerClientPackages
-      .filter(cp => cp.status === 'active')
-      .reduce((sum, cp) => sum + Math.max(0, cp.sessionsRemaining || 0), 0);
-  }, [centerClientPackages]);
+  const clientBalanceRows = useMemo(() => buildClientBalances({ centerId, clients: centerClients,
+    clientPackages: centerClientPackages, payments: centerPayments, appointments: centerAppointments, now: balanceAsOf,
+  }), [centerId, centerClients, centerClientPackages, centerPayments, centerAppointments, balanceAsOf]);
+  const totalPostedAmount = useMemo(() => netReceipts(centerPayments), [centerPayments]);
+  const totalSessionsRemaining = clientBalanceRows.reduce((sum, row) => sum + row.totalRemaining, 0);
+  const clientsWithCredits = clientBalanceRows.filter(row => row.totalRemaining > 0).length;
+  const nonUsableRemaining = clientBalanceRows.reduce((sum, row) => sum + row.nonUsableRemaining, 0);
 
   // Filtered Payments for Register Tab
   const filteredPayments = useMemo(() => {
@@ -168,75 +162,6 @@ export function ManagerPaymentsView({
       .sort((a, b) => safeText(b.date).localeCompare(safeText(a.date)));
   }, [centerPayments, centerClients, packages, searchQuery, methodFilter, packageFilter, dateFilter]);
 
-  // Client Balances Calculation
-  const clientBalanceRows = useMemo(() => {
-    return centerClients.map(client => {
-      const pkgs = centerClientPackages.filter(cp => cp.clientId === client.id);
-      const activePkg = pkgs.find(cp => cp.status === 'active' && cp.sessionsRemaining > 0);
-      const totalAcquired = pkgs.reduce((sum, cp) => {
-        const pack = packages.find(p => p.id === cp.packageId);
-        return sum + (pack?.sessionsCount ?? cp.totalSessions ?? 0);
-      }, 0);
-      const totalRemaining = pkgs.filter(cp => cp.status === 'active').reduce((sum, cp) => sum + Math.max(0, cp.sessionsRemaining || 0), 0);
-      const clientPays = centerPayments.filter(p => p.clientId === client.id && p.status !== 'reversed');
-      const totalSpent = clientPays.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-      const clientApts = centerAppointments.filter(a => a.clientId === client.id);
-      const completedApts = clientApts.filter(a => a.status === 'completed').length;
-
-      let statusCategory: 'active' | 'low' | 'empty' = 'empty';
-      if (totalRemaining > 2) statusCategory = 'active';
-      else if (totalRemaining > 0) statusCategory = 'low';
-
-      return {
-        client,
-        activePkg,
-        pkgsCount: pkgs.length,
-        totalAcquired,
-        totalRemaining,
-        totalSpent,
-        completedApts,
-        statusCategory,
-        lastPaymentDate: clientPays[0]?.date || null,
-      };
-    });
-  }, [centerClients, centerClientPackages, centerPayments, centerAppointments]);
-
-type BalanceSortOption = 'alpha_asc' | 'alpha_desc' | 'balance_desc' | 'balance_asc' | 'spent_desc';
-
-  const [balanceSortBy, setBalanceSortBy] = useState<BalanceSortOption>('alpha_asc');
-
-  const filteredClientBalances = useMemo(() => {
-    const list = clientBalanceRows.filter(row => {
-      const fullName = `${row.client.firstName} ${row.client.lastName}`.toLowerCase();
-      const matchesQuery = !searchQuery.trim() || fullName.includes(searchQuery.trim().toLowerCase()) || row.client.phone.includes(searchQuery.trim());
-      const matchesBalance = balanceFilter === 'all' || row.statusCategory === balanceFilter;
-      return matchesQuery && matchesBalance;
-    });
-
-    return list.sort((a, b) => {
-      if (balanceSortBy === 'alpha_asc') {
-        const nameA = `${a.client.firstName} ${a.client.lastName}`;
-        const nameB = `${b.client.firstName} ${b.client.lastName}`;
-        return nameA.localeCompare(nameB, 'fr', { sensitivity: 'base' });
-      }
-      if (balanceSortBy === 'alpha_desc') {
-        const nameA = `${a.client.firstName} ${a.client.lastName}`;
-        const nameB = `${b.client.firstName} ${b.client.lastName}`;
-        return nameB.localeCompare(nameA, 'fr', { sensitivity: 'base' });
-      }
-      if (balanceSortBy === 'balance_desc') {
-        return b.totalRemaining - a.totalRemaining;
-      }
-      if (balanceSortBy === 'balance_asc') {
-        return a.totalRemaining - b.totalRemaining;
-      }
-      if (balanceSortBy === 'spent_desc') {
-        return b.totalSpent - a.totalSpent;
-      }
-      return 0;
-    });
-  }, [clientBalanceRows, searchQuery, balanceFilter, balanceSortBy]);
-
   const totalPages = Math.max(1, Math.ceil(filteredPayments.length / listPageSize));
   const normalizedListPage = Math.min(listPage, totalPages);
   const startIndex = (normalizedListPage - 1) * listPageSize;
@@ -260,7 +185,6 @@ type BalanceSortOption = 'alpha_asc' | 'alpha_desc' | 'balance_desc' | 'balance_
     setMethodFilter('all');
     setPackageFilter('all');
     setDateFilter('all');
-    setBalanceFilter('all');
   };
 
   const handlePrintReceipt = () => {
@@ -269,118 +193,36 @@ type BalanceSortOption = 'alpha_asc' | 'alpha_desc' | 'balance_desc' | 'balance_
 
   return (
     <div id="manager-payments-view" className="space-y-5">
-      {/* Top Banner KPI & Mode Indicator */}
-      <div className="bg-gradient-to-br from-[#1e1e1e] via-[#2a2a2a] to-[#121212] rounded-3xl p-6 text-white shadow-xl border border-slate-800 relative overflow-hidden">
-        <div className="absolute top-0 right-0 h-64 w-64 translate-x-12 -translate-y-12 rounded-full bg-[#0284c7]/10 blur-3xl pointer-events-none" />
-        
-        <div className="relative z-10 space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-[#0284c7] backdrop-blur-md mb-2">
-                <CreditCard className="h-3.5 w-3.5" /> Finance & Comptabilité Adhérents
-              </div>
-              <h2 className="font-display text-2xl font-black text-white">Suivi des Paiements & Soldes</h2>
-              <p className="text-xs text-slate-300 font-medium">Gérez le registre d'encaissement et la déduction des séances pour chaque adhérent.</p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                id="btn-payments-log-top"
-                onClick={onLogPaymentClick}
-                className="px-4 py-2 bg-[#0284c7] hover:bg-[#0369a1] text-white font-bold rounded-xl transition shadow-md text-xs flex items-center gap-1.5 cursor-pointer"
-              >
-                <Plus className="h-4 w-4" /> Enregistrer un encaissement
-              </button>
-            </div>
+      <section className="space-y-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div><p className="text-xs font-bold uppercase tracking-wider text-sky-700">Paiements et forfaits</p>
+            <h2 className="mt-1 text-2xl font-bold text-slate-900">Encaissements et crédits de séances</h2>
+            <p className="mt-2 text-sm text-slate-600">Consultez les règlements du CRM, les crédits utilisables et l’historique de chaque adhérent.</p>
           </div>
-
-          {/* Validation Mode Badge & Summary Metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-white/10">
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-[#0284c7]/20 text-[#0284c7] flex items-center justify-center font-bold">
-                DZD
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Total Encaissements</span>
-                <span className="font-mono text-base font-black text-white">{totalPostedAmount.toLocaleString('fr-DZ')} DZD</span>
-              </div>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-                <Layers className="h-5 w-5" />
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Séances Vendues</span>
-                <span className="font-mono text-base font-black text-white">{totalSessionsPurchased} séances</span>
-              </div>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold">
-                <Clock className="h-5 w-5" />
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Solde Global Restant</span>
-                <span className="font-mono text-base font-black text-sky-300">{totalSessionsRemaining} séa. dispo</span>
-              </div>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5 flex items-center gap-3">
-              <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold ${
-                validationMode === 'auto' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
-              }`}>
-                {validationMode === 'auto' ? <Zap className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Mode Déduction</span>
-                <span className={`text-xs font-black uppercase ${validationMode === 'auto' ? 'text-emerald-400' : 'text-amber-400'}`}>
-                  {validationMode === 'auto' ? '⚡ Automatique' : '✋ Manuel à la séance'}
-                </span>
-              </div>
-            </div>
-          </div>
+          <button id="btn-payments-log-top" type="button" onClick={onLogPaymentClick} className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-3 text-sm font-bold text-white hover:bg-sky-700"><Plus className="h-4 w-4" /> Nouvel encaissement</button>
         </div>
-      </div>
-
-      {/* Main Tabs Navigation */}
-      <div className="flex bg-white rounded-2xl p-1.5 border border-slate-200 shadow-xs gap-1.5">
-        <button type="button" onClick={() => setActiveTab('history')} className={`flex-1 rounded-xl px-4 py-2.5 text-xs font-black ${activeTab === 'history' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>Historique ancienne base</button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('register')}
-          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-black transition cursor-pointer flex items-center justify-center gap-2 ${
-            activeTab === 'register'
-              ? 'bg-[#353535] text-white shadow-sm'
-              : 'text-slate-600 hover:bg-slate-50'
-          }`}
-        >
-          <CreditCard className="h-4 w-4" /> Registre d'Encaissement Manuel ({centerPayments.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('balances')}
-          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-black transition cursor-pointer flex items-center justify-center gap-2 ${
-            activeTab === 'balances'
-              ? 'bg-[#353535] text-white shadow-sm'
-              : 'text-slate-600 hover:bg-slate-50'
-          }`}
-        >
-          <Users className="h-4 w-4" /> Suivi des Soldes Adhérents ({centerClients.length})
-        </button>
-      </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><p className="text-xs font-semibold text-slate-600">Encaissements nets · CRM</p><p className="mt-2 text-2xl font-bold text-slate-900">{totalPostedAmount.toLocaleString('fr-DZ')} <span className="text-sm">DA</span></p><p className="mt-1 text-xs text-slate-500">Règlements moins écritures d’annulation · toutes dates</p></div>
+          <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4"><p className="text-xs font-semibold text-sky-800">Crédits utilisables aujourd’hui</p><p className="mt-2 text-2xl font-bold text-sky-900">{totalSessionsRemaining} <span className="text-sm">séances</span></p><p className="mt-1 text-xs text-sky-700">Forfaits en cours, non expirés · clients actifs</p></div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><p className="text-xs font-semibold text-slate-600">Adhérents avec crédits utilisables</p><p className="mt-2 text-2xl font-bold text-slate-900">{clientsWithCredits}</p><p className="mt-1 text-xs text-slate-500">Sur {centerClients.length} adhérents du centre</p></div>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500"><p>Les écritures de l’ancienne base sont consultables dans l’onglet Historique ancienne base.</p><p className="rounded-full bg-slate-100 px-3 py-1.5 font-semibold text-slate-700">Déduction des séances : {validationMode === 'auto' ? 'automatique' : 'validation manuelle'}</p></div>
+        {nonUsableRemaining > 0 && <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">{nonUsableRemaining} crédit(s) figurent sur des forfaits non utilisables : expirés, clos ou rattachés à un client suspendu. Ils restent visibles dans le détail et ne sont pas comptés comme disponibles.</p>}
+      </section>
+      <nav aria-label="Paiements et crédits" className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-1.5 sm:grid-cols-3">
+        {([{ id: 'register', label: `Encaissements CRM (${centerPayments.length})` }, { id: 'balances', label: 'Crédits de séances' }, { id: 'history', label: 'Historique ancienne base' }] as Array<{ id: MainTab; label: string }>).map(tab => <button key={tab.id} type="button" aria-pressed={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} className={`rounded-xl px-4 py-3 text-sm font-bold transition ${activeTab === tab.id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>{tab.label}</button>)}
+      </nav>
 
       {/* TAB 1: REGISTRE DES ENCAISSEMENTS */}
       {activeTab === 'history' && <LegacyHistoryPanel centerId={centerId} kind="finance" />}
-      <p className="text-xs text-slate-500">Les encaissements affichés ici concernent le CRM actuel. Les écritures anciennes et abonnements passés restent consultables dans « Historique ancienne base ».</p>
       {activeTab === 'register' && (
         <div className="space-y-4">
           {/* Filters Bar */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-4 space-y-4">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <div>
-                <h3 className="font-bold font-display text-slate-800 text-base">Historique des Règlements</h3>
-                <p className="text-[10px] text-slate-400 font-medium">Recherchez et consultez les reçus des règlements encaisseurs.</p>
+                <h3 className="font-bold font-display text-slate-800 text-base">Encaissements du CRM courant</h3>
+                <p className="text-xs text-slate-500">Recherchez un règlement, consultez son reçu et retrouvez les annulations.</p>
               </div>
             </div>
 
@@ -564,204 +406,31 @@ type BalanceSortOption = 'alpha_asc' | 'alpha_desc' | 'balance_desc' | 'balance_
         </div>
       )}
 
-      {/* TAB 2: SUIVI DES SOLDES ADHÉRENTS */}
-      {activeTab === 'balances' && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-4 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-              <div>
-                <h3 className="font-bold font-display text-slate-800 text-base">Suivi des Crédits & Soldes de Séances</h3>
-                <p className="text-[10px] text-slate-400 font-medium">Consultez le nombre de séances disponibles pour chaque membre du centre.</p>
-              </div>
-
-              {/* Balance Category Filter */}
-              <div className="flex flex-wrap items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setBalanceFilter('all')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    balanceFilter === 'all' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  Tous ({clientBalanceRows.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBalanceFilter('active')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    balanceFilter === 'active' ? 'bg-emerald-50 text-emerald-700 shadow-xs' : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  Soldes actifs ({clientBalanceRows.filter(r => r.statusCategory === 'active').length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBalanceFilter('low')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    balanceFilter === 'low' ? 'bg-amber-50 text-amber-700 shadow-xs' : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  Solde bas ≤2 ({clientBalanceRows.filter(r => r.statusCategory === 'low').length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBalanceFilter('empty')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    balanceFilter === 'empty' ? 'bg-rose-50 text-rose-700 shadow-xs' : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  Épuisé / 0 ({clientBalanceRows.filter(r => r.statusCategory === 'empty').length})
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="sm:col-span-2 relative">
-                <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Rechercher par prénom, nom ou téléphone d'adhérent..."
-                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-[#0284c7] focus:bg-white"
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">Tri :</span>
-                <select
-                  value={balanceSortBy}
-                  onChange={(e) => setBalanceSortBy(e.target.value as BalanceSortOption)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-[#0284c7]"
-                >
-                  <option value="alpha_asc">🔤 Nom (A ➔ Z)</option>
-                  <option value="alpha_desc">🔤 Nom (Z ➔ A)</option>
-                  <option value="balance_desc">⚡ Solde restant (Plus élevé)</option>
-                  <option value="balance_asc">⚡ Solde restant (Plus bas)</option>
-                  <option value="spent_desc">💰 Total investi (Décroissant)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Client Balances Table */}
-          <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-xs">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 text-slate-400 font-semibold border-b border-slate-100 uppercase text-[10px]">
-                  <tr>
-                    <th className="p-4">Adhérent</th>
-                    <th className="p-4">Forfait Actif</th>
-                    <th className="p-4 text-center">Séances Achetées</th>
-                    <th className="p-4 text-center">Séances Consommées</th>
-                    <th className="p-4 text-center">Solde Restant</th>
-                    <th className="p-4 text-right">Total Investi</th>
-                    <th className="p-4 text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {filteredClientBalances.length > 0 ? filteredClientBalances.map(row => {
-                    const activePackDef = packages.find(p => p.id === row.activePkg?.packageId);
-
-                    return (
-                      <tr key={row.client.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-4 font-bold text-slate-800">
-                          <div>{row.client.firstName} {row.client.lastName}</div>
-                          <div className="text-[10px] text-slate-400 font-mono font-normal">{row.client.phone}</div>
-                        </td>
-
-                        <td className="p-4">
-                          {row.activePkg ? (
-                            <span className="font-semibold text-slate-700 block">
-                              {activePackDef?.name || 'Forfait en cours'}
-                            </span>
-                          ) : (
-                            <span className="text-slate-400 italic text-[11px]">Aucun forfait actif</span>
-                          )}
-                        </td>
-
-                        <td className="p-4 text-center font-mono font-semibold text-slate-600">
-                          {row.totalAcquired} séa.
-                        </td>
-
-                        <td className="p-4 text-center font-mono font-semibold text-slate-600">
-                          {row.completedApts} faite{row.completedApts > 1 ? 's' : ''}
-                        </td>
-
-                        <td className="p-4 text-center">
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black font-mono ${
-                            row.statusCategory === 'active'
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : row.statusCategory === 'low'
-                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                              : 'bg-rose-50 text-rose-700 border border-rose-200'
-                          }`}>
-                            {row.totalRemaining} séance{row.totalRemaining > 1 ? 's' : ''}
-                          </span>
-                        </td>
-
-                        <td className="p-4 text-right font-mono font-bold text-slate-800">
-                          {row.totalSpent.toLocaleString('fr-DZ')} DZD
-                        </td>
-
-                        <td className="p-4 text-center">
-                          <div className="inline-flex items-center justify-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedClientLedger(row.client)}
-                              className="px-3 py-1.5 bg-slate-100 hover:bg-[#0284c7] hover:text-white text-slate-700 font-bold rounded-xl transition text-[11px] inline-flex items-center gap-1 cursor-pointer"
-                            >
-                              <Eye className="h-3.5 w-3.5" /> Fiche Solde
-                            </button>
-                            {row.activePkg && onCancelPackageClick && (
-                              <button
-                                type="button"
-                                onClick={() => onCancelPackageClick(row.activePkg!.id)}
-                                className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 rounded-xl transition text-[11px] inline-flex items-center gap-1 cursor-pointer"
-                                title="Annuler le forfait actif"
-                              >
-                                <Ban className="h-3.5 w-3.5" /> Annuler
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  }) : (
-                    <tr>
-                      <td colSpan={7} className="p-8 text-center text-slate-400 italic">
-                        Aucun adhérent trouvé.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+      {activeTab === 'balances' && <ClientBalancesPanel rows={clientBalanceRows} packages={packages} onOpen={(client, history = false) => { setSelectedClientLedger(client); setShowLedgerHistory(history); }} />}
 
       {/* --- MODAL DETAILED CLIENT LEDGER & SOLDE HISTORY --- */}
       {selectedClientLedger && (() => {
         const clientPkgs = centerClientPackages.filter(cp => cp.clientId === selectedClientLedger.id);
-        const clientPays = centerPayments.filter(p => p.clientId === selectedClientLedger.id && p.status !== 'reversed');
+        const clientPays = centerPayments.filter(p => p.clientId === selectedClientLedger.id).sort((a, b) => b.date.localeCompare(a.date));
         const clientApts = centerAppointments.filter(a => a.clientId === selectedClientLedger.id);
-        const totalSpent = clientPays.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-        const activePkg = clientPkgs.find(cp => cp.status === 'active' && cp.sessionsRemaining > 0);
+        const totalSpent = netReceipts(clientPays);
+        const balance = clientBalanceRows.find(row => row.client.id === selectedClientLedger.id);
 
         return (
           <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
-            <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl border border-slate-150 flex flex-col max-h-[90vh]">
+            <div role="dialog" aria-modal="true" aria-label="Dossier de paiements et crédits" className="bg-white rounded-3xl w-full max-w-5xl overflow-hidden shadow-2xl border border-slate-150 flex flex-col max-h-[90vh]">
               {/* Header */}
               <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
                 <div>
                   <h3 className="font-display font-black text-lg">
-                    Historique & Solde : {selectedClientLedger.firstName} {selectedClientLedger.lastName}
+                    Dossier de paiements : {selectedClientLedger.firstName} {selectedClientLedger.lastName}
                   </h3>
-                  <p className="text-xs text-slate-400 font-medium">Fiche financière et de déduction des séances pour cet adhérent.</p>
+                  <p className="text-xs text-slate-400 font-medium">Forfaits et règlements du CRM courant. Les archives restent accessibles séparément.</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelectedClientLedger(null)}
+                  aria-label="Fermer le dossier de paiements"
                   className="p-1.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition cursor-pointer text-sm font-bold"
                 >
                   ✕
@@ -770,28 +439,35 @@ type BalanceSortOption = 'alpha_asc' | 'alpha_desc' | 'balance_desc' | 'balance_
 
               {/* Body Content */}
               <div className="p-6 space-y-6 overflow-y-auto">
+                <button type="button" onClick={() => setShowLedgerHistory(value => !value)} aria-expanded={showLedgerHistory} className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-800">{showLedgerHistory ? 'Masquer les archives anciennes' : 'Consulter les anciens paiements, abonnements et réservations'}</button>
+                {showLedgerHistory && <div className="space-y-4"><HistoricalMemberships client={selectedClientLedger} /><LegacyHistoryPanel centerId={centerId} clientId={selectedClientLedger.id} kind="finance" /><LegacyHistoryPanel centerId={centerId} clientId={selectedClientLedger.id} kind="reservations" /></div>}
+
                 {/* Solde Summary Pill */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
                   <div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Solde Disponible</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Crédits utilisables</span>
                     <span className="font-mono text-lg font-black text-[#0284c7]">
-                      {activePkg ? `${activePkg.sessionsRemaining} / ${packages.find(p => p.id === activePkg.packageId)?.sessionsCount ?? activePkg.totalSessions}` : '0 séance'}
+                      {balance?.pkgsCount ? `${balance.totalRemaining} séance(s)` : 'Non renseigné'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Cumul Réglé</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Encaissements nets CRM</span>
                     <span className="font-mono text-lg font-black text-slate-800">
-                      {totalSpent.toLocaleString('fr-DZ')} DZD
+                      {clientPays.length ? `${totalSpent.toLocaleString('fr-DZ')} DA` : 'Aucune écriture CRM'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Rendez-vous Réalisés</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Séances validées CRM</span>
                     <span className="font-mono text-lg font-black text-emerald-600">
                       {clientApts.filter(a => a.status === 'completed').length} séances
                     </span>
                   </div>
                 </div>
 
+                <section className="space-y-3"><h4 className="text-sm font-bold text-slate-800">Règlements du CRM courant ({clientPays.length})</h4><p className="text-xs text-slate-500">Les règlements et leurs contre-écritures restent visibles. Le cumul est net des annulations.</p>
+                  {clientPays.map(payment => <div key={payment.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 text-sm"><div><p className="font-semibold text-slate-800">{payment.receiptNumber || payment.id}</p><p className="text-xs text-slate-500">{payment.date.slice(0, 10).split('-').reverse().join('/')} · {payment.kind === 'reversal' ? 'Écriture d’annulation' : payment.status === 'reversed' ? 'Règlement annulé' : 'Règlement enregistré'}</p></div><strong>{payment.amount.toLocaleString('fr-DZ')} DA</strong>{payment.kind !== 'reversal' && <button type="button" onClick={() => setSelectedReceiptPayment(payment)} className="text-xs font-semibold text-sky-700 underline">Voir le reçu</button>}</div>)}
+                  {!clientPays.length && <p className="text-sm text-slate-500">Aucun règlement dans le CRM courant. Consultez les archives pour les paiements antérieurs.</p>}
+                </section>
                 {/* Packages Purchased Section */}
                 <div className="space-y-2">
                   <h4 className="font-bold text-xs uppercase text-slate-400 tracking-wider">Forfaits Souscrits ({clientPkgs.length})</h4>
@@ -799,7 +475,7 @@ type BalanceSortOption = 'alpha_asc' | 'alpha_desc' | 'balance_desc' | 'balance_
                     {clientPkgs.length > 0 ? clientPkgs.map(cp => {
                       const packDef = packages.find(p => p.id === cp.packageId);
                       const isCancelled = cp.status === 'cancelled';
-                      const totalSess = packDef?.sessionsCount ?? cp.totalSessions;
+                      const totalSess = cp.totalSessions;
 
                       return (
                         <div key={cp.id} className="p-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-xs">
@@ -816,11 +492,11 @@ type BalanceSortOption = 'alpha_asc' | 'alpha_desc' | 'balance_desc' | 'balance_
                               <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md ${
                                 isCancelled
                                   ? 'bg-rose-100 text-rose-800 border border-rose-200'
-                                  : cp.status === 'active'
+                                  : packageStatusLabel(cp, balanceAsOf) === 'En cours'
                                   ? 'bg-emerald-50 text-emerald-700'
                                   : 'bg-slate-100 text-slate-500'
                               }`}>
-                                {isCancelled ? 'Annulé' : cp.status}
+                                {packageStatusLabel(cp, balanceAsOf)}
                               </span>
                             </div>
                             {!isCancelled && onCancelPackageClick && (
@@ -856,7 +532,7 @@ type BalanceSortOption = 'alpha_asc' | 'alpha_desc' | 'balance_desc' | 'balance_
                         <div>
                           <span className="font-bold text-slate-800 block">Séance du {apt.dateTime.replace('T', ' ')}</span>
                           <span className="text-[10px] text-slate-400">
-                            {apt.deductedCredits === 1 ? '1 crédit déduit' : '0 crédit déduit (Attente validation)'}
+                            {apt.deductedCredits === 1 ? 'Déduction enregistrée : 1 crédit' : 'Aucune déduction enregistrée'}
                           </span>
                         </div>
                         <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] uppercase ${
@@ -866,7 +542,7 @@ type BalanceSortOption = 'alpha_asc' | 'alpha_desc' | 'balance_desc' | 'balance_
                             ? 'bg-sky-100 text-[#0284c7]'
                             : 'bg-rose-100 text-rose-800'
                         }`}>
-                          {apt.status === 'completed' ? 'Validée' : apt.status === 'booked' ? 'Réservée' : 'Annulée'}
+                          {apt.status === 'completed' ? 'Validée' : apt.status === 'booked' ? 'Réservée' : apt.status === 'confirmed' ? 'Confirmée' : 'Annulée'}
                         </span>
                       </div>
                     )) : (
@@ -918,6 +594,7 @@ type BalanceSortOption = 'alpha_asc' | 'alpha_desc' | 'balance_desc' | 'balance_
                 </div>
 
                 {/* Receipt Details */}
+                {(selectedReceiptPayment.status === 'reversed' || selectedReceiptPayment.kind === 'reversal') && <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-rose-800"><p className="text-sm font-bold">{selectedReceiptPayment.kind === 'reversal' ? 'Contre-écriture d’annulation' : 'Reçu annulé'}</p><p className="mt-1 text-xs">Montant d’origine conservé pour la traçabilité. Ce document ne représente pas un nouvel encaissement.</p>{selectedReceiptPayment.reversedByPaymentId && <p className="mt-1 break-all text-xs">Annulation : {selectedReceiptPayment.reversedByPaymentId}</p>}{selectedReceiptPayment.reversalOfPaymentId && <p className="mt-1 break-all text-xs">Règlement d’origine : {selectedReceiptPayment.reversalOfPaymentId}</p>}</div>}
                 <div className="space-y-2">
                   <div className="flex justify-between font-bold text-slate-800 text-[11px] pb-1.5 gap-3">
                     <span>REÇU DE PAIEMENT N°</span>
@@ -943,7 +620,7 @@ type BalanceSortOption = 'alpha_asc' | 'alpha_desc' | 'balance_desc' | 'balance_
 
                 {/* Amount Paid block */}
                 <div className="p-3 bg-[#0284c7]/5 border border-[#0284c7]/15 rounded-xl flex justify-between items-center gap-3">
-                  <span className="font-bold text-[#0284c7] uppercase text-[10px] tracking-wide">Montant Total Réglé</span>
+                  <span className="font-bold text-[#0284c7] uppercase text-[10px] tracking-wide">{selectedReceiptPayment.status === 'reversed' ? 'Montant d’origine · reçu annulé' : selectedReceiptPayment.kind === 'reversal' ? 'Montant de l’annulation' : 'Montant réglé'}</span>
                   <span className="font-mono font-black text-slate-800 text-sm whitespace-nowrap">{receiptAmount.toLocaleString('fr-DZ')} DZD</span>
                 </div>
 
