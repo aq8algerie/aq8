@@ -195,6 +195,19 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 /* Print Media Styles for Invoices */
 @media print {
+  body:has(#client-statement-print-root) { overflow: visible !important; height: auto !important; }
+  body:has(#client-statement-print-root) > :not(#client-statement-print-root) { display: none !important; }
+  #client-statement-print-root, #client-statement-print-root * { visibility: visible !important; }
+  #client-statement-print-root { position: static !important; overflow: visible !important; padding: 0 !important; background: white !important; }
+  #client-statement-print-root .statement-shell { max-width: none !important; border-radius: 0 !important; box-shadow: none !important; }
+  #client-statement-print-root .statement-toolbar { display: none !important; }
+  #client-statement-print-root .client-statement-document { padding: 0 !important; font-size: 10pt; }
+  #client-statement-print-root .overflow-x-auto { overflow: visible !important; }
+  #client-statement-print-root thead { display: table-header-group; }
+  #client-statement-print-root tr { break-inside: avoid; }
+  #client-statement-print-root h3 { break-after: avoid; }
+}
+@media print {
   body * {
     visibility: hidden;
   }

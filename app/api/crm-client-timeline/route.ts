@@ -4,11 +4,14 @@ import { CrmAccessError, getCrmErrorResponse, verifyServerCrmAccess } from '@/sr
 import { buildClientTimeline, filterClientTimeline } from '@/src/lib/clientTimeline';
 import type { Appointment, Client, ClientPackage, Payment } from '@/src/types';
 import type { LegacyHistoryRecord } from '@/src/lib/legacyHistory';
+import { buildClientStatement } from '@/src/lib/clientStatement';
 
 export async function POST(request: Request) {
   try {
     const actor = await verifyServerCrmAccess(request, ['center_manager', 'super_admin']);
     const body = await request.json();
+    if (body.mode !== undefined && body.mode !== 'statement') throw new CrmAccessError('Mode invalide.', 400);
+    if (body.mode === 'statement' && ['search', 'kind', 'origin', 'from', 'to'].some(key => body[key])) throw new CrmAccessError('Le relevé complet ne peut pas être filtré.', 400);
     for (const key of ['centerId', 'clientId']) if (typeof body[key] !== 'string' || !body[key].trim() || body[key].length > 200 || body[key].includes('/')) throw new CrmAccessError('Dossier invalide.', 400);
     const centerId = body.centerId.trim(), clientId = body.clientId.trim();
     if (actor.role !== 'super_admin' && actor.centerId !== centerId) throw new CrmAccessError('Centre non autorisé.', 403);
@@ -33,9 +36,14 @@ export async function POST(request: Request) {
     // Keep pre-existing imports without a PDF center visible, without importing or duplicating archive records.
     const unassigned = payments.flatMap((p: any) => p.legacyReconciliation?.unassignedSourceRecord
       ? [{ ...p.legacyReconciliation.unassignedSourceRecord, id: p.id, centerId, originalCenterMissing: true }] : []);
-    const events = buildClientTimeline({ client: { ...doc.data(), id: doc.id } as Client, centerId, financialVisible: actor.canReadFinances,
+    const input = { client: { ...doc.data(), id: doc.id } as Client, centerId, financialVisible: actor.canReadFinances,
       appointments: appointments as Appointment[], packages: packages as ClientPackage[], payments: payments as Payment[],
-      finance: [...finance, ...unassigned] as LegacyHistoryRecord[], reservations: reservations as LegacyHistoryRecord[] });
+      finance: [...finance, ...unassigned] as LegacyHistoryRecord[], reservations: reservations as LegacyHistoryRecord[] };
+    if (body.mode === 'statement') {
+      const center = await db.collection('centers').doc(centerId).get();
+      return NextResponse.json({ ok: true, statement: buildClientStatement(input, center.data() || {}) }, { headers: { 'Cache-Control': 'private, no-store' } });
+    }
+    const events = buildClientTimeline(input);
     const filtered = filterClientTimeline(events, body);
     const pageSize = 30;
     const page = Math.max(1, Math.min(Math.ceil(filtered.length / pageSize) || 1, Number.isSafeInteger(body.page) ? body.page : 1));

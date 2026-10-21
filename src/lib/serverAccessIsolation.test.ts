@@ -297,6 +297,15 @@ async function run() {
       const visible = await (await readTimeline(authenticatedRequest(sidiOwner.token, sidiPayload))).json();
       assert.equal(visible.financialVisible, true); assert.equal(visible.rows[0].amount, 987654);
       assert.equal((await readTimeline(authenticatedRequest(superAdmin.token, sidiPayload))).status, 200);
+      const statement = await (await readTimeline(authenticatedRequest(managerA.token, { ...payload, mode: 'statement' }))).json();
+      assert.ok(statement.statement.events.filter(e => e.origin === 'legacy' && e.kind === 'reservation').length === 55, 'The statement includes all pages');
+      assert.equal((await readTimeline(authenticatedRequest(managerA.token, { ...payload, mode: 'statement', origin: 'legacy' }))).status, 400);
+      const hiddenStatement = await (await readTimeline(authenticatedRequest(sidiStaff.token, { ...sidiPayload, mode: 'statement' }))).json();
+      assert.equal(hiddenStatement.statement.financialVisible, false);
+      assert.ok(!('netReceipts' in hiddenStatement.statement.summary));
+      assert.ok(!JSON.stringify(hiddenStatement).includes('987654'));
+      assert.ok(!JSON.stringify(hiddenStatement).includes('OWNER_ONLY_SECRET'));
+      assert.equal((await readTimeline(authenticatedRequest(managerA.token, { ...sidiPayload, mode: 'statement' }))).status, 403);
     });
     await testCase('manager provisioning cannot overwrite a super admin or invent a center', async () => {
       const payload = { action: 'upsert', name: 'Test', email: 'super-admin@security.test', centerId: 'center-a', active: true };

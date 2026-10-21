@@ -34,6 +34,7 @@ import { calculateClientGamification } from '../../lib/gamification';
 import { ClientFollowUpPanel } from './ClientFollowUpPanel';
 import { LegacyHistoryPanel } from './LegacyHistoryPanel';
 import { ClientTimeline } from './ClientTimeline';
+import { ClientStatementButton } from './ClientStatement';
 
 interface ClientProfileViewProps {
   canReadFinances?: boolean;
@@ -208,6 +209,7 @@ export function ClientProfileView({
       </div>
 
       {/* Profile Sub-Tabs Bar */}
+      <ClientStatementButton key={`statement:${centerId || client.centerId}:${client.id}`} centerId={centerId || client.centerId} clientId={client.id} />
       <div className="flex border-b border-slate-200 space-x-2 sm:space-x-4 overflow-x-auto">
         <button type="button" onClick={() => setActiveProfileTab('timeline')} className={`whitespace-nowrap border-b-2 px-2 pb-3 text-sm font-bold ${activeProfileTab === 'timeline' ? 'border-sky-600 text-sky-700' : 'border-transparent text-slate-500'}`}>Chronologie adhérent</button>
         <button type="button" onClick={() => setActiveProfileTab('history')} className={`whitespace-nowrap border-b-2 px-2 pb-3 text-sm font-bold ${activeProfileTab === 'history' ? 'border-sky-600 text-sky-700' : 'border-transparent text-slate-500'}`}>Historique ancienne base</button>
