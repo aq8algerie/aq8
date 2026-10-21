@@ -33,6 +33,7 @@ import { formatDateTime } from '../../lib/centerManagerUtils';
 import { calculateClientGamification } from '../../lib/gamification';
 import { ClientFollowUpPanel } from './ClientFollowUpPanel';
 import { LegacyHistoryPanel } from './LegacyHistoryPanel';
+import { ClientTimeline } from './ClientTimeline';
 
 interface ClientProfileViewProps {
   canReadFinances?: boolean;
@@ -85,7 +86,7 @@ export function ClientProfileView({
   const age = calculateAge(client.dob);
   const isSuspended = client.status === 'suspended';
 
-  const [activeProfileTab, setActiveProfileTab] = React.useState<'profile' | 'measurements' | 'packages' | 'history'>('profile');
+  const [activeProfileTab, setActiveProfileTab] = React.useState<'profile' | 'measurements' | 'packages' | 'history' | 'timeline'>('profile');
 
   // Stats calculation
   const completedSessionsCount = clientApts.filter(a => a.status === 'completed').length;
@@ -208,6 +209,7 @@ export function ClientProfileView({
 
       {/* Profile Sub-Tabs Bar */}
       <div className="flex border-b border-slate-200 space-x-2 sm:space-x-4 overflow-x-auto">
+        <button type="button" onClick={() => setActiveProfileTab('timeline')} className={`whitespace-nowrap border-b-2 px-2 pb-3 text-sm font-bold ${activeProfileTab === 'timeline' ? 'border-sky-600 text-sky-700' : 'border-transparent text-slate-500'}`}>Chronologie adhérent</button>
         <button type="button" onClick={() => setActiveProfileTab('history')} className={`whitespace-nowrap border-b-2 px-2 pb-3 text-sm font-bold ${activeProfileTab === 'history' ? 'border-sky-600 text-sky-700' : 'border-transparent text-slate-500'}`}>Historique ancienne base</button>
         <button
           type="button"
@@ -247,6 +249,7 @@ export function ClientProfileView({
       </div>
 
       {/* KPI Metrics Summary Cards */}
+      {activeProfileTab === 'timeline' && <ClientTimeline key={`${centerId || client.centerId}:${client.id}`} centerId={centerId || client.centerId} clientId={client.id} />}
       {activeProfileTab === 'history' && <div className="space-y-5"><LegacyHistoryPanel centerId={centerId || client.centerId} clientId={client.id} kind="reservations" />{canReadFinances && <LegacyHistoryPanel centerId={centerId || client.centerId} clientId={client.id} kind="finance" />}</div>}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-xs flex items-center gap-3">

@@ -72,6 +72,7 @@ async function run() {
   const { POST: mutateOperations } = await import('../../app/api/crm-operations/route');
   const { POST: readFinanceSummary } = await import('../../app/api/crm-financial-summary/route');
   const { POST: readHistory } = await import('../../app/api/crm-legacy-history/route');
+  const { POST: readTimeline } = await import('../../app/api/crm-client-timeline/route');
   const { POST: mutateManagers } = await import('../../app/api/crm-managers/route');
   const { POST: readPortal } = await import('../../app/api/client-portal/route');
   const { POST: registerPortal } = await import('../../app/api/client-portal/register/route');
@@ -270,6 +271,32 @@ async function run() {
       assert.equal(adminPage.rows[0].amount, 1000);
       await db.collection('appointments').doc('legacy-reservation-test').set({ id: 'legacy-reservation-test', centerId: 'center-a', status: 'booked' });
       assert.equal((await mutateOperations(authenticatedRequest(managerA.token, { action: 'complete_appointment', centerId: 'center-a', appointmentId: 'legacy-reservation-test' }))).status, 409);
+    });
+    await testCase('client timeline paginates both origins and redacts finances before serialization', async () => {
+      const payload = { centerId: 'center-a', clientId: 'privacy-client' };
+      assert.equal((await readTimeline(authenticatedRequest('', payload))).status, 401);
+      assert.equal((await readTimeline(authenticatedRequest(managerA.token, { ...payload, centerId: 'center-b' }))).status, 403);
+      assert.equal((await readTimeline(authenticatedRequest(managerA.token, { ...payload, clientId: 'foreign' }))).status, 404);
+      assert.equal((await readTimeline(authenticatedRequest(managerA.token, { ...payload, from: '2026-02-30' }))).status, 400);
+      const first = await (await readTimeline(authenticatedRequest(managerA.token, { ...payload, kind: 'reservation', origin: 'legacy' }))).json();
+      const second = await (await readTimeline(authenticatedRequest(managerA.token, { ...payload, kind: 'reservation', origin: 'legacy', page: 2 }))).json();
+      assert.equal(first.total, 55); assert.equal(first.rows.length, 30); assert.equal(second.rows.length, 25);
+      assert.equal(new Set([...first.rows, ...second.rows].map(r => r.id)).size, 55);
+      const finance = await (await readTimeline(authenticatedRequest(managerA.token, { ...payload, kind: 'payment' }))).json();
+      assert.ok(finance.rows.some(r => r.amount === -7000 && r.origin === 'legacy'));
+      assert.ok(!JSON.stringify(finance).includes('FOREIGN_PRIVATE'));
+      await db.collection('users').doc(managerA.uid).update({ financeRead: false });
+      const staff = await (await readTimeline(authenticatedRequest(managerA.token, { ...payload, kind: 'payment' }))).json();
+      assert.equal(staff.financialVisible, false); assert.equal(staff.total, 0);
+      await db.collection('users').doc(managerA.uid).update({ financeRead: true });
+      await db.collection('clients').doc('sidi-timeline').set({ centerId: 'center-5' });
+      await db.collection('payments').doc('sidi-timeline-payment').set({ centerId: 'center-5', clientId: 'sidi-timeline', amount: 987654, date: '2026-10-21', reason: 'OWNER_ONLY_SECRET' });
+      const sidiPayload = { centerId: 'center-5', clientId: 'sidi-timeline' };
+      const hidden = await (await readTimeline(authenticatedRequest(sidiStaff.token, sidiPayload))).json();
+      assert.equal(hidden.financialVisible, false); assert.ok(!JSON.stringify(hidden).includes('987654')); assert.ok(!JSON.stringify(hidden).includes('OWNER_ONLY_SECRET'));
+      const visible = await (await readTimeline(authenticatedRequest(sidiOwner.token, sidiPayload))).json();
+      assert.equal(visible.financialVisible, true); assert.equal(visible.rows[0].amount, 987654);
+      assert.equal((await readTimeline(authenticatedRequest(superAdmin.token, sidiPayload))).status, 200);
     });
     await testCase('manager provisioning cannot overwrite a super admin or invent a center', async () => {
       const payload = { action: 'upsert', name: 'Test', email: 'super-admin@security.test', centerId: 'center-a', active: true };
