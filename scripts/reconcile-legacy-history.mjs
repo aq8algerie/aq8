@@ -7,6 +7,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
+import { hasConfirmedLegacyCenter } from './confirmed-legacy-center.mjs';
 
 const project = 'aq8algerie-4f675';
 const dir = path.resolve('db-audit/out/legacy-reconciliation');
@@ -83,6 +84,10 @@ for (const [id, existing] of db.payments) {
   const record = financeById.get(id.slice('legacy-payment-'.length));
   if (!record) throw new Error(`Payment has no PDF source: ${id}`);
   if (Number(existing.data.amount) !== record.amount || existing.data.clientId !== record.clientId) throw new Error(`Payment diverged: ${id}`);
+  if (hasConfirmedLegacyCenter(existing.data, db.legacy_financial_operations.get(record.id)?.data, record)) {
+    stats.confirmedCentersPreserved = (stats.confirmedCentersPreserved || 0) + 1;
+    continue;
+  }
   const reconciliation = { version: plan.version, archiveId: record.centerId ? record.id : null,
     source: record.source, sourceType: record.type, sourceCenterId: record.centerId,
     previousCenterId: existing.data.legacyReconciliation?.previousCenterId || existing.data.centerId, revenueTreatment: 'excluded_pending_historical_qualification',

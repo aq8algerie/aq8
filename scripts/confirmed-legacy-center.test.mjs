@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {hasConfirmedLegacyCenter} from './confirmed-legacy-center.mjs';
+const source={id:'legacy-operation-1',centerId:null,clientId:'client',amount:-2000,source:{legacyId:'1',sha256:'proof'}};
+const centerResolution={status:'confirmed_by_owner',originalSourceCenterId:null,centerId:'center-2',auditId:'audit',confirmedAt:'2026-10-26'};
+const archive={...source,centerId:'center-2',historicalOnly:true,centerResolution};
+const payment={clientId:'client',centerId:'center-2',amount:-2000,historicalOnly:true,legacyReconciliation:{archiveId:source.id,centerResolution}};
+assert.equal(hasConfirmedLegacyCenter(payment,archive,source),true);
+assert.equal(hasConfirmedLegacyCenter({legacyReconciliation:{}},undefined,source),false);
+assert.throws(()=>hasConfirmedLegacyCenter({...payment,amount:2000},archive,source));
+assert.throws(()=>hasConfirmedLegacyCenter(payment,{...archive,centerId:'center-1'},source));
+assert.throws(()=>hasConfirmedLegacyCenter({...payment,legacyReconciliation:{...payment.legacyReconciliation,unassignedSourceRecord:source}},archive,source));
+assert.throws(()=>hasConfirmedLegacyCenter(payment,undefined,source));
+console.log('Confirmed legacy centers: replay protection, signed amounts, source evidence, archive links and no unresolved duplication passed.');
